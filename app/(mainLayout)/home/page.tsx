@@ -1,4 +1,3 @@
-import MainLayout from '@/app/(layouts)/MainLayout';
 import React from 'react';
 
 const Home = () => {
@@ -26,7 +25,5 @@ const Home = () => {
         </div>
     );
 };
-
-Home.getLayout = (page) => <MainLayout>{page}</MainLayout>;
 
 export default Home;
