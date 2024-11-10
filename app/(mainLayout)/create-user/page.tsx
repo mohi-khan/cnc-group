@@ -1,4 +1,3 @@
-import MainLayout from '@/app/(layouts)/MainLayout';
 import React from 'react';
 
 const CreateUser = () => {
@@ -109,7 +108,5 @@ const CreateUser = () => {
         </div>
     );
 };
-
-CreateUser.getLayout = (page) => <MainLayout>{page}</MainLayout>;
 
 export default CreateUser;
