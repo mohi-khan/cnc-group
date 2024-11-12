@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
@@ -145,7 +145,7 @@ export default function Navbar() {
                                     onMouseLeave={() => setActiveMenu(null)}
                                 >
                                     <button
-                                        className="inline-flex items-center h-16 px-1 text-sm font-medium leading-5 text-gray-900 focus:outline-none transition duration-150 ease-in-out"
+                                        className="inline-flex items-center h-16 px-1 text-sm font-medium leading-5 text-gray-900 focus:outline-none transition duration-500 ease-in-out"
                                         aria-expanded={activeMenu === menuItem.name}
                                         aria-haspopup={menuItem.subItems.length > 0}
                                     >
@@ -156,8 +156,8 @@ export default function Navbar() {
                                     </button>
                                     {menuItem.subItems.length > 0 && activeMenu === menuItem.name && (
                                         <div className="absolute z-10 -ml-4 transform px-2 w-screen max-w-52 sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2">
-                                            <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
-                                                <div className="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-3">
+                                            <div className="rounded-lg shadow-lg ring-1 ring-slate-800 ring-opacity-5 overflow-hidden">
+                                                <div className="relative grid gap-3 bg-white px-5 py-6 sm:gap-6 sm:p-3">
                                                     {menuItem.subItems.map((subItem, subIndex) => (
                                                         <a
                                                             key={subIndex}
@@ -182,7 +182,7 @@ export default function Navbar() {
                     <div className="flex items-center ml-4">
                         <div className="relative" ref={profileRef}>
                             <button
-                                className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out"
+                                className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
                                 id="user-menu"
                                 aria-label="User menu"
                                 aria-haspopup="true"
@@ -212,3 +212,6 @@ export default function Navbar() {
         </nav>
     )
 }
+
+
+
