@@ -1,6 +1,7 @@
-import React from 'react';
+"use client";
+import React from 'react'
 
-const Home = () => {
+const SignIn = () => {
     return (
         <div className='flex justify-center items-center h-screen'>
             <div>
@@ -23,7 +24,7 @@ const Home = () => {
                 </form>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default Home;
+export default SignIn

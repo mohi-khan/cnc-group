@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 
-const CreateUser = () => {
+const SignUpPage = () => {
     return (
         <div className='flex justify-center items-center py-10'>
             <div>
@@ -98,7 +98,7 @@ const CreateUser = () => {
                                 <input type="checkbox" className="border" />
                                 <p>Voucher</p>
                             </div>
-                        </div>                        
+                        </div>
                     </div>
                     <div className='text-center mt-5'>
                         <button className='border py-1 px-3 rounded-md bg-primary text-secondary'>Submit</button>
@@ -106,7 +106,7 @@ const CreateUser = () => {
                 </form>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default CreateUser;
+export default SignUpPage
