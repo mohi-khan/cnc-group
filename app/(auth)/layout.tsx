@@ -13,8 +13,8 @@ export default function AuthLayout({
 
         <html lang="en">
             <body className={inter.className}>
-                <div className="flex items-center justify-center min-h-max bg-gray-100">
-                    <div className="p-8 bg-white rounded shadow-md">
+                <div className="flex items-center justify-center min-h-max">
+                    <div className="p-8 bg-white rounded">
                         {children}
                     </div>
                 </div>
