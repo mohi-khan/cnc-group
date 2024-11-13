@@ -64,7 +64,7 @@ export default function SignUp() {
                 <CardHeader className="space-y-1">
                     <div className="flex justify-center mb-4">
                         <Image
-                            src="/placeholder.svg?height=64&width=64"
+                            src="/"
                             alt="Company Logo"
                             width={64}
                             height={64}
