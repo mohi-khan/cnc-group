@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
+import Link from 'next/link'
 
 interface SubItem {
     name: string
@@ -165,7 +166,7 @@ export default function Navbar() {
                                             <div className="rounded-lg shadow-lg ring-1 ring-slate-800 ring-opacity-5 overflow-hidden">
                                                 <div className="relative grid gap-3 bg-white px-5 py-6 sm:gap-6 sm:p-3">
                                                     {menuItem.subItems.map((subItem, subIndex) => (
-                                                        <a
+                                                        <Link
                                                             key={subIndex}
                                                             href={subItem.source} // Use source URL here
                                                             className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
@@ -175,7 +176,7 @@ export default function Navbar() {
                                                                     {subItem.name}
                                                                 </p>
                                                             </div>
-                                                        </a>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>

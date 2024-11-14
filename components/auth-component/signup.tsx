@@ -29,14 +29,14 @@ export default function SignUp() {
         )
     }
 
-    const handleLocationChange = (company: string) => {
-        setSelectedCompanies((prev) =>
-            prev.includes(company) ? prev.filter((c) => c !== company) : [...prev, company]
+    const handleLocationChange = (location: string) => {
+        setSelectedLocations((prev) =>
+            prev.includes(location) ? prev.filter((c) => c !== location) : [...prev, location]
         )
     }
-    const handleVoucherChange = (company: string) => {
-        setSelectedCompanies((prev) =>
-            prev.includes(company) ? prev.filter((c) => c !== company) : [...prev, company]
+    const handleVoucherChange = (voucher: string) => {
+        setSelectedVouchers((prev) =>
+            prev.includes(voucher) ? prev.filter((c) => c !== voucher) : [...prev, voucher]
         )
     }
 
@@ -60,7 +60,7 @@ export default function SignUp() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4 sm:px-6 lg:px-8 my-16">
-            <Card className="w-full max-w-md"> {/* Match the width with SignInPage */}
+            <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <div className="flex justify-center mb-4">
                         <Image
@@ -128,7 +128,7 @@ export default function SignUp() {
                         <div className="space-y-2">
                             <div className='flex gap-3 items-center justify-between'>
                                 <Label>Company</Label>
-                                <SmallButton>New</SmallButton>
+                                {/* <SmallButton>New</SmallButton> */}
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {['Company A', 'Company B', 'Company C', 'Company D'].map((company) => (
@@ -145,7 +145,7 @@ export default function SignUp() {
                         <div className="space-y-2 py-3">
                             <div className='flex gap-3 items-center justify-between'>
                                 <Label>Location</Label>
-                                <SmallButton>New</SmallButton>
+                                {/* <SmallButton>New</SmallButton> */}
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {['Location A', 'Location B', 'Location C', 'Location D'].map((location) => (
@@ -186,11 +186,11 @@ export default function SignUp() {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="text-center">
-                    <div className="text-sm">
+                <CardFooter className="flex flex-col space-y-2">
+                    <div className="text-sm text-center">
                         Already have an account?{' '}
-                        <Link href="/sign-in" className="text-primary hover:underline">
-                            Sign in
+                        <Link href="/" className="text-primary hover:underline">
+                            Sign In
                         </Link>
                     </div>
                 </CardFooter>
