@@ -121,12 +121,6 @@ export default function SignIn() {
           <Link href="/forgot-password" className="text-sm text-center text-primary hover:underline">
             Forgot your password?
           </Link>
-          <div className="text-sm text-center">
-            Don&apos;t have an account?{' '}
-            <Link href="/sign-up" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </div>
         </CardFooter>
       </Card>
     </div>
