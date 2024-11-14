@@ -3,10 +3,16 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+
+interface SubItem {
+    name: string
+    source: string
+}
 
 interface MenuItem {
     name: string
-    subItems: string[]
+    subItems: SubItem[]
 }
 
 export default function Navbar() {
@@ -19,98 +25,99 @@ export default function Navbar() {
         {
             name: "Accounting",
             subItems: [
-                "Journal Entry",
-                "Journal Items",
-                "Reverse Entry",
-                "Day Books",
-                "Create Repetitive Vouchers",
-                "Lock Vouchers"
+                { name: "Journal Entry", source: "/accounting/journal-entry" },
+                { name: "Journal Items", source: "/accounting/journal-items" },
+                { name: "Reverse Entry", source: "/accounting/reverse-entry" },
+                { name: "Day Books", source: "/accounting/day-books" },
+                { name: "Create Repetitive Vouchers", source: "/accounting/repetitive-vouchers" },
+                { name: "Lock Vouchers", source: "/accounting/lock-vouchers" }
             ]
         },
         {
             name: "Cash",
             subItems: [
-                "Cash Voucher",
-                "Cash Reports",
-                "Cntra Vouchers"
+                { name: "Cash Voucher", source: "/cash/cash-voucher" },
+                { name: "Cash Reports", source: "/cash/cash-reports" },
+                { name: "Cntra Vouchers", source: "/cash/cntra-vouchers" }
             ]
         },
         {
             name: "Customers",
             subItems: [
-                "Invoices",
-                "Receipt",
-                "Customer Statement"
+                { name: "Invoices", source: "/customers/invoices" },
+                { name: "Receipt", source: "/customers/receipt" },
+                { name: "Customer Statement", source: "/customers/customer-statement" }
             ]
         },
         {
             name: "Vendors",
             subItems: [
-                "Bills",
-                "Payments",
-                "Vendor Statement"
+                { name: "Bills", source: "/vendors/bills" },
+                { name: "Payments", source: "/vendors/payments" },
+                { name: "Vendor Statement", source: "/vendors/vendor-statement" }
             ]
         },
         {
             name: "Assets",
             subItems: [
-                "Create Asset Group",
-                "Configure Depreciation",
-                "Configure Asset Accounting",
-                "Run Depreciation"
+                { name: "Create Asset Group", source: "/assets/create-asset-group" },
+                { name: "Configure Depreciation", source: "/assets/configure-depreciation" },
+                { name: "Configure Asset Accounting", source: "/assets/configure-asset-accounting" },
+                { name: "Run Depreciation", source: "/assets/run-depreciation" }
             ]
         },
         {
             name: "Bank",
             subItems: [
-                "Create Bank Account",
-                "Bank Vouchers",
-                "Bank Reconciliation",
-                "Bank Ledger",
-                "Check Print",
-                "Bank Balances"
+                { name: "Create Bank Account", source: "/bank/create-bank-account" },
+                { name: "Bank Vouchers", source: "/bank/bank-vouchers" },
+                { name: "Bank Reconciliation", source: "/bank/bank-reconciliation" },
+                { name: "Bank Ledger", source: "/bank/bank-ledger" },
+                { name: "Check Print", source: "/bank/check-print" },
+                { name: "Bank Balances", source: "/bank/bank-balances" }
             ]
         },
         {
             name: "Budget",
             subItems: [
-                "Create Budget",
-                "Budget Settings",
-                "View Budget"
+                { name: "Create Budget", source: "/budget/create-budget" },
+                { name: "Budget Settings", source: "/budget/budget-settings" },
+                { name: "View Budget", source: "/budget/view-budget" }
             ]
         },
         {
             name: "Reports",
             subItems: [
-                "Trial Balance",
-                "Profit and Loss Accounts",
-                "Balance Sheet",
-                "Bank Ledger",
-                "Customer Ledger",
-                "Bank and Cash Reports",
-                "Fund Flow Statement",
-                "Budget Vs Actual Reports"
+                { name: "Trial Balance", source: "/reports/trial-balance" },
+                { name: "Profit and Loss Accounts", source: "/reports/profit-loss" },
+                { name: "Balance Sheet", source: "/reports/balance-sheet" },
+                { name: "Bank Ledger", source: "/reports/bank-ledger" },
+                { name: "Customer Ledger", source: "/reports/customer-ledger" },
+                { name: "Bank and Cash Reports", source: "/reports/bank-cash-reports" },
+                { name: "Fund Flow Statement", source: "/reports/fund-flow-statement" },
+                { name: "Budget Vs Actual Reports", source: "/reports/budget-vs-actual" }
             ]
         },
         {
             name: "Admin",
             subItems: [
-                "Users"
+                { name: "Create User", source: "/create-user" },
+                { name: "Users List", source: "/admin/users-list" }
             ]
         },
         {
             name: "Settings",
             subItems: [
-                "Company",
-                "Chart of Accounts",
-                "Currencies",
-                "Cost Centers",
-                "Internal Orders",
-                "Banks",
-                "Cash Accounts",
-                "Locations",
-                "Withholding Taxes",
-                "Financial Year"
+                { name: "Company", source: "/settings/company" },
+                { name: "Chart of Accounts", source: "/settings/chart-of-accounts" },
+                { name: "Currencies", source: "/settings/currencies" },
+                { name: "Cost Centers", source: "/settings/cost-centers" },
+                { name: "Internal Orders", source: "/settings/internal-orders" },
+                { name: "Banks", source: "/settings/banks" },
+                { name: "Cash Accounts", source: "/settings/cash-accounts" },
+                { name: "Locations", source: "/settings/locations" },
+                { name: "Withholding Taxes", source: "/settings/withholding-taxes" },
+                { name: "Financial Year", source: "/settings/financial-year" }
             ]
         }
     ]
@@ -159,17 +166,17 @@ export default function Navbar() {
                                             <div className="rounded-lg shadow-lg ring-1 ring-slate-800 ring-opacity-5 overflow-hidden">
                                                 <div className="relative grid gap-3 bg-white px-5 py-6 sm:gap-6 sm:p-3">
                                                     {menuItem.subItems.map((subItem, subIndex) => (
-                                                        <a
+                                                        <Link
                                                             key={subIndex}
-                                                            href="#"
+                                                            href={subItem.source} // Use source URL here
                                                             className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
                                                         >
                                                             <div className="ml-4">
                                                                 <p className="text-base font-medium text-gray-900">
-                                                                    {subItem}
+                                                                    {subItem.name}
                                                                 </p>
                                                             </div>
-                                                        </a>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -199,9 +206,9 @@ export default function Navbar() {
                             {isProfileOpen && (
                                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
                                     <div className="py-1 rounded-md bg-white shadow-xs" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
-                                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Option 1</a>
-                                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Option 2</a>
-                                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Option 3</a>
+                                        <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Your Profile</a>
+                                        <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
+                                        <a href="/logout" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</a>
                                     </div>
                                 </div>
                             )}
@@ -212,6 +219,3 @@ export default function Navbar() {
         </nav>
     )
 }
-
-
-
