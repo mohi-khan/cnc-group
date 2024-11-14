@@ -10,9 +10,14 @@ interface SubItem {
     source: string
 }
 
+interface SubItemGroup {
+    name: string
+    items: SubItem[]
+}
+
 interface MenuItem {
     name: string
-    subItems: SubItem[]
+    subItemGroups: SubItemGroup[]
 }
 
 export default function Navbar() {
@@ -21,103 +26,178 @@ export default function Navbar() {
     const profileRef = useRef<HTMLDivElement>(null)
 
     const menuItems: MenuItem[] = [
-        { name: "Dashboard", subItems: [] },
+        { name: "Dashboard", subItemGroups: [] },
         {
             name: "Accounting",
-            subItems: [
-                { name: "Journal Entry", source: "/accounting/journal-entry" },
-                { name: "Journal Items", source: "/accounting/journal-items" },
-                { name: "Reverse Entry", source: "/accounting/reverse-entry" },
-                { name: "Day Books", source: "/accounting/day-books" },
-                { name: "Create Repetitive Vouchers", source: "/accounting/repetitive-vouchers" },
-                { name: "Lock Vouchers", source: "/accounting/lock-vouchers" }
+            subItemGroups: [
+                {
+                    name: "Journal Management",
+                    items: [
+                        { name: "Journal Entry", source: "/accounting/journal-entry" },
+                        { name: "Journal Items", source: "/accounting/journal-items" },
+                        { name: "Reverse Entry", source: "/accounting/reverse-entry" },
+                    ]
+                },
+                {
+                    name: "Books",
+                    items: [
+                        { name: "Day Books", source: "/accounting/day-books" },
+                    ]
+                },
+                {
+                    name: "Vouchers",
+                    items: [
+                        { name: "Create Repetitive Vouchers", source: "/accounting/repetitive-vouchers" },
+                        { name: "Lock Vouchers", source: "/accounting/lock-vouchers" }
+                    ]
+                }
             ]
         },
         {
             name: "Cash",
-            subItems: [
-                { name: "Cash Voucher", source: "/cash/cash-voucher" },
-                { name: "Cash Reports", source: "/cash/cash-reports" },
-                { name: "Cntra Vouchers", source: "/cash/cntra-vouchers" }
+            subItemGroups: [
+                {
+                    name: "Cash Management",
+                    items: [
+                        { name: "Cash Voucher", source: "/cash/cash-voucher" },
+                        { name: "Cash Reports", source: "/cash/cash-reports" },
+                        { name: "Cntra Vouchers", source: "/cash/cntra-vouchers" }
+                    ]
+                }
             ]
         },
         {
             name: "Customers",
-            subItems: [
-                { name: "Invoices", source: "/customers/invoices" },
-                { name: "Receipt", source: "/customers/receipt" },
-                { name: "Customer Statement", source: "/customers/customer-statement" }
+            subItemGroups: [
+                {
+                    name: "Customer Management",
+                    items: [
+                        { name: "Invoices", source: "/customers/invoices" },
+                        { name: "Receipt", source: "/customers/receipt" },
+                        { name: "Customer Statement", source: "/customers/customer-statement" }
+                    ]
+                }
             ]
         },
         {
             name: "Vendors",
-            subItems: [
-                { name: "Bills", source: "/vendors/bills" },
-                { name: "Payments", source: "/vendors/payments" },
-                { name: "Vendor Statement", source: "/vendors/vendor-statement" }
+            subItemGroups: [
+                {
+                    name: "Vendor Management",
+                    items: [
+                        { name: "Bills", source: "/vendors/bills" },
+                        { name: "Payments", source: "/vendors/payments" },
+                        { name: "Vendor Statement", source: "/vendors/vendor-statement" }
+                    ]
+                }
             ]
         },
         {
             name: "Assets",
-            subItems: [
-                { name: "Create Asset Group", source: "/assets/create-asset-group" },
-                { name: "Configure Depreciation", source: "/assets/configure-depreciation" },
-                { name: "Configure Asset Accounting", source: "/assets/configure-asset-accounting" },
-                { name: "Run Depreciation", source: "/assets/run-depreciation" }
+            subItemGroups: [
+                {
+                    name: "Asset Management",
+                    items: [
+                        { name: "Create Asset Group", source: "/assets/create-asset-group" },
+                        { name: "Configure Depreciation", source: "/assets/configure-depreciation" },
+                        { name: "Configure Asset Accounting", source: "/assets/configure-asset-accounting" },
+                        { name: "Run Depreciation", source: "/assets/run-depreciation" }
+                    ]
+                }
             ]
         },
         {
             name: "Bank",
-            subItems: [
-                { name: "Create Bank Account", source: "/bank/create-bank-account" },
-                { name: "Bank Vouchers", source: "/bank/bank-vouchers" },
-                { name: "Bank Reconciliation", source: "/bank/bank-reconciliation" },
-                { name: "Bank Ledger", source: "/bank/bank-ledger" },
-                { name: "Check Print", source: "/bank/check-print" },
-                { name: "Bank Balances", source: "/bank/bank-balances" }
+            subItemGroups: [
+                {
+                    name: "Bank Management",
+                    items: [
+                        { name: "Create Bank Account", source: "/bank/create-bank-account" },
+                        { name: "Bank Vouchers", source: "/bank/bank-vouchers" },
+                        { name: "Bank Reconciliation", source: "/bank/bank-reconciliation" },
+                        { name: "Bank Ledger", source: "/bank/bank-ledger" },
+                        { name: "Check Print", source: "/bank/check-print" },
+                        { name: "Bank Balances", source: "/bank/bank-balances" }
+                    ]
+                }
             ]
         },
         {
             name: "Budget",
-            subItems: [
-                { name: "Create Budget", source: "/budget/create-budget" },
-                { name: "Budget Settings", source: "/budget/budget-settings" },
-                { name: "View Budget", source: "/budget/view-budget" }
+            subItemGroups: [
+                {
+                    name: "Budget Management",
+                    items: [
+                        { name: "Create Budget", source: "/budget/create-budget" },
+                        { name: "Budget Settings", source: "/budget/budget-settings" },
+                        { name: "View Budget", source: "/budget/view-budget" }
+                    ]
+                }
             ]
         },
         {
             name: "Reports",
-            subItems: [
-                { name: "Trial Balance", source: "/reports/trial-balance" },
-                { name: "Profit and Loss Accounts", source: "/reports/profit-loss" },
-                { name: "Balance Sheet", source: "/reports/balance-sheet" },
-                { name: "Bank Ledger", source: "/reports/bank-ledger" },
-                { name: "Customer Ledger", source: "/reports/customer-ledger" },
-                { name: "Bank and Cash Reports", source: "/reports/bank-cash-reports" },
-                { name: "Fund Flow Statement", source: "/reports/fund-flow-statement" },
-                { name: "Budget Vs Actual Reports", source: "/reports/budget-vs-actual" }
-            ]
-        },
-        {
-            name: "Admin",
-            subItems: [
-                { name: "Create User", source: "/create-user" },
-                { name: "Users List", source: "/admin/users-list" }
+            subItemGroups: [
+                {
+                    name: "Financial Reports",
+                    items: [
+                        { name: "Trial Balance", source: "/reports/trial-balance" },
+                        { name: "Profit and Loss Accounts", source: "/reports/profit-loss" },
+                        { name: "Balance Sheet", source: "/reports/balance-sheet" },
+                    ]
+                },
+                {
+                    name: "Ledger Reports",
+                    items: [
+                        { name: "Bank Ledger", source: "/reports/bank-ledger" },
+                        { name: "Customer Ledger", source: "/reports/customer-ledger" },
+                    ]
+                },
+                {
+                    name: "Other Reports",
+                    items: [
+                        { name: "Bank and Cash Reports", source: "/reports/bank-cash-reports" },
+                        { name: "Fund Flow Statement", source: "/reports/fund-flow-statement" },
+                        { name: "Budget Vs Actual Reports", source: "/reports/budget-vs-actual" }
+                    ]
+                }
             ]
         },
         {
             name: "Settings",
-            subItems: [
-                { name: "Company", source: "/settings/company" },
-                { name: "Chart of Accounts", source: "/settings/chart-of-accounts" },
-                { name: "Currencies", source: "/settings/currencies" },
-                { name: "Cost Centers", source: "/settings/cost-centers" },
-                { name: "Internal Orders", source: "/settings/internal-orders" },
-                { name: "Banks", source: "/settings/banks" },
-                { name: "Cash Accounts", source: "/settings/cash-accounts" },
-                { name: "Locations", source: "/settings/locations" },
-                { name: "Withholding Taxes", source: "/settings/withholding-taxes" },
-                { name: "Financial Year", source: "/settings/financial-year" }
+            subItemGroups: [
+                {
+                    name: "Admin",
+                    items: [
+                        { name: "Create User", source: "/settings/create-user" },
+                        { name: "Users List", source: "/settings/users-list" },
+                    ]
+                },
+                {
+                    name: "General Settings",
+                    items: [
+                        { name: "Company", source: "/settings/company" },
+                        { name: "Chart of Accounts", source: "/settings/chart-of-accounts" },
+                        { name: "Currencies", source: "/settings/currencies" },
+                    ]
+                },
+                {
+                    name: "Financial Settings",
+                    items: [
+                        { name: "Cost Centers", source: "/settings/cost-centers" },
+                        { name: "Internal Orders", source: "/settings/internal-orders" },
+                        { name: "Banks", source: "/settings/banks" },
+                        { name: "Cash Accounts", source: "/settings/cash-accounts" },
+                    ]
+                },
+                {
+                    name: "Other Settings",
+                    items: [
+                        { name: "Locations", source: "/settings/locations" },
+                        { name: "Withholding Taxes", source: "/settings/withholding-taxes" },
+                        { name: "Financial Year", source: "/settings/financial-year" }
+                    ]
+                }
             ]
         }
     ]
@@ -154,29 +234,36 @@ export default function Navbar() {
                                     <button
                                         className="inline-flex items-center h-16 px-1 text-sm font-medium leading-5 text-gray-900 focus:outline-none transition duration-500 ease-in-out"
                                         aria-expanded={activeMenu === menuItem.name}
-                                        aria-haspopup={menuItem.subItems.length > 0}
+                                        aria-haspopup={menuItem.subItemGroups.length > 0}
                                     >
                                         {menuItem.name}
-                                        {menuItem.subItems.length > 0 && (
+                                        {menuItem.subItemGroups.length > 0 && (
                                             <ChevronDown className="ml-1 h-4 w-4" />
                                         )}
                                     </button>
-                                    {menuItem.subItems.length > 0 && activeMenu === menuItem.name && (
-                                        <div className="absolute z-10 -ml-4 transform px-2 w-screen max-w-52 sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2">
+                                    {menuItem.subItemGroups.length > 0 && activeMenu === menuItem.name && (
+                                        <div className="absolute z-10 -ml-4 transform px-2 w-screen max-w-[300px] sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2">
                                             <div className="rounded-lg shadow-lg ring-1 ring-slate-800 ring-opacity-5 overflow-hidden">
-                                                <div className="relative grid gap-3 bg-white px-5 py-6 sm:gap-6 sm:p-3">
-                                                    {menuItem.subItems.map((subItem, subIndex) => (
-                                                        <Link
-                                                            key={subIndex}
-                                                            href={subItem.source} // Use source URL here
-                                                            className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
-                                                        >
-                                                            <div className="ml-4">
-                                                                <p className="text-base font-medium text-gray-900">
-                                                                    {subItem.name}
-                                                                </p>
-                                                            </div>
-                                                        </Link>
+                                                <div className="relative grid gap-6 bg-white px-5 py-6 sm:gap-4 sm:p-8">
+                                                    {menuItem.subItemGroups.map((group, groupIndex) => (
+                                                        <div key={groupIndex}>
+                                                            <p className="text-base font-bold text-gray-900 mb-2">
+                                                                {group.name}
+                                                            </p>
+                                                            {group.items.map((item, itemIndex) => (
+                                                                <Link
+                                                                    key={itemIndex}
+                                                                    href={item.source}
+                                                                    className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
+                                                                >
+                                                                    <div className="ml-4">
+                                                                        <p className="text-base text-gray-900">
+                                                                            {item.name}
+                                                                        </p>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
