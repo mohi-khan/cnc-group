@@ -57,13 +57,13 @@ export default function Component() {
                 <TabsList className="w-[300px] grid grid-cols-2">
                     <TabsTrigger
                         value="general"
-                        className="data-[state=active]:bg-slate-200 data-[state=active]:text-black border-2 border-t-transparent"
+                        className="data-[state=active]:bg-white data-[state=active]:text-black border data-[state=inactive]:border-t-transparent data-[state=inactive]:border-l-transparent data-[state=active]:border-b-transparent"
                     >
                         General Information
                     </TabsTrigger>
                     <TabsTrigger
                         value="location"
-                        className="data-[state=active]:bg-slate-200 data-[state=active]:text-black border-2 border-b-transparent border-l-transparent"
+                        className="data-[state=active]:bg-white data-[state=active]:text-black border data-[state=active]:border-b-transparent border-l-transparent data-[state=inactive]:border-t-transparent data-[state=inactive]:border-r-transparent"
                     >
                         Location
                     </TabsTrigger>
@@ -186,6 +186,10 @@ export default function Component() {
                     </CardContent>
                 </Card>
             </Tabs>
+
+            <div className='text-right pt-5'>
+                <Button>Save</Button>
+            </div>
         </div>
     )
 }
