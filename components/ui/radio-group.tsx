@@ -5,28 +5,33 @@ import { cn } from "@/lib/utils"
 
 interface RadioGroupContextValue {
   value: string | undefined
-  onChange: (value: string | undefined) => void
+  onChange: (value: string) => void
 }
 
 const RadioGroupContext = React.createContext<RadioGroupContextValue | undefined>(undefined)
 
 export interface RadioGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: string
-  onValueChange?: (value: string | undefined) => void
+  defaultValue?: string
+  onValueChange?: (value: string) => void
 }
 
 const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
-  ({ className, value, onValueChange, ...props }, ref) => {
-    const [selectedValue, setSelectedValue] = React.useState<string | undefined>(value)
+  ({ className, value, defaultValue, onValueChange, ...props }, ref) => {
+    const [selectedValue, setSelectedValue] = React.useState<string | undefined>(value || defaultValue)
 
     React.useEffect(() => {
-      setSelectedValue(value)
+      if (value !== undefined) {
+        setSelectedValue(value)
+      }
     }, [value])
 
-    const handleChange = React.useCallback((newValue: string | undefined) => {
-      setSelectedValue(newValue)
+    const handleChange = React.useCallback((newValue: string) => {
+      if (value === undefined) {
+        setSelectedValue(newValue)
+      }
       onValueChange?.(newValue)
-    }, [onValueChange])
+    }, [value, onValueChange])
 
     return (
       <RadioGroupContext.Provider value={{ value: selectedValue, onChange: handleChange }}>
@@ -50,12 +55,8 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
 
     const { value: groupValue, onChange } = context
 
-    const handleClick = () => {
-      if (groupValue === value) {
-        // If the clicked item is already selected, deselect it
-        onChange(undefined)
-      } else {
-        // Otherwise, select the clicked item
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.checked) {
         onChange(value)
       }
     }
@@ -64,13 +65,13 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
       <input
         type="radio"
         className={cn(
-          "h-4 w-4 rounded-full border border-primary text-black ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         ref={ref}
+        value={value}
         checked={groupValue === value}
-        onClick={handleClick}
-        readOnly
+        onChange={handleChange}
         {...props}
       />
     )

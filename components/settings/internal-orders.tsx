@@ -3,9 +3,12 @@
 import React, { useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Edit2Icon } from 'lucide-react'
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SmallButton } from '../custom-ui/small-button'
 
 type InternalOrder = {
@@ -41,11 +44,23 @@ const companies: Company[] = [
 export default function InternalOrders() {
   const [orders, setOrders] = useState<InternalOrder[]>(dummyData)
   const [selectedOrder, setSelectedOrder] = useState<InternalOrder | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const toggleActive = (id: string) => {
-    setOrders(orders.map(order => 
-      order.id === id ? { ...order, active: !order.active } : order
-    ))
+  const handleEdit = (order: InternalOrder) => {
+    setSelectedOrder({ ...order })
+    setIsDialogOpen(true)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedOrder) {
+      setSelectedOrder({ ...selectedOrder, [e.target.name]: e.target.value })
+    }
+  }
+
+  const handleSelectChange = (value: string, field: string) => {
+    if (selectedOrder) {
+      setSelectedOrder({ ...selectedOrder, [field]: value === 'true' })
+    }
   }
 
   const handleCompanyCodeChange = (companyCode: string) => {
@@ -58,12 +73,12 @@ export default function InternalOrders() {
     }
   }
 
-  const saveCompanyCodes = () => {
+  const saveChanges = () => {
     if (selectedOrder) {
       setOrders(orders.map(order =>
-        order.id === selectedOrder.id ? { ...order, companyCodes: selectedOrder.companyCodes } : order
+        order.id === selectedOrder.id ? selectedOrder : order
       ))
-      setSelectedOrder(null)
+      setIsDialogOpen(false)
     }
   }
 
@@ -80,6 +95,7 @@ export default function InternalOrders() {
               <TableHead className="w-[150px]">Effective Date</TableHead>
               <TableHead className="w-[100px]">Active</TableHead>
               <TableHead className="w-[200px]">Company Code</TableHead>
+              <TableHead className="w-[100px]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,52 +105,89 @@ export default function InternalOrders() {
                 <TableCell>{order.description}</TableCell>
                 <TableCell>{order.purpose}</TableCell>
                 <TableCell>{order.effectiveDate}</TableCell>
+                <TableCell>{order.active ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{order.companyCodes.join(', ')}</TableCell>
                 <TableCell>
-                  <Checkbox 
-                    checked={order.active} 
-                    onCheckedChange={() => toggleActive(order.id)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-between items-center space-x-2">
-                    <p>{order.companyCodes.join(', ')}</p>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <SmallButton onClick={() => setSelectedOrder(order)}>
-                          <Edit2Icon className="h-4 w-4" />
-                        </SmallButton>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Edit Company Codes</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          {companies.map((company) => (
-                            <div key={company.code} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={company.code}
-                                checked={selectedOrder?.companyCodes.includes(company.code)}
-                                onCheckedChange={() => handleCompanyCodeChange(company.code)}
-                              />
-                              <label htmlFor={company.code} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {company.code} - {company.name}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                        <DialogClose asChild>
-                        <Button onClick={saveCompanyCodes}>Save</Button>
-                        </DialogClose>
-                        
-                      </DialogContent>
-                    </Dialog>
-                  </div>
+                  <SmallButton onClick={() => handleEdit(order)}>
+                    <Edit2Icon className="" />
+                  </SmallButton>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Internal Order</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={selectedOrder.description}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="purpose" className="text-right">
+                  Purpose
+                </Label>
+                <Input
+                  id="purpose"
+                  name="purpose"
+                  value={selectedOrder.purpose}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="active" className="text-right">
+                  Active
+                </Label>
+                <Select
+                  onValueChange={(value) => handleSelectChange(value, 'active')}
+                  defaultValue={selectedOrder.active.toString()}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select active status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Company Codes</Label>
+                <div className="col-span-3 space-y-2">
+                  {companies.map((company) => (
+                    <div key={company.code} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={company.code}
+                        checked={selectedOrder.companyCodes.includes(company.code)}
+                        onCheckedChange={() => handleCompanyCodeChange(company.code)}
+                      />
+                      <label htmlFor={company.code} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {company.code} - {company.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          <Button onClick={saveChanges}>Save Changes</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
