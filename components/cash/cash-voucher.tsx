@@ -2,18 +2,44 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
+interface DetailRow {
+  id: number;
+  accountHead: string;
+  particulars: string;
+  costCenter: string;
+  amount: string;
+}
+
+interface Voucher {
+  voucherNo: string;
+  paymentReceipt: string;
+  payee: string;
+  payeePhRefNo: string;
+  totalAmount: string;
+  status: string;
+}
+
+interface FormData {
+  date: string;
+  location: string;
+  paymentReceipt: string;
+  refNo: string;
+  payee: string;
+  payeePh: string;
+  remarks: string;
+}
+
 export default function CashVoucher() {
-  const [detailRows, setDetailRows] = useState([
+  const [detailRows, setDetailRows] = useState<DetailRow[]>([
     { id: 1, accountHead: '', particulars: '', costCenter: '', amount: '' }
   ])
-  const [voucherList, setVoucherList] = useState([])
-  const [formData, setFormData] = useState({
+  const [voucherList, setVoucherList] = useState<Voucher[]>([])
+  const [formData, setFormData] = useState<FormData>({
     date: '',
     location: '',
     paymentReceipt: '',
@@ -24,7 +50,7 @@ export default function CashVoucher() {
   })
 
   const addDetailRow = () => {
-    const newRow = {
+    const newRow: DetailRow = {
       id: detailRows.length + 1,
       accountHead: '',
       particulars: '',
@@ -34,23 +60,23 @@ export default function CashVoucher() {
     setDetailRows([...detailRows, newRow])
   }
 
-  const handleDetailChange = (id, field, value) => {
+  const handleDetailChange = (id: number, field: keyof DetailRow, value: string) => {
     setDetailRows(detailRows.map(row => 
       row.id === id ? { ...row, [field]: value } : row
     ))
   }
 
-  const deleteDetailRow = (id) => {
+  const deleteDetailRow = (id: number) => {
     setDetailRows(detailRows.filter(row => row.id !== id))
   }
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData({ ...formData, [field]: value })
   }
 
-  const handleSubmit = (isDraft) => {
+  const handleSubmit = (isDraft: boolean) => {
     const totalAmount = detailRows.reduce((sum, row) => sum + Number(row.amount || 0), 0)
-    const newVoucher = {
+    const newVoucher: Voucher = {
       voucherNo: `00${voucherList.length + 1}`,
       paymentReceipt: formData.paymentReceipt,
       payee: formData.payee,
