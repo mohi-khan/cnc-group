@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,23 +11,30 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff } from 'lucide-react'
+
+const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    return password.length >= minLength && hasUpperCase && hasLowerCase && hasSpecialChar;
+};
 
 export default function SignUp() {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [role, setRole] = useState('')
-    const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
     const [selectedLocations, setSelectedLocations] = useState<string[]>([])
     const [selectedVouchers, setSelectedVouchers] = useState<string[]>([])
     const [error, setError] = useState('')
+    const [companies, setCompanies] = useState<string[]>([])
+    const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
     const router = useRouter()
-
-    const handleCompanyChange = (company: string) => {
-        setSelectedCompanies((prev) =>
-            prev.includes(company) ? prev.filter((c) => c !== company) : [...prev, company]
-        )
-    }
 
     const handleLocationChange = (location: string) => {
         setSelectedLocations((prev) =>
@@ -40,6 +47,27 @@ export default function SignUp() {
         )
     }
 
+    const handleCompanyChange = (company: string) => {
+        setSelectedCompanies((prev) =>
+            prev.includes(company) ? prev.filter((c) => c !== company) : [...prev, company]
+        )
+    }
+
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const response = await fetch('http://localhost:4000/api/company/companies/all')
+                const data = await response.json()
+                setCompanies(data.map((company: any) => company.companyName))
+            } catch (error) {
+                console.error('Error fetching companies:', error)
+                setError('Failed to fetch companies')
+            }
+        }
+
+        fetchCompanies()
+    }, [])
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
@@ -49,12 +77,17 @@ export default function SignUp() {
             return
         }
 
-        if (password !== confirmPassword) {
-            setError('Passwords do not match.')
+        if (!validatePassword(password)) {
+            setError('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one special character.')
             return
         }
 
-        console.log('Creating account with:', { username, password, role, selectedCompanies, selectedLocations, selectedVouchers })
+        if (password !== confirmPassword) {
+            setError('Password & Confirm Password do not match.')
+            return
+        }
+
+        console.log('Creating account with:', { username, password, role, selectedLocations, selectedVouchers, selectedCompanies })
         router.push('/dashboard')
     }
 
@@ -91,23 +124,56 @@ export default function SignUp() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4 text-gray-500" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                    )}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-gray-400">
+                                Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one special character.
+                            </p>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="confirm-password">Confirm Password</Label>
-                            <Input
-                                id="confirm-password"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="confirm-password"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-4 w-4 text-gray-500" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">Select Role</Label>
@@ -128,10 +194,9 @@ export default function SignUp() {
                         <div className="space-y-2">
                             <div className='flex gap-3 items-center justify-between'>
                                 <Label>Company</Label>
-                                {/* <SmallButton>New</SmallButton> */}
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Company A', 'Company B', 'Company C', 'Company D'].map((company) => (
+                                {companies.map((company) => (
                                     <div key={company} className="flex items-center gap-2">
                                         <Checkbox
                                             checked={selectedCompanies.includes(company)}
@@ -175,9 +240,8 @@ export default function SignUp() {
                                 ))}
                             </div>
                         </div>
-                        {/* Similar structure for Location and Voucher sections */}
                         {error && (
-                            <Alert variant="destructive">
+                            <Alert variant="destructive" className='text-red-500 border-hidden'>
                                 <AlertDescription>{error}</AlertDescription>
                             </Alert>
                         )}
@@ -198,3 +262,5 @@ export default function SignUp() {
         </div>
     )
 }
+
+
