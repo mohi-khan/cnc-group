@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function Component() {
-    // Form state
     const [companyName, setCompanyName] = useState('')
     const [streetAddress, setStreetAddress] = useState('')
     const [streetAddress2, setStreetAddress2] = useState('')
@@ -45,17 +44,16 @@ export default function Component() {
     const [isLoading, setIsLoading] = useState(false)
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
-    // Computed values
     const isLocationTabEnabled = Boolean(
-        companyName.trim() && 
-        streetAddress.trim() && 
+        companyName.trim() &&
+        streetAddress.trim() &&
         mobile.trim()
     )
 
     const isSaveButtonEnabled = Boolean(
-        companyName.trim() && 
-        streetAddress.trim() && 
-        mobile.trim() && 
+        companyName.trim() &&
+        streetAddress.trim() &&
+        mobile.trim() &&
         locations.some(loc => loc.trim() !== '')
     )
 
@@ -70,125 +68,124 @@ export default function Component() {
     }
 
     const createCompany = async () => {
-    const companyData = {
-        companyName: companyName.trim(),
-        address: streetAddress.trim(),
-        address2: streetAddress2.trim(),
-        city: city.trim(),
-        state: state.trim(),
-        zip: zip.trim(),
-        country: country.trim(),
-        taxId: taxId.trim(),
-        companyId: companyId.trim(),
-        currency: currency,
-        phone: phone.trim(),
-        mobile: mobile.trim(),
-        email: email.trim(),
-        website: website.trim(),
-        emailDomain: emailDomain.trim(),
+        const companyData = {
+            companyName: companyName.trim(),
+            address: streetAddress.trim(),
+            address2: streetAddress2.trim(),
+            city: city.trim(),
+            state: state.trim(),
+            zip: zip.trim(),
+            country: country.trim(),
+            taxId: taxId.trim(),
+            companyId: companyId.trim(),
+            currency: currency,
+            phone: phone.trim(),
+            mobile: mobile.trim(),
+            email: email.trim(),
+            website: website.trim(),
+            emailDomain: emailDomain.trim(),
+        };
+
+        console.log("Data to send for company:", companyData);
+
+        const response = await fetch('http://localhost:4000/api/company/createCompany', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(companyData),
+        });
+
+        console.log("Company API Response Status:", response.status);
+
+        const data = await response.json();
+
+        console.log("Company API Response Data:", data);
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to create company');
+        }
+
+        return data.data.company;
     };
 
-    console.log("Data to send for company:", companyData); // Log the data before sending
+    const createLocations = async (companyId: number) => {
+        const locationPromises = locations
+            .filter(loc => loc.trim() !== '')
+            .map(async (location) => {
+                const locationData = {
+                    companyId: companyId,
+                    branchName: location.trim(),
+                    address: location.trim(),
+                };
 
-    const response = await fetch('http://localhost:4000/api/company/createCompany', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(companyData),
-    });
+                console.log("Data to send for location:", locationData);
 
-    console.log("Company API Response Status:", response.status); // Log the response status
+                const response = await fetch('http://localhost:4000/api/location/createLocation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(locationData),
+                });
 
-    const data = await response.json();
+                console.log("Location API Response Status:", response.status);
 
-    console.log("Company API Response Data:", data); // Log the response data
+                const data = await response.json();
 
-    if (!response.ok) {
-        throw new Error(data.message || 'Failed to create company');
-    }
+                console.log("Location API Response Data:", data);
 
-    return data;
-};
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to create location');
+                }
 
-const createLocations = async (companyId: number) => {
-    const locationPromises = locations
-        .filter(loc => loc.trim() !== '')
-        .map(async (location) => {
-            const locationData = {
-                companyId,
-                branchName: location.trim(),
-                address: location.trim(),
-            };
-
-            console.log("Data to send for location:", locationData); // Log the data before sending
-
-            const response = await fetch('http://localhost:4000/api/location/createLocation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(locationData),
+                return data;
             });
 
-            console.log("Location API Response Status:", response.status); // Log the response status
+        return Promise.all(locationPromises);
+    };
 
-            const data = await response.json();
-
-            console.log("Location API Response Data:", data); // Log the response data
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to create location');
-            }
-
-            return data;
-        });
-
-    return Promise.all(locationPromises);
-};
-
-const handleSave = async () => {
-    setIsLoading(true);
-    setFeedback(null);
-    try {
-        console.log("Saving company and locations..."); // Debug log
-        const company = await createCompany();
-        console.log("Company created successfully with ID:", company.id); // Log the created company ID
-        await createLocations(company.id);
-        console.log("Locations created successfully"); // Debug log for successful locations
-        setFeedback({
-            type: 'success',
-            message: 'Company and locations created successfully',
-        });
-        // Reset form
-        setCompanyName('');
-        setStreetAddress('');
-        setStreetAddress2('');
-        setCity('');
-        setState('');
-        setZip('');
-        setCountry('');
-        setTaxId('');
-        setCompanyId('');
-        setCurrency('BDT');
-        setPhone('');
-        setMobile('');
-        setEmail('');
-        setWebsite('');
-        setEmailDomain('cnc-accessories.odoo.com');
-        setLocations(['']);
-        setActiveTab('general');
-    } catch (error) {
-        console.error("Error saving data:", error); // Log detailed error
-        setFeedback({
-            type: 'error',
-            message: error instanceof Error ? error.message : 'Failed to create company and locations',
-        });
-    } finally {
-        setIsLoading(false);
-    }
-};
-
+    const handleSave = async () => {
+        setIsLoading(true);
+        setFeedback(null);
+        try {
+            console.log("Saving company and locations...");
+            const company = await createCompany();
+            console.log("Company created successfully with ID:", company.companyId);
+            await createLocations(Number(companyId)); // Convert companyId to number
+            console.log("Locations created successfully");
+            setFeedback({
+                type: 'success',
+                message: 'Company and locations created successfully',
+            });
+            // Reset form
+            setCompanyName('');
+            setStreetAddress('');
+            setStreetAddress2('');
+            setCity('');
+            setState('');
+            setZip('');
+            setCountry('');
+            setTaxId('');
+            setCompanyId('');
+            setCurrency('BDT');
+            setPhone('');
+            setMobile('');
+            setEmail('');
+            setWebsite('');
+            setEmailDomain('cnc-accessories.odoo.com');
+            setLocations(['']);
+            setActiveTab('general');
+        } catch (error) {
+            console.error("Error saving data:", error);
+            setFeedback({
+                type: 'error',
+                message: error instanceof Error ? error.message : 'Failed to create company and locations',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="max-w-4xl mx-auto p-4">
@@ -235,40 +232,40 @@ const handleSave = async () => {
                                 <div className="space-y-4">
                                     <div>
                                         <Label htmlFor="street">Address *</Label>
-                                        <Input 
-                                            id="street" 
-                                            placeholder="Street..." 
-                                            className="mt-1.5" 
+                                        <Input
+                                            id="street"
+                                            placeholder="Street..."
+                                            className="mt-1.5"
                                             value={streetAddress}
                                             onChange={(e) => setStreetAddress(e.target.value)}
                                             required
                                         />
-                                        <Input 
-                                            placeholder="Street 2..." 
-                                            className="mt-1.5" 
+                                        <Input
+                                            placeholder="Street 2..."
+                                            className="mt-1.5"
                                             value={streetAddress2}
                                             onChange={(e) => setStreetAddress2(e.target.value)}
                                         />
                                         <div className="grid grid-cols-3 gap-2 mt-1.5">
-                                            <Input 
-                                                placeholder="City" 
+                                            <Input
+                                                placeholder="City"
                                                 value={city}
                                                 onChange={(e) => setCity(e.target.value)}
                                             />
-                                            <Input 
-                                                placeholder="State" 
+                                            <Input
+                                                placeholder="State"
                                                 value={state}
                                                 onChange={(e) => setState(e.target.value)}
                                             />
-                                            <Input 
-                                                placeholder="ZIP" 
+                                            <Input
+                                                placeholder="ZIP"
                                                 value={zip}
                                                 onChange={(e) => setZip(e.target.value)}
                                             />
                                         </div>
-                                        <Input 
-                                            placeholder="Country" 
-                                            className="mt-1.5" 
+                                        <Input
+                                            placeholder="Country"
+                                            className="mt-1.5"
                                             value={country}
                                             onChange={(e) => setCountry(e.target.value)}
                                         />
@@ -277,17 +274,17 @@ const handleSave = async () => {
                                     <div className="space-y-2">
                                         <div>
                                             <Label htmlFor="taxId">Tax ID</Label>
-                                            <Input 
-                                                id="taxId" 
-                                                placeholder="/ if not applicable" 
+                                            <Input
+                                                id="taxId"
+                                                placeholder="/ if not applicable"
                                                 value={taxId}
                                                 onChange={(e) => setTaxId(e.target.value)}
                                             />
                                         </div>
                                         <div>
                                             <Label htmlFor="companyId">Company ID</Label>
-                                            <Input 
-                                                id="companyId" 
+                                            <Input
+                                                id="companyId"
                                                 value={companyId}
                                                 onChange={(e) => setCompanyId(e.target.value)}
                                             />
@@ -311,18 +308,18 @@ const handleSave = async () => {
                                 <div className="space-y-2">
                                     <div>
                                         <Label htmlFor="phone">Phone</Label>
-                                        <Input 
-                                            id="phone" 
-                                            type="tel" 
+                                        <Input
+                                            id="phone"
+                                            type="tel"
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
                                         />
                                     </div>
                                     <div>
                                         <Label htmlFor="mobile">Mobile *</Label>
-                                        <Input 
-                                            id="mobile" 
-                                            type="tel" 
+                                        <Input
+                                            id="mobile"
+                                            type="tel"
                                             value={mobile}
                                             onChange={(e) => setMobile(e.target.value)}
                                             required
@@ -330,26 +327,26 @@ const handleSave = async () => {
                                     </div>
                                     <div>
                                         <Label htmlFor="email">Email</Label>
-                                        <Input 
-                                            id="email" 
-                                            type="email" 
+                                        <Input
+                                            id="email"
+                                            type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                         />
                                     </div>
                                     <div>
                                         <Label htmlFor="website">Website</Label>
-                                        <Input 
-                                            id="website" 
-                                            placeholder="e.g. https://www.odoo.com" 
+                                        <Input
+                                            id="website"
+                                            placeholder="e.g. https://www.odoo.com"
                                             value={website}
                                             onChange={(e) => setWebsite(e.target.value)}
                                         />
                                     </div>
                                     <div>
                                         <Label htmlFor="emailDomain">Email Domain</Label>
-                                        <Input 
-                                            id="emailDomain" 
+                                        <Input
+                                            id="emailDomain"
                                             value={emailDomain}
                                             onChange={(e) => setEmailDomain(e.target.value)}
                                         />
@@ -371,8 +368,8 @@ const handleSave = async () => {
                                             className="mt-2"
                                         />
                                     ))}
-                                    <Button 
-                                        onClick={handleAddAddress} 
+                                    <Button
+                                        onClick={handleAddAddress}
                                         className="mt-4"
                                     >
                                         Add Address
@@ -380,8 +377,8 @@ const handleSave = async () => {
                                 </div>
                             </div>
                             <div className='text-right pt-5'>
-                                <Button 
-                                    onClick={handleSave} 
+                                <Button
+                                    onClick={handleSave}
                                     disabled={!isSaveButtonEnabled || isLoading}
                                 >
                                     {isLoading ? 'Saving...' : 'Save'}
@@ -394,3 +391,4 @@ const handleSave = async () => {
         </div>
     )
 }
+
