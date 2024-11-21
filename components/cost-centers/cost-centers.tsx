@@ -425,6 +425,7 @@ export default function CostCenterManagement() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Id</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Currency Code</TableHead>
@@ -438,6 +439,7 @@ export default function CostCenterManagement() {
                     <TableBody>
                         {costCenters.map((center) => (
                             <TableRow key={center.id}>
+                                <TableCell>{center.id}</TableCell>
                                 <TableCell>{center.name}</TableCell>
                                 <TableCell>{center.description}</TableCell>
                                 <TableCell>{center.currencyCode}</TableCell>
