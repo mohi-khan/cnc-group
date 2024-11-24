@@ -163,13 +163,19 @@ interface User {
     role: string
 }
 
-const USERS_PER_PAGE = 10
+const USERS_PER_PAGE = 5
 
 export default function UsersList() {
     const [users, setUsers] = useState<User[]>([
         { id: 1, name: "John Doe", isDisabled: false, company: "Acme Inc.", voucher: "ACME001", role: "Manager" },
         { id: 2, name: "Jane Smith", isDisabled: false, company: "TechCorp", voucher: "TECH002", role: "Developer" },
         { id: 3, name: "Alice Johnson", isDisabled: false, company: "DataSoft", voucher: "DATA003", role: "Analyst" },
+        { id: 4, name: "John Doe", isDisabled: false, company: "Acme Inc.", voucher: "ACME001", role: "Manager" },
+        { id: 5, name: "Jane Smith", isDisabled: false, company: "TechCorp", voucher: "TECH002", role: "Developer" },
+        { id: 6, name: "Alice Johnson", isDisabled: false, company: "DataSoft", voucher: "DATA003", role: "Analyst" },
+        { id: 7, name: "John Doe", isDisabled: false, company: "Acme Inc.", voucher: "ACME001", role: "Manager" },
+        { id: 8, name: "Jane Smith", isDisabled: false, company: "TechCorp", voucher: "TECH002", role: "Developer" },
+        { id: 9, name: "Alice Johnson", isDisabled: false, company: "DataSoft", voucher: "DATA003", role: "Analyst" },
         // Add more users as needed
     ])
     const [currentPage, setCurrentPage] = useState(1)
@@ -307,7 +313,7 @@ export default function UsersList() {
                         <PaginationItem>
                             <PaginationPrevious
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
+                                aria-disabled={currentPage === 1}
                             />
                         </PaginationItem>
                         {[...Array(totalPages)].map((_, i) => (
@@ -323,7 +329,7 @@ export default function UsersList() {
                         <PaginationItem>
                             <PaginationNext
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
+                                aria-disabled={currentPage === totalPages}
                             />
                         </PaginationItem>
                     </PaginationContent>
