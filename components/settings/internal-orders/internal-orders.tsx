@@ -9,7 +9,7 @@ import { Edit2Icon } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SmallButton } from '../custom-ui/small-button'
+import { SmallButton } from '../../custom-ui/small-button'
 
 type InternalOrder = {
   id: string

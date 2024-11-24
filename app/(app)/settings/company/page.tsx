@@ -1,4 +1,4 @@
-import Company from '@/components/settings/company'
+import Company from '@/components/settings/company/company'
 import React from 'react'
 
 const CompanyPage = () => {

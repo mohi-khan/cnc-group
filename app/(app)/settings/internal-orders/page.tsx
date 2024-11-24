@@ -1,4 +1,4 @@
-import InternalOrders from '@/components/settings/internal-orders'
+import InternalOrders from '@/components/settings/internal-orders/internal-orders'
 import React from 'react'
 
 const InternalOrdersPage = () => {
