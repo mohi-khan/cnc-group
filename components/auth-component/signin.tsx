@@ -48,11 +48,11 @@ export default function SignIn() {
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <Image
-              src="/"
+              src="/logo.webp"
               alt="Company Logo"
-              width={64}
-              height={64}
-              className="rounded-full border"
+              width={80}
+              height={80}
+              className=""
             />
           </div>
           <CardTitle className="text-2xl font-bold text-center">Sign in to your account</CardTitle>

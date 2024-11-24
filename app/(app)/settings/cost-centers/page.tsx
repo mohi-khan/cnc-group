@@ -1,4 +1,4 @@
-import CostCenters from '@/components/cost-centers/cost-centers'
+import CostCenters from '@/components/settings/cost-centers/cost-centers'
 import React from 'react'
 
 const CostCentersPage = () => {

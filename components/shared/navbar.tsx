@@ -217,12 +217,19 @@ export default function Navbar() {
 
     return (
         <nav className="bg-white shadow-md sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
+                    <div className="flex-shrink-0 flex items-center">
+                        {/* <span className="text-xl font-bold text-gray-800">Logo</span> */}
+                        <Image
+                            src="/logo.webp"
+                            width={70}
+                            height={70}
+                            className=""
+                            alt="Profile"
+                        />
+                    </div>
                     <div className="flex items-center justify-between">
-                        <div className="flex-shrink-0 flex items-center">
-                            <span className="text-xl font-bold text-gray-800">Logo</span>
-                        </div>
                         <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
                             {menuItems.map((menuItem, index) => (
                                 <div

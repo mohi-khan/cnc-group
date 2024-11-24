@@ -118,84 +118,6 @@ export default function Component() {
         }
     }
 
-    const createCompany = async () => {
-        const companyData = {
-            companyName: companyName.trim(),
-            address: streetAddress.trim(),
-            address2: streetAddress2.trim(),
-            city: city.trim(),
-            state: state.trim(),
-            zip: zip.trim(),
-            country: country.trim(),
-            taxId: taxId.trim(),
-            companyId: companyId.trim(),
-            currency: currency,
-            phone: phone.trim(),
-            mobile: mobile.trim(),
-            email: email.trim(),
-            website: website.trim(),
-            emailDomain: emailDomain.trim(),
-        };
-
-        console.log("Data to send for company:", companyData);
-
-        const response = await fetch('http://localhost:4000/api/company/createCompany', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(companyData),
-        });
-
-        console.log("Company API Response Status:", response.status);
-
-        const data = await response.json();
-
-        console.log("Company API Response Data:", data);
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to create company');
-        }
-
-        return data.data.company;
-    };
-
-    const createLocations = async (companyId: number) => {
-        const locationPromises = locations
-            .filter(loc => loc.trim() !== '')
-            .map(async (location) => {
-                const locationData = {
-                    companyId: companyId,
-                    branchName: location.trim(),
-                    address: location.trim(),
-                };
-
-                console.log("Data to send for location:", locationData);
-
-                const response = await fetch('http://localhost:4000/api/location/createLocation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(locationData),
-                });
-
-                console.log("Location API Response Status:", response.status);
-
-                const data = await response.json();
-
-                console.log("Location API Response Data:", data);
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to create location');
-                }
-
-                return data;
-            });
-
-        return Promise.all(locationPromises);
-    };
-
     const handleSave = async () => {
         setIsLoading(true)
         setFeedback(null)
@@ -225,7 +147,7 @@ export default function Component() {
                 emailDomain,
             }
 
-            const company = await createCompany(companyData)
+            const company = await createCompany(companyData) //data is storing. but it's showing error (Types of property 'currency' are incompatible).
 
             const locationPromises = locations
                 .filter(loc => loc.trim() !== '')
