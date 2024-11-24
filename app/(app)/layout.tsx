@@ -6,7 +6,7 @@ import Navbar from '@/components/shared/navbar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'My Next.js Project',
+  title: 'CNC Group',
   description: 'Created with Next.js, TypeScript, Tailwind CSS, and shadcn/ui',
 }
 

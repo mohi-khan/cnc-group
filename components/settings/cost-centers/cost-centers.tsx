@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { costCenterSchema, createCostCenters, getAllCostCenters, CostCenter } from './cost-centers-api'
+import { Switch } from "@/components/ui/switch"
+import { costCenterSchema, createCostCenters, updateCostCenter, getAllCostCenters, CostCenter, createCostCenter } from './cost-centers-api'
 
 export default function CostCenterManagement() {
     const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -41,10 +42,20 @@ export default function CostCenterManagement() {
         }
     };
 
-    const handleDeactivate = (id: string) => {
-        setCostCenters(costCenters.map(center =>
-            center.id === id ? { ...center, active: !center.active } : center
-        ))
+    const handleDeactivate = async (id: string) => {
+        const costCenter = costCenters.find(center => center.costCenterId === id);
+        if (costCenter) {
+            try {
+                await updateCostCenter({ costCenterId: id, active: !costCenter.active });
+                await fetchCostCenters();
+            } catch (error) {
+                console.error("Error updating cost center:", error);
+                setFeedback({
+                    type: 'error',
+                    message: error instanceof Error ? error.message : 'Failed to update cost center',
+                });
+            }
+        }
     }
 
     const handleEdit = (center: CostCenter) => {
@@ -52,36 +63,52 @@ export default function CostCenterManagement() {
         setIsEditDialogOpen(true)
     }
 
-    const CostCenterForm = () => {
+    const CostCenterForm = ({ isEdit = false }) => {
+        const [currencyCode, setCurrencyCode] = useState<'BDT' | 'USD' | 'EUR' | 'GBP'>(
+            isEdit ? (selectedCostCenter?.currencyCode || 'BDT') : ''
+        );
+
+        useEffect(() => {
+            if (isEdit && selectedCostCenter) {
+                setCurrencyCode(selectedCostCenter.currencyCode);
+            } else {
+                setCurrencyCode('');
+            }
+        }, [isEdit, selectedCostCenter]);
+
         const handleSubmit = async (e: React.FormEvent) => {
             e.preventDefault();
-            setIsLoading(true)
-            setFeedback(null)
+            setIsLoading(true);
+            setFeedback(null);
 
             try {
                 const formData = new FormData(formRef.current!);
                 const newCostCenter = {
+                    costCenterId: formData.get('costCenterId') as string,
                     costCenterName: formData.get('name') as string,
                     costCenterDescription: formData.get('description') as string,
-                    currencyCode: formData.get('currencyCode') as 'BDT' | 'USD' | 'EUR' | 'GBP',
-                    budget: '0', // Initialize as string to match API
-                    active: true,
-                    companyNames: [],
-                    actual: 0
+                    currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+                    budget: Number(formData.get('budget')), // Convert to number
+                    active: formData.get('active') === 'on',
+                    actual: parseFloat(formData.get('actual') as string),
                 };
 
-                if (isEditDialogOpen) {
-                    // ... (edit logic remains the same)
+                if (isEdit && selectedCostCenter) {
+                    await updateCostCenter({
+                        ...selectedCostCenter,
+                        ...newCostCenter,
+                    });
                 } else {
-                    const result = await createCostCenters([newCostCenter]);
-                    await fetchCostCenters();
-                    setIsAddDialogOpen(false);
+                    await createCostCenter(newCostCenter);
                 }
 
+                await fetchCostCenters();
+                setIsAddDialogOpen(false);
+                setIsEditDialogOpen(false);
                 setSelectedCostCenter(null);
                 setFeedback({
                     type: 'success',
-                    message: `Cost center ${isEditDialogOpen ? 'updated' : 'created'} successfully`,
+                    message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
                 });
             } catch (error) {
                 console.error("Error saving cost center:", error);
@@ -94,8 +121,23 @@ export default function CostCenterManagement() {
             }
         };
 
+
+
         return (
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+                <div className={`${isEdit && 'hidden'} grid grid-cols-4 items-center gap-4`}>
+                    <Label htmlFor="cost-center-id" className="text-right">
+                        Cost Center ID
+                    </Label>
+                    <Input
+                        id="cost-center-id"
+                        name="costCenterId"
+                        defaultValue={isEdit ? selectedCostCenter?.costCenterId : ''}
+                        className="col-span-3"
+                        required
+                        readOnly={isEdit}
+                    />
+                </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="cost-center-name" className="text-right">
                         Cost Center Name
@@ -103,7 +145,7 @@ export default function CostCenterManagement() {
                     <Input
                         id="cost-center-name"
                         name="name"
-                        defaultValue={selectedCostCenter?.name}
+                        defaultValue={isEdit ? selectedCostCenter?.costCenterName : ''}
                         className="col-span-3"
                         required
                     />
@@ -115,7 +157,7 @@ export default function CostCenterManagement() {
                     <Input
                         id="cost-center-description"
                         name="description"
-                        defaultValue={selectedCostCenter?.description}
+                        defaultValue={isEdit ? selectedCostCenter?.costCenterDescription : ''}
                         className="col-span-3"
                         required
                     />
@@ -124,7 +166,11 @@ export default function CostCenterManagement() {
                     <Label htmlFor="currency-code" className="text-right">
                         Currency Code
                     </Label>
-                    <Select name="currencyCode" defaultValue={selectedCostCenter?.currencyCode || 'BDT'}>
+                    <Select
+                        name="currencyCode"
+                        value={currencyCode}
+                        onValueChange={(value) => setCurrencyCode(value as 'BDT' | 'USD' | 'EUR' | 'GBP')}
+                    >
                         <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="Select currency code" />
                         </SelectTrigger>
@@ -136,12 +182,52 @@ export default function CostCenterManagement() {
                         </SelectContent>
                     </Select>
                 </div>
+                {!isEdit && (
+                    <>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="budget" className="text-right">
+                                Budget
+                            </Label>
+                            <Input
+                                id="budget"
+                                name="budget"
+                                type="number"
+                                defaultValue=""
+                                className="col-span-3"
+                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="actual" className="text-right">
+                                Actual
+                            </Label>
+                            <Input
+                                id="actual"
+                                name="actual"
+                                type="number"
+                                defaultValue={isEdit ? selectedCostCenter?.actual : ''}
+                                className="col-span-3"
+                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="active" className="text-right">
+                                Active
+                            </Label>
+                            <Switch
+                                id="active"
+                                name="active"
+                                defaultChecked={true}
+                            />
+                        </div>
+                    </>
+                )}
                 <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => isEditDialogOpen ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)}>
+                    <Button variant="outline" onClick={() => isEdit ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)}>
                         Cancel
                     </Button>
                     <Button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Saving...' : isEditDialogOpen ? 'Update' : 'Add'} Cost Center
+                        {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Add'} Cost Center
                     </Button>
                 </div>
             </form>
@@ -176,7 +262,6 @@ export default function CostCenterManagement() {
                                 <TableHead>Description</TableHead>
                                 <TableHead>Currency Code</TableHead>
                                 <TableHead>Active</TableHead>
-                                <TableHead>Company Names</TableHead>
                                 <TableHead>Budget</TableHead>
                                 <TableHead>Actual</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
@@ -190,7 +275,6 @@ export default function CostCenterManagement() {
                                     <TableCell>{center.costCenterDescription}</TableCell>
                                     <TableCell>{center.currencyCode}</TableCell>
                                     <TableCell>{center.active ? 'Yes' : 'No'}</TableCell>
-                                    <TableCell>{center.companyNames?.join(', ')}</TableCell>
                                     <TableCell>{Number(center.budget).toLocaleString()}</TableCell>
                                     <TableCell>{center.actual?.toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
@@ -222,7 +306,7 @@ export default function CostCenterManagement() {
                     <DialogHeader>
                         <DialogTitle>Add New Cost Center</DialogTitle>
                     </DialogHeader>
-                    <CostCenterForm />
+                    <CostCenterForm isEdit={false} />
                 </DialogContent>
             </Dialog>
 
@@ -231,7 +315,7 @@ export default function CostCenterManagement() {
                     <DialogHeader>
                         <DialogTitle>Edit Cost Center</DialogTitle>
                     </DialogHeader>
-                    <CostCenterForm />
+                    <CostCenterForm isEdit={true} />
                 </DialogContent>
             </Dialog>
         </div>

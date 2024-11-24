@@ -6,10 +6,9 @@ export const costCenterSchema = z.object({
   costCenterName: z.string().min(1, "Cost center name is required"),
   costCenterDescription: z.string(),
   budget: z.string(), // API returns budget as string
+  actual: z.number().optional(),
   currencyCode: z.enum(["USD", "BDT", "EUR", "GBP"]),
-  active: z.boolean().optional().default(true),
-  companyNames: z.array(z.string()).optional(),
-  actual: z.number().optional()
+  active: z.boolean().optional()
 });
 
 export type CostCenter = z.infer<typeof costCenterSchema>;
@@ -47,23 +46,45 @@ export async function getAllCostCenters(): Promise<CostCenter[]> {
   return validatedData;
 }
 
-export async function createCostCenters(costCenters: Omit<CostCenter, 'costCenterId'>[]) {
-  console.log("API: Creating cost centers with data:", costCenters);
+export async function createCostCenter(costCenter: Omit<CostCenter, 'costCenterId'> & { costCenterId: string }) {
+  console.log("API: Creating cost center with data:", costCenter);
   
   const response = await fetch('http://localhost:4000/api/cost-centers/create-cost-centers', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(costCenters),
+    body: JSON.stringify(costCenter), // Send single object instead of array
   });
 
-  console.log("API: Cost centers creation response status:", response.status);
+  console.log("API: Cost center creation response status:", response.status);
   const responseData = await response.json();
-  console.log("API: Cost centers creation response data:", responseData.data);
+  console.log("API: Cost center creation response data:", responseData.data);
 
   if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to create cost centers');
+    throw new Error(responseData.message || 'Failed to create cost center');
+  }
+
+  return responseData.data;
+}
+
+export async function updateCostCenter(costCenter: CostCenter) {
+  console.log("API: Updating cost center with data:", costCenter);
+  
+  const response = await fetch(`http://localhost:4000/api/cost-centers/cost-centers/edit/${costCenter.costCenterId}`, {
+      method: 'PATCH',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(costCenter),
+  });
+
+  console.log("API: Cost center update response status:", response.status);
+  const responseData = await response.json();
+  console.log("API: Cost center update response data:", responseData.data);
+
+  if (!response.ok) {
+      throw new Error(responseData.message || 'Failed to update cost center');
   }
 
   return responseData.data;
