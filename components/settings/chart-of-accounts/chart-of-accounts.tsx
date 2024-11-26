@@ -651,7 +651,7 @@ const initialAccounts: Account[] = [
     { code: "570000", name: "Advertising Expense", type: "Expenses", allowReconciliation: true, isActive: true },
     { code: "580000", name: "Travel Expense", type: "Expenses", allowReconciliation: true, isActive: true },
     { code: "590000", name: "Maintenance Expense", type: "Expenses", allowReconciliation: true, isActive: true },
-    { code: "600000", name: "Interest Expense", type: "Expenses", allowReconciliation: true, isActive: true },
+
 ]
 
 const accountTypes = [
