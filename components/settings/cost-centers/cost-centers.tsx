@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
-import { costCenterSchema, createCostCenters, updateCostCenter, getAllCostCenters, CostCenter, createCostCenter } from './cost-centers-api'
+import { costCenterSchema, createCostCenters, updateCostCenter, getAllCostCenters, CostCenter, createCostCenter, deactivateCostCenter, activateCostCenter } from './cost-centers-api'
 
 export default function CostCenterManagement() {
     const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -42,21 +42,26 @@ export default function CostCenterManagement() {
         }
     };
 
-    const handleDeactivate = async (id: string) => {
-        const costCenter = costCenters.find(center => center.costCenterId === id);
-        if (costCenter) {
-            try {
-                await updateCostCenter({ costCenterId: id, active: !costCenter.active });
-                await fetchCostCenters();
-            } catch (error) {
-                console.error("Error updating cost center:", error);
-                setFeedback({
-                    type: 'error',
-                    message: error instanceof Error ? error.message : 'Failed to update cost center',
-                });
-            }
+    const handleActivateDeactivate = async (id: string, isActive: boolean) => {
+        try {
+          if (isActive) {
+            await deactivateCostCenter(id);
+          } else {
+            await activateCostCenter(id);
+          }
+          await fetchCostCenters();
+          setFeedback({
+            type: 'success',
+            message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+          });
+        } catch (error) {
+          console.error("Error updating cost center:", error);
+          setFeedback({
+            type: 'error',
+            message: error instanceof Error ? error.message : 'Failed to update cost center',
+          });
         }
-    }
+      }
 
     const handleEdit = (center: CostCenter) => {
         setSelectedCostCenter(center)
@@ -274,7 +279,10 @@ export default function CostCenterManagement() {
                                     <TableCell>{center.costCenterName}</TableCell>
                                     <TableCell>{center.costCenterDescription}</TableCell>
                                     <TableCell>{center.currencyCode}</TableCell>
-                                    <TableCell>{center.active ? 'Yes' : 'No'}</TableCell>
+                                    <TableCell>
+                                        {center.active == true && 'Yes'}
+                                        {center.active == false && 'No'}
+                                    </TableCell>
                                     <TableCell>{Number(center.budget).toLocaleString()}</TableCell>
                                     <TableCell>{center.actual?.toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
@@ -289,7 +297,7 @@ export default function CostCenterManagement() {
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            onClick={() => handleDeactivate(center.costCenterId)}
+                                            onClick={() => handleActivateDeactivate(center.costCenterId, center.active)}
                                         >
                                             {center.active ? 'Deactivate' : 'Activate'}
                                         </Button>
