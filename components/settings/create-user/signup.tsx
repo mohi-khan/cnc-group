@@ -68,6 +68,8 @@ export default function SignUp() {
     }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
+        console.log(formData);
+
         e.preventDefault()
         setError('')
 
@@ -87,6 +89,8 @@ export default function SignUp() {
             setError('An error occurred during sign up.')
         }
     }
+
+
 
     if (isLoading) {
         return (
