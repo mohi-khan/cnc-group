@@ -11,83 +11,89 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from 'lucide-react'
-
-const validatePassword = (password: string) => {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    return password.length >= minLength && hasUpperCase && hasLowerCase && hasSpecialChar;
-};
+import { signUp, SignUpData, getAllCompanies, CompanyData, getAllLocations, LocationData } from './create-user-api'
 
 export default function SignUp() {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
+    const [formData, setFormData] = useState<SignUpData>({
+        username: '',
+        password: '',
+        role: 'Admin',
+        companies: [],
+        locations: [],
+        vouchers: []
+    })
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [role, setRole] = useState('')
-    const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-    const [selectedVouchers, setSelectedVouchers] = useState<string[]>([])
     const [error, setError] = useState('')
-    const [companies, setCompanies] = useState<string[]>([])
-    const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
+    const [companies, setCompanies] = useState<CompanyData[]>([])
+    const [locations, setLocations] = useState<LocationData[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
 
-    const handleLocationChange = (location: string) => {
-        setSelectedLocations((prev) =>
-            prev.includes(location) ? prev.filter((c) => c !== location) : [...prev, location]
-        )
-    }
-    const handleVoucherChange = (voucher: string) => {
-        setSelectedVouchers((prev) =>
-            prev.includes(voucher) ? prev.filter((c) => c !== voucher) : [...prev, voucher]
-        )
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
     }
 
-    const handleCompanyChange = (company: string) => {
-        setSelectedCompanies((prev) =>
-            prev.includes(company) ? prev.filter((c) => c !== company) : [...prev, company]
-        )
+    const handleCheckboxChange = (type: 'companies' | 'locations' | 'vouchers', item: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [type]: prev[type].includes(item)
+                ? prev[type].filter(i => i !== item)
+                : [...prev[type], item]
+        }))
     }
 
     useEffect(() => {
-        const fetchCompanies = async () => {
+        const fetchData = async () => {
+            setIsLoading(true)
+            setError('')
             try {
-                const response = await fetch('http://localhost:4000/api/company/companies/all')
-                const data = await response.json()
-                setCompanies(data.map((company: any) => company.companyName))
+                const [fetchedCompanies, fetchedLocations] = await Promise.all([
+                    getAllCompanies(),
+                    getAllLocations()
+                ])
+                setCompanies(fetchedCompanies)
+                setLocations(fetchedLocations)
             } catch (error) {
-                console.error('Error fetching companies:', error)
-                setError('Failed to fetch companies')
+                console.error('Error fetching data:', error)
+                setError('Failed to fetch data. Please refresh the page or try again later.')
+            } finally {
+                setIsLoading(false)
             }
         }
 
-        fetchCompanies()
+        fetchData()
     }, [])
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
 
-        if (!username || !password || !confirmPassword || !role) {
-            setError('Please fill in all required fields.')
-            return
-        }
-
-        if (!validatePassword(password)) {
-            setError('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one special character.')
-            return
-        }
-
-        if (password !== confirmPassword) {
+        if (formData.password !== confirmPassword) {
             setError('Password & Confirm Password do not match.')
             return
         }
 
-        console.log('Creating account with:', { username, password, role, selectedLocations, selectedVouchers, selectedCompanies })
-        router.push('/dashboard')
+        try {
+            const result = await signUp(formData)
+            if (result.success) {
+                router.push('/dashboard')
+            } else {
+                setError(result.errors.map((err: any) => err.message).join(', '))
+            }
+        } catch (error) {
+            setError('An error occurred during sign up.')
+        }
+    }
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <p>Loading...</p>
+            </div>
+        )
     }
 
     return (
@@ -96,11 +102,11 @@ export default function SignUp() {
                 <CardHeader className="space-y-1">
                     <div className="flex justify-center mb-4">
                         <Image
-                            src="/"
+                            src="/logo.webp"
                             alt="Company Logo"
-                            width={64}
-                            height={64}
-                            className="rounded-full border"
+                            width={80}
+                            height={80}
+                            className=""
                         />
                     </div>
                     <CardTitle className="text-2xl font-bold text-center">Create a New Account</CardTitle>
@@ -109,15 +115,20 @@ export default function SignUp() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {error && (
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="username">Username</Label>
                             <Input
                                 id="username"
+                                name="username"
                                 type="text"
-                                placeholder=""
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={formData.username}
+                                onChange={handleChange}
                                 required
                             />
                         </div>
@@ -126,9 +137,10 @@ export default function SignUp() {
                             <div className="relative">
                                 <Input
                                     id="password"
+                                    name="password"
                                     type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     required
                                 />
                                 <Button
@@ -178,12 +190,12 @@ export default function SignUp() {
                             <Label htmlFor="role">Select Role</Label>
                             <select
                                 id="role"
+                                name="role"
                                 className="input p-2 border w-full"
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
+                                value={formData.role}
+                                onChange={handleChange}
                                 required
                             >
-                                <option value="" disabled>Select option</option>
                                 <option value="Admin">Admin</option>
                                 <option value="Entry Operation">Entry Operation</option>
                                 <option value="Supervisor">Supervisor</option>
@@ -196,12 +208,12 @@ export default function SignUp() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {companies.map((company) => (
-                                    <div key={company} className="flex items-center gap-2">
+                                    <div key={company.companyName} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={selectedCompanies.includes(company)}
-                                            onCheckedChange={() => handleCompanyChange(company)}
+                                            checked={formData.companies.includes(company.companyName)}
+                                            onCheckedChange={() => handleCheckboxChange('companies', company.companyName)}
                                         />
-                                        <Label>{company}</Label>
+                                        <Label>{company.companyName}</Label>
                                     </div>
                                 ))}
                             </div>
@@ -209,16 +221,15 @@ export default function SignUp() {
                         <div className="space-y-2 py-3">
                             <div className='flex gap-3 items-center justify-between'>
                                 <Label>Location</Label>
-                                {/* <SmallButton>New</SmallButton> */}
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Location A', 'Location B', 'Location C', 'Location D'].map((location) => (
-                                    <div key={location} className="flex items-center gap-2">
+                                {locations.map((location) => (
+                                    <div key={location.locationId} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={selectedCompanies.includes(location)}
-                                            onCheckedChange={() => handleLocationChange(location)}
+                                            checked={formData.locations.includes(location.address)}
+                                            onCheckedChange={() => handleCheckboxChange('locations', location.address)}
                                         />
-                                        <Label>{location}</Label>
+                                        <Label>{location.address}</Label>
                                     </div>
                                 ))}
                             </div>
@@ -231,19 +242,14 @@ export default function SignUp() {
                                 {['Voucher A', 'Voucher B', 'Voucher C', 'Voucher D'].map((voucher) => (
                                     <div key={voucher} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={selectedCompanies.includes(voucher)}
-                                            onCheckedChange={() => handleVoucherChange(voucher)}
+                                            checked={formData.vouchers.includes(voucher)}
+                                            onCheckedChange={() => handleCheckboxChange('vouchers', voucher)}
                                         />
                                         <Label>{voucher}</Label>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        {error && (
-                            <Alert variant="destructive" className='text-red-500 border-hidden'>
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        )}
                         <Button type="submit" className="w-full">
                             Submit
                         </Button>
@@ -261,5 +267,4 @@ export default function SignUp() {
         </div>
     )
 }
-
 
