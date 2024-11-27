@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,19 +21,26 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select"
 
 interface User {
     id: number
     username: string
     VoucherTypes: string[]
-    roleModel: string
+    roleId: string | number | null
     active: boolean
 }
 
 interface UpdateUserData {
     username?: string
     voucherTypes?: string[]
-    roleId?: number
+    roleId?: string | number | null
     active?: boolean
 }
 
@@ -44,9 +51,11 @@ export default function UsersList() {
     const [currentPage, setCurrentPage] = useState(1)
     const [editingUser, setEditingUser] = useState<User | null>(null)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [availableRoles, setAvailableRoles] = useState<{ id: number, name: string }[]>([])
 
     useEffect(() => {
         fetchUsers()
+        fetchRoles()
     }, [])
 
     const fetchUsers = async () => {
@@ -66,13 +75,37 @@ export default function UsersList() {
         }
     }
 
+    const fetchRoles = async () => {
+        try {
+            const response = await fetch('http://localhost:4000/api/roles/get-all-roles')
+            if (!response.ok) {
+                throw new Error('Failed to fetch roles')
+            }
+            const data = await response.json()
+            console.log(data.data[0].roleName);
+            if (data.status === 'success' && Array.isArray(data.data)) {
+
+
+                setAvailableRoles(data.data)
+
+            } else {
+                throw new Error('Unexpected data format')
+            }
+        } catch (error) {
+            console.error('Error fetching roles:', error)
+        }
+    }
+
     const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
     const startIndex = (currentPage - 1) * USERS_PER_PAGE
     const endIndex = startIndex + USERS_PER_PAGE
     const currentUsers = users.slice(startIndex, endIndex)
 
     const handleEditUser = (user: User) => {
-        setEditingUser({ ...user })
+        setEditingUser({
+            ...user,
+            roleId: user.roleId ? user.roleId.toString() : ''
+        })
         setIsEditDialogOpen(true)
     }
 
@@ -82,7 +115,7 @@ export default function UsersList() {
                 const updateData: UpdateUserData = {
                     username: editingUser.username,
                     voucherTypes: editingUser.VoucherTypes,
-                    roleId: Number(editingUser.roleModel),
+                    roleId: editingUser.roleId ? Number(editingUser.roleId) : undefined,
                     active: editingUser.active
                 }
 
@@ -95,7 +128,8 @@ export default function UsersList() {
                 })
 
                 if (!response.ok) {
-                    throw new Error('Failed to update user')
+                    const errorData = await response.json()
+                    throw new Error(errorData.message || 'Failed to update user')
                 }
 
                 const result = await response.json()
@@ -111,6 +145,7 @@ export default function UsersList() {
                 }
             } catch (error) {
                 console.error('Error updating user:', error)
+                alert(`Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`)
             }
         }
     }
@@ -123,7 +158,6 @@ export default function UsersList() {
     const handleToggleActive = async (userId: number, currentActiveState: boolean) => {
         const newActiveState = !currentActiveState;
 
-        // Immediately update the local state
         setUsers(users.map(user =>
             user.id === userId ? { ...user, active: newActiveState } : user
         ));
@@ -144,7 +178,6 @@ export default function UsersList() {
             const result = await response.json();
 
             if (result.status !== "success") {
-                // If the server update fails, revert the local state
                 setUsers(users.map(user =>
                     user.id === userId ? { ...user, active: currentActiveState } : user
                 ));
@@ -152,7 +185,7 @@ export default function UsersList() {
             }
         } catch (error) {
             console.error('Error toggling user active state:', error);
-            // Optionally, show an error message to the user here
+            alert(`Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -185,8 +218,8 @@ export default function UsersList() {
                                         </DialogHeader>
                                         <div className="py-4">
                                             <p><strong>Voucher Types:</strong> {user.VoucherTypes.join(', ')}</p>
-                                            <p><strong>Role Model:</strong> {user.roleModel}</p>
-                                            <p><strong>Active:</strong> {user.active ? 'No' : 'Yes'}</p>
+                                            <p><strong>Role Id:</strong> {user.roleId}</p>
+                                            <p><strong>Active:</strong> {user.active ? 'Yes' : 'No'}</p>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
@@ -210,13 +243,21 @@ export default function UsersList() {
                                                 className="mb-2"
                                             />
                                             <Label htmlFor="roleModel">Role Model</Label>
-                                            <Input
-                                                id="roleModel"
-                                                name="roleModel"
-                                                value={editingUser?.roleModel || ''}
-                                                onChange={handleInputChange}
-                                                className="mb-2"
-                                            />
+                                            <Select
+                                                value={editingUser?.roleId?.toString()}
+                                                onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, roleModel: value } : null)}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableRoles.map((role) => (
+                                                        <SelectItem key={role.id} value={role.id}>
+                                                            {role.roleName}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             <Label htmlFor="voucherTypes">Voucher Types</Label>
                                             <Input
                                                 id="voucherTypes"
