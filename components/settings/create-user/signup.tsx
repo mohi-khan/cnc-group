@@ -11,16 +11,17 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from 'lucide-react'
-import { signUp, SignUpData, getAllCompanies, CompanyData, getAllLocations, LocationData } from './create-user-api'
+import { signUp, SignUpData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
 
 export default function SignUp() {
     const [formData, setFormData] = useState<SignUpData>({
         username: '',
         password: '',
-        role: 'Admin',
+        confirmPassword: '',
+        roleId: 1,
         companies: [],
         locations: [],
-        vouchers: []
+        voucherTypes: []
     })
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -28,15 +29,16 @@ export default function SignUp() {
     const [error, setError] = useState('')
     const [companies, setCompanies] = useState<CompanyData[]>([])
     const [locations, setLocations] = useState<LocationData[]>([])
+    const [roles, setRoles] = useState<RoleData[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        setFormData(prev => ({ ...prev, [name]: name === 'roleId' ? parseInt(value, 10) : value }))
     }
 
-    const handleCheckboxChange = (type: 'companies' | 'locations' | 'vouchers', item: string) => {
+    const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: string) => {
         setFormData(prev => ({
             ...prev,
             [type]: prev[type].includes(item)
@@ -50,12 +52,16 @@ export default function SignUp() {
             setIsLoading(true)
             setError('')
             try {
-                const [fetchedCompanies, fetchedLocations] = await Promise.all([
+                const [fetchedCompanies, fetchedLocations, fetchedRoles] = await Promise.all([
                     getAllCompanies(),
-                    getAllLocations()
+                    getAllLocations(),
+                    getAllRoles()
                 ])
+                console.log('Fetched roles:', fetchedRoles)
+                console.log('fetched locations 2', fetchedLocations);
                 setCompanies(fetchedCompanies)
                 setLocations(fetchedLocations)
+                setRoles(fetchedRoles)
             } catch (error) {
                 console.error('Error fetching data:', error)
                 setError('Failed to fetch data. Please refresh the page or try again later.')
@@ -68,8 +74,6 @@ export default function SignUp() {
     }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
-        console.log(formData);
-
         e.preventDefault()
         setError('')
 
@@ -78,21 +82,19 @@ export default function SignUp() {
             return
         }
 
-        console.log('user before enterning backend', formData)
+        console.log('user before entering backend', formData)
 
         try {
             const result = await signUp(formData)
             if (result.success) {
                 router.push('/dashboard')
             } else {
-                setError(result.errors.map((err: any) => err.message).join(', '))
+                setError(result.errors ? result.errors.map((err: any) => err.message).join(', ') : 'An error occurred during sign up.')
             }
         } catch (error) {
             setError('An error occurred during sign up.')
         }
     }
-
-
 
     if (isLoading) {
         return (
@@ -112,7 +114,6 @@ export default function SignUp() {
                             alt="Company Logo"
                             width={80}
                             height={80}
-                            className=""
                         />
                     </div>
                     <CardTitle className="text-2xl font-bold text-center">Create a New Account</CardTitle>
@@ -193,19 +194,21 @@ export default function SignUp() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="role">Select Role</Label>
+                            <Label htmlFor="roleId">Select Role</Label>
                             <select
-                                id="role"
-                                name="role"
-                                className="input p-2 border w-full"
-                                value={formData.role}
+                                id="roleId"
+                                name="roleId"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-ring-ring focus-ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={formData.roleId}
                                 onChange={handleChange}
                                 required
                             >
-                                <option value="Admin">Admin</option>
-                                <option value="Entry Operation">Entry Operation</option>
-                                <option value="Supervisor">Supervisor</option>
-                                <option value="Management">Management</option>
+                                <option value="">Select a role</option>
+                                {roles.map((role) => (
+                                    <option key={role.roleId} value={role.roleId}>
+                                        {role.roleName}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -242,16 +245,16 @@ export default function SignUp() {
                         </div>
                         <div className="space-y-2">
                             <div className='flex gap-3 items-center'>
-                                <Label>Voucher</Label>
+                                <Label>Voucher Types</Label>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Payment Voucher', 'Receipt Voucher', 'Bank Voucher', 'Journal Voucher', 'Contra Voucher'].map((voucher) => (
+                                {['Payment', 'Receipt', 'Bank', 'Journal', 'Contra'].map((voucher) => (
                                     <div key={voucher} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={formData.vouchers.includes(voucher)}
-                                            onCheckedChange={() => handleCheckboxChange('vouchers', voucher)}
+                                            checked={formData.voucherTypes.includes(voucher)}
+                                            onCheckedChange={() => handleCheckboxChange('voucherTypes', voucher)}
                                         />
-                                        <Label>{voucher}</Label>
+                                        <Label>{voucher} Voucher</Label>
                                     </div>
                                 ))}
                             </div>
