@@ -7,9 +7,8 @@ const signUpSchema = z.object({
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
         .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character"),
-    role: z.enum(["Admin", "Entry Operation", "Supervisor", "Management"]),
-    companies: z.array(z.string()),
-    locations: z.array(z.string()),
+    confirmPassword: z.string().min(8),
+    roleId: z.number(),
     vouchers: z.array(z.string())
 });
 
@@ -17,7 +16,7 @@ export const locationSchema = z.object({
     locationId: z.number(),
     address: z.string().min(1, "Location address is required"),
     // Add other fields as necessary
-  });
+});
 
 export type LocationData = z.infer<typeof locationSchema>;
 
@@ -28,7 +27,8 @@ const companySchema = z.object({
 });
 
 const roleSchema = z.object({
-    companyName: z.string().min(1, "role is required"),
+    roleId: z.number(), // Changed from z.string() to z.number()
+    roleName: z.string().min(1, "role name is required"),
 });
 
 export type CompanyData = z.infer<typeof companySchema>;
@@ -74,50 +74,65 @@ export async function getAllCompanies() {
     }
 }
 
-export async function getAllRoles() {
+export type RoleData = z.infer<typeof roleSchema>;
+
+export async function getAllRoles(): Promise<RoleData[]> {
     try {
         const response = await fetch('http://localhost:4000/api/roles/get-all-roles');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        console.log('role data', data)
-        return data.map((role: any) => roleSchema.parse(role));
+        const responseData = await response.json();
+        console.log('role data', responseData.data);
+
+        const roles = responseData.data;
+
+        // Validate and transform the data
+        return roles.map((role: any) => {
+            try {
+                return roleSchema.parse({
+                    roleId: role.roleId,
+                    roleName: role.roleName
+                });
+            } catch (error) {
+                console.error('Error parsing role:', role, error);
+                return null;
+            }
+        }).filter((role: RoleData | null): role is RoleData => role !== null);
     } catch (error) {
         console.error('Error fetching roles:', error);
         throw new Error('Failed to fetch roles. Please try again later.');
     }
 }
 
+
 export async function getAllLocations() {
     try {
-      const response = await fetch('http://localhost:4000/api/location/get-all-locations');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const responseData = await response.json();
-      console.log('locations data', responseData.data);
-      
-      // Assuming the locations are in responseData.data
-      const locations = responseData.data;
-      
-      // Validate and transform the data
-      return locations.map((location: any) => {
-        try {
-          return locationSchema.parse({
-            locationId: location.locationId,
-            address: location.address,
-            // Map other fields as necessary
-          });
-        } catch (error) {
-          console.error('Error parsing location:', location, error);
-          return null;
+        const response = await fetch('http://localhost:4000/api/location/get-all-locations');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-      }).filter((location: LocationData | null): location is LocationData => location !== null);
+        const responseData = await response.json();
+        console.log('locations data', responseData.data);
+
+        // Assuming the locations are in responseData.data
+        const locations = responseData.data;
+
+        // Validate and transform the data
+        return locations.map((location: any) => {
+            try {
+                return locationSchema.parse({
+                    locationId: location.locationId,
+                    address: location.address,
+                    // Map other fields as necessary
+                });
+            } catch (error) {
+                console.error('Error parsing location:', location, error);
+                return null;
+            }
+        }).filter((location: LocationData | null): location is LocationData => location !== null);
     } catch (error) {
-      console.error('Error fetching locations:', error);
-      throw new Error('Failed to fetch locations. Please try again later.');
+        console.error('Error fetching locations:', error);
+        throw new Error('Failed to fetch locations. Please try again later.');
     }
-  }
-  
-  
+}
