@@ -76,6 +76,8 @@ export default function SignUp() {
             return
         }
 
+        console.log('user before enterning backend', formData)
+
         try {
             const result = await signUp(formData)
             if (result.success) {
@@ -239,7 +241,7 @@ export default function SignUp() {
                                 <Label>Voucher</Label>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Voucher A', 'Voucher B', 'Voucher C', 'Voucher D'].map((voucher) => (
+                                {['Payment Voucher', 'Receipt Voucher', 'Bank Voucher', 'Journal Voucher', 'Contra Voucher'].map((voucher) => (
                                     <div key={voucher} className="flex items-center gap-2">
                                         <Checkbox
                                             checked={formData.vouchers.includes(voucher)}
