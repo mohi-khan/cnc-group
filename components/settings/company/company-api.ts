@@ -28,7 +28,7 @@ export const locationSchema = z.object({
 export async function createCompany(companyData: z.infer<typeof companySchema>) {
   console.log("API: Creating company with data:", companyData);
   
-  const response = await fetch('http://localhost:4000/api/company/createCompany', {
+  const response = await fetch('http://localhost:4000/api/company/create-company', {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function createCompany(companyData: z.infer<typeof companySchema>) 
 export async function createLocation(locationData: z.infer<typeof locationSchema>) {
   console.log("API: Creating location with data:", locationData);
   
-  const response = await fetch('http://localhost:4000/api/location/createLocation', {
+  const response = await fetch('http://localhost:4000/api/location/create-location', {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
