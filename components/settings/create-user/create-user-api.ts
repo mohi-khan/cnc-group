@@ -23,10 +23,12 @@ export type LocationData = z.infer<typeof locationSchema>;
 
 export type SignUpData = z.infer<typeof signUpSchema>;
 
-// Company schema
 const companySchema = z.object({
     companyName: z.string().min(1, "Company name is required"),
-    // Add other company fields as needed
+});
+
+const roleSchema = z.object({
+    companyName: z.string().min(1, "role is required"),
 });
 
 export type CompanyData = z.infer<typeof companySchema>;
@@ -35,7 +37,7 @@ export type CompanyData = z.infer<typeof companySchema>;
 export async function signUp(data: SignUpData) {
     try {
         const validatedData = signUpSchema.parse(data);
-        const response = await fetch('/api/sign-up', {
+        const response = await fetch('http://localhost:4000/api/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,6 +71,21 @@ export async function getAllCompanies() {
     } catch (error) {
         console.error('Error fetching companies:', error);
         throw new Error('Failed to fetch companies. Please try again later.');
+    }
+}
+
+export async function getAllRoles() {
+    try {
+        const response = await fetch('http://localhost:4000/api/roles/get-all-roles');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('role data', data)
+        return data.map((role: any) => roleSchema.parse(role));
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        throw new Error('Failed to fetch roles. Please try again later.');
     }
 }
 
