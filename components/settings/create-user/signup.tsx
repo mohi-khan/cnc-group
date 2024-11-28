@@ -11,17 +11,32 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from 'lucide-react'
-import { signUp, SignUpData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
+import { signUp, createUserLocation, createUserCompany, SignUpData, UserCompanyData, UserLocationData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
+
+enum VoucherTypes {
+    Payment = 'Payment Voucher',
+    Receipt = 'Receipt Voucher',
+    Bank = 'Bank Voucher',
+    Journal = 'Journal Voucher',
+    Contra = 'Contra Voucher',
+}
 
 export default function SignUp() {
-    const [formData, setFormData] = useState<SignUpData>({
+    const [userFormData, setUserFormData] = useState<SignUpData>({
         username: '',
         password: '',
         confirmPassword: '',
-        roleId: 1,
-        companies: [],
-        locations: [],
+        active: true,
+        roleId: 2,
         voucherTypes: []
+    })
+    const [userCompaniesFormData, setUserCompaniesFormData] = useState<UserCompanyData>({
+        userId: 1,
+        companyId: [],
+    })
+    const [userLocationsFormData, setUserLocationsFormData] = useState<UserLocationData>({
+        userId: 1,
+        locationId: [],
     })
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -31,20 +46,37 @@ export default function SignUp() {
     const [locations, setLocations] = useState<LocationData[]>([])
     const [roles, setRoles] = useState<RoleData[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null)
     const router = useRouter()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: name === 'roleId' ? parseInt(value, 10) : value }))
+        setUserFormData(prev => ({ ...prev, [name]: name === 'roleId' ? parseInt(value, 10) : value }))
     }
 
-    const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [type]: prev[type].includes(item)
-                ? prev[type].filter(i => i !== item)
-                : [...prev[type], item]
-        }))
+    const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: number | string) => {
+        if (type === 'companies') {
+            setUserCompaniesFormData(prev => ({
+                ...prev,
+                companyId: prev.companyId.includes(item as number)
+                    ? prev.companyId.filter(i => i !== item)
+                    : [...prev.companyId, item as number]
+            }))
+        } else if (type === 'locations') {
+            setUserLocationsFormData(prev => ({
+                ...prev,
+                locationId: prev.locationId.includes(item as number)
+                    ? prev.locationId.filter(i => i !== item)
+                    : [...prev.locationId, item as number]
+            }))
+        } else {
+            setUserFormData(prev => ({
+                ...prev,
+                voucherTypes: prev.voucherTypes.includes(item as VoucherTypes)
+                    ? prev.voucherTypes.filter(i => i !== item)
+                    : [...prev.voucherTypes, item as VoucherTypes]
+            }))
+        }
     }
 
     useEffect(() => {
@@ -57,8 +89,6 @@ export default function SignUp() {
                     getAllLocations(),
                     getAllRoles()
                 ])
-                console.log('Fetched roles:', fetchedRoles)
-                console.log('fetched locations 2', fetchedLocations);
                 setCompanies(fetchedCompanies)
                 setLocations(fetchedLocations)
                 setRoles(fetchedRoles)
@@ -76,23 +106,73 @@ export default function SignUp() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-
-        if (formData.password !== confirmPassword) {
-            setError('Password & Confirm Password do not match.')
-            return
-        }
-
-        console.log('user before entering backend', formData)
+        setFeedback(null)
+        setIsLoading(true)
 
         try {
-            const result = await signUp(formData)
-            if (result.success) {
-                router.push('/dashboard')
-            } else {
-                setError(result.errors ? result.errors.map((err: any) => err.message).join(', ') : 'An error occurred during sign up.')
+            console.log('Submitting form data:', userFormData);
+
+            // Step 1: Register the user
+            const signUpResult = await signUp(userFormData)
+            if (!signUpResult.success) {
+                const errorMessages = signUpResult.errors 
+                    ? signUpResult.errors.map(err => `${err.field}: ${err.message}`).join('\n')
+                    : 'Sign up failed';
+                console.error('Validation errors:', errorMessages);
+                throw new Error(errorMessages);
             }
+
+            const newUserId = 5
+
+            // Step 2: Create user-location associations
+            if (userLocationsFormData.locationId.length > 0) {
+                const userLocationData = {
+                    userId: newUserId, 
+                    locationId: userLocationsFormData.locationId
+                }
+                console.log('Creating user locations with data:', userLocationData);
+                await createUserLocation(userLocationData)
+            }
+
+            // Step 3: Create user-company associations
+            if (userCompaniesFormData.companyId.length > 0) {
+                const userCompanyData = {
+                    userId: newUserId,
+                    companyId: userCompaniesFormData.companyId
+                }
+                console.log('Creating user companies with data:', userCompanyData);
+                await createUserCompany(userCompanyData)
+            }
+
+            setFeedback({
+                type: 'success',
+                message: 'User registered successfully with associated locations and companies.'
+            })
+
+            // Reset form
+            setUserFormData({
+                username: '',
+                password: '',
+                confirmPassword: '',
+                active: true,
+                roleId: 2,
+                voucherTypes: []
+            })
+            setUserCompaniesFormData({ userId: 1, companyId: [] })
+            setUserLocationsFormData({ userId: 1, locationId: [] })
+
+            // Redirect to dashboard after a short delay
+            setTimeout(() => {
+                router.push('/dashboard')
+            }, 2000)
         } catch (error) {
-            setError('An error occurred during sign up.')
+            console.error('Error during sign up process:', error)
+            setFeedback({
+                type: 'error',
+                message: error instanceof Error ? error.message : 'An error occurred during the sign up process. Please try again.'
+            })
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -122,9 +202,9 @@ export default function SignUp() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {error && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertDescription>{error}</AlertDescription>
+                    {feedback && (
+                        <Alert variant={feedback.type === 'success' ? 'default' : 'destructive'} className="mb-4">
+                            <AlertDescription>{feedback.message}</AlertDescription>
                         </Alert>
                     )}
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -134,7 +214,7 @@ export default function SignUp() {
                                 id="username"
                                 name="username"
                                 type="text"
-                                value={formData.username}
+                                value={userFormData.username}
                                 onChange={handleChange}
                                 required
                             />
@@ -146,7 +226,7 @@ export default function SignUp() {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
-                                    value={formData.password}
+                                    value={userFormData.password}
                                     onChange={handleChange}
                                     required
                                 />
@@ -173,9 +253,10 @@ export default function SignUp() {
                             <div className="relative">
                                 <Input
                                     id="confirm-password"
+                                    name="confirmPassword"
                                     type={showConfirmPassword ? "text" : "password"}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    value={userFormData.confirmPassword}
+                                    onChange={handleChange}
                                     required
                                 />
                                 <Button
@@ -198,8 +279,8 @@ export default function SignUp() {
                             <select
                                 id="roleId"
                                 name="roleId"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-ring-ring focus-ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                value={formData.roleId}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={userFormData.roleId}
                                 onChange={handleChange}
                                 required
                             >
@@ -217,10 +298,10 @@ export default function SignUp() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {companies.map((company) => (
-                                    <div key={company.companyName} className="flex items-center gap-2">
+                                    <div key={company.companyId} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={formData.companies.includes(company.companyName)}
-                                            onCheckedChange={() => handleCheckboxChange('companies', company.companyName)}
+                                            checked={userCompaniesFormData.companyId.includes(company.companyId)}
+                                            onCheckedChange={() => handleCheckboxChange('companies', company.companyId)}
                                         />
                                         <Label>{company.companyName}</Label>
                                     </div>
@@ -235,8 +316,8 @@ export default function SignUp() {
                                 {locations.map((location) => (
                                     <div key={location.locationId} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={formData.locations.includes(location.address)}
-                                            onCheckedChange={() => handleCheckboxChange('locations', location.address)}
+                                            checked={userLocationsFormData.locationId.includes(location.locationId)}
+                                            onCheckedChange={() => handleCheckboxChange('locations', location.locationId)}
                                         />
                                         <Label>{location.address}</Label>
                                     </div>
@@ -248,19 +329,19 @@ export default function SignUp() {
                                 <Label>Voucher Types</Label>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Payment', 'Receipt', 'Bank', 'Journal', 'Contra'].map((voucher) => (
+                                {Object.values(VoucherTypes).map((voucher) => (
                                     <div key={voucher} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={formData.voucherTypes.includes(voucher)}
+                                            checked={userFormData.voucherTypes.includes(voucher)}
                                             onCheckedChange={() => handleCheckboxChange('voucherTypes', voucher)}
                                         />
-                                        <Label>{voucher} Voucher</Label>
+                                        <Label>{voucher}</Label>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <Button type="submit" className="w-full">
-                            Submit
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? 'Submitting...' : 'Submit'}
                         </Button>
                     </form>
                 </CardContent>
