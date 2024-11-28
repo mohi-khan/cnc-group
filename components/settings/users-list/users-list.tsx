@@ -46,11 +46,11 @@ export default function UsersList() {
     const [currentPage, setCurrentPage] = useState(1)
     const [editingUser, setEditingUser] = useState<User | null>(null)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-   
+
 
     useEffect(() => {
         fetchUsers()
-        
+
     }, [])
 
     const fetchUsers = async () => {
@@ -70,7 +70,7 @@ export default function UsersList() {
         }
     }
 
-    
+
 
     const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
     const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -298,4 +298,432 @@ export default function UsersList() {
         </div>
     )
 }
+
+
+
+
+
+
+
+
+// "use client"
+
+// import React, { useState, useEffect } from 'react'
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+// import { Button } from "@/components/ui/button"
+// import { Input } from "@/components/ui/input"
+// import { Label } from "@/components/ui/label"
+// import {
+//     Pagination,
+//     PaginationContent,
+//     PaginationItem,
+//     PaginationLink,
+//     PaginationNext,
+//     PaginationPrevious,
+// } from "@/components/ui/pagination"
+// import {
+//     Dialog,
+//     DialogContent,
+//     DialogHeader,
+//     DialogTitle,
+//     DialogTrigger,
+//     DialogFooter,
+// } from "@/components/ui/dialog"
+// import { fetchUsers, updateUser, toggleUserActive, User, UpdateUserData } from './user-list-api'
+
+// const USERS_PER_PAGE = 5
+
+// export default function UsersList() {
+//     const [users, setUsers] = useState<User[]>([])
+//     const [currentPage, setCurrentPage] = useState(1)
+//     const [editingUser, setEditingUser] = useState<User | null>(null)
+//     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+//     useEffect(() => {
+//         fetchUsers().then(setUsers).catch(console.error)
+//     }, [])
+
+//     const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
+//     const startIndex = (currentPage - 1) * USERS_PER_PAGE
+//     const endIndex = startIndex + USERS_PER_PAGE
+//     const currentUsers = users.slice(startIndex, endIndex)
+
+//     const handleEditUser = (user: User) => {
+//         setEditingUser(user)
+//         setIsEditDialogOpen(true)
+//     }
+
+//     const handleSaveEdit = async () => {
+//         if (editingUser) {
+//             try {
+//                 const updateData: UpdateUserData = {
+//                     username: editingUser.username,
+//                     voucherTypes: editingUser.VoucherTypes,
+//                     active: editingUser.active
+//                 }
+
+//                 const updatedUser = await updateUser(editingUser.id, updateData)
+//                 setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user))
+//                 setEditingUser(null)
+//                 setIsEditDialogOpen(false)
+//             } catch (error) {
+//                 console.error('Error updating user:', error)
+//                 alert(`Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`)
+//             }
+//         }
+//     }
+
+//     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//         const { name, value } = e.target
+//         setEditingUser(prev => prev ? { ...prev, [name]: value } : null)
+//     }
+
+//     const handleToggleActive = async (userId: number, currentActiveState: boolean) => {
+//         try {
+//             const updatedUser = await toggleUserActive(userId, !currentActiveState)
+//             setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user))
+//         } catch (error) {
+//             console.error('Error toggling user active state:', error)
+//             alert(`Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`)
+//         }
+//     }
+
+//     return (
+//         <div className="container mx-auto py-10">
+//             <h1 className="text-2xl font-bold mb-4">Employee List</h1>
+//             <Table>
+//                 <TableHeader>
+//                     <TableRow>
+//                         <TableHead className="w-[100px]">Serial Number</TableHead>
+//                         <TableHead>Username</TableHead>
+//                         <TableHead>Role</TableHead>
+//                         <TableHead className="text-right">Action</TableHead>
+//                     </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                     {currentUsers.map((user, index) => (
+//                         <TableRow key={user.id}>
+//                             <TableCell className="font-medium">{startIndex + index + 1}</TableCell>
+//                             <TableCell>{user.username}</TableCell>
+//                             <TableCell>{user.roleName || 'N/A'}</TableCell>
+//                             <TableCell className="text-right space-x-2">
+//                                 <Dialog key={`view-${user.id}`}>
+//                                     <DialogTrigger asChild>
+//                                         <Button variant="outline" size="sm">
+//                                             View Details
+//                                         </Button>
+//                                     </DialogTrigger>
+//                                     <DialogContent>
+//                                         <DialogHeader>
+//                                             <DialogTitle><span className='ring-2 px-3 py-1 rounded-xl hover:bg-slate-200'>{user.username}</span></DialogTitle>
+//                                         </DialogHeader>
+//                                         <div className="py-4">
+//                                             <p><strong>Voucher Types:</strong> {user.VoucherTypes?.join(', ') || 'None'}</p>
+//                                             <p><strong>Role:</strong> {user.roleName || 'N/A'}</p>
+//                                             <p><strong>Active:</strong> {user.active ? 'Yes' : 'No'}</p>
+//                                         </div>
+//                                     </DialogContent>
+//                                 </Dialog>
+//                                 <Dialog key={`edit-${user.id}`} open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+//                                     <DialogTrigger asChild>
+//                                         <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+//                                             Edit
+//                                         </Button>
+//                                     </DialogTrigger>
+//                                     <DialogContent>
+//                                         <DialogHeader>
+//                                             <DialogTitle>Edit User</DialogTitle>
+//                                         </DialogHeader>
+//                                         <div className="py-4">
+//                                             <Label htmlFor="username">Username</Label>
+//                                             <Input
+//                                                 id="username"
+//                                                 name="username"
+//                                                 value={editingUser?.username || ''}
+//                                                 onChange={handleInputChange}
+//                                                 className="mb-2"
+//                                             />
+//                                             <Label htmlFor="voucherTypes">Voucher Types</Label>
+//                                             <Input
+//                                                 id="voucherTypes"
+//                                                 name="VoucherTypes"
+//                                                 value={editingUser?.VoucherTypes?.join(', ') || ''}
+//                                                 onChange={(e) => setEditingUser(prev => prev ? { ...prev, VoucherTypes: e.target.value ? e.target.value.split(', ') : [] } : null)}
+//                                                 className="mb-2"
+//                                             />
+//                                         </div>
+//                                         <DialogFooter>
+//                                             <Button onClick={handleSaveEdit}>Save Changes</Button>
+//                                         </DialogFooter>
+//                                     </DialogContent>
+//                                 </Dialog>
+//                                 <Button
+//                                     variant={user.active ? "ghost" : "destructive"}
+//                                     size="sm"
+//                                     onClick={() => handleToggleActive(user.id, user.active)}
+//                                 >
+//                                     {user.active ? 'Deactivate' : 'Activate'}
+//                                 </Button>
+//                             </TableCell>
+//                         </TableRow>
+//                     ))}
+//                 </TableBody>
+//             </Table>
+//             <div className="mt-4">
+//                 <Pagination>
+//                     <PaginationContent>
+//                         <PaginationItem>
+//                             <PaginationPrevious
+//                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+//                                 aria-disabled={currentPage === 1}
+//                                 tabIndex={currentPage === 1 ? -1 : undefined}
+//                                 className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+//                             />
+//                         </PaginationItem>
+//                         {[...Array(totalPages)].map((_, i) => (
+//                             <PaginationItem key={`page-${i}`}>
+//                                 <PaginationLink
+//                                     onClick={() => setCurrentPage(i + 1)}
+//                                     isActive={currentPage === i + 1}
+//                                 >
+//                                     {i + 1}
+//                                 </PaginationLink>
+//                             </PaginationItem>
+//                         ))}
+//                         <PaginationItem>
+//                             <PaginationNext
+//                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+//                                 aria-disabled={currentPage === totalPages}
+//                                 tabIndex={currentPage === totalPages ? -1 : undefined}
+//                                 className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+//                             />
+//                         </PaginationItem>
+//                     </PaginationContent>
+//                 </Pagination>
+//             </div>
+//         </div>
+//     )
+// }
+
+
+
+// "use client"
+
+// import React, { useState, useEffect } from 'react'
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+// import { Button } from "@/components/ui/button"
+// import { Input } from "@/components/ui/input"
+// import { Label } from "@/components/ui/label"
+// import {
+//     Pagination,
+//     PaginationContent,
+//     PaginationItem,
+//     PaginationLink,
+//     PaginationNext,
+//     PaginationPrevious,
+// } from "@/components/ui/pagination"
+// import {
+//     Dialog,
+//     DialogContent,
+//     DialogHeader,
+//     DialogTitle,
+//     DialogTrigger,
+//     DialogFooter,
+// } from "@/components/ui/dialog"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// import { fetchUsers, updateUser, toggleUserActive, fetchRoles, User, UpdateUserData } from './user-list-api'
+
+// const USERS_PER_PAGE = 5
+
+// export default function UsersList() {
+//     const [users, setUsers] = useState<User[]>([])
+//     const [currentPage, setCurrentPage] = useState(1)
+//     const [editingUser, setEditingUser] = useState<User | null>(null)
+//     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+//     const [availableRoles, setAvailableRoles] = useState<{ id: number; roleName: string }[]>([])
+
+//     useEffect(() => {
+//         fetchUsers().then(setUsers).catch(console.error)
+//         fetchRoles().then(setAvailableRoles).catch(console.error)
+//     }, [])
+
+//     const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
+//     const startIndex = (currentPage - 1) * USERS_PER_PAGE
+//     const endIndex = startIndex + USERS_PER_PAGE
+//     const currentUsers = users.slice(startIndex, endIndex)
+
+//     const handleEditUser = (user: User) => {
+//         setEditingUser(user)
+//         setIsEditDialogOpen(true)
+//     }
+
+//     const handleSaveEdit = async () => {
+//         if (editingUser) {
+//             try {
+//                 const updateData: UpdateUserData = {
+//                     username: editingUser.username,
+//                     voucherTypes: editingUser.VoucherTypes,
+//                     active: editingUser.active,
+//                     roleId: editingUser.roleId
+//                 }
+
+//                 const updatedUser = await updateUser(editingUser.id, updateData)
+//                 setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user))
+//                 setEditingUser(null)
+//                 setIsEditDialogOpen(false)
+//             } catch (error) {
+//                 console.error('Error updating user:', error)
+//                 alert(`Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`)
+//             }
+//         }
+//     }
+
+//     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//         const { name, value } = e.target
+//         setEditingUser(prev => prev ? { ...prev, [name]: value } : null)
+//     }
+
+//     const handleToggleActive = async (userId: number, currentActiveState: boolean) => {
+//         try {
+//             const updatedUser = await toggleUserActive(userId, !currentActiveState)
+//             setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user))
+//         } catch (error) {
+//             console.error('Error toggling user active state:', error)
+//             alert(`Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`)
+//         }
+//     }
+
+//     return (
+//         <div className="container mx-auto py-10">
+//             <h1 className="text-2xl font-bold mb-4">Employee List</h1>
+//             <Table>
+//                 <TableHeader>
+//                     <TableRow>
+//                         <TableHead className="w-[100px]">Serial Number</TableHead>
+//                         <TableHead>Username</TableHead>
+//                         <TableHead>Role</TableHead>
+//                         <TableHead className="text-right">Action</TableHead>
+//                     </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                     {currentUsers.map((user, index) => (
+//                         <TableRow key={user.id}>
+//                             <TableCell className="font-medium">{startIndex + index + 1}</TableCell>
+//                             <TableCell>{user.username}</TableCell>
+//                             <TableCell>{user.roleName || 'N/A'}</TableCell>
+//                             <TableCell className="text-right space-x-2">
+//                                 <Dialog key={`view-${user.id}`}>
+//                                     <DialogTrigger asChild>
+//                                         <Button variant="outline" size="sm">
+//                                             View Details
+//                                         </Button>
+//                                     </DialogTrigger>
+//                                     <DialogContent>
+//                                         <DialogHeader>
+//                                             <DialogTitle><span className='ring-2 px-3 py-1 rounded-xl hover:bg-slate-200'>{user.username}</span></DialogTitle>
+//                                         </DialogHeader>
+//                                         <div className="py-4">
+//                                             <p><strong>Voucher Types:</strong> {user.VoucherTypes?.join(', ') || 'None'}</p>
+//                                             <p><strong>Role:</strong> {user.roleName || 'N/A'}</p>
+//                                             <p><strong>Active:</strong> {user.active ? 'Yes' : 'No'}</p>
+//                                         </div>
+//                                     </DialogContent>
+//                                 </Dialog>
+//                                 <Dialog key={`edit-${user.id}`} open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+//                                     <DialogTrigger asChild>
+//                                         <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+//                                             Edit
+//                                         </Button>
+//                                     </DialogTrigger>
+//                                     <DialogContent>
+//                                         <DialogHeader>
+//                                             <DialogTitle>Edit User</DialogTitle>
+//                                         </DialogHeader>
+//                                         <div className="py-4">
+//                                             <Label htmlFor="username">Username</Label>
+//                                             <Input
+//                                                 id="username"
+//                                                 name="username"
+//                                                 value={editingUser?.username || ''}
+//                                                 onChange={handleInputChange}
+//                                                 className="mb-2"
+//                                             />
+//                                             <Label htmlFor="voucherTypes">Voucher Types</Label>
+//                                             <Input
+//                                                 id="voucherTypes"
+//                                                 name="VoucherTypes"
+//                                                 value={editingUser?.VoucherTypes?.join(', ') || ''}
+//                                                 onChange={(e) => setEditingUser(prev => prev ? { ...prev, VoucherTypes: e.target.value ? e.target.value.split(', ') : [] } : null)}
+//                                                 className="mb-2"
+//                                             />
+//                                             <Label htmlFor="role">Role</Label>
+//                                             <Select
+//                                                 value={editingUser?.roleId?.toString() ?? ''}
+//                                                 onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, roleId: value ? parseInt(value) : null } : null)}
+//                                             >
+//                                                 <SelectTrigger className="w-full mb-2">
+//                                                     <SelectValue placeholder="Select a role" />
+//                                                 </SelectTrigger>
+//                                                 <SelectContent>
+//                                                     <SelectItem value="">No Role</SelectItem>
+//                                                     {availableRoles.map((role) => (
+//                                                         <SelectItem key={role.id} value={role.id.toString()}>
+//                                                             {role.roleName}
+//                                                         </SelectItem>
+//                                                     ))}
+//                                                 </SelectContent>
+//                                             </Select>
+//                                         </div>
+//                                         <DialogFooter>
+//                                             <Button onClick={handleSaveEdit}>Save Changes</Button>
+//                                         </DialogFooter>
+//                                     </DialogContent>
+//                                 </Dialog>
+//                                 <Button
+//                                     variant={user.active ? "ghost" : "destructive"}
+//                                     size="sm"
+//                                     onClick={() => handleToggleActive(user.id, user.active)}
+//                                 >
+//                                     {user.active ? 'Deactivate' : 'Activate'}
+//                                 </Button>
+//                             </TableCell>
+//                         </TableRow>
+//                     ))}
+//                 </TableBody>
+//             </Table>
+//             <div className="mt-4">
+//                 <Pagination>
+//                     <PaginationContent>
+//                         <PaginationItem>
+//                             <PaginationPrevious
+//                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+//                                 aria-disabled={currentPage === 1}
+//                                 tabIndex={currentPage === 1 ? -1 : undefined}
+//                                 className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+//                             />
+//                         </PaginationItem>
+//                         {[...Array(totalPages)].map((_, i) => (
+//                             <PaginationItem key={`page-${i}`}>
+//                                 <PaginationLink
+//                                     onClick={() => setCurrentPage(i + 1)}
+//                                     isActive={currentPage === i + 1}
+//                                 >
+//                                     {i + 1}
+//                                 </PaginationLink>
+//                             </PaginationItem>
+//                         ))}
+//                         <PaginationItem>
+//                             <PaginationNext
+//                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+//                                 aria-disabled={currentPage === totalPages}
+//                                 tabIndex={currentPage === totalPages ? -1 : undefined}
+//                                 className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+//                             />
+//                         </PaginationItem>
+//                     </PaginationContent>
+//                 </Pagination>
+//             </div>
+//         </div>
+//     )
+// }
 
