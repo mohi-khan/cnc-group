@@ -21,26 +21,21 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select"
+
 
 interface User {
     id: number
     username: string
-    VoucherTypes: string[]
-    roleId: string | number | null
+    VoucherTypes?: string[]
+    roleId: number | null
     active: boolean
+    roleName?: string
 }
 
 interface UpdateUserData {
     username?: string
     voucherTypes?: string[]
-    roleId?: string | number | null
+    roleId?: number | null
     active?: boolean
 }
 
@@ -51,16 +46,16 @@ export default function UsersList() {
     const [currentPage, setCurrentPage] = useState(1)
     const [editingUser, setEditingUser] = useState<User | null>(null)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-    const [availableRoles, setAvailableRoles] = useState<{ id: number, name: string }[]>([])
+   
 
     useEffect(() => {
         fetchUsers()
-        fetchRoles()
+        
     }, [])
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/auth/users')
+            const response = await fetch('http://localhost:4000/api/auth/users-by-roles')
             if (!response.ok) {
                 throw new Error('Failed to fetch users')
             }
@@ -75,26 +70,7 @@ export default function UsersList() {
         }
     }
 
-    const fetchRoles = async () => {
-        try {
-            const response = await fetch('http://localhost:4000/api/roles/get-all-roles')
-            if (!response.ok) {
-                throw new Error('Failed to fetch roles')
-            }
-            const data = await response.json()
-            console.log(data.data[0].roleName);
-            if (data.status === 'success' && Array.isArray(data.data)) {
-
-
-                setAvailableRoles(data.data)
-
-            } else {
-                throw new Error('Unexpected data format')
-            }
-        } catch (error) {
-            console.error('Error fetching roles:', error)
-        }
-    }
+    
 
     const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
     const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -104,7 +80,7 @@ export default function UsersList() {
     const handleEditUser = (user: User) => {
         setEditingUser({
             ...user,
-            roleId: user.roleId ? user.roleId.toString() : ''
+            roleId: user.roleId ?? null
         })
         setIsEditDialogOpen(true)
     }
@@ -114,8 +90,8 @@ export default function UsersList() {
             try {
                 const updateData: UpdateUserData = {
                     username: editingUser.username,
-                    voucherTypes: editingUser.VoucherTypes,
-                    roleId: editingUser.roleId ? Number(editingUser.roleId) : undefined,
+                    voucherTypes: editingUser.VoucherTypes || [],
+                    // roleId: editingUser.roleId === 'no-role' ? null : editingUser.roleId,
                     active: editingUser.active
                 }
 
@@ -197,6 +173,7 @@ export default function UsersList() {
                     <TableRow>
                         <TableHead className="w-[100px]">Serial Number</TableHead>
                         <TableHead>Username</TableHead>
+                        <TableHead>Role</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -205,8 +182,9 @@ export default function UsersList() {
                         <TableRow key={user.id}>
                             <TableCell className="font-medium">{startIndex + index + 1}</TableCell>
                             <TableCell>{user.username}</TableCell>
+                            <TableCell>{user.roleName || 'N/A'}</TableCell>
                             <TableCell className="text-right space-x-2">
-                                <Dialog>
+                                <Dialog key={`view-${user.id}`}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="sm">
                                             View Details
@@ -217,13 +195,13 @@ export default function UsersList() {
                                             <DialogTitle><span className='ring-2 px-3 py-1 rounded-xl hover:bg-slate-200'>{user.username}</span></DialogTitle>
                                         </DialogHeader>
                                         <div className="py-4">
-                                            <p><strong>Voucher Types:</strong> {user.VoucherTypes.join(', ')}</p>
-                                            <p><strong>Role Id:</strong> {user.roleId}</p>
+                                            <p><strong>Voucher Types:</strong> {user.VoucherTypes?.join(', ') || 'None'}</p>
+                                            <p><strong>Role:</strong> {user.roleName || 'N/A'}</p>
                                             <p><strong>Active:</strong> {user.active ? 'Yes' : 'No'}</p>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
-                                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                                <Dialog key={`edit-${user.id}`} open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
                                             Edit
@@ -242,28 +220,29 @@ export default function UsersList() {
                                                 onChange={handleInputChange}
                                                 className="mb-2"
                                             />
-                                            <Label htmlFor="roleModel">Role Model</Label>
-                                            <Select
-                                                value={editingUser?.roleId?.toString()}
-                                                onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, roleModel: value } : null)}
+                                            <Label htmlFor="roleId">Role</Label>
+                                            {/* <Select
+                                                value={editingUser?.roleId?.toString() ?? ''}
+                                                onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, roleId: value ? parseInt(value) : null } : null)}
                                             >
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="Select a role" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="no-role">No Role</SelectItem>
                                                     {availableRoles.map((role) => (
-                                                        <SelectItem key={role.id} value={role.id}>
+                                                        <SelectItem key={`role-${role.id}`} value={role.id}>
                                                             {role.roleName}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
-                                            </Select>
+                                            </Select> */}
                                             <Label htmlFor="voucherTypes">Voucher Types</Label>
                                             <Input
                                                 id="voucherTypes"
                                                 name="VoucherTypes"
-                                                value={editingUser?.VoucherTypes.join(', ') || ''}
-                                                onChange={(e) => setEditingUser(prev => prev ? { ...prev, VoucherTypes: e.target.value.split(', ') } : null)}
+                                                value={editingUser?.VoucherTypes?.join(', ') || ''}
+                                                onChange={(e) => setEditingUser(prev => prev ? { ...prev, VoucherTypes: e.target.value ? e.target.value.split(', ') : [] } : null)}
                                                 className="mb-2"
                                             />
                                         </div>
@@ -296,7 +275,7 @@ export default function UsersList() {
                             />
                         </PaginationItem>
                         {[...Array(totalPages)].map((_, i) => (
-                            <PaginationItem key={i}>
+                            <PaginationItem key={`page-${i}`}>
                                 <PaginationLink
                                     onClick={() => setCurrentPage(i + 1)}
                                     isActive={currentPage === i + 1}
