@@ -21,6 +21,7 @@ import {
   createCompany,
   createLocation,
 } from './company-api'
+
 enum Currency {
   BDT = 'BDT',
   USD = 'USD',
@@ -39,7 +40,6 @@ export default function Component() {
   const [companyId, setCompanyId] = useState('')
   const [currency, setCurrency] = useState<Currency>(Currency.BDT)
   const [phone, setPhone] = useState('')
-  const [mobile, setMobile] = useState('')
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
   const [emailDomain, setEmailDomain] = useState('cnc-accessories.odoo.com')
@@ -53,13 +53,13 @@ export default function Component() {
   const [errors, setErrors] = useState<z.ZodError | null>(null)
 
   const isLocationTabEnabled = Boolean(
-    companyName.trim() && streetAddress.trim() && mobile.trim()
+    companyName.trim() && streetAddress.trim() && phone.trim()
   )
 
   const isSaveButtonEnabled = Boolean(
     companyName.trim() &&
       streetAddress.trim() &&
-      mobile.trim() &&
+      phone.trim() &&
       locations.some((loc) => loc.trim() !== '')
   )
 
@@ -87,7 +87,6 @@ export default function Component() {
         companyId,
         currency,
         phone,
-        mobile,
         email,
         website,
         emailDomain,
@@ -143,13 +142,12 @@ export default function Component() {
         companyId,
         currency,
         phone,
-        mobile,
         email,
         website,
         emailDomain,
       }
 
-      const company = await createCompany(companyData) //data is storing. but it's showing error (Types of property 'currency' are incompatible).
+      const company = await createCompany(companyData)
 
       const locationPromises = locations
         .filter((loc) => loc.trim() !== '')
@@ -179,7 +177,6 @@ export default function Component() {
       setCompanyId('')
       setCurrency(Currency.BDT)
       setPhone('')
-      setMobile('')
       setEmail('')
       setWebsite('')
       setEmailDomain('cnc-accessories.odoo.com')
@@ -311,14 +308,14 @@ export default function Component() {
                         onChange={(e) => setTaxId(e.target.value)}
                       />
                     </div>
-                    <div>
+                    {/* <div>
                       <Label htmlFor="companyId">Company ID</Label>
                       <Input
                         id="companyId"
                         value={companyId}
                         onChange={(e) => setCompanyId(e.target.value)}
                       />
-                    </div>
+                    </div> */}
                     <div>
                       <Label htmlFor="currency">Currency</Label>
                       <Select
@@ -340,21 +337,12 @@ export default function Component() {
 
                 <div className="space-y-2">
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Phone *</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="mobile">Mobile *</Label>
-                    <Input
-                      id="mobile"
-                      type="tel"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
                       required
                     />
                   </div>

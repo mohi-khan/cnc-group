@@ -24,14 +24,16 @@ interface MenuItem {
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isCompaniesOpen, setIsCompaniesOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const companiesRef = useRef<HTMLDivElement>(null)
 
   const router = useRouter()
 
   const handleSignOut = () => {
     localStorage.removeItem('currentUser') // Remove the current user from local storage
     setIsProfileOpen(false) // Close the profile dropdown
-    router.push('/') // Redirect to login page (adjust the path as needed)
+    router.push('/') // Redirect to login page
   }
 
   const menuItems: MenuItem[] = [
@@ -252,9 +254,12 @@ export default function Navbar() {
     function handleClickOutside(event: MouseEvent) {
       if (
         profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
+        !profileRef.current.contains(event.target as Node) &&
+        companiesRef.current &&
+        !companiesRef.current.contains(event.target as Node)
       ) {
         setIsProfileOpen(false)
+        setIsCompaniesOpen(false)
       }
     }
 
@@ -262,7 +267,7 @@ export default function Navbar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [profileRef])
+  }, [profileRef, companiesRef])
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -331,6 +336,46 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center ml-4">
+            <div className="relative mr-4" ref={companiesRef}>
+              <button
+                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => setIsCompaniesOpen(!isCompaniesOpen)}
+              >
+                Companies
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </button>
+              {isCompaniesOpen && (
+                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
+                  <div
+                    className="py-1 rounded-md bg-white shadow-xs"
+                    role="menu"
+                    aria-orientation="vertical"
+                  >
+                    <a
+                      href="/company1"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Company 1
+                    </a>
+                    <a
+                      href="/company2"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Company 2
+                    </a>
+                    <a
+                      href="/company3"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Company 3
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="relative" ref={profileRef}>
               <button
                 className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"

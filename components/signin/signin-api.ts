@@ -50,7 +50,7 @@ export const signin = async (
         success: false,
         message:
           error.response?.data?.message ||
-          'Login failed. Please check your credentials.',
+          'Wrong Login/Password. Please Contact with Administrator.',
       }
     }
     return {
