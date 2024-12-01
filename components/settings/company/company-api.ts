@@ -13,9 +13,8 @@ export const companySchema = z.object({
   companyId: z.string().optional(),
   currency: z.enum(['BDT', 'USD', 'EUR']),
   phone: z.string().optional(),
-  mobile: z.string().min(1, 'Mobile number is required'),
-  email: z.string().email().optional(),
-  website: z.string().url().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  website: z.string().url().optional().or(z.literal('')),
   emailDomain: z.string().optional(),
 })
 
