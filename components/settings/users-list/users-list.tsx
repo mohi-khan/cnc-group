@@ -157,6 +157,8 @@ export default function UsersList() {
         setEditingUser(prev => prev ? { ...prev, [name]: value } : null)
     }
 
+
+
     const handleToggleActive = async (userId: number, currentActiveState: boolean) => {
         const newActiveState = !currentActiveState;
 
@@ -194,10 +196,12 @@ export default function UsersList() {
 
     return (
         <div className="container mx-auto py-10">
-            <h1 className="text-2xl font-bold mb-4">Employee List</h1>
+            <h1 className="text-2xl font-bold mb-4">User List</h1>
             <Table>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className='bg-slate-100 shadow-sm
+
+                    '>
                         <TableHead className="w-[100px]">Serial Number</TableHead>
                         <TableHead>Username</TableHead>
                         <TableHead>Role</TableHead>
@@ -208,7 +212,7 @@ export default function UsersList() {
                     {currentUsers.map((user, index) => (
                         <TableRow key={user.id}>
                             <TableCell className="font-medium">{startIndex + index + 1}</TableCell>
-                            <TableCell>{user.username}</TableCell>
+                            <TableCell className='capitalize'>{user.username}</TableCell>
                             <TableCell>{user.roleName || 'N/A'}</TableCell>
                             <TableCell className="text-right space-x-2">
                                 <Dialog key={`view-${user.id}`}>
@@ -219,7 +223,7 @@ export default function UsersList() {
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle><span className='ring-2 px-3 py-1 rounded-xl hover:bg-slate-200'>{user.username}</span></DialogTitle>
+                                            <DialogTitle><span className='ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize'>{user.username}</span></DialogTitle>
                                         </DialogHeader>
                                         <div className="py-4">
                                             <p><strong>Voucher Types:</strong> {user.voucherTypes?.join(', ') || 'None'}</p>
@@ -264,6 +268,9 @@ export default function UsersList() {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
+
+
+                                           
                                             <Label htmlFor="voucherTypes">Voucher Types</Label>
                                             <Input
                                                 id="voucherTypes"
@@ -325,4 +332,3 @@ export default function UsersList() {
         </div>
     )
 }
-
