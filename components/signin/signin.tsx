@@ -1,6 +1,5 @@
 "use client"
 
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -12,34 +11,53 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react'
+import { signin } from './signin-api'
 
 export default function SignIn() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true)
 
-    // Basic form validation
-    if (!email || !password) {
+    if (!username || !password) {
       setError('Please fill in all fields.')
+      setIsLoading(false)
       return
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address.')
-      return
+    try {
+      const response = await signin({ username, password })
+      
+      if (response.success && response.data?.token) {
+        // Log the current user information
+        
+        // Store token if remember me is checked
+        if (rememberMe) {
+          localStorage.setItem('authToken', response.data.token)
+        }
+        // Store user information in localStorage
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user))
+        console.log('Current user:', response.data.user)
+        
+        // Redirect to dashboard
+        router.push('/dashboard')
+      } else {
+        setError(response.message || 'Login failed. Please try again.')
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('An unexpected error occurred. Please try again later.')
+    } finally {
+      setIsLoading(false)
     }
-
-    // Here you would typically make an API call to authenticate the user
-    // For this example, we'll just simulate a successful login
-    console.log('Logging in with:', { email, password, rememberMe })
-    router.push('/dashboard') // Redirect to dashboard after successful login
   }
 
   return (
@@ -57,7 +75,7 @@ export default function SignIn() {
           </div>
           <CardTitle className="text-2xl font-bold text-center">Sign in to your account</CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to access your account
+            Enter your username and password to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,10 +84,9 @@ export default function SignIn() {
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                type="username"
-                placeholder=""
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
@@ -113,8 +130,9 @@ export default function SignIn() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full">
-              <LockIcon className="mr-2 h-4 w-4" /> Sign In
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              <LockIcon className="mr-2 h-4 w-4" /> 
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
@@ -127,3 +145,4 @@ export default function SignIn() {
     </div>
   )
 }
+
