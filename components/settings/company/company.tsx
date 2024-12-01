@@ -24,7 +24,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { companySchema, locationSchema, createCompany, createLocation } from './company-api'
-
+enum Currency {
+    BDT = "BDT",
+    USD = "USD",
+    EUR = "EUR",
+  
+  }
 
 export default function Component() {
     const [companyName, setCompanyName] = useState('')
@@ -36,7 +41,7 @@ export default function Component() {
     const [country, setCountry] = useState('')
     const [taxId, setTaxId] = useState('')
     const [companyId, setCompanyId] = useState('')
-    const [currency, setCurrency] = useState('BDT')
+    const [currency, setCurrency] = useState<Currency>(Currency.BDT)
     const [phone, setPhone] = useState('')
     const [mobile, setMobile] = useState('')
     const [email, setEmail] = useState('')
@@ -173,7 +178,7 @@ export default function Component() {
             setCountry('')
             setTaxId('')
             setCompanyId('')
-            setCurrency('BDT')
+            setCurrency(Currency.BDT)
             setPhone('')
             setMobile('')
             setEmail('')
@@ -309,14 +314,14 @@ export default function Component() {
                                         </div>
                                         <div>
                                             <Label htmlFor="currency">Currency</Label>
-                                            <Select value={currency} onValueChange={(value) => setCurrency(value)}>
+                                            <Select value={currency} onValueChange={(value: Currency) => setCurrency(value)}>
                                                 <SelectTrigger id="currency">
                                                     <SelectValue placeholder="Select currency" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="BDT">BDT</SelectItem>
-                                                    <SelectItem value="USD">USD</SelectItem>
-                                                    <SelectItem value="EUR">EUR</SelectItem>
+                                                    <SelectItem value={Currency.BDT}>BDT</SelectItem>
+                                                    <SelectItem value={Currency.USD}>USD</SelectItem>
+                                                    <SelectItem value={Currency.EUR}>EUR</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
