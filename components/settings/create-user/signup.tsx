@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from 'lucide-react'
-import { signUp, createUserLocation, createUserCompany, SignUpData, UserCompanyData, UserLocationData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
+import { signUp, SignUpData, UserCompanyData, UserLocationData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
 
 enum VoucherTypes {
     Payment = 'Payment Voucher',
@@ -28,16 +28,18 @@ export default function SignUp() {
         confirmPassword: '',
         active: true,
         roleId: 2,
-        voucherTypes: []
+        voucherTypes: [],
+        companyid: [],
+        locationid: [],
     })
-    const [userCompaniesFormData, setUserCompaniesFormData] = useState<UserCompanyData>({
-        userId: 1,
-        companyId: [],
-    })
-    const [userLocationsFormData, setUserLocationsFormData] = useState<UserLocationData>({
-        userId: 1,
-        locationId: [],
-    })
+    // const [userCompaniesFormData, setUserCompaniesFormData] = useState<UserCompanyData>({
+    //     userId: 1,
+    //     companyId: [],
+    // })
+    // const [userLocationsFormData, setUserLocationsFormData] = useState<UserLocationData>({
+    //     userId: 1,
+    //     locationId: [],
+    // })
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -47,27 +49,50 @@ export default function SignUp() {
     const [roles, setRoles] = useState<RoleData[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const router = useRouter()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target
         setUserFormData(prev => ({ ...prev, [name]: name === 'roleId' ? parseInt(value, 10) : value }))
     }
+    ///For Validating Pasword on Inline //////
+    const validatePassword = (password: string) => {
+        const errors: string[] = [];
+        if (!/[A-Z]/.test(password)) errors.push("Must include at least one uppercase letter.");
+        if (!/[a-z]/.test(password)) errors.push("Must include at least one lowercase letter.");
+        if (!/\d/.test(password)) errors.push("Must include at least one number.");
+        if (!/[\W_]/.test(password)) errors.push("Must include at least one special character.");
+        if (password.length < 8) errors.push("Must be at least 8 characters long.");
+        return errors;
+    };
 
+
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setUserFormData(prev => ({ ...prev, [name]: value }));
+
+        if (name === "password") {
+            const errors = validatePassword(value);
+            setPasswordErrors(errors);
+        }
+    };
+    ///For Validating Pasword on Inline //////
     const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: number | string) => {
         if (type === 'companies') {
-            setUserCompaniesFormData(prev => ({
+            setUserFormData(prev => ({
                 ...prev,
-                companyId: prev.companyId.includes(item as number)
-                    ? prev.companyId.filter(i => i !== item)
-                    : [...prev.companyId, item as number]
+                companyid: prev.companyid.includes(item as number)
+                    ? prev.companyid.filter(i => i !== item)
+                    : [...prev.companyid, item as number]
             }))
         } else if (type === 'locations') {
-            setUserLocationsFormData(prev => ({
+            setUserFormData(prev => ({
                 ...prev,
-                locationId: prev.locationId.includes(item as number)
-                    ? prev.locationId.filter(i => i !== item)
-                    : [...prev.locationId, item as number]
+                locationid: prev.locationid.includes(item as number)
+                    ? prev.locationid.filter(i => i !== item)
+                    : [...prev.locationid, item as number]
             }))
         } else {
             setUserFormData(prev => ({
@@ -115,34 +140,35 @@ export default function SignUp() {
             // Step 1: Register the user
             const signUpResult = await signUp(userFormData)
             if (!signUpResult.success) {
-                const errorMessages = signUpResult.errors 
+                const errorMessages = signUpResult.errors
                     ? signUpResult.errors.map(err => `${err.field}: ${err.message}`).join('\n')
                     : 'Sign up failed';
                 console.error('Validation errors:', errorMessages);
                 throw new Error(errorMessages);
             }
 
-            const newUserId = 5
+            const newUserId = signUpResult.userId // Assuming the API returns the new user's ID
+            console.log(newUserId)
 
             // Step 2: Create user-location associations
-            if (userLocationsFormData.locationId.length > 0) {
-                const userLocationData = {
-                    userId: newUserId, 
-                    locationId: userLocationsFormData.locationId
-                }
-                console.log('Creating user locations with data:', userLocationData);
-                await createUserLocation(userLocationData)
-            }
+            // if (userFormData.locationid.length > 0) {
+            //     const userLocationData = {
+            //         userId: newUserId,
+            //         locationId: userFormData.locationid
+            //     }
+            //     console.log('Creating user locations with data:', userLocationData);
+            //     await createUserLocation(userLocationData)
+            // }
 
-            // Step 3: Create user-company associations
-            if (userCompaniesFormData.companyId.length > 0) {
-                const userCompanyData = {
-                    userId: newUserId,
-                    companyId: userCompaniesFormData.companyId
-                }
-                console.log('Creating user companies with data:', userCompanyData);
-                await createUserCompany(userCompanyData)
-            }
+            // // Step 3: Create user-company associations
+            // if (userFormData.companyid.length > 0) {
+            //     const userCompanyData = {
+            //         userId: newUserId,
+            //         companyId: userFormData.companyid
+            //     }
+            //     console.log('Creating user companies with data:', userCompanyData);
+            //     await createUserCompany(userCompanyData)
+            // }
 
             setFeedback({
                 type: 'success',
@@ -156,10 +182,10 @@ export default function SignUp() {
                 confirmPassword: '',
                 active: true,
                 roleId: 2,
-                voucherTypes: []
+                voucherTypes: [],
+                companyid: [],
+                locationid: [],
             })
-            setUserCompaniesFormData({ userId: 1, companyId: [] })
-            setUserLocationsFormData({ userId: 1, locationId: [] })
 
             // Redirect to dashboard after a short delay
             setTimeout(() => {
@@ -227,7 +253,7 @@ export default function SignUp() {
                                     name="password"
                                     type={showPassword ? "text" : "password"}
                                     value={userFormData.password}
-                                    onChange={handleChange}
+                                    onChange={handlePasswordChange}
                                     required
                                 />
                                 <Button
@@ -236,6 +262,7 @@ export default function SignUp() {
                                     size="icon"
                                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                                     onClick={() => setShowPassword(!showPassword)}
+
                                 >
                                     {showPassword ? (
                                         <EyeOff className="h-4 w-4 text-gray-500" />
@@ -244,9 +271,11 @@ export default function SignUp() {
                                     )}
                                 </Button>
                             </div>
-                            <p className="text-xs text-gray-400">
-                                Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one special character.
-                            </p>
+                            <ul className="text-xs text-red-500 space-y-1 mt-2">
+                                {passwordErrors.map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                ))}
+                            </ul>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="confirm-password">Confirm Password</Label>
@@ -300,7 +329,7 @@ export default function SignUp() {
                                 {companies.map((company) => (
                                     <div key={company.companyId} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={userCompaniesFormData.companyId.includes(company.companyId)}
+                                            checked={userFormData.companyid.includes(company.companyId)}
                                             onCheckedChange={() => handleCheckboxChange('companies', company.companyId)}
                                         />
                                         <Label>{company.companyName}</Label>
@@ -316,7 +345,7 @@ export default function SignUp() {
                                 {locations.map((location) => (
                                     <div key={location.locationId} className="flex items-center gap-2">
                                         <Checkbox
-                                            checked={userLocationsFormData.locationId.includes(location.locationId)}
+                                            checked={userFormData.locationid.includes(location.locationId)}
                                             onCheckedChange={() => handleCheckboxChange('locations', location.locationId)}
                                         />
                                         <Label>{location.address}</Label>
