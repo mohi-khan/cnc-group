@@ -1,13 +1,33 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Edit2Icon, PlusIcon } from 'lucide-react'
 import { SmallButton } from '../custom-ui/small-button'
 
@@ -29,8 +49,28 @@ type Company = {
 }
 
 const dummyBanks: Bank[] = [
-  { id: '1', bankCode: 'BNK001', bankName: 'Bank A', branchName: 'Main Branch', routerNo: '001122', accountNo: '1234567890', accountName: 'Company Account', companyCodes: ['CC001', 'CC002'], accountCode: 'AC001' },
-  { id: '2', bankCode: 'BNK002', bankName: 'Bank B', branchName: 'Downtown', routerNo: '002233', accountNo: '0987654321', accountName: 'Payroll Account', companyCodes: ['CC002'], accountCode: 'AC002' },
+  {
+    id: '1',
+    bankCode: 'BNK001',
+    bankName: 'Bank A',
+    branchName: 'Main Branch',
+    routerNo: '001122',
+    accountNo: '1234567890',
+    accountName: 'Company Account',
+    companyCodes: ['CC001', 'CC002'],
+    accountCode: 'AC001',
+  },
+  {
+    id: '2',
+    bankCode: 'BNK002',
+    bankName: 'Bank B',
+    branchName: 'Downtown',
+    routerNo: '002233',
+    accountNo: '0987654321',
+    accountName: 'Payroll Account',
+    companyCodes: ['CC002'],
+    accountCode: 'AC002',
+  },
 ]
 
 const bankNames = ['Bank A', 'Bank B', 'Bank C', 'Bank D']
@@ -61,8 +101,10 @@ export default function Banks() {
 
   const handleCompanyCodeChange = (companyCode: string) => {
     if (selectedBank) {
-      const updatedCompanyCodes = selectedBank.companyCodes.includes(companyCode)
-        ? selectedBank.companyCodes.filter(code => code !== companyCode)
+      const updatedCompanyCodes = selectedBank.companyCodes.includes(
+        companyCode
+      )
+        ? selectedBank.companyCodes.filter((code) => code !== companyCode)
         : [...selectedBank.companyCodes, companyCode]
 
       setSelectedBank({ ...selectedBank, companyCodes: updatedCompanyCodes })
@@ -72,7 +114,11 @@ export default function Banks() {
   const saveBank = () => {
     if (selectedBank) {
       if (selectedBank.id) {
-        setBanks(banks.map(bank => bank.id === selectedBank.id ? selectedBank : bank))
+        setBanks(
+          banks.map((bank) =>
+            bank.id === selectedBank.id ? selectedBank : bank
+          )
+        )
       } else {
         setBanks([...banks, { ...selectedBank, id: Date.now().toString() }])
       }
@@ -83,12 +129,15 @@ export default function Banks() {
 
   const saveCompanyCodes = () => {
     if (selectedBank) {
-      setBanks(banks.map(bank =>
-        bank.id === selectedBank.id ? { ...bank, companyCodes: selectedBank.companyCodes } : bank
-      ))
+      setBanks(
+        banks.map((bank) =>
+          bank.id === selectedBank.id
+            ? { ...bank, companyCodes: selectedBank.companyCodes }
+            : bank
+        )
+      )
     }
   }
-
 
   const addNewBank = () => {
     setSelectedBank({
@@ -100,7 +149,7 @@ export default function Banks() {
       accountNo: '',
       accountName: '',
       companyCodes: [],
-      accountCode: ''
+      accountCode: '',
     })
     setIsMainDialogOpen(true)
   }
@@ -140,7 +189,12 @@ export default function Banks() {
                 <TableCell>{bank.companyCodes.join(', ')}</TableCell>
                 <TableCell>{bank.accountCode}</TableCell>
                 <TableCell>
-                  <SmallButton onClick={() => { setSelectedBank(bank); setIsMainDialogOpen(true); }}>
+                  <SmallButton
+                    onClick={() => {
+                      setSelectedBank(bank)
+                      setIsMainDialogOpen(true)
+                    }}
+                  >
                     <Edit2Icon className="h-4 w-4" />
                   </SmallButton>
                 </TableCell>
@@ -153,7 +207,9 @@ export default function Banks() {
       <Dialog open={isMainDialogOpen} onOpenChange={setIsMainDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{selectedBank?.id ? 'Edit Bank' : 'Add Bank'}</DialogTitle>
+            <DialogTitle>
+              {selectedBank?.id ? 'Edit Bank' : 'Add Bank'}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -242,7 +298,10 @@ export default function Banks() {
               </Label>
               <div className="col-span-3 flex justify-between items-center">
                 <p>{selectedBank?.companyCodes.join(', ')}</p>
-                <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
+                <Dialog
+                  open={isCompanyDialogOpen}
+                  onOpenChange={setIsCompanyDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <SmallButton onClick={() => setIsCompanyDialogOpen(true)}>
                       <Edit2Icon className="h-4 w-4" />
@@ -254,13 +313,23 @@ export default function Banks() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       {companies.map((company) => (
-                        <div key={company.code} className="flex items-center space-x-2">
+                        <div
+                          key={company.code}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={company.code}
-                            checked={selectedBank?.companyCodes.includes(company.code)}
-                            onCheckedChange={() => handleCompanyCodeChange(company.code)}
+                            checked={selectedBank?.companyCodes.includes(
+                              company.code
+                            )}
+                            onCheckedChange={() =>
+                              handleCompanyCodeChange(company.code)
+                            }
                           />
-                          <label htmlFor={company.code} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          <label
+                            htmlFor={company.code}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
                             {company.code} - {company.name}
                           </label>
                         </div>
@@ -287,7 +356,10 @@ export default function Banks() {
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsMainDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsMainDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={saveBank}>Save</Button>

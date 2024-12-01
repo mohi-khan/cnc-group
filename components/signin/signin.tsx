@@ -152,18 +152,25 @@
 //   )
 // }
 
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react'
 import { signin } from './signin-api'
 
@@ -199,10 +206,11 @@ export default function SignIn() {
         }
 
         // Store user information in localStorage
-        const { userId, userCompanies, userLocations, voucherTypes } = response.data.user;
-        const userInfo = { userId, userCompanies, userLocations, voucherTypes };
-        localStorage.setItem('currentUser', JSON.stringify(userInfo));
-        console.log('Current user info stored:', userInfo);
+        const { userId, userCompanies, userLocations, voucherTypes } =
+          response.data.user
+        const userInfo = { userId, userCompanies, userLocations, voucherTypes }
+        localStorage.setItem('currentUser', JSON.stringify(userInfo))
+        console.log('Current user info stored:', userInfo)
 
         // Redirect to dashboard
         router.push('/dashboard')
@@ -230,7 +238,9 @@ export default function SignIn() {
               className=""
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Sign in to your account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Sign in to your account
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your username and password to access your account
           </CardDescription>
@@ -252,7 +262,7 @@ export default function SignIn() {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -278,7 +288,10 @@ export default function SignIn() {
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
-              <Label htmlFor="remember-me" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <Label
+                htmlFor="remember-me"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 Remember me
               </Label>
             </div>
@@ -294,7 +307,10 @@ export default function SignIn() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Link href="/forgot-password" className="text-sm text-center text-primary hover:underline">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-center text-primary hover:underline"
+          >
             Forgot your password?
           </Link>
         </CardFooter>

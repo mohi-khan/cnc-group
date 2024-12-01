@@ -2,12 +2,11 @@ import SignUp from '@/components/settings/create-user/signup'
 import React from 'react'
 
 const SignUpPage = () => {
-    return (
-        <div>
-            <SignUp />
-
-        </div>
-    )
+  return (
+    <div>
+      <SignUp />
+    </div>
+  )
 }
 
 export default SignUpPage

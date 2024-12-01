@@ -1,4 +1,3 @@
-
 // import { z } from 'zod';
 
 // const UserSchema = z.object({
@@ -74,8 +73,6 @@
 //     }
 //     throw new Error(result.message || 'Failed to toggle user active state');
 // }
-
-
 
 // import { z } from 'zod';
 
@@ -165,4 +162,3 @@
 //     }
 //     throw new Error('Unexpected data format for roles');
 // }
-
