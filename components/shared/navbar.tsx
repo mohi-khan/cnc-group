@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface SubItem {
     name: string
@@ -24,6 +25,14 @@ export default function Navbar() {
     const [activeMenu, setActiveMenu] = useState<string | null>(null)
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const profileRef = useRef<HTMLDivElement>(null)
+
+    const router = useRouter()
+
+    const handleSignOut = () => {
+        localStorage.removeItem('currentUser') // Remove the current user from local storage
+        setIsProfileOpen(false) // Close the profile dropdown
+        router.push('/') // Redirect to login page (adjust the path as needed)
+    }
 
     const menuItems: MenuItem[] = [
         { name: "Dashboard", subItemGroups: [] },
@@ -302,7 +311,7 @@ export default function Navbar() {
                                     <div className="py-1 rounded-md bg-white shadow-xs" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
                                         <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Your Profile</a>
                                         <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
-                                        <a href="/logout" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</a>
+                                        <button onClick={handleSignOut} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sign out</button>
                                     </div>
                                 </div>
                             )}
