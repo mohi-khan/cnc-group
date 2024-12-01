@@ -10,42 +10,61 @@ enum VoucherTypes {
 
 // Sign-up schema
 const signUpSchema = z
-  .object({
-    username: z.string().min(1, "Username is required"),
-    password: z
-      .string()
-      .min(1, "Password is required")
-      .min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-    active: z.boolean().default(true),
-    roleId: z.number(),
-    voucherTypes: z
-      .array(z.nativeEnum(VoucherTypes))
-      .min(1, "At least one voucher type is required"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+    .object({
+        username: z.string().min(1, "Username is required"),
+        password: z
+            .string()
+            .min(1, "Password is required")
+            .min(8, "Password must be at least 8 characters")
+            .refine(
+                (password) => /[A-Z]/.test(password),
+                "Password must contain at least one uppercase letter"
+            )
+            .refine(
+                (password) => /[a-z]/.test(password),
+                "Password must contain at least one lowercase letter"
+            )
+            .refine(
+                (password) => /\d/.test(password),
+                "Password must contain at least one number"
+            )
+            .refine(
+                (password) => /[\W_]/.test(password),
+                "Password must contain at least one special character"
+            ),
+        confirmPassword: z.string(),
+        active: z.boolean().default(true),
+        roleId: z.number(),
+        voucherTypes: z
+            .array(z.nativeEnum(VoucherTypes))
+            .min(1, "At least one voucher type is required"),
+        companyid: z.array(z.number()).min(1, "At least one company type is required"),
+        locationid: z.array(z.number()).min(1, "At least one location type is required"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+    });
 
-export const locationSchema = z.object({
+const locationSchema = z.object({
     locationId: z.number(),
     address: z.string().min(1, "Location address is required"),
 });
 
 const companySchema = z.object({
     companyId: z.number().min(1, "CompanyId is required"),
-    companyName: z.string().min(1, "Company name is required"),
+    companyName: z.string().min(1, "At least one company name is required")
 });
 
 const userLocationSchema = z.object({
     userId: z.number().min(1, "UserId is required"),
-    locationId: z.number().min(1, "LocationId is required"),
+    locationId: z.number().min(1, "LocationId is required"), // Changed to single number
 });
 
+// Modified user-company schema to handle single companyId
 const userCompanySchema = z.object({
     userId: z.number().min(1, "UserId is required"),
-    companyId: z.number().min(1, "CompanyId is required"),
+    companyId: z.number().min(1, "CompanyId is required"), // Changed to single number
 });
 
 const roleSchema = z.object({
@@ -84,8 +103,8 @@ export async function signUp(data: SignUpData) {
         console.error('Validation or API error:', error);
         if (error instanceof z.ZodError) {
             console.error('Validation errors:', error.errors);
-            return { 
-                success: false, 
+            return {
+                success: false,
                 errors: error.errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message
@@ -97,61 +116,61 @@ export async function signUp(data: SignUpData) {
 }
 
 // User-Location association function
-export async function createUserLocation(userLocationData: { userId: number, locationId: number[] }) {
-    const promises = userLocationData.locationId.map(async (locationId) => {
-        const data = { userId: userLocationData.userId, locationId };
-        const validatedData = userLocationSchema.parse(data);
-        const response = await fetch('http://localhost:4000/api/auth/create-user-location', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(validatedData),
-        });
+// export async function createUserLocation(userLocationData: { userId: number, locationId: number[] }) {
+//     const promises = userLocationData.locationId.map(async (locationId) => {
+//         const data = { userId: userLocationData.userId, locationId };
+//         const validatedData = userLocationSchema.parse(data);
+//         const response = await fetch('http://localhost:4000/api/auth/create-user-location', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(validatedData),
+//         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to create user location');
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || 'Failed to create user location');
+//         }
 
-        return response.json();
-    });
+//         return response.json();
+//     });
 
-    return Promise.all(promises);
-}
+//     return Promise.all(promises);
+// }
 
 // User-Company association function
-export async function createUserCompany(userCompanyData: { userId: number, companyId: number[] }) {
-    const promises = userCompanyData.companyId.map(async (companyId) => {
-        const data = { userId: userCompanyData.userId, companyId };
-        const validatedData = userCompanySchema.parse(data);
-        const response = await fetch('http://localhost:4000/api/auth/create-user-company', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(validatedData),
-        });
+// export async function createUserCompany(userCompanyData: { userId: number, companyId: number[] }) {
+//     const promises = userCompanyData.companyId.map(async (companyId) => {
+//         const data = { userId: userCompanyData.userId, companyId };
+//         const validatedData = userCompanySchema.parse(data);
+//         const response = await fetch('http://localhost:4000/api/auth/create-user-company', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(validatedData),
+//         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to create user company');
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || 'Failed to create user company');
+//         }
 
-        return response.json();
-    });
+//         return response.json();
+//     });
 
-    return Promise.all(promises);
-}
+//     return Promise.all(promises);
+// }
 
 // Get all companies function
 export async function getAllCompanies() {
     const response = await fetch('http://localhost:4000/api/company/get-all-companies');
-    
+
     if (!response.ok) {
         throw new Error('Failed to fetch companies');
     }
-    
+
     const data = await response.json();
     return data.map((company: any) => companySchema.parse(company));
 }
@@ -159,11 +178,11 @@ export async function getAllCompanies() {
 // Get all roles function
 export async function getAllRoles(): Promise<RoleData[]> {
     const response = await fetch('http://localhost:4000/api/roles/get-all-roles');
-    
+
     if (!response.ok) {
         throw new Error('Failed to fetch roles');
     }
-    
+
     const responseData = await response.json();
     const roles = responseData.data;
 
@@ -185,11 +204,11 @@ export async function getAllRoles(): Promise<RoleData[]> {
 // Get all locations function
 export async function getAllLocations() {
     const response = await fetch('http://localhost:4000/api/location/get-all-locations');
-    
+
     if (!response.ok) {
         throw new Error('Failed to fetch locations');
     }
-    
+
     const responseData = await response.json();
     const locations = responseData.data;
 
@@ -205,6 +224,6 @@ export async function getAllLocations() {
                 return null;
             }
         })
-        .filter((location: LocationData | null): role is LocationData => location !== null);
+
 }
 
