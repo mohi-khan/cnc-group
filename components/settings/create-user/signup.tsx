@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from 'lucide-react'
-import { signUp, SignUpData, UserCompanyData, UserLocationData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
+import { signUp, SignUpData, getAllCompanies, CompanyData, getAllLocations, LocationData, getAllRoles, RoleData } from './create-user-api'
 
 enum VoucherTypes {
     Payment = 'Payment Voucher',
@@ -79,7 +79,7 @@ export default function SignUp() {
         }
     };
     ///For Validating Pasword on Inline //////
-    const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: number | string) => {
+    const handleCheckboxChange = (type: 'companies' | 'locations' | 'voucherTypes', item: number | VoucherTypes) => {
         if (type === 'companies') {
             setUserFormData(prev => ({
                 ...prev,

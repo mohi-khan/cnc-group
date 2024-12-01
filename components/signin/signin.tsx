@@ -189,18 +189,21 @@ export default function SignIn() {
 
     try {
       const response = await signin({ username, password })
-      
+
       if (response.success && response.data?.token) {
         // Log the current user information
-        
+
         // Store token if remember me is checked
         if (rememberMe) {
           localStorage.setItem('authToken', response.data.token)
         }
+
         // Store user information in localStorage
-        localStorage.setItem('currentUser', JSON.stringify(response.data.user))
-        console.log('Current user:', response.data.user)
-        
+        const { userId, userCompanies, userLocations, voucherTypes } = response.data.user;
+        const userInfo = { userId, userCompanies, userLocations, voucherTypes };
+        localStorage.setItem('currentUser', JSON.stringify(userInfo));
+        console.log('Current user info stored:', userInfo);
+
         // Redirect to dashboard
         router.push('/dashboard')
       } else {
@@ -285,7 +288,7 @@ export default function SignIn() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              <LockIcon className="mr-2 h-4 w-4" /> 
+              <LockIcon className="mr-2 h-4 w-4" />
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
