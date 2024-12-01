@@ -2,11 +2,11 @@ import InternalOrders from '@/components/settings/internal-orders/internal-order
 import React from 'react'
 
 const InternalOrdersPage = () => {
-    return (
-        <div>
-            <InternalOrders />
-        </div>
-    )
+  return (
+    <div>
+      <InternalOrders />
+    </div>
+  )
 }
 
 export default InternalOrdersPage
