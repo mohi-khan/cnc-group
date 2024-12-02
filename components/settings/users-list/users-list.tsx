@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+// Import UI components
 import {
   Table,
   TableBody,
@@ -36,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+// Define interfaces for User and UpdateUserData
 interface User {
   id: number
   username: string
@@ -56,6 +58,7 @@ interface UpdateUserData {
 const USERS_PER_PAGE = 5
 
 export default function UsersList() {
+  // State declarations
   const [users, setUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -64,11 +67,15 @@ export default function UsersList() {
     { roleId: number; roleName: string; permission: string }[]
   >([])
 
+  const [newVoucherType, setNewVoucherType] = useState('')
+
+  // Fetch users and roles on component mount
   useEffect(() => {
     fetchUsers()
     fetchRoles()
   }, [])
 
+  // Function to fetch users from the API
   const fetchUsers = async () => {
     try {
       const response = await fetch(
@@ -88,6 +95,7 @@ export default function UsersList() {
     }
   }
 
+  // Function to fetch roles from the API
   const fetchRoles = async () => {
     try {
       const response = await fetch(
@@ -107,6 +115,7 @@ export default function UsersList() {
     }
   }
 
+  // Function to refresh the user list
   const refreshAttachment = async () => {
     try {
       await fetchUsers()
@@ -116,11 +125,13 @@ export default function UsersList() {
     }
   }
 
+  // Pagination logic
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
   const endIndex = startIndex + USERS_PER_PAGE
   const currentUsers = users.slice(startIndex, endIndex)
 
+  // Function to handle editing a user
   const handleEditUser = (user: User) => {
     setEditingUser({
       ...user,
@@ -129,6 +140,7 @@ export default function UsersList() {
     setIsEditDialogOpen(true)
   }
 
+  // Function to save edited user data
   const handleSaveEdit = async () => {
     if (editingUser) {
       try {
@@ -178,11 +190,19 @@ export default function UsersList() {
     }
   }
 
+  // Function to handle input changes in the edit form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
+    if (name === 'voucherTypes') {
+      setEditingUser((prev) =>
+        prev ? { ...prev, voucherTypes: value.split(',').map((type) => type.trim()) } : null
+      )
+    } else {
+      setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
+    }
   }
 
+  // Function to toggle user active state
   const handleToggleActive = async (
     userId: number,
     currentActiveState: boolean
@@ -227,26 +247,17 @@ export default function UsersList() {
       alert(
         `Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
-      
     }
-    
-    
-    
   }
-  
 
-  
-
+  // Main component render
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-4">User List</h1>
+      {/* User table */}
       <Table>
         <TableHeader>
-          <TableRow
-            className="bg-slate-100 shadow-sm
-
-                    "
-          >
+          <TableRow className="bg-slate-100 shadow-sm">
             <TableHead className="w-[100px]">Serial Number</TableHead>
             <TableHead>Username</TableHead>
             <TableHead>Role</TableHead>
@@ -262,6 +273,7 @@ export default function UsersList() {
               <TableCell className="capitalize">{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
+                {/* View user details dialog */}
                 <Dialog key={`view-${user.id}`}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -290,6 +302,7 @@ export default function UsersList() {
                     </div>
                   </DialogContent>
                 </Dialog>
+                {/* Edit user dialog */}
                 <Dialog
                   key={`edit-${user.id}`}
                   open={isEditDialogOpen}
@@ -355,29 +368,19 @@ export default function UsersList() {
                       <Label htmlFor="voucherTypes">Voucher Types</Label>
                       <Input
                         id="voucherTypes"
-                        name="VoucherTypes"
+                        name="voucherTypes"
                         value={editingUser?.voucherTypes?.join(', ') || ''}
-                        onChange={(e) =>
-                          setEditingUser((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  VoucherTypes: e.target.value
-                                    ? e.target.value.split(', ')
-                                    : [],
-                                }
-                              : null
-                          )
-                        }
+                        onChange={handleInputChange}
                         className="mb-2"
+                        placeholder="Enter voucher types separated by commas"
                       />
-                      
                     </div>
                     <DialogFooter>
                       <Button onClick={handleSaveEdit}>Submit</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                {/* Toggle user active state button */}
                 <Button
                   variant={user.active ? 'ghost' : 'destructive'}
                   size="sm"
@@ -390,6 +393,7 @@ export default function UsersList() {
           ))}
         </TableBody>
       </Table>
+      {/* Pagination */}
       <div className="mt-4">
         <Pagination>
           <PaginationContent>
@@ -433,3 +437,4 @@ export default function UsersList() {
     </div>
   )
 }
+
