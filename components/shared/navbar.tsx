@@ -11,6 +11,15 @@ interface SubItem {
   source: string
 }
 
+interface Company {
+  companyId: number
+  companyName: string
+}
+interface UserCompany {
+  userId: number
+  companyId: number
+}
+
 interface SubItemGroup {
   name: string
   items: SubItem[]
@@ -21,7 +30,17 @@ interface MenuItem {
   subItemGroups: SubItemGroup[]
 }
 
+interface User {
+  userId: number
+  username: string
+  roleId: number
+  roleName: string
+  userCompanies: UserCompany[]
+}
+
 export default function Navbar() {
+  const [user, setUser] = useState<User | null>(null)
+  const [companies, setCompanies] = useState<Company[]>([])
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isCompaniesOpen, setIsCompaniesOpen] = useState(false)
@@ -35,6 +54,37 @@ export default function Navbar() {
     setIsProfileOpen(false) // Close the profile dropdown
     router.push('/') // Redirect to login page
   }
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch(
+          'http://localhost:4000/api/company/get-all-companies'
+        )
+        const data: Company[] = await response.json()
+
+        const userStr = localStorage.getItem('currentUser')
+        if (userStr) {
+          const userData: User = JSON.parse(userStr)
+          setUser(userData)
+
+          // Filter companies based on userCompanies
+          const userCompanyIds = userData.userCompanies.map(
+            (uc) => uc.companyId
+          )
+          const filteredCompanies = data.filter((company) =>
+            userCompanyIds.includes(company.companyId)
+          )
+          console.log('company filter', filteredCompanies)
+          setCompanies(filteredCompanies)
+        }
+      } catch (error) {
+        console.error('Error fetching companies:', error)
+      }
+    }
+
+    fetchCompanies()
+  }, [])
 
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', subItemGroups: [] },
@@ -351,27 +401,22 @@ export default function Navbar() {
                     role="menu"
                     aria-orientation="vertical"
                   >
-                    <a
-                      href="/company1"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Company 1
-                    </a>
-                    <a
-                      href="/company2"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Company 2
-                    </a>
-                    <a
-                      href="/company3"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Company 3
-                    </a>
+                    {companies?.length > 0 ? (
+                      companies?.map((company) => (
+                        <a
+                          key={company?.companyId}
+                          href={`/company/${company.companyId}`}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          role="menuitem"
+                        >
+                          {company?.companyName}
+                        </a>
+                      ))
+                    ) : (
+                      <p className="px-4 py-2 text-sm text-gray-500">
+                        No companies available
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

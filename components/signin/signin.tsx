@@ -196,7 +196,7 @@ export default function SignIn() {
 
     try {
       const response = await signin({ username, password })
-
+      alert(response.success)
       if (response.success && response.data?.token) {
         // Log the current user information
 
@@ -204,10 +204,11 @@ export default function SignIn() {
         if (rememberMe) {
           localStorage.setItem('authToken', response.data.token)
         }
-
+       console.log(response.data.user)
         // Store user information in localStorage
         const { userId, userCompanies, userLocations, voucherTypes } =
           response.data.user
+
         const userInfo = { userId, userCompanies, userLocations, voucherTypes }
         localStorage.setItem('currentUser', JSON.stringify(userInfo))
         console.log('Current user info stored:', userInfo)
