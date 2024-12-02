@@ -83,16 +83,7 @@ export default function CompanyForm() {
       setErrors(null)
       return true
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Map the errors to their fields for better error messages
-        const fieldErrors = error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: `${err.path[0]}: ${err.message}`
-        }))
-        setErrors({ ...error, errors: fieldErrors })
-        console.log('Validation errors:', fieldErrors)
-      }
-      return false
+      throw "zod validation error"
     }
   }
 
