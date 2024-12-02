@@ -227,8 +227,15 @@ export default function UsersList() {
       alert(
         `Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
+      
     }
+    
+    
+    
   }
+  
+
+  
 
   return (
     <div className="container mx-auto py-10">
@@ -311,14 +318,18 @@ export default function UsersList() {
                         className="mb-2"
                       />
                       <Label htmlFor="roleId">Role</Label>
+                      
                       <Select
-                        value={editingUser?.roleId?.toString() ?? ''}
+                        value={editingUser?.roleId?.toString() ?? 'no-role'}
                         onValueChange={(value) =>
                           setEditingUser((prev) =>
                             prev
                               ? {
                                   ...prev,
-                                  roleId: value ? parseInt(value) : null,
+                                  roleId:
+                                    value !== 'no-role'
+                                      ? parseInt(value)
+                                      : null,
                                 }
                               : null
                           )
@@ -328,8 +339,8 @@ export default function UsersList() {
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem key={0} value="no-role">
-                            No Role
+                          <SelectItem value="no-role">
+                            {editingUser?.roleName || 'No Role'}
                           </SelectItem>
                           {roles.map((role) => (
                             <SelectItem
@@ -341,7 +352,6 @@ export default function UsersList() {
                           ))}
                         </SelectContent>
                       </Select>
-
                       <Label htmlFor="voucherTypes">Voucher Types</Label>
                       <Input
                         id="voucherTypes"
@@ -361,6 +371,7 @@ export default function UsersList() {
                         }
                         className="mb-2"
                       />
+                      
                     </div>
                     <DialogFooter>
                       <Button onClick={handleSaveEdit}>Submit</Button>
