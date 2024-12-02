@@ -4,18 +4,18 @@ import { z } from 'zod'
 export const companySchema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
   address: z.string().min(1, 'Address is required'),
-  address2: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  zip: z.string().optional(),
-  country: z.string().optional(),
-  taxId: z.string().optional(),
-  companyId: z.string().optional(),
-  currency: z.enum(['BDT', 'USD', 'EUR']),
-  phone: z.string().optional(),
+  city: z.string(),
+  state: z.string(),
+  country: z.string(),
+  postalCode: z.string(),
+  phone: z.string().min(1, 'Phone is required'),
   email: z.string().email().optional().or(z.literal('')),
   website: z.string().url().optional().or(z.literal('')),
-  emailDomain: z.string().optional(),
+  taxId: z.string().optional(),
+  currencyId: z.number(),
+  logo: z.string().optional(),
+  parentCompanyId: z.number().nullable(),
+  locationId: z.number().optional(),
 })
 
 export const locationSchema = z.object({
@@ -25,18 +25,23 @@ export const locationSchema = z.object({
 })
 
 export async function createCompany(
-  companyData: z.infer<typeof companySchema>
+  companyData: z.infer<typeof companySchema>,
+  locations: string[]
 ) {
   console.log('API: Creating company with data:', companyData)
 
   const response = await fetch(
-    'http://localhost:4000/api/company/create-company',
+    'http://localhost:4000/api/company/create-company-location',
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(companyData),
+      body: JSON.stringify({
+        companydata: companyData,
+        address: locations,
+        branchName: locations,
+      }),
     }
   )
 
@@ -50,6 +55,7 @@ export async function createCompany(
 
   return data
 }
+
 
 export async function createLocation(
   locationData: z.infer<typeof locationSchema>

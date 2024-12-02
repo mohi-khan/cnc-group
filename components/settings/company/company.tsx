@@ -15,34 +15,23 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  companySchema,
-  locationSchema,
-  createCompany,
-  createLocation,
-} from './company-api'
+import { companySchema, createCompany } from './company-api'
 
-enum Currency {
-  BDT = 'BDT',
-  USD = 'USD',
-  EUR = 'EUR',
-}
-
-export default function Component() {
+export default function CompanyForm() {
   const [companyName, setCompanyName] = useState('')
-  const [streetAddress, setStreetAddress] = useState('')
-  const [streetAddress2, setStreetAddress2] = useState('')
+  const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
-  const [zip, setZip] = useState('')
   const [country, setCountry] = useState('')
-  const [taxId, setTaxId] = useState('')
-  const [companyId, setCompanyId] = useState('')
-  const [currency, setCurrency] = useState<Currency>(Currency.BDT)
+  const [postalCode, setPostalCode] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
-  const [emailDomain, setEmailDomain] = useState('cnc-accessories.odoo.com')
+  const [taxId, setTaxId] = useState('')
+  const [currencyId, setCurrencyId] = useState(1)
+  const [logo, setLogo] = useState('https://placeholder.com/logo.png')
+  const [parentCompanyId, setParentCompanyId] = useState<number | null>(null)
+  const [locationId, setLocationId] = useState<number>(0)
   const [locations, setLocations] = useState([''])
   const [activeTab, setActiveTab] = useState('general')
   const [isLoading, setIsLoading] = useState(false)
@@ -53,21 +42,21 @@ export default function Component() {
   const [errors, setErrors] = useState<z.ZodError | null>(null)
 
   const isLocationTabEnabled = Boolean(
-    companyName.trim() && streetAddress.trim() && phone.trim()
+    companyName.trim() && address.trim() && phone.trim()
   )
 
   const isSaveButtonEnabled = Boolean(
     companyName.trim() &&
-      streetAddress.trim() &&
+      address.trim() &&
       phone.trim() &&
       locations.some((loc) => loc.trim() !== '')
   )
 
-  const handleAddAddress = () => {
+  const handleAddLocation = () => {
     setLocations([...locations, ''])
   }
 
-  const handleAddressChange = (index: number, value: string) => {
+  const handleLocationChange = (index: number, value: string) => {
     const newLocations = [...locations]
     newLocations[index] = value
     setLocations(newLocations)
@@ -77,43 +66,31 @@ export default function Component() {
     try {
       companySchema.parse({
         companyName,
-        address: streetAddress,
-        address2: streetAddress2,
+        address,
         city,
         state,
-        zip,
         country,
-        taxId,
-        companyId,
-        currency,
+        postalCode,
         phone,
         email,
         website,
-        emailDomain,
+        taxId,
+        currencyId,
+        logo,
+        parentCompanyId,
+        locationId,
       })
       setErrors(null)
       return true
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setErrors(error)
-      }
-      return false
-    }
-  }
-
-  const validateLocations = () => {
-    try {
-      locations.forEach((location, index) => {
-        locationSchema.parse({
-          companyId: Number(companyId),
-          branchName: location,
-          address: location,
-        })
-      })
-      return true
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error)
+        // Map the errors to their fields for better error messages
+        const fieldErrors = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: `${err.path[0]}: ${err.message}`
+        }))
+        setErrors({ ...error, errors: fieldErrors })
+        console.log('Validation errors:', fieldErrors)
       }
       return false
     }
@@ -124,7 +101,7 @@ export default function Component() {
     setFeedback(null)
     setErrors(null)
 
-    if (!validateCompanyData() || !validateLocations()) {
+    if (!validateCompanyData()) {
       setIsLoading(false)
       return
     }
@@ -132,34 +109,22 @@ export default function Component() {
     try {
       const companyData = {
         companyName,
-        address: streetAddress,
-        address2: streetAddress2,
+        address,
         city,
         state,
-        zip,
         country,
-        taxId,
-        companyId,
-        currency,
+        postalCode,
         phone,
         email,
         website,
-        emailDomain,
+        taxId,
+        currencyId,
+        logo,
+        parentCompanyId,
+        locationId,
       }
 
-      const company = await createCompany(companyData)
-
-      const locationPromises = locations
-        .filter((loc) => loc.trim() !== '')
-        .map((location) =>
-          createLocation({
-            companyId: Number(company.companyId),
-            branchName: location.trim(),
-            address: location.trim(),
-          })
-        )
-
-      await Promise.all(locationPromises)
+      await createCompany(companyData, locations.filter(loc => loc.trim() !== ''))
 
       setFeedback({
         type: 'success',
@@ -167,19 +132,19 @@ export default function Component() {
       })
       // Reset form
       setCompanyName('')
-      setStreetAddress('')
-      setStreetAddress2('')
+      setAddress('')
       setCity('')
       setState('')
-      setZip('')
       setCountry('')
-      setTaxId('')
-      setCompanyId('')
-      setCurrency(Currency.BDT)
+      setPostalCode('')
       setPhone('')
       setEmail('')
       setWebsite('')
-      setEmailDomain('cnc-accessories.odoo.com')
+      setTaxId('')
+      setCurrencyId(1)
+      setLogo('https://placeholder.com/logo.png')
+      setParentCompanyId(null)
+      setLocationId(0)
       setLocations([''])
       setActiveTab('general')
     } catch (error) {
@@ -202,7 +167,7 @@ export default function Component() {
         <Label htmlFor="companyName">Company Name *</Label>
         <Input
           id="companyName"
-          placeholder="e.g. My Company"
+          placeholder="e.g. Tech Innovators Inc."
           className="max-w-xl"
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
@@ -226,9 +191,11 @@ export default function Component() {
         <Alert variant="destructive" className="mb-6">
           <AlertTitle>Validation Error</AlertTitle>
           <AlertDescription>
-            <ul>
+            <ul className="list-disc pl-4">
               {errors.errors.map((error, index) => (
-                <li key={index}>{error.message}</li>
+                <li key={index} className="text-sm">
+                  {error.message}
+                </li>
               ))}
             </ul>
           </AlertDescription>
@@ -258,22 +225,16 @@ export default function Component() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="street">Address *</Label>
+                    <Label htmlFor="address">Address *</Label>
                     <Input
-                      id="street"
+                      id="address"
                       placeholder="Street..."
                       className="mt-1.5"
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
                       required
                     />
-                    <Input
-                      placeholder="Street 2..."
-                      className="mt-1.5"
-                      value={streetAddress2}
-                      onChange={(e) => setStreetAddress2(e.target.value)}
-                    />
-                    <div className="grid grid-cols-3 gap-2 mt-1.5">
+                    <div className="grid grid-cols-2 gap-2 mt-1.5">
                       <Input
                         placeholder="City"
                         value={city}
@@ -284,18 +245,19 @@ export default function Component() {
                         value={state}
                         onChange={(e) => setState(e.target.value)}
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-1.5">
                       <Input
-                        placeholder="ZIP"
-                        value={zip}
-                        onChange={(e) => setZip(e.target.value)}
+                        placeholder="Country"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Postal Code"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
                       />
                     </div>
-                    <Input
-                      placeholder="Country"
-                      className="mt-1.5"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -308,27 +270,19 @@ export default function Component() {
                         onChange={(e) => setTaxId(e.target.value)}
                       />
                     </div>
-                    {/* <div>
-                      <Label htmlFor="companyId">Company ID</Label>
-                      <Input
-                        id="companyId"
-                        value={companyId}
-                        onChange={(e) => setCompanyId(e.target.value)}
-                      />
-                    </div> */}
                     <div>
-                      <Label htmlFor="currency">Currency</Label>
+                      <Label htmlFor="currencyId">Currency ID</Label>
                       <Select
-                        value={currency}
-                        onValueChange={(value: Currency) => setCurrency(value)}
+                        value={currencyId.toString()}
+                        onValueChange={(value) => setCurrencyId(Number(value))}
                       >
-                        <SelectTrigger id="currency">
+                        <SelectTrigger id="currencyId">
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={Currency.BDT}>BDT</SelectItem>
-                          <SelectItem value={Currency.USD}>USD</SelectItem>
-                          <SelectItem value={Currency.EUR}>EUR</SelectItem>
+                          <SelectItem value="1">BDT</SelectItem>
+                          <SelectItem value="2">USD</SelectItem>
+                          <SelectItem value="3">EUR</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -359,17 +313,18 @@ export default function Component() {
                     <Label htmlFor="website">Website</Label>
                     <Input
                       id="website"
-                      placeholder="e.g. https://www.odoo.com"
+                      placeholder="e.g. https://www.example.com"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="emailDomain">Email Domain</Label>
+                    <Label htmlFor="logo">Logo URL</Label>
                     <Input
-                      id="emailDomain"
-                      value={emailDomain}
-                      onChange={(e) => setEmailDomain(e.target.value)}
+                      id="logo"
+                      placeholder="e.g. https://www.example.com/logo.png"
+                      value={logo}
+                      onChange={(e) => setLogo(e.target.value)}
                     />
                   </div>
                 </div>
@@ -379,7 +334,7 @@ export default function Component() {
             <TabsContent value="location" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="addAddress" className="mr-2">
+                  <Label htmlFor="addLocation" className="mr-2">
                     Add Location
                   </Label>
                   {locations.map((location, index) => (
@@ -387,14 +342,14 @@ export default function Component() {
                       key={index}
                       value={location}
                       onChange={(e) =>
-                        handleAddressChange(index, e.target.value)
+                        handleLocationChange(index, e.target.value)
                       }
-                      placeholder={`Address ${index + 1}`}
+                      placeholder={`Location ${index + 1}`}
                       className="mt-2"
                     />
                   ))}
-                  <Button onClick={handleAddAddress} className="mt-4">
-                    Add Address
+                  <Button onClick={handleAddLocation} className="mt-4">
+                    Add Location
                   </Button>
                 </div>
               </div>
@@ -413,3 +368,4 @@ export default function Component() {
     </div>
   )
 }
+
