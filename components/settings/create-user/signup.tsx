@@ -27,7 +27,7 @@ import {
   LocationData,
   getAllRoles,
   RoleData,
-} from './create-user-api'
+} from '../../../api/create-user-api'
 
 enum VoucherTypes {
   Payment = 'Payment Voucher',

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
 // Update the schema to match the exact API response structure
 export const costCenterSchema = z.object({
   costCenterId: z.string(),
@@ -19,7 +21,7 @@ export async function getAllCostCenters(): Promise<CostCenter[]> {
   console.log('API: Fetching all cost centers')
 
   const response = await fetch(
-    'http://localhost:4000/api/cost-centers/get-all-cost-centers'
+    `${API_BASE_URL}/api/cost-centers/get-all-cost-centers`
   )
 
   console.log('API: Get all cost centers response status:', response.status)
@@ -53,7 +55,7 @@ export async function createCostCenter(
   console.log('API: Creating cost center with data:', costCenter)
 
   const response = await fetch(
-    'http://localhost:4000/api/cost-centers/create-cost-centers',
+    `${API_BASE_URL}/api/cost-centers/create-cost-centers`,
     {
       method: 'POST',
       headers: {
@@ -78,7 +80,7 @@ export async function updateCostCenter(costCenter: CostCenter) {
   console.log('API: Updating cost center with data:', costCenter)
 
   const response = await fetch(
-    `http://localhost:4000/api/cost-centers/edit/${costCenter.costCenterId}`,
+    `${API_BASE_URL}/api/cost-centers/edit/${costCenter.costCenterId}`,
     {
       method: 'PATCH',
       headers: {
@@ -103,7 +105,7 @@ export async function activateCostCenter(id: string) {
   console.log('API: Activating cost center with id:', id)
 
   const response = await fetch(
-    `http://localhost:4000/api/cost-centers/activate/${id}`,
+    `${API_BASE_URL}/api/cost-centers/activate/${id}`,
     {
       method: 'PATCH',
       headers: {
@@ -127,7 +129,7 @@ export async function deactivateCostCenter(id: string) {
   console.log('API: Deactivating cost center with id:', id)
 
   const response = await fetch(
-    `http://localhost:4000/api/cost-centers/deactivate/${id}`,
+    `${API_BASE_URL}/api/cost-centers/deactivate/${id}`,
     {
       method: 'PATCH',
       headers: {

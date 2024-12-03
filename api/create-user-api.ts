@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
 enum VoucherTypes {
   Payment = 'Payment Voucher',
   Receipt = 'Receipt Voucher',
@@ -87,7 +89,7 @@ export type RoleData = z.infer<typeof roleSchema>
 export async function signUp(data: SignUpData) {
   try {
     const validatedData = signUpSchema.parse(data)
-    const response = await fetch('http://localhost:4000/api/auth/register', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,58 +121,10 @@ export async function signUp(data: SignUpData) {
   }
 }
 
-// User-Location association function
-// export async function createUserLocation(userLocationData: { userId: number, locationId: number[] }) {
-//     const promises = userLocationData.locationId.map(async (locationId) => {
-//         const data = { userId: userLocationData.userId, locationId };
-//         const validatedData = userLocationSchema.parse(data);
-//         const response = await fetch('http://localhost:4000/api/auth/create-user-location', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(validatedData),
-//         });
-
-//         if (!response.ok) {
-//             const errorData = await response.json();
-//             throw new Error(errorData.message || 'Failed to create user location');
-//         }
-
-//         return response.json();
-//     });
-
-//     return Promise.all(promises);
-// }
-
-// User-Company association function
-// export async function createUserCompany(userCompanyData: { userId: number, companyId: number[] }) {
-//     const promises = userCompanyData.companyId.map(async (companyId) => {
-//         const data = { userId: userCompanyData.userId, companyId };
-//         const validatedData = userCompanySchema.parse(data);
-//         const response = await fetch('http://localhost:4000/api/auth/create-user-company', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(validatedData),
-//         });
-
-//         if (!response.ok) {
-//             const errorData = await response.json();
-//             throw new Error(errorData.message || 'Failed to create user company');
-//         }
-
-//         return response.json();
-//     });
-
-//     return Promise.all(promises);
-// }
-
 // Get all companies function
 export async function getAllCompanies() {
   const response = await fetch(
-    'http://localhost:4000/api/company/get-all-companies'
+    `${API_BASE_URL}/api/company/get-all-companies`
   )
 
   if (!response.ok) {
@@ -183,7 +137,7 @@ export async function getAllCompanies() {
 
 // Get all roles function
 export async function getAllRoles(): Promise<RoleData[]> {
-  const response = await fetch('http://localhost:4000/api/roles/get-all-roles')
+  const response = await fetch(`${API_BASE_URL}/api/roles/get-all-roles`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch roles')
@@ -210,7 +164,7 @@ export async function getAllRoles(): Promise<RoleData[]> {
 // Get all locations function
 export async function getAllLocations() {
   const response = await fetch(
-    'http://localhost:4000/api/location/get-all-locations'
+    `${API_BASE_URL}/api/location/get-all-locations`
   )
 
   if (!response.ok) {
