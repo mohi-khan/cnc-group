@@ -1,4 +1,4 @@
-import Banks from '@/components/settings/banks'
+import Banks from '@/components/settings/banks/banks'
 import React from 'react'
 
 const BanksPage = () => {

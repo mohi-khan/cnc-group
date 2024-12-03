@@ -1,7 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface SignInRequest {
   username: string
@@ -31,7 +30,7 @@ export const signin = async (
   credentials: SignInRequest
 ): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await api.post<SignInResponse>('/auth/login', credentials)
+    const response = await api.post<SignInResponse>('api/auth/login', credentials)
 
     if (response.data.status === 'success' && response.data.data) {
       return {
@@ -59,3 +58,50 @@ export const signin = async (
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { fetchApi } from '@/utils/http'
+// import { z } from 'zod'
+
+// export const SignInRequestSchema = z.object({
+//   username: z.string().min(1),
+//   password: z.string().min(1),
+// })
+
+// export const SignInResponseSchema = z.object({
+//   token: z.string(),
+//   user: z.object({
+//     id: z.string(),
+//     email: z.string(),
+//     name: z.string().optional(),
+//   }),
+// })
+
+// export type SignInRequest = z.infer<typeof SignInRequestSchema>
+// export type SignInResponse = z.infer<typeof SignInResponseSchema>
+
+// export async function signIn(credentials: SignInRequest) {
+//   return fetchApi<SignInResponse>({
+//     url: '/api/auth/login',
+//     method: 'POST',
+//     body: credentials,
+//     schema: SignInResponseSchema,
+//   })
+// }
+

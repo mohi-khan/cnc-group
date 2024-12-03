@@ -37,7 +37,7 @@ import {
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
-} from './cost-centers-api'
+} from '../../../api/cost-centers-api'
 
 export default function CostCenterManagement() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])

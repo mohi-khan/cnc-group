@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { companySchema, createCompany } from './company-api'
+import { companySchema, createCompany } from '../../../api/company-api'
 
 export default function CompanyForm() {
   const [companyName, setCompanyName] = useState('')
