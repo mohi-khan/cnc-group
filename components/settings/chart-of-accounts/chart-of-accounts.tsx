@@ -590,6 +590,7 @@ export default function ChartOfAccountsTable() {
         </div>
       </div>
 
+      {/* Edit Portion Start here */}
       <Dialog open={isEditAccountOpen} onOpenChange={setIsEditAccountOpen}>
         <DialogContent>
           <DialogHeader>
@@ -604,14 +605,14 @@ export default function ChartOfAccountsTable() {
               }}
             >
               <div className="space-y-2">
-                <Label htmlFor="edit-code">Notes</Label>
+                <Label htmlFor="edit-notes">Notes</Label>
                 <Input
-                  id="edit-code"
+                  id="edit-notes"
                   value={editingAccount.notes}
                   onChange={(e) =>
                     setEditingAccount({
                       ...editingAccount,
-                      code: e.target.value,
+                      notes: e.target.value,
                     })
                   }
                 />
