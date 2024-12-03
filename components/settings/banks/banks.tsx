@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Edit2Icon, PlusIcon } from 'lucide-react'
-import { SmallButton } from '../custom-ui/small-button'
+import { SmallButton } from '../../custom-ui/small-button'
 
 type Bank = {
   id: string
@@ -282,7 +282,7 @@ export default function Banks() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="accountName" className="text-right">
-                Account Name
+                Account Nam
               </Label>
               <Input
                 id="accountName"

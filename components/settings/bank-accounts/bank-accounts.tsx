@@ -63,7 +63,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
 })
 
-export default function BankAccountForm() {
+export default function BankAccounts() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

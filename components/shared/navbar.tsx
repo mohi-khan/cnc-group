@@ -186,10 +186,10 @@ export default function Navbar() {
         {
           name: 'Bank Management',
           items: [
-            {
-              name: 'Create Bank Account',
-              source: '/bank/create-bank-account',
-            },
+            // {
+            //   name: 'Create Bank Account',
+            //   source: '/bank/create-bank-account',
+            // },
             { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
             {
               name: 'Bank Reconciliation',
@@ -281,7 +281,7 @@ export default function Navbar() {
           items: [
             { name: 'Cost Centers', source: '/settings/cost-centers' },
             { name: 'Internal Orders', source: '/settings/internal-orders' },
-            { name: 'Banks', source: '/settings/banks' },
+            { name: 'Bank Accounts', source: '/settings/bank-accounts' },
             { name: 'Cash Accounts', source: '/settings/cash-accounts' },
           ],
         },
@@ -476,3 +476,5 @@ export default function Navbar() {
     </nav>
   )
 }
+
+// Notes : In settings i have bank accounts. from there i can create bank accounts as well. previously there was banks. i kept the banks code in 'settings/banks' folder location in both page folder and component folder, even though i don't need it for now. i also commented out the create bank accounts route form navbar.
