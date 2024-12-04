@@ -274,6 +274,7 @@ export default function Navbar() {
               source: '/settings/chart-of-accounts',
             },
             { name: 'Currencies', source: '/settings/currencies' },
+            { name: 'Res Partners', source: '/settings/res-partner' },
           ],
         },
         {
