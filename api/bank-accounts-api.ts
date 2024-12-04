@@ -19,6 +19,7 @@ export const bankAccountSchema = z.object({
   bankCode: z.string().max(50, 'Bank code must not exceed 50 characters').optional(),
   integrationId: z.string().max(36, 'Integration ID must not exceed 36 characters').optional(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  created_by: z.number()
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {

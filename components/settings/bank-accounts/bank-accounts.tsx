@@ -53,26 +53,24 @@ import {
 import { bankAccountSchema, createBankAccount, editBankAccount, getAllBankAccounts, BankAccount } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 
-const formSchema = bankAccountSchema
-
 export default function BankAccounts() {
-  console.log('BankAccounts component rendered');
   const [accounts, setAccounts] = React.useState<BankAccount[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null);
+  const [userId, setUserId] = React.useState();
   const { toast } = useToast()
-
+  
   React.useEffect(() => {
-    console.log('Accounts state changed:', accounts);
-  }, [accounts]);
-
-  React.useEffect(() => {
-    console.log('Dialog open state changed:', isDialogOpen);
-  }, [isDialogOpen]);
-
-  React.useEffect(() => {
-    console.log('Editing account state changed:', editingAccount);
-  }, [editingAccount]);
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('asdgfasdg',userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userId])
 
 
   const form = useForm<z.infer<typeof bankAccountSchema>>({
@@ -86,6 +84,7 @@ export default function BankAccounts() {
       openingBalance: 0,
       isActive: true,
       isReconcilable: true,
+      created_by: userId
     },
   })
 
@@ -96,6 +95,7 @@ export default function BankAccounts() {
 
   React.useEffect(() => {
     console.log('Resetting form', { editingAccount });
+    console.log('dkhdkd', userId)
     if (editingAccount) {
       form.reset({
         ...editingAccount,
@@ -111,9 +111,10 @@ export default function BankAccounts() {
         openingBalance: 0,
         isActive: true,
         isReconcilable: true,
+        created_by: userId
       })
     }
-  }, [editingAccount, form])
+  }, [editingAccount, form, userId])
 
   async function fetchBankAccounts() {
     console.log('Fetching bank accounts');
