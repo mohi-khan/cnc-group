@@ -50,59 +50,57 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-const formSchema = z.object({
-  accountName: z.string().min(2, {
-    message: 'Account name must be at least 2 characters.',
-  }),
-  accountNumber: z.string().min(5, {
-    message: 'Account number must be at least 5 characters.',
-  }),
-  bankName: z.string().min(2, {
-    message: 'Bank name must be at least 2 characters.',
-  }),
-  branchName: z.string().optional(),
-  ifscCode: z.string().optional(),
-  swiftCode: z.string().optional(),
-  currencyId: z.string(),
-  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
-  openingBalance: z.string().regex(/^\d+(\.\d{1,2})?$/, {
-    message: 'Please enter a valid amount (up to 2 decimal places).',
-  }),
-  validityDate: z.date().optional(),
-  assetDetails: z.string().optional(),
-  isActive: z.boolean(),
-  isReconcilable: z.boolean(),
-  glAccountId: z.string().optional(),
-  bankCode: z.string().optional(),
-  integrationId: z.string().optional(),
-  notes: z.string().optional(),
-})
-
-type BankAccount = z.infer<typeof formSchema> & { id: string }
+import { bankAccountSchema, createBankAccount, editBankAccount, getAllBankAccounts, BankAccount } from '../../../api/bank-accounts-api'
+import { useToast } from '@/hooks/use-toast'
 
 export default function BankAccounts() {
-  const [accounts, setAccounts] = React.useState<BankAccount[]>([])
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null)
+  const [accounts, setAccounts] = React.useState<BankAccount[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null);
+  const [userId, setUserId] = React.useState();
+  const { toast } = useToast()
+  
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('asdgfasdg',userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userId])
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+
+  const form = useForm<z.infer<typeof bankAccountSchema>>({
+    resolver: zodResolver(bankAccountSchema),
     defaultValues: {
       accountName: '',
       accountNumber: '',
       bankName: '',
       currencyId: '',
       accountType: 'Savings',
-      openingBalance: '0.00',
+      openingBalance: 0,
       isActive: true,
       isReconcilable: true,
+      created_by: userId
     },
   })
 
   React.useEffect(() => {
+    console.log('Fetching bank accounts');
+    fetchBankAccounts();
+  }, [])
+
+  React.useEffect(() => {
+    console.log('Resetting form', { editingAccount });
+    console.log('dkhdkd', userId)
     if (editingAccount) {
-      form.reset(editingAccount)
+      form.reset({
+        ...editingAccount,
+        openingBalance: Number(editingAccount.openingBalance)
+      })
     } else {
       form.reset({
         accountName: '',
@@ -110,29 +108,66 @@ export default function BankAccounts() {
         bankName: '',
         currencyId: '',
         accountType: 'Savings',
-        openingBalance: '0.00',
+        openingBalance: 0,
         isActive: true,
         isReconcilable: true,
+        created_by: userId
       })
     }
-  }, [editingAccount, form])
+  }, [editingAccount, form, userId])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (editingAccount) {
-      setAccounts(accounts.map(acc => acc.id === editingAccount.id ? { ...acc, ...values } : acc))
-    } else {
-      const newAccount: BankAccount = {
-        id: Date.now().toString(),
-        ...values,
-      }
-      setAccounts([...accounts, newAccount])
+  async function fetchBankAccounts() {
+    console.log('Fetching bank accounts');
+    try {
+      const fetchedAccounts = await getAllBankAccounts()
+      console.log('Fetched accounts:', fetchedAccounts);
+      setAccounts(fetchedAccounts)
+    } catch (error) {
+      console.error('Error fetching bank accounts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch bank accounts",
+        variant: "destructive",
+      })
     }
-    setIsDialogOpen(false)
-    setEditingAccount(null)
-    form.reset()
+  }
+
+  async function onSubmit(values: z.infer<typeof bankAccountSchema>) {
+    console.log('Form submitted:', values);
+    try {
+      if (editingAccount) {
+        console.log('Editing account:', editingAccount.id);
+        await editBankAccount(editingAccount.id!, values)
+        console.log('Account edited successfully');
+        toast({
+          title: "Success",
+          description: "Bank account updated successfully",
+        })
+      } else {
+        console.log('Creating new account');
+        await createBankAccount(values)
+        console.log('Account created successfully');
+        toast({
+          title: "Success",
+          description: "Bank account created successfully",
+        })
+      }
+      setIsDialogOpen(false)
+      setEditingAccount(null)
+      form.reset()
+      fetchBankAccounts()
+    } catch (error) {
+      console.error('Error saving bank account:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save bank account",
+        variant: "destructive",
+      })
+    }
   }
 
   function handleEdit(account: BankAccount) {
+    console.log('Editing account:', account);
     setEditingAccount(account)
     setIsDialogOpen(true)
   }
@@ -269,7 +304,8 @@ export default function BankAccounts() {
                               type="number"
                               step="0.01"
                               placeholder="0.00"
-                              {...field}
+                              value={field.value}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
                               readOnly={!!editingAccount}
                             />
                           </FormControl>
@@ -294,7 +330,7 @@ export default function BankAccounts() {
                                   )}
                                 >
                                   {field.value ? (
-                                    format(field.value, 'PPP')
+                                    format(new Date(field.value), 'PPP')
                                   ) : (
                                     <span>Pick a date</span>
                                   )}
@@ -305,8 +341,8 @@ export default function BankAccounts() {
                             <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
+                                selected={field.value ? new Date(field.value) : undefined}
+                                onSelect={(date) => field.onChange(date ? date.toISOString() : undefined)}
                                 disabled={(date) => date < new Date('1900-01-01')}
                                 initialFocus
                               />
@@ -489,3 +525,4 @@ export default function BankAccounts() {
     </div>
   )
 }
+
