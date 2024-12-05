@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -33,48 +32,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  resPartnerSchema,
+  createResPartner,
+  updateResPartner,
+  getAllResPartners,
+  ResPartner,
+} from '../../../api/res-partner-api'
 
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  displayName: z.string().min(1, "Display name is required"),
-  companyName: z.string().optional(),
-  type: z.string().optional(),
-  companyId: z.number().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  mobile: z.string().optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  isCompany: z.boolean().default(false),
-  vat: z.string().optional(),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  zip: z.string().optional(),
-  active: z.boolean().default(true),
-  creditLimit: z.number().optional(),
-  customerRank: z.number().optional(),
-  supplierRank: z.number().optional(),
-  comment: z.string().optional(),
-})
-
-// Mock API functions - replace with actual API calls
-const getAllResPartners = async () => {
-  return [
-    { id: 1, name: 'John Doe', displayName: 'John Doe', email: 'john@example.com', phone: '123-456-7890', isCompany: false, active: true },
-    { id: 2, name: 'Acme Corp', displayName: 'Acme Corporation', email: 'info@acme.com', phone: '987-654-3210', isCompany: true, active: true },
-  ]
-}
-
-const createResPartner = async (data: any) => {
-  console.log('Creating res partner:', data)
-  return { ...data, id: Date.now() }
-}
-
-const updateResPartner = async (data: any) => {
-  console.log('Updating res partner:', data)
-  return data
-}
-
-type ResPartner = z.infer<typeof formSchema> & { id: number }
+const formSchema = resPartnerSchema.omit({ id: true })
 
 export default function ResPartnerManagement() {
   const [resPartners, setResPartners] = useState<ResPartner[]>([])
@@ -153,7 +119,7 @@ export default function ResPartnerManagement() {
 
     return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-[80vh]">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -168,19 +134,7 @@ export default function ResPartnerManagement() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
             <FormField
               control={form.control}
               name="companyName"
@@ -482,7 +436,7 @@ export default function ResPartnerManagement() {
       )}
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Add New Res Partner</DialogTitle>
           </DialogHeader>
@@ -491,7 +445,7 @@ export default function ResPartnerManagement() {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Edit Res Partner</DialogTitle>
           </DialogHeader>

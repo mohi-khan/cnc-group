@@ -50,28 +50,61 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { bankAccountSchema, createBankAccount, editBankAccount, getAllBankAccounts, BankAccount } from '../../../api/bank-accounts-api'
+import {
+  bankAccountSchema,
+  createBankAccount,
+  editBankAccount,
+  getAllBankAccounts,
+  BankAccount,
+  getAllGlAccounts,
+} from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 
 export default function BankAccounts() {
-  const [accounts, setAccounts] = React.useState<BankAccount[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null);
-  const [userId, setUserId] = React.useState();
+  const [accounts, setAccounts] = React.useState<BankAccount[]>([])
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [editingAccount, setEditingAccount] =
+    React.useState<BankAccount | null>(null)
+  const [userId, setUserId] = React.useState()
   const { toast } = useToast()
-  
+  const [glAccounts, setGlAccounts] = React.useState<
+    Array<{
+      accountId: string
+      name: string
+      code: string
+      accountType: string
+    }>
+  >([])
+
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUserId(userData?.userId)
-      console.log('asdgfasdg',userId)
+      console.log('asdgfasdg', userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userId])
+  })
 
+  const bangladeshBanks = [
+    { id: '1', name: 'Bangladesh Bank' },
+    { id: '2', name: 'Standard Chartered Bank' },
+    { id: '3', name: 'Dutch-Bangla Bank Limited' },
+    { id: '4', name: 'BRAC Bank Limited' },
+    { id: '5', name: 'Eastern Bank Limited' },
+    { id: '6', name: 'Social Islami Bank Limited' },
+    { id: '7', name: 'Islami Bank Bangladesh Limited' },
+    { id: '8', name: 'Pubali Bank Limited' },
+    { id: '9', name: 'United Commercial Bank Limited' },
+    { id: '10', name: 'City Bank Limited' },
+    { id: '11', name: 'Jamuna Bank Limited' },
+    { id: '12', name: 'Sonali Bank Limited' },
+    { id: '13', name: 'AB Bank Limited' },
+    { id: '14', name: 'Mercantile Bank Limited' },
+    { id: '15', name: 'Mutual Trust Bank Limited' },
+  ]
 
   const form = useForm<z.infer<typeof bankAccountSchema>>({
     resolver: zodResolver(bankAccountSchema),
@@ -84,22 +117,27 @@ export default function BankAccounts() {
       openingBalance: 0,
       isActive: true,
       isReconcilable: true,
-      created_by: userId
+      createdBy: Number(userId),
     },
   })
 
   React.useEffect(() => {
-    console.log('Fetching bank accounts');
-    fetchBankAccounts();
+    console.log('Fetching bank accounts')
+    fetchBankAccounts()
   }, [])
 
   React.useEffect(() => {
-    console.log('Resetting form', { editingAccount });
+    console.log('Fetching gl accounts')
+    fetchGlAccounts()
+  }, [])
+
+  React.useEffect(() => {
+    console.log('Resetting form', { editingAccount })
     console.log('dkhdkd', userId)
     if (editingAccount) {
       form.reset({
         ...editingAccount,
-        openingBalance: Number(editingAccount.openingBalance)
+        openingBalance: Number(editingAccount.openingBalance),
       })
     } else {
       form.reset({
@@ -111,75 +149,98 @@ export default function BankAccounts() {
         openingBalance: 0,
         isActive: true,
         isReconcilable: true,
-        created_by: userId
+        createdBy: Number(userId),
       })
     }
   }, [editingAccount, form, userId])
 
   async function fetchBankAccounts() {
-    console.log('Fetching bank accounts');
+    console.log('Fetching bank accounts')
     try {
       const fetchedAccounts = await getAllBankAccounts()
-      console.log('Fetched accounts:', fetchedAccounts);
+      console.log('Fetched accounts:', fetchedAccounts)
       setAccounts(fetchedAccounts)
     } catch (error) {
-      console.error('Error fetching bank accounts:', error);
+      console.error('Error fetching bank accounts:', error)
       toast({
-        title: "Error",
-        description: "Failed to fetch bank accounts",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch bank accounts',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  async function fetchGlAccounts() {
+    console.log('Fetching gl accounts')
+    try {
+      const fetchedGlAccounts = await getAllGlAccounts()
+      console.log('Fetched gl accounts:', fetchedGlAccounts)
+      setGlAccounts(fetchedGlAccounts)
+    } catch (error) {
+      console.error('Error fetching gl accounts:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch gl accounts',
+        variant: 'destructive',
       })
     }
   }
 
   async function onSubmit(values: z.infer<typeof bankAccountSchema>) {
-    console.log('Form submitted:', values);
+    alert('I am under onSubmit')
+    console.log('Form submitted:', values)
     try {
       if (editingAccount) {
-        console.log('Editing account:', editingAccount.id);
+        console.log('Editing account:', editingAccount.id)
         await editBankAccount(editingAccount.id!, values)
-        console.log('Account edited successfully');
+        console.log('Account edited successfully')
         toast({
-          title: "Success",
-          description: "Bank account updated successfully",
+          title: 'Success',
+          description: 'Bank account updated successfully',
         })
       } else {
-        console.log('Creating new account');
+        console.log('Creating new account')
         await createBankAccount(values)
-        console.log('Account created successfully');
+        console.log('Account created successfully')
         toast({
-          title: "Success",
-          description: "Bank account created successfully",
+          title: 'Success',
+          description: 'Bank account created successfully',
         })
       }
       setIsDialogOpen(false)
       setEditingAccount(null)
       form.reset()
       fetchBankAccounts()
+      fetchGlAccounts()
     } catch (error) {
-      console.error('Error saving bank account:', error);
+      console.error('Error saving bank account:', error)
       toast({
-        title: "Error",
-        description: "Failed to save bank account",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save bank account',
+        variant: 'destructive',
       })
     }
   }
 
   function handleEdit(account: BankAccount) {
-    console.log('Editing account:', account);
     setEditingAccount(account)
     setIsDialogOpen(true)
+    console.log(account, 'account')
   }
+
+  console.log('tsx', form.formState.errors, form.getValues())
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Bank Accounts</h1>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open)
-          if (!open) setEditingAccount(null)
-        }}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) setEditingAccount(null)
+          }}
+        >
           <DialogTrigger asChild>
             <Button variant="default" className="bg-black hover:bg-black/90">
               <Plus className="mr-2 h-4 w-4" /> Add Bank Account
@@ -187,13 +248,20 @@ export default function BankAccounts() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingAccount ? 'Edit Bank Account' : 'Add New Bank Account'}</DialogTitle>
+              <DialogTitle>
+                {editingAccount ? 'Edit Bank Account' : 'Add New Bank Account'}
+              </DialogTitle>
               <DialogDescription>
-                {editingAccount ? 'Edit the details for the bank account here.' : 'Enter the details for the new bank account here.'}
+                {editingAccount
+                  ? 'Edit the details for the bank account here.'
+                  : 'Enter the details for the new bank account here.'}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
                 <div className="pr-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -203,7 +271,10 @@ export default function BankAccounts() {
                         <FormItem>
                           <FormLabel>Account Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter account name" {...field} />
+                            <Input
+                              placeholder="Enter account name"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -216,7 +287,10 @@ export default function BankAccounts() {
                         <FormItem>
                           <FormLabel>Account Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter account number" {...field} />
+                            <Input
+                              placeholder="Enter account number"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -228,9 +302,23 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Bank Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter bank name" {...field} />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select bank" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bangladeshBanks.map((bank) => (
+                                <SelectItem key={bank.id} value={bank.name}>
+                                  {bank.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -250,11 +338,35 @@ export default function BankAccounts() {
                     />
                     <FormField
                       control={form.control}
+                      name="createdBy"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Created By</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              defaultValue={userId}
+                              placeholder="userId"
+                              type="number"
+                              onChange={(value) => {
+                                field.onChange(Number(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="currencyId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Currency</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select currency" />
@@ -276,7 +388,10 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Account Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select account type" />
@@ -285,7 +400,9 @@ export default function BankAccounts() {
                             <SelectContent>
                               <SelectItem value="Savings">Savings</SelectItem>
                               <SelectItem value="Current">Current</SelectItem>
-                              <SelectItem value="Overdraft">Overdraft</SelectItem>
+                              <SelectItem value="Overdraft">
+                                Overdraft
+                              </SelectItem>
                               <SelectItem value="Fixed">Fixed</SelectItem>
                             </SelectContent>
                           </Select>
@@ -305,7 +422,9 @@ export default function BankAccounts() {
                               step="0.01"
                               placeholder="0.00"
                               value={field.value}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
                               readOnly={!!editingAccount}
                             />
                           </FormControl>
@@ -338,12 +457,25 @@ export default function BankAccounts() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
                               <Calendar
                                 mode="single"
-                                selected={field.value ? new Date(field.value) : undefined}
-                                onSelect={(date) => field.onChange(date ? date.toISOString() : undefined)}
-                                disabled={(date) => date < new Date('1900-01-01')}
+                                selected={
+                                  field.value
+                                    ? new Date(field.value)
+                                    : undefined
+                                }
+                                onSelect={(date) =>
+                                  field.onChange(
+                                    date ? date.toISOString() : undefined
+                                  )
+                                }
+                                disabled={(date) =>
+                                  date < new Date('1900-01-01')
+                                }
                                 initialFocus
                               />
                             </PopoverContent>
@@ -353,23 +485,6 @@ export default function BankAccounts() {
                       )}
                     />
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="assetDetails"
-                    render={({ field }) => (
-                      <FormItem className="pt-4">
-                        <FormLabel>Asset Details</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter asset details"
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <div className="flex space-x-4 pt-5">
                     <FormField
                       control={form.control}
@@ -397,7 +512,9 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Reconcilable</FormLabel>
+                            <FormLabel className="text-base">
+                              Reconcilable
+                            </FormLabel>
                             <FormDescription>
                               Can this account be reconciled?
                             </FormDescription>
@@ -412,42 +529,33 @@ export default function BankAccounts() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-5">
+                  <div className="grid grid-cols-1 gap-4 py-5">
                     <FormField
                       control={form.control}
                       name="glAccountId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>GL Account ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter GL Account ID" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bankCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bank Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter bank code" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="integrationId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Integration ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter integration ID" {...field} />
-                          </FormControl>
+                          <FormLabel>GL Account</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select GL Account" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {glAccounts?.map((glaccount) => (
+                                <SelectItem
+                                  key={glaccount.accountId}
+                                  value={glaccount.accountId.toString()}
+                                >
+                                  {glaccount.name} ({glaccount.code})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -525,4 +633,3 @@ export default function BankAccounts() {
     </div>
   )
 }
-
