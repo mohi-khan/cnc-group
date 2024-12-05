@@ -30,11 +30,11 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
 };
 
 // API functions
-const API_BASE_URL = 'http://localhost:4000/api/bank-accounts'
+const API_BASE_URL = 'http://localhost:4000'
 
 export async function createBankAccount(data: Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>): Promise<BankAccount> {
   console.log('Creating bank account:', data);
-  const response = await fetch(`${API_BASE_URL}/create-bank-account`, {
+  const response = await fetch(`${API_BASE_URL}/api/bank-accounts/create-bank-account`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export async function createBankAccount(data: Omit<BankAccount, 'id' | 'createdB
 
 export async function editBankAccount(id: number, data: Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>): Promise<BankAccount> {
   console.log('Editing bank account:', id, data);
-  const response = await fetch(`${API_BASE_URL}/edit-bank-account/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/bank-accounts/edit-bank-account/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export async function editBankAccount(id: number, data: Omit<BankAccount, 'id' |
 
 export async function getAllBankAccounts(): Promise<BankAccount[]> {
   console.log('Fetching all bank accounts');
-  const response = await fetch(`${API_BASE_URL}/get-all-bank-accounts`)
+  const response = await fetch(`${API_BASE_URL}/api/bank-accounts/get-all-bank-accounts`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch bank accounts')
@@ -77,3 +77,13 @@ export async function getAllBankAccounts(): Promise<BankAccount[]> {
   return response.json()
 }
 
+export async function getAllGlAccounts() {
+  console.log('Fetching all bank accounts');
+  const response = await fetch(`http://localhost:4000/api/chart-of-accounts/get-all-coa`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch gl accounts')
+  }
+  console.log('Fetched gl accounts:', response);
+  return response.json()
+}
