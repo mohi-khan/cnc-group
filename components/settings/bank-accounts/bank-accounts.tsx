@@ -89,22 +89,22 @@ export default function BankAccounts() {
   })
 
   const bangladeshBanks = [
-    { id: "1", name: "Bangladesh Bank" },
-    { id: "2", name: "Standard Chartered Bank" },
-    { id: "3", name: "Dutch-Bangla Bank Limited" },
-    { id: "4", name: "BRAC Bank Limited" },
-    { id: "5", name: "Eastern Bank Limited" },
-    { id: "6", name: "Social Islami Bank Limited" },
-    { id: "7", name: "Islami Bank Bangladesh Limited" },
-    { id: "8", name: "Pubali Bank Limited" },
-    { id: "9", name: "United Commercial Bank Limited" },
-    { id: "10", name: "City Bank Limited" },
-    { id: "11", name: "Jamuna Bank Limited" },
-    { id: "12", name: "Sonali Bank Limited" },
-    { id: "13", name: "AB Bank Limited" },
-    { id: "14", name: "Mercantile Bank Limited" },
-    { id: "15", name: "Mutual Trust Bank Limited" }
-  ];
+    { id: '1', name: 'Bangladesh Bank' },
+    { id: '2', name: 'Standard Chartered Bank' },
+    { id: '3', name: 'Dutch-Bangla Bank Limited' },
+    { id: '4', name: 'BRAC Bank Limited' },
+    { id: '5', name: 'Eastern Bank Limited' },
+    { id: '6', name: 'Social Islami Bank Limited' },
+    { id: '7', name: 'Islami Bank Bangladesh Limited' },
+    { id: '8', name: 'Pubali Bank Limited' },
+    { id: '9', name: 'United Commercial Bank Limited' },
+    { id: '10', name: 'City Bank Limited' },
+    { id: '11', name: 'Jamuna Bank Limited' },
+    { id: '12', name: 'Sonali Bank Limited' },
+    { id: '13', name: 'AB Bank Limited' },
+    { id: '14', name: 'Mercantile Bank Limited' },
+    { id: '15', name: 'Mutual Trust Bank Limited' },
+  ]
 
   const form = useForm<z.infer<typeof bankAccountSchema>>({
     resolver: zodResolver(bankAccountSchema),
@@ -117,7 +117,7 @@ export default function BankAccounts() {
       openingBalance: 0,
       isActive: true,
       isReconcilable: true,
-      created_by: userId,
+      createdBy: Number(userId),
     },
   })
 
@@ -149,7 +149,7 @@ export default function BankAccounts() {
         openingBalance: 0,
         isActive: true,
         isReconcilable: true,
-        created_by: userId,
+        createdBy: Number(userId),
       })
     }
   }, [editingAccount, form, userId])
@@ -225,7 +225,10 @@ export default function BankAccounts() {
   function handleEdit(account: BankAccount) {
     setEditingAccount(account)
     setIsDialogOpen(true)
+    console.log(account, 'account')
   }
+
+  console.log('tsx', form.formState.errors, form.getValues())
 
   return (
     <div className="container mx-auto py-10">
@@ -328,6 +331,27 @@ export default function BankAccounts() {
                           <FormLabel>Branch Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter branch name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="createdBy"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Created By</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              defaultValue={userId}
+                              placeholder="userId"
+                              type="number"
+                              onChange={(value) => {
+                                field.onChange(Number(value));
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

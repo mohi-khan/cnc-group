@@ -6,20 +6,20 @@ export const bankAccountSchema = z.object({
   accountNumber: z.string().min(5, 'Account number must be at least 5 characters.').max(50, 'Account number must not exceed 50 characters.'),
   bankName: z.string().min(2, 'Bank name must be at least 2 characters.').max(100, 'Bank name must not exceed 100 characters.'),
   branchName: z.string().max(100, 'Branch name must not exceed 100 characters.').optional(),
-  ifscCode: z.string().max(20, 'IFSC code must not exceed 20 characters.').optional(),
-  swiftCode: z.string().max(20, 'SWIFT code must not exceed 20 characters.').optional(),
+  ifscCode: z.string().max(20, 'IFSC code must not exceed 20 characters.').optional().nullable(),
+  swiftCode: z.string().max(20, 'SWIFT code must not exceed 20 characters.').optional().nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
   openingBalance: z.number().nonnegative('Opening balance must be a non-negative number.').multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
   validityDate: z.string().optional().transform((str) => str ? new Date(str) : undefined),
-  assetDetails: z.string().max(255, 'Asset details must not exceed 255 characters').optional(),
+  assetDetails: z.string().max(255, 'Asset details must not exceed 255 characters').optional().nullable(),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
   glAccountId: z.string().max(36, 'GL Account ID must not exceed 36 characters').optional(),
-  bankCode: z.string().max(50, 'Bank code must not exceed 50 characters').optional(),
-  integrationId: z.string().max(36, 'Integration ID must not exceed 36 characters').optional(),
+  bankCode: z.string().max(50, 'Bank code must not exceed 50 characters').optional().nullable(),
+  integrationId: z.string().max(36, 'Integration ID must not exceed 36 characters').optional().nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
-  created_by: z.number()
+  createdBy: z.number()
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
@@ -52,7 +52,7 @@ export async function createBankAccount(data: Omit<BankAccount, 'id' | 'createdB
 export async function editBankAccount(id: number, data: Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>): Promise<BankAccount> {
   console.log('Editing bank account:', id, data);
   const response = await fetch(`${API_BASE_URL}/api/bank-accounts/edit-bank-account/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
