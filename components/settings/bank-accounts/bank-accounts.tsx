@@ -3,7 +3,6 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { CalendarIcon, Plus, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -63,9 +62,8 @@ import { useToast } from '@/hooks/use-toast'
 export default function BankAccounts() {
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] =
-    React.useState<BankAccount | null>(null)
-  const [userId, setUserId] = React.useState()
+  const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null)
+  const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
   const [glAccounts, setGlAccounts] = React.useState<
     Array<{
@@ -81,12 +79,11 @@ export default function BankAccounts() {
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUserId(userData?.userId)
-      console.log('asdgfasdg', userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  })
+  }, [])
 
   const bangladeshBanks = [
     { id: '1', name: 'Bangladesh Bank' },
@@ -106,7 +103,7 @@ export default function BankAccounts() {
     { id: '15', name: 'Mutual Trust Bank Limited' },
   ]
 
-  const form = useForm<z.infer<typeof bankAccountSchema>>({
+  const form = useForm<BankAccount>({
     resolver: zodResolver(bankAccountSchema),
     defaultValues: {
       accountName: '',
@@ -117,7 +114,8 @@ export default function BankAccounts() {
       openingBalance: 0,
       isActive: true,
       isReconcilable: true,
-      createdBy: Number(userId),
+      createdBy: userId,
+      glAccountId: ''
     },
   })
 
@@ -133,11 +131,12 @@ export default function BankAccounts() {
 
   React.useEffect(() => {
     console.log('Resetting form', { editingAccount })
-    console.log('dkhdkd', userId)
     if (editingAccount) {
       form.reset({
         ...editingAccount,
         openingBalance: Number(editingAccount.openingBalance),
+        updatedBy: userId,
+        glAccountId: editingAccount.glAccountId || '',
       })
     } else {
       form.reset({
@@ -149,7 +148,8 @@ export default function BankAccounts() {
         openingBalance: 0,
         isActive: true,
         isReconcilable: true,
-        createdBy: Number(userId),
+        createdBy: userId,
+        glAccountId: '',
       })
     }
   }, [editingAccount, form, userId])
@@ -186,13 +186,12 @@ export default function BankAccounts() {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof bankAccountSchema>) {
-    alert('I am under onSubmit')
+  async function onSubmit(values: BankAccount) {
     console.log('Form submitted:', values)
     try {
       if (editingAccount) {
         console.log('Editing account:', editingAccount.id)
-        await editBankAccount(editingAccount.id!, values)
+        await editBankAccount(editingAccount.id!, { ...values, updatedBy: userId })
         console.log('Account edited successfully')
         toast({
           title: 'Success',
@@ -211,7 +210,6 @@ export default function BankAccounts() {
       setEditingAccount(null)
       form.reset()
       fetchBankAccounts()
-      fetchGlAccounts()
     } catch (error) {
       console.error('Error saving bank account:', error)
       toast({
@@ -228,7 +226,8 @@ export default function BankAccounts() {
     console.log(account, 'account')
   }
 
-  console.log('tsx', form.formState.errors, form.getValues())
+  console.log('Form state errors:', form.formState.errors)
+  console.log('Form values:', form.getValues())
 
   return (
     <div className="container mx-auto py-10">
@@ -338,27 +337,6 @@ export default function BankAccounts() {
                     />
                     <FormField
                       control={form.control}
-                      name="createdBy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Created By</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              defaultValue={userId}
-                              placeholder="userId"
-                              type="number"
-                              onChange={(value) => {
-                                field.onChange(Number(value));
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
                       name="currencyId"
                       render={({ field }) => (
                         <FormItem>
@@ -421,11 +399,8 @@ export default function BankAccounts() {
                               type="number"
                               step="0.01"
                               placeholder="0.00"
-                              value={field.value}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                              readOnly={!!editingAccount}
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value))}
                             />
                           </FormControl>
                           <FormMessage />
@@ -463,19 +438,9 @@ export default function BankAccounts() {
                             >
                               <Calendar
                                 mode="single"
-                                selected={
-                                  field.value
-                                    ? new Date(field.value)
-                                    : undefined
-                                }
-                                onSelect={(date) =>
-                                  field.onChange(
-                                    date ? date.toISOString() : undefined
-                                  )
-                                }
-                                disabled={(date) =>
-                                  date < new Date('1900-01-01')
-                                }
+                                selected={field.value ? new Date(field.value) : undefined}
+                                onSelect={(date) => field.onChange(date?.toISOString())}
+                                disabled={(date) => date < new Date('1900-01-01')}
                                 initialFocus
                               />
                             </PopoverContent>

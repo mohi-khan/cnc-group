@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+// Zod schema for bank account validation
 export const bankAccountSchema = z.object({
   id: z.number().optional(),
   accountName: z.string().min(2, 'Account name must be at least 2 characters.').max(100, 'Account name must not exceed 100 characters.'),
@@ -19,20 +20,21 @@ export const bankAccountSchema = z.object({
   bankCode: z.string().max(50, 'Bank code must not exceed 50 characters').optional().nullable(),
   integrationId: z.string().max(36, 'Integration ID must not exceed 36 characters').optional().nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
-  createdBy: z.number()
+  createdBy: z.number(),
+  updatedBy: z.number().optional(),
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
-  createdBy?: number;
   createdAt?: string;
-  updatedBy?: number;
   updatedAt?: string;
 };
 
-// API functions
+export type BankAccountCreate = Omit<BankAccount, 'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'>;
+export type BankAccountUpdate = Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>;
+
 const API_BASE_URL = 'http://localhost:4000'
 
-export async function createBankAccount(data: Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>): Promise<BankAccount> {
+export async function createBankAccount(data: BankAccountCreate): Promise<BankAccount> {
   console.log('Creating bank account:', data);
   const response = await fetch(`${API_BASE_URL}/api/bank-accounts/create-bank-account`, {
     method: 'POST',
@@ -49,7 +51,7 @@ export async function createBankAccount(data: Omit<BankAccount, 'id' | 'createdB
   return response.json()
 }
 
-export async function editBankAccount(id: number, data: Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>): Promise<BankAccount> {
+export async function editBankAccount(id: number, data: BankAccountUpdate): Promise<BankAccount> {
   console.log('Editing bank account:', id, data);
   const response = await fetch(`${API_BASE_URL}/api/bank-accounts/edit-bank-account/${id}`, {
     method: 'PATCH',
@@ -78,12 +80,13 @@ export async function getAllBankAccounts(): Promise<BankAccount[]> {
 }
 
 export async function getAllGlAccounts() {
-  console.log('Fetching all bank accounts');
-  const response = await fetch(`http://localhost:4000/api/chart-of-accounts/get-all-coa`)
+  console.log('Fetching all GL accounts');
+  const response = await fetch(`${API_BASE_URL}/api/chart-of-accounts/get-all-coa`)
 
   if (!response.ok) {
-    throw new Error('Failed to fetch gl accounts')
+    throw new Error('Failed to fetch GL accounts')
   }
-  console.log('Fetched gl accounts:', response);
+  console.log('Fetched GL accounts:', response);
   return response.json()
 }
+
