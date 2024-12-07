@@ -65,10 +65,11 @@ interface Account {
   id: number
   code: string
   name: string
+  parentName: string
   parentAccountId: number
-  accountType: string
+  type: string
   notes: string
-  allowReconciliation: boolean
+  allowreconcilable: boolean
   isActive: boolean
 }
 
@@ -79,20 +80,26 @@ interface CodeGroup {
   subgroups?: CodeGroup[]
 }
 
+interface ParentCode {
+  code: string
+  name: string
+}
+
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
 const currencyItems = ['BDT', 'USD', 'EUR']
-const parentIds = [
-  '101',
-  '102',
-  '103',
-  '202',
-  '203',
-  '301',
-  '302',
-  '401',
-  '402',
-  '502',
-]
+
+// const parentIds = [
+//   '101',
+//   '102',
+//   '103',
+//   '202',
+//   '203',
+//   '301',
+//   '302',
+//   '401',
+//   '402',
+//   '502',
+// ]
 
 const codeGroups: CodeGroup[] = [
   {
@@ -173,6 +180,8 @@ export default function ChartOfAccountsTable() {
   const [editingAccount, setEditingAccount] = React.useState<Account | null>(
     null
   )
+  const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
+  const [error, setError] = React.useState<string | null>(null)
 
   // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
   const API_BASE_URL = 'http://localhost:4000'
@@ -202,6 +211,36 @@ export default function ChartOfAccountsTable() {
     return newCode
   }
 
+  // get parentcode with-name
+
+  React.useEffect(() => {
+    const fetchParentCodes = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/chart-of-accounts/get-pc-w-name-coa`
+        )
+        if (!response.ok) {
+          throw new Error('Failed to fetch parent codes')
+        }
+        const data = await response.json()
+        console.log(data.data[0])
+
+        if (data.length > 0) {
+          console.log(data)
+        }
+
+        setParentCodes(data)
+      } catch (error) {
+        console.error('Error fetching parent codes:', error)
+        setError('Failed to load parent codes. Please try again later.')
+      }
+    }
+
+    fetchParentCodes()
+  }, [])
+
+  // get all details
+
   React.useEffect(() => {
     const fetchAccounts = async () => {
       try {
@@ -212,9 +251,7 @@ export default function ChartOfAccountsTable() {
           throw new Error('Failed to fetch accounts')
         }
         const data = await response.json()
-        console.log(data)
-
-        console.log(data[0].accountType)
+        console.log(data[0])
 
         setAccounts(data)
       } catch (error) {
@@ -231,16 +268,13 @@ export default function ChartOfAccountsTable() {
         (account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.accountType
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())) &&
-        (selectedTypes.length === 0 ||
-          selectedTypes.includes(account.accountType)) &&
+          account.type.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (selectedTypes.length === 0 || selectedTypes.includes(account.type)) &&
         (selectedCode ? account.code.startsWith(selectedCode) : true)
     )
 
     if (activeAccountOnly) {
-      filtered = filtered.filter((account) => account.allowReconciliation)
+      filtered = filtered.filter((account) => account.allowreconcilable)
     }
 
     setFilteredAccounts(filtered)
@@ -254,7 +288,7 @@ export default function ChartOfAccountsTable() {
     setAccounts((prevAccounts) =>
       prevAccounts.map((account) =>
         account.code === code
-          ? { ...account, allowReconciliation: checked }
+          ? { ...account, allowreconcilable: checked }
           : account
       )
     )
@@ -415,9 +449,10 @@ export default function ChartOfAccountsTable() {
             </Button>
           </div>
 
+          {/* Add account  */}
           <Dialog open={isAddAccountOpen} onOpenChange={setIsAddAccountOpen}>
             <DialogTrigger asChild>
-              <Button variant="default" size="sm" className="whitespace-nowrap">
+              <Button variant="default" size="lg" className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Account
               </Button>
@@ -483,38 +518,33 @@ export default function ChartOfAccountsTable() {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select parent account" />
+                              <SelectValue placeholder="Select Parent Account" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {parentIds.map((id) => (
+                            {parentCodes.map((code) => (
+                              <p
+                                key={code.code}
+                                className="bg-white p-4 rounded shadow"
+                              >
+                                <span className="font-semibold">
+                                  {code.code}
+                                </span>
+                              </p>
+                            ))}
+                            {/* for dammy data */}
+                            {/* {parentIds.map((id) => (
                               <SelectItem key={id} value={id}>
                                 {id}
                               </SelectItem>
-                            ))}
+                            ))} */}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Account Code</FormLabel>
-                        <FormControl>
-                          <Input {...field} readOnly />
-                        </FormControl>
-                        <FormDescription>
-                          This code is generated automatically based on the
-                          parent account.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                   <FormField
                     control={form.control}
                     name="currencyId"
@@ -770,8 +800,8 @@ export default function ChartOfAccountsTable() {
                     <TableRow className="">
                       <TableHead className="w-[100px]">Code</TableHead>
                       <TableHead>Account Name</TableHead>
-                      <TableHead>Parent Id</TableHead>
-                      <TableHead>Type</TableHead>
+                      <TableHead>Parent Account Name</TableHead>
+                      <TableHead className="capitalize">Type</TableHead>
                       <TableHead className="text-center">
                         Allow Reconciliation
                       </TableHead>
@@ -783,11 +813,11 @@ export default function ChartOfAccountsTable() {
                       <TableRow key={account.code}>
                         <TableCell>{account.code}</TableCell>
                         <TableCell>{account.name}</TableCell>
-                        <TableCell>{account.parentAccountId}</TableCell>
-                        <TableCell>{account.accountType}</TableCell>
+                        <TableCell>{account.parentName}</TableCell>
+                        <TableCell>{account.type}</TableCell>
                         <TableCell className="text-center">
                           <Switch
-                            checked={account.allowReconciliation}
+                            checked={account.allowreconcilable}
                             onChange={(checked: any) =>
                               handleSwitchChange(account.code, checked)
                             }
@@ -842,6 +872,7 @@ export default function ChartOfAccountsTable() {
         </div>
       </div>
 
+      {/* Edit Chart Of Accounts */}
       <Dialog open={isEditAccountOpen} onOpenChange={setIsEditAccountOpen}>
         <DialogContent>
           <DialogHeader>
@@ -884,16 +915,16 @@ export default function ChartOfAccountsTable() {
 
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="edit-allowReconciliation"
-                  checked={editingAccount.allowReconciliation}
+                  id="edit-allowreconcilable"
+                  checked={editingAccount.allowreconcilable}
                   onCheckedChange={(checked) =>
                     setEditingAccount({
                       ...editingAccount,
-                      allowReconciliation: checked as boolean,
+                      allowreconcilable: checked as boolean,
                     })
                   }
                 />
-                <Label htmlFor="edit-allowReconciliation">
+                <Label htmlFor="edit-allowreconcilable">
                   Allow Reconciliation
                 </Label>
               </div>
