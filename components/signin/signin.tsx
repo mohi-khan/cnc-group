@@ -52,10 +52,10 @@ export default function SignIn() {
         }
        console.log(response.data.user)
         // Store user information in localStorage
-        const { userId, userCompanies, userLocations, voucherTypes } =
+        const { userId, roleId, userCompanies, userLocations, voucherTypes } =
           response.data.user
 
-        const userInfo = { userId, userCompanies, userLocations, voucherTypes }
+        const userInfo = { userId, roleId, userCompanies, userLocations, voucherTypes }
         localStorage.setItem('currentUser', JSON.stringify(userInfo))
         console.log('Current user info stored:', userInfo)
 
