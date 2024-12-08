@@ -60,9 +60,12 @@ import {
 import { useToast } from '@/hooks/use-toast'
 
 export default function BankAccounts() {
+  // const { user } = useAuthContext()
+  // console.log('auth', user)
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] = React.useState<BankAccount | null>(null)
+  const [editingAccount, setEditingAccount] =
+    React.useState<BankAccount | null>(null)
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
   const [glAccounts, setGlAccounts] = React.useState<
@@ -115,7 +118,7 @@ export default function BankAccounts() {
       isActive: true,
       isReconcilable: true,
       createdBy: userId,
-      glAccountId: ''
+      glAccountId: '',
     },
   })
 
@@ -191,7 +194,10 @@ export default function BankAccounts() {
     try {
       if (editingAccount) {
         console.log('Editing account:', editingAccount.id)
-        await editBankAccount(editingAccount.id!, { ...values, updatedBy: userId })
+        await editBankAccount(editingAccount.id!, {
+          ...values,
+          updatedBy: userId,
+        })
         console.log('Account edited successfully')
         toast({
           title: 'Success',
@@ -400,7 +406,9 @@ export default function BankAccounts() {
                               step="0.01"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -438,9 +446,17 @@ export default function BankAccounts() {
                             >
                               <Calendar
                                 mode="single"
-                                selected={field.value ? new Date(field.value) : undefined}
-                                onSelect={(date) => field.onChange(date?.toISOString())}
-                                disabled={(date) => date < new Date('1900-01-01')}
+                                selected={
+                                  field.value
+                                    ? new Date(field.value)
+                                    : undefined
+                                }
+                                onSelect={(date) =>
+                                  field.onChange(date?.toISOString())
+                                }
+                                disabled={(date) =>
+                                  date < new Date('1900-01-01')
+                                }
                                 initialFocus
                               />
                             </PopoverContent>

@@ -389,7 +389,7 @@ export default function Navbar() {
           <div className="flex items-center ml-4">
             <div className="relative mr-4" ref={companiesRef}>
               <button
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
                 onClick={() => setIsCompaniesOpen(!isCompaniesOpen)}
               >
                 Companies
@@ -404,14 +404,14 @@ export default function Navbar() {
                   >
                     {companies?.length > 0 ? (
                       companies?.map((company) => (
-                        <a
+                        <Link
                           key={company?.companyId}
                           href={`/company/${company.companyId}`}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           role="menuitem"
                         >
                           {company?.companyName}
-                        </a>
+                        </Link>
                       ))
                     ) : (
                       <p className="px-4 py-2 text-sm text-gray-500">
@@ -446,20 +446,13 @@ export default function Navbar() {
                     aria-orientation="vertical"
                     aria-labelledby="user-menu"
                   >
-                    <a
-                      href="/profile"
+                    <Link
+                      href="/change-password"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       role="menuitem"
                     >
-                      Your Profile
-                    </a>
-                    <a
-                      href="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Settings
-                    </a>
+                      Change Password
+                    </Link>
                     <button
                       onClick={handleSignOut}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
