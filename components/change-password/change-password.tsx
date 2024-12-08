@@ -1,43 +1,93 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import React, { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { changePassword } from '@/api/change-password-api'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+
+interface User {
+  userId: number
+  username: string
+  roleId: number
+  roleName: string
+  // Add other user properties as needed
+}
 
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData: User = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log('Current user from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+      setError('User not authenticated. Please log in.')
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
+
+    if (!userId) {
+      setError('User not authenticated. Please log in.')
+      return
+    }
 
     if (newPassword !== confirmPassword) {
       setError("New passwords don't match")
       return
     }
 
-    // Here you would typically call an API to change the password
-    console.log('Password change submitted', { oldPassword, newPassword })
-    // Reset form after submission
-    setOldPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
+    setIsLoading(true)
+
+    try {
+      const result = await changePassword(
+        userId,
+        oldPassword,
+        newPassword,
+        confirmPassword
+      )
+      setSuccess(result.message)
+      // Reset form after successful submission
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('An unexpected error occurred')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Change Password</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Change Password
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,9 +166,21 @@ const ChangePassword = () => {
                 </Button>
               </div>
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full">
-              Change Password
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert
+                variant="default"
+                className="bg-green-100 border-green-500 text-green-700"
+              >
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={isLoading || !userId}>
+              {isLoading ? 'Changing Password...' : 'Change Password'}
             </Button>
           </form>
         </CardContent>

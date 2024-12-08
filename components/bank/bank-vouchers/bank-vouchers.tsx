@@ -76,10 +76,30 @@ type Voucher = z.infer<typeof voucherSchema> & {
   status: 'Draft' | 'Posted'
 }
 
+interface User {
+  userId: number
+  username: string
+  roleId: number
+  roleName: string
+  // Add other user properties as needed
+}
+
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<Voucher[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
+  const [user, setUser] = React.useState<User | null>(null)
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+      console.log('Current user from localStorage:', userData)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   const form = useForm<z.infer<typeof voucherSchema>>({
     resolver: zodResolver(voucherSchema),
