@@ -67,6 +67,7 @@ export default function Navbar() {
         if (userStr) {
           const userData: User = JSON.parse(userStr)
           setUser(userData)
+         
 
           // Filter companies based on userCompanies
           const userCompanyIds = userData.userCompanies.map(
