@@ -30,7 +30,10 @@ export const signin = async (
   credentials: SignInRequest
 ): Promise<{ success: boolean; data?: any; message?: string }> => {
   try {
-    const response = await api.post<SignInResponse>('api/auth/login', credentials)
+    const response = await api.post<SignInResponse>(
+      'api/auth/login',
+      credentials
+    )
 
     if (response.data.status === 'success' && response.data.data) {
       return {
@@ -58,23 +61,6 @@ export const signin = async (
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import { fetchApi } from '@/utils/http'
 // import { z } from 'zod'
@@ -104,4 +90,3 @@ export const signin = async (
 //     schema: SignInResponseSchema,
 //   })
 // }
-

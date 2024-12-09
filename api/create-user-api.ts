@@ -122,9 +122,7 @@ export async function signUp(data: SignUpData) {
 
 // Get all companies function
 export async function getAllCompanies() {
-  const response = await fetch(
-    `${API_BASE_URL}/api/company/get-all-companies`
-  )
+  const response = await fetch(`${API_BASE_URL}/api/company/get-all-companies`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch companies')
@@ -162,9 +160,7 @@ export async function getAllRoles(): Promise<RoleData[]> {
 
 // Get all locations function
 export async function getAllLocations() {
-  const response = await fetch(
-    `${API_BASE_URL}/api/location/get-all-locations`
-  )
+  const response = await fetch(`${API_BASE_URL}/api/location/get-all-locations`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch locations')

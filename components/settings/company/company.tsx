@@ -83,7 +83,7 @@ export default function CompanyForm() {
       setErrors(null)
       return true
     } catch (error) {
-      throw "zod validation error"
+      throw 'zod validation error'
     }
   }
 
@@ -115,7 +115,10 @@ export default function CompanyForm() {
         locationId,
       }
 
-      await createCompany(companyData, locations.filter(loc => loc.trim() !== ''))
+      await createCompany(
+        companyData,
+        locations.filter((loc) => loc.trim() !== '')
+      )
 
       setFeedback({
         type: 'success',
@@ -359,4 +362,3 @@ export default function CompanyForm() {
     </div>
   )
 }
-
