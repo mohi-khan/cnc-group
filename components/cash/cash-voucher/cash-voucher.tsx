@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Company {
   company: string
@@ -622,7 +623,15 @@ export default function CashVoucher() {
                         <Check className="h-4 w-4" />
                       </Button>
                       <Button variant="outline" size="icon">
-                        <Printer className="h-4 w-4" />
+                        <Link
+                          href={
+                            voucher.type.toLowerCase() === 'payment'
+                              ? '/payment-preview'
+                              : '/receipt-preview'
+                          }
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Link>
                       </Button>
                     </div>
                   </TableCell>
