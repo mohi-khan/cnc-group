@@ -195,7 +195,12 @@ export default function UsersList() {
     const { name, value } = e.target
     if (name === 'voucherTypes') {
       setEditingUser((prev) =>
-        prev ? { ...prev, voucherTypes: value.split(',').map((type) => type.trim()) } : null
+        prev
+          ? {
+              ...prev,
+              voucherTypes: value.split(',').map((type) => type.trim()),
+            }
+          : null
       )
     } else {
       setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
@@ -331,7 +336,7 @@ export default function UsersList() {
                         className="mb-2"
                       />
                       <Label htmlFor="roleId">Role</Label>
-                      
+
                       <Select
                         value={editingUser?.roleId?.toString() ?? 'no-role'}
                         onValueChange={(value) =>
@@ -437,4 +442,3 @@ export default function UsersList() {
     </div>
   )
 }
-

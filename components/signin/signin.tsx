@@ -50,12 +50,18 @@ export default function SignIn() {
         if (rememberMe) {
           localStorage.setItem('authToken', response.data.token)
         }
-       console.log(response.data.user)
+        console.log(response.data.user)
         // Store user information in localStorage
         const { userId, roleId, userCompanies, userLocations, voucherTypes } =
           response.data.user
 
-        const userInfo = { userId, roleId, userCompanies, userLocations, voucherTypes }
+        const userInfo = {
+          userId,
+          roleId,
+          userCompanies,
+          userLocations,
+          voucherTypes,
+        }
         localStorage.setItem('currentUser', JSON.stringify(userInfo))
         console.log('Current user info stored:', userInfo)
 
@@ -165,24 +171,6 @@ export default function SignIn() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 'use client'
 

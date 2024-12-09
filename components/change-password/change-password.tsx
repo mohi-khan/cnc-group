@@ -179,7 +179,11 @@ const ChangePassword = () => {
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full" disabled={isLoading || !userId}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !userId}
+            >
               {isLoading ? 'Changing Password...' : 'Change Password'}
             </Button>
           </form>
@@ -190,4 +194,3 @@ const ChangePassword = () => {
 }
 
 export default ChangePassword
-

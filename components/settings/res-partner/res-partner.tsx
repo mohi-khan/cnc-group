@@ -53,9 +53,13 @@ import { useToast } from '@/hooks/use-toast'
 
 export default function ResPartners() {
   const [partners, setPartners] = React.useState<ResPartner[]>([])
-  const [companies, setCompanies] = React.useState<{ id: number; name: string }[]>([])
+  const [companies, setCompanies] = React.useState<
+    { id: number; name: string }[]
+  >([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [editingPartner, setEditingPartner] = React.useState<ResPartner | null>(null)
+  const [editingPartner, setEditingPartner] = React.useState<ResPartner | null>(
+    null
+  )
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
 
@@ -151,9 +155,9 @@ export default function ResPartners() {
     // console.log('Fetching companies')
     try {
       const response = await getAllCompanies()
-      console.log('companies 1', response);
+      console.log('companies 1', response)
       setCompanies(response)
-      console.log('companies datas', companies);
+      console.log('companies datas', companies)
     } catch (error) {
       console.error('Error fetching companies:', error)
       toast({
@@ -173,7 +177,10 @@ export default function ResPartners() {
     try {
       if (editingPartner) {
         console.log('Editing partner:', editingPartner.id)
-        await editResPartner(editingPartner.id!, { ...values, updatedBy: userId })
+        await editResPartner(editingPartner.id!, {
+          ...values,
+          updatedBy: userId,
+        })
         // console.log('Partner edited successfully')
         toast({
           title: 'Success',
@@ -252,10 +259,7 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Name</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter name"
-                              {...field}
-                            />
+                            <Input placeholder="Enter name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -268,7 +272,9 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Company</FormLabel>
                           <Select
-                            onValueChange={(value) => field.onChange(Number(value))}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
                             value={field.value?.toString()}
                           >
                             <FormControl>
@@ -278,7 +284,10 @@ export default function ResPartners() {
                             </FormControl>
                             <SelectContent>
                               {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.companyId.toString()}>
+                                <SelectItem
+                                  key={company.id}
+                                  value={company.companyId.toString()}
+                                >
                                   {company.companyName}
                                 </SelectItem>
                               ))}
@@ -332,7 +341,10 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter phone number" {...field} />
+                            <Input
+                              placeholder="Enter phone number"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -345,7 +357,10 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Mobile</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter mobile number" {...field} />
+                            <Input
+                              placeholder="Enter mobile number"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -384,7 +399,10 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Street</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter street address" {...field} />
+                            <Input
+                              placeholder="Enter street address"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -428,7 +446,9 @@ export default function ResPartners() {
                               step="0.01"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -446,7 +466,9 @@ export default function ResPartners() {
                               type="number"
                               placeholder="0"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -464,7 +486,9 @@ export default function ResPartners() {
                               type="number"
                               placeholder="0"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -479,7 +503,9 @@ export default function ResPartners() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Is Company</FormLabel>
+                            <FormLabel className="text-base">
+                              Is Company
+                            </FormLabel>
                             <FormDescription>
                               Is this res partner a company?
                             </FormDescription>
@@ -559,35 +585,36 @@ export default function ResPartners() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.isArray(partners) && partners.map((partner) => (
-              <TableRow key={partner.id}>
-                <TableCell>{partner.name}</TableCell>
-                <TableCell>
-                  {partner.companyId ? (
-                    companies.find(c => c.companyId === partner.companyId)?.companyName || 'Unknown Company'
-                  ) : ''}
-                </TableCell>
-                <TableCell>{partner.email}</TableCell>
-                <TableCell>{partner.phone}</TableCell>
-                <TableCell>{partner.type}</TableCell>
-                <TableCell>{partner.isCompany ? 'Yes' : 'No'}</TableCell>
-                <TableCell>{partner.active ? 'Yes' : 'No'}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(partner)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {Array.isArray(partners) &&
+              partners.map((partner) => (
+                <TableRow key={partner.id}>
+                  <TableCell>{partner.name}</TableCell>
+                  <TableCell>
+                    {partner.companyId
+                      ? companies.find((c) => c.companyId === partner.companyId)
+                          ?.companyName || 'Unknown Company'
+                      : ''}
+                  </TableCell>
+                  <TableCell>{partner.email}</TableCell>
+                  <TableCell>{partner.phone}</TableCell>
+                  <TableCell>{partner.type}</TableCell>
+                  <TableCell>{partner.isCompany ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{partner.active ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(partner)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>
     </div>
   )
 }
-
