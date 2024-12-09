@@ -3,8 +3,7 @@ import { z } from 'zod'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 enum VoucherTypes {
-  Payment = 'Payment Voucher',
-  Receipt = 'Receipt Voucher',
+  Cash = 'Cash Voucher',
   Bank = 'Bank Voucher',
   Journal = 'Journal Voucher',
   Contra = 'Contra Voucher',

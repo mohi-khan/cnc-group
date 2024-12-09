@@ -32,6 +32,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Company {
   company: string
@@ -89,6 +90,7 @@ interface FormData {
 }
 
 export default function CashVoucher() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [companies, setCompanies] = useState<Company[]>([])
   const [locations, setLocations] = useState<Location[]>([])
@@ -122,8 +124,13 @@ export default function CashVoucher() {
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
       console.log('Current user from localStorage:', userData)
+      if (!userData.voucherTypes.includes('Cash Voucher')) {
+        console.log('User does not have access to Cash Voucher')
+        router.push('/unauthorized-access')
+      }
     } else {
       console.log('No user data found in localStorage')
+      router.push('/unauthorized-access')
     }
     setIsLoading(false)
   }, [])

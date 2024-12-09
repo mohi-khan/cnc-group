@@ -30,8 +30,7 @@ import {
 } from '../../../api/create-user-api'
 
 enum VoucherTypes {
-  Payment = 'Payment Voucher',
-  Receipt = 'Receipt Voucher',
+  Cash = 'Cash Voucher',
   Bank = 'Bank Voucher',
   Journal = 'Journal Voucher',
   Contra = 'Contra Voucher',
