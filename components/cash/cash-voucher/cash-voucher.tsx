@@ -35,14 +35,19 @@ import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Company {
-  company: string
+  company: {
+    companyName: string
+  }
   companyId: number
-  companyName: string
 }
 
 interface Location {
   id: number
   name: string
+  locationId: number
+  location: {
+    address: string
+  }
   companyId: number
 }
 
@@ -114,8 +119,7 @@ export default function CashVoucher() {
     currency: '',
   })
   const [cashBalance, setCashBalance] = useState(125000) // Initial cash balance
-  const [isLoading, setIsLoading] = useState(true)
-
+const [isLoading, setIsLoading] = useState(true)
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -134,10 +138,6 @@ export default function CashVoucher() {
     }
     setIsLoading(false)
   }, [])
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
 
   const addDetailRow = () => {
     const newRow: DetailRow = {
@@ -175,9 +175,7 @@ export default function CashVoucher() {
       // Reset location when company changes
       setFormData((prev) => ({ ...prev, location: '' }))
       // Find the selected company and update locations
-      const selectedCompany = companies.find(
-        (c) => c.company.companyName === value
-      )
+      const selectedCompany = companies.find((c) => c.companyName === value)
       if (selectedCompany) {
         setLocations(
           locations.filter((l) => l.companyId === selectedCompany.companyId)
@@ -275,7 +273,7 @@ export default function CashVoucher() {
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent>
-                {companies.map((company: any) => (
+                {companies.map((company) => (
                   <SelectItem
                     key={company.companyId}
                     value={company.company.companyName}
@@ -298,9 +296,9 @@ export default function CashVoucher() {
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
-                {locations.map((location: any) => (
+                {locations.map((location) => (
                   <SelectItem
-                    key={location.id}
+                    key={location.locationId}
                     value={location.location.address}
                   >
                     {location.location.address}
@@ -635,3 +633,4 @@ export default function CashVoucher() {
     </div>
   )
 }
+
