@@ -50,6 +50,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { useRouter } from 'next/navigation'
 
 const voucherItemSchema = z.object({
   accountName: z.string().min(1, 'Account Name is required'),
@@ -86,20 +87,29 @@ interface User {
 
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<Voucher[]>([])
+  const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
+  const router = useRouter()
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUser(userData)
-      console.log('Current user from localStorage:', userData)
+      console.log('Current user from localStorage:', userData.voucherTypes)
+      
+      // Check if 'Bank Voucher' is in the voucherTypes array
+      if (!userData.voucherTypes.includes('Bank Voucher')) {
+        console.log('User does not have access to Bank Voucher')
+        router.push('/unauthorized-access')
+      }
     } else {
       console.log('No user data found in localStorage')
+      router.push('/unauthorized-access')
     }
-  }, [])
+  }, [router])
 
   const form = useForm<z.infer<typeof voucherSchema>>({
     resolver: zodResolver(voucherSchema),
