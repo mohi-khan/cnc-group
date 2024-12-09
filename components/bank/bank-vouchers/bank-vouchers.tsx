@@ -70,6 +70,7 @@ const voucherSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   amount: z.number().min(0, 'Amount must be positive'),
   items: z.array(voucherItemSchema),
+  checkNumber: z.number().min(1, 'Check Number is required'),
 })
 
 type Voucher = z.infer<typeof voucherSchema> & {
@@ -87,7 +88,9 @@ interface User {
 
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<Voucher[]>([])
-  const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>([])
+  const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>(
+    []
+  )
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
@@ -99,7 +102,7 @@ export default function BankVoucher() {
       const userData = JSON.parse(userStr)
       setUser(userData)
       console.log('Current user from localStorage:', userData.voucherTypes)
-      
+
       // Check if 'Bank Voucher' is in the voucherTypes array
       if (!userData.voucherTypes.includes('Bank Voucher')) {
         console.log('User does not have access to Bank Voucher')
@@ -114,6 +117,7 @@ export default function BankVoucher() {
   const form = useForm<z.infer<typeof voucherSchema>>({
     resolver: zodResolver(voucherSchema),
     defaultValues: {
+      checkNumber: '',
       companyName: '',
       location: '',
       currency: '',
@@ -318,24 +322,48 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="bankName"
+                    name="bankAccountName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Bank Name</FormLabel>
+                        <FormLabel>Bank Account Name</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select bank" />
+                              <SelectValue placeholder="Select bank account" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="bank1">Bank 1</SelectItem>
-                            <SelectItem value="bank2">Bank 2</SelectItem>
+                            <SelectItem value="bank Account 1">
+                              Bank Account 1
+                            </SelectItem>
+                            <SelectItem value="bank Account 2">
+                              Bank Account 2
+                            </SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="checkNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Check Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter check number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value))
+                            }
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -611,6 +639,7 @@ export default function BankVoucher() {
         <TableHeader>
           <TableRow className="border-b">
             <TableHead>Voucher No.</TableHead>
+            <TableHead>Check No.</TableHead>
             <TableHead>Company Name</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Currency</TableHead>
@@ -626,6 +655,7 @@ export default function BankVoucher() {
           {vouchers.map((voucher) => (
             <TableRow key={voucher.id} className="border-b">
               <TableCell className="">{voucher.id}</TableCell>
+              <TableCell className="">{voucher.checkNumber}</TableCell>
               <TableCell className="">{voucher.companyName}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
               <TableCell className="">{voucher.currency}</TableCell>

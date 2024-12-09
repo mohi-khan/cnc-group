@@ -33,21 +33,17 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Company {
-  company: {
-    companyName: string
-  }
+  company: string
   companyId: number
+  companyName: string
 }
 
 interface Location {
   id: number
   name: string
-  locationId: number
-  location: {
-    address: string
-  }
   companyId: number
 }
 
@@ -119,7 +115,8 @@ export default function CashVoucher() {
     currency: '',
   })
   const [cashBalance, setCashBalance] = useState(125000) // Initial cash balance
-const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -138,6 +135,10 @@ const [isLoading, setIsLoading] = useState(true)
     }
     setIsLoading(false)
   }, [])
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   const addDetailRow = () => {
     const newRow: DetailRow = {
@@ -175,7 +176,9 @@ const [isLoading, setIsLoading] = useState(true)
       // Reset location when company changes
       setFormData((prev) => ({ ...prev, location: '' }))
       // Find the selected company and update locations
-      const selectedCompany = companies.find((c) => c.companyName === value)
+      const selectedCompany = companies.find(
+        (c) => c.company.companyName === value
+      )
       if (selectedCompany) {
         setLocations(
           locations.filter((l) => l.companyId === selectedCompany.companyId)
@@ -273,7 +276,7 @@ const [isLoading, setIsLoading] = useState(true)
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent>
-                {companies.map((company) => (
+                {companies.map((company: any) => (
                   <SelectItem
                     key={company.companyId}
                     value={company.company.companyName}
@@ -296,9 +299,9 @@ const [isLoading, setIsLoading] = useState(true)
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
-                {locations.map((location) => (
+                {locations.map((location: any) => (
                   <SelectItem
-                    key={location.locationId}
+                    key={location.id}
                     value={location.location.address}
                   >
                     {location.location.address}
@@ -620,7 +623,15 @@ const [isLoading, setIsLoading] = useState(true)
                         <Check className="h-4 w-4" />
                       </Button>
                       <Button variant="outline" size="icon">
-                        <Printer className="h-4 w-4" />
+                        <Link
+                          href={
+                            voucher.type.toLowerCase() === 'payment'
+                              ? '/payment-preview'
+                              : '/receipt-preview'
+                          }
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Link>
                       </Button>
                     </div>
                   </TableCell>
@@ -633,4 +644,3 @@ const [isLoading, setIsLoading] = useState(true)
     </div>
   )
 }
-
