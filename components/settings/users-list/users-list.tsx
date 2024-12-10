@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-// Import UI components
 import {
   Table,
   TableBody,
@@ -13,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Pagination,
   PaginationContent,
@@ -37,11 +37,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-// Define interfaces for User and UpdateUserData
 interface User {
   id: number
   username: string
-  voucherTypes?: string[]
+  voucherTypes: string[]
   roleId: number | null
   active: boolean
   roleName?: string
@@ -56,9 +55,14 @@ interface UpdateUserData {
 }
 
 const USERS_PER_PAGE = 5
+const VOUCHER_TYPES = [
+  'Cash Voucher',
+  'Bank Voucher',
+  'Journal Voucher',
+  'Contra Voucher',
+]
 
 export default function UsersList() {
-  // State declarations
   const [users, setUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -67,15 +71,11 @@ export default function UsersList() {
     { roleId: number; roleName: string; permission: string }[]
   >([])
 
-  const [newVoucherType, setNewVoucherType] = useState('')
-
-  // Fetch users and roles on component mount
   useEffect(() => {
     fetchUsers()
     fetchRoles()
   }, [])
 
-  // Function to fetch users from the API
   const fetchUsers = async () => {
     try {
       const response = await fetch(
@@ -95,7 +95,6 @@ export default function UsersList() {
     }
   }
 
-  // Function to fetch roles from the API
   const fetchRoles = async () => {
     try {
       const response = await fetch(
@@ -115,7 +114,6 @@ export default function UsersList() {
     }
   }
 
-  // Function to refresh the user list
   const refreshAttachment = async () => {
     try {
       await fetchUsers()
@@ -125,28 +123,27 @@ export default function UsersList() {
     }
   }
 
-  // Pagination logic
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
   const endIndex = startIndex + USERS_PER_PAGE
   const currentUsers = users.slice(startIndex, endIndex)
 
-  // Function to handle editing a user
   const handleEditUser = (user: User) => {
     setEditingUser({
       ...user,
       roleId: user.roleId ?? null,
+      voucherTypes: user.voucherTypes || [],
+      username: user.username || '',
     })
     setIsEditDialogOpen(true)
   }
 
-  // Function to save edited user data
   const handleSaveEdit = async () => {
     if (editingUser) {
       try {
         const updateData: UpdateUserData = {
           username: editingUser.username,
-          voucherTypes: editingUser.voucherTypes || [],
+          voucherTypes: editingUser.voucherTypes,
           roleId: editingUser.roleId === 0 ? null : editingUser.roleId,
           active: editingUser.active,
         }
@@ -190,24 +187,21 @@ export default function UsersList() {
     }
   }
 
-  // Function to handle input changes in the edit form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    if (name === 'voucherTypes') {
-      setEditingUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              voucherTypes: value.split(',').map((type) => type.trim()),
-            }
-          : null
-      )
-    } else {
-      setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
-    }
+    setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
   }
 
-  // Function to toggle user active state
+  const handleVoucherTypeChange = (voucherType: string, checked: boolean) => {
+    setEditingUser((prev) => {
+      if (!prev) return null
+      const updatedVoucherTypes = checked
+        ? [...prev.voucherTypes, voucherType]
+        : prev.voucherTypes.filter((type) => type !== voucherType)
+      return { ...prev, voucherTypes: updatedVoucherTypes }
+    })
+  }
+
   const handleToggleActive = async (
     userId: number,
     currentActiveState: boolean
@@ -255,11 +249,9 @@ export default function UsersList() {
     }
   }
 
-  // Main component render
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-4">User List</h1>
-      {/* User table */}
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-100 shadow-sm">
@@ -278,7 +270,6 @@ export default function UsersList() {
               <TableCell className="capitalize">{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
-                {/* View user details dialog */}
                 <Dialog key={`view-${user.id}`}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -296,7 +287,9 @@ export default function UsersList() {
                     <div className="py-4">
                       <p>
                         <strong>Voucher Types:</strong>{' '}
-                        {user.voucherTypes?.join(', ') || 'None'}
+                        {user.voucherTypes && user.voucherTypes.length > 0
+                          ? user.voucherTypes.join(', ')
+                          : 'None'}
                       </p>
                       <p>
                         <strong>Role:</strong> {user.roleName || 'N/A'}
@@ -307,7 +300,6 @@ export default function UsersList() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                {/* Edit user dialog */}
                 <Dialog
                   key={`edit-${user.id}`}
                   open={isEditDialogOpen}
@@ -331,12 +323,11 @@ export default function UsersList() {
                       <Input
                         id="username"
                         name="username"
-                        value={editingUser?.username || ''}
+                        value={editingUser?.username ?? ''}
                         onChange={handleInputChange}
                         className="mb-2"
                       />
                       <Label htmlFor="roleId">Role</Label>
-
                       <Select
                         value={editingUser?.roleId?.toString() ?? 'no-role'}
                         onValueChange={(value) =>
@@ -370,22 +361,42 @@ export default function UsersList() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Label htmlFor="voucherTypes">Voucher Types</Label>
-                      <Input
-                        id="voucherTypes"
-                        name="voucherTypes"
-                        value={editingUser?.voucherTypes?.join(', ') || ''}
-                        onChange={handleInputChange}
-                        className="mb-2"
-                        placeholder="Enter voucher types separated by commas"
-                      />
+                      <Label htmlFor="voucherTypes" className="mt-4 block">
+                        Voucher Types
+                      </Label>
+                      <div className="space-y-2">
+                        {VOUCHER_TYPES.map((voucherType) => (
+                          <div
+                            key={voucherType}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`voucherType-${voucherType}`}
+                              checked={editingUser?.voucherTypes.includes(
+                                voucherType
+                              )}
+                              onCheckedChange={(checked) =>
+                                handleVoucherTypeChange(
+                                  voucherType,
+                                  checked as boolean
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`voucherType-${voucherType}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {voucherType}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button onClick={handleSaveEdit}>Submit</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                {/* Toggle user active state button */}
                 <Button
                   variant={user.active ? 'ghost' : 'destructive'}
                   size="sm"
@@ -398,7 +409,6 @@ export default function UsersList() {
           ))}
         </TableBody>
       </Table>
-      {/* Pagination */}
       <div className="mt-4">
         <Pagination>
           <PaginationContent>
