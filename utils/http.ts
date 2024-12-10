@@ -10,6 +10,7 @@ type ApiResponse<T> = {
   } | null
 }
 
+
 // Type for the fetch options
 type FetchOptions<T> = {
   url: string
@@ -25,6 +26,8 @@ const handleLogout = () => {
   //window.location.href = '/login'
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
 // Main fetch utility function
 export async function fetchApi<T>({
   url,
@@ -33,8 +36,9 @@ export async function fetchApi<T>({
   headers = {},
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
+  console.log(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`)
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`,
+    `${API_BASE_URL}/${url}`,
     {
       method,
       headers: {

@@ -38,6 +38,7 @@ import {
   deactivateCostCenter,
   activateCostCenter,
 } from '../../../api/cost-centers-api'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CostCenterManagement() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -50,6 +51,7 @@ export default function CostCenterManagement() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
+  const { toast } = useToast()
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -59,21 +61,22 @@ export default function CostCenterManagement() {
 
   const fetchCostCenters = async () => {
     setIsLoading(true)
-    try {
-      const data = await getAllCostCenters()
-      setCostCenters(data)
-    } catch (error) {
-      console.error('Error fetching cost centers:', error)
-      setFeedback({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch cost centers',
+    const data = await getAllCostCenters()
+    console.log('🚀 ~ fetchCostCenters ~ data:', data)
+    setCostCenters(data.data.data)
+    if (data.error || !data.data) {
+      console.error('Error getting cost centers:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get cost centers',
       })
-    } finally {
-      setIsLoading(false)
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Banks are getting successfully',
+      })
     }
+    setIsLoading(false)
   }
 
   const handleActivateDeactivate = async (id: string, isActive: boolean) => {
@@ -123,47 +126,63 @@ export default function CostCenterManagement() {
       setIsLoading(true)
       setFeedback(null)
 
-      try {
-        const formData = new FormData(formRef.current!)
-        const newCostCenter = {
-          costCenterId: formData.get('costCenterId') as string,
-          costCenterName: formData.get('name') as string,
-          costCenterDescription: formData.get('description') as string,
-          currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
-          budget: Number(formData.get('budget')), // Convert to number
-          active: formData.get('active') === 'on',
-          actual: parseFloat(formData.get('actual') as string),
-        }
+      const formData = new FormData(formRef.current!)
+      const newCostCenter = {
+        costCenterId: formData.get('costCenterId') as string,
+        costCenterName: formData.get('name') as string,
+        costCenterDescription: formData.get('description') as string,
+        currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+        budget: Number(formData.get('budget')), // Convert to number
+        active: formData.get('active') === 'on',
+        actual: parseFloat(formData.get('actual') as string),
+      }
 
-        if (isEdit && selectedCostCenter) {
-          await updateCostCenter({
-            ...selectedCostCenter,
-            ...newCostCenter,
+      if (isEdit && selectedCostCenter) {
+        const costCenterId  = selectedCostCenter.costCenterId // Assuming the ID is stored here
+        const response = await updateCostCenter(Number(costCenterId), {
+          ...selectedCostCenter,
+          ...newCostCenter,
+        })
+        if (response.error || !response.data) {
+          console.error('Error updating const center:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to edit const center',
           })
         } else {
-          await createCostCenter(newCostCenter)
+          console.log('cost center edited successfully')
+          toast({
+            title: 'Success',
+            description: 'const center edited successfully',
+          })
         }
-
-        await fetchCostCenters()
-        setIsAddDialogOpen(false)
-        setIsEditDialogOpen(false)
-        setSelectedCostCenter(null)
-        setFeedback({
-          type: 'success',
-          message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
-        })
-      } catch (error) {
-        console.error('Error saving cost center:', error)
-        setFeedback({
-          type: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to save cost center',
-        })
-      } finally {
-        setIsLoading(false)
+      } else {
+        const response = await createCostCenter(newCostCenter)
+        if (response.error || !response.data) {
+          console.error('Error creating const center:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to create const center',
+          })
+        } else {
+          console.log('cost center created successfully')
+          toast({
+            title: 'Success',
+            description: 'const center created successfully',
+          })
+        }
       }
+
+      await fetchCostCenters()
+      setIsAddDialogOpen(false)
+      setIsEditDialogOpen(false)
+      setSelectedCostCenter(null)
+      setFeedback({
+        type: 'success',
+        message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
+      })
     }
 
     return (

@@ -24,7 +24,7 @@ export default function PaymentPreview() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
+    <div className="min-h-screen p-8">
       <Card className="max-w-4xl mx-auto">
         <CardHeader className="text-center border-b">
           <CardTitle className="text-2xl font-bold">Payment Voucher</CardTitle>
@@ -33,11 +33,11 @@ export default function PaymentPreview() {
           {/* Header Section */}
           <div className="flex justify-between">
             <div>
-              <Label className="text-sm text-gray-500">Voucher No:</Label>
+              <Label className="text-sm ">Voucher No:</Label>
               <p>{paymentData.voucherNo}</p>
             </div>
             <div>
-              <Label className="text-sm text-gray-500">Date:</Label>
+              <Label className="text-sm ">Date:</Label>
               <p>{paymentData.date}</p>
             </div>
           </div>
@@ -45,11 +45,11 @@ export default function PaymentPreview() {
           {/* Company Details */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm text-gray-500">Company:</Label>
+              <Label className="text-sm ">Company:</Label>
               <p>{paymentData.companyName}</p>
             </div>
             <div>
-              <Label className="text-sm text-gray-500">Location:</Label>
+              <Label className="text-sm ">Location:</Label>
               <p>{paymentData.location}</p>
             </div>
           </div>
@@ -57,7 +57,7 @@ export default function PaymentPreview() {
           {/* Payment Details */}
           <div className="space-y-4">
             <div>
-              <Label className="text-sm text-gray-500">
+              <Label className="text-sm ">
                 Method of Payment:
               </Label>
               <div className="flex gap-4 mt-1">
@@ -72,15 +72,15 @@ export default function PaymentPreview() {
               </div>
             </div>
             <div>
-              <Label className="text-sm text-gray-500">Partner Name:</Label>
+              <Label className="text-sm ">Partner Name:</Label>
               <p>{paymentData.partnerName}</p>
             </div>
             <div>
-              <Label className="text-sm text-gray-500">Remarks:</Label>
+              <Label className="text-sm ">Remarks:</Label>
               <p>{paymentData.remarks}</p>
             </div>
             <div>
-              <Label className="text-sm text-gray-500">Account Details:</Label>
+              <Label className="text-sm ">Account Details:</Label>
               <div className="grid grid-cols-3 gap-4 mt-1">
                 <p>Bank Account Name: {paymentData.accountName}</p>
                 <p>Cost Center: {paymentData.costCenter}</p>
@@ -90,11 +90,11 @@ export default function PaymentPreview() {
 
             {/* Added Status field */}
             <div>
-              <Label className="text-sm text-gray-500">Status:</Label>
+              <Label className="text-sm ">Status:</Label>
               <p>{paymentData.status}</p>
             </div>
             <div className='text-right'>
-              <Label className="text-sm text-gray-500">Amount:</Label>
+              <Label className="text-sm ">Amount:</Label>
               <p className="text-xl font-semibold">
                 {paymentData.currency} {paymentData.totalAmount}
               </p>
@@ -105,15 +105,15 @@ export default function PaymentPreview() {
           <div className="grid grid-cols-3 gap-4 pt-4">
             <div className="text-center">
               <div className="h-20 border-b mb-2" />
-              <Label className="text-sm text-gray-500">Approved By</Label>
+              <Label className="text-sm ">Approved By</Label>
             </div>
             <div className="text-center">
               <div className="h-20 border-b mb-2" />
-              <Label className="text-sm text-gray-500">Paid By</Label>
+              <Label className="text-sm ">Paid By</Label>
             </div>
             <div className="text-center">
               <div className="h-20 border-b mb-2" />
-              <Label className="text-sm text-gray-500">Signature</Label>
+              <Label className="text-sm ">Signature</Label>
             </div>
           </div>
         </CardContent>

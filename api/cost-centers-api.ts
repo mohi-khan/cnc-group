@@ -1,3 +1,4 @@
+import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -17,88 +18,31 @@ export type CostCenter = z.infer<typeof costCenterSchema>
 
 export const costCentersArraySchema = z.array(costCenterSchema)
 
-export async function getAllCostCenters(): Promise<CostCenter[]> {
-  console.log('API: Fetching all cost centers')
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/cost-centers/get-all-cost-centers`
-  )
-
-  console.log('API: Get all cost centers response status:', response.status)
-  const responseData = await response.json()
-  console.log('API: Get all cost centers response data:', responseData.data)
-
-  if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to fetch cost centers')
-  }
-
-  // Transform the data to match our schema if needed
-  const transformedData = responseData.data.map((item: any) => ({
-    costCenterId: item.costCenterId,
-    costCenterName: item.costCenterName,
-    costCenterDescription: item.costCenterDescription || '',
-    budget: Number(item.budget) || 0, // Convert string to number
-    actual: Number(item.actual) || 0, // Convert string to number
-    currencyCode: item.currencyCode,
-    active: item.isActive ?? true, // Use API's isActive field or default to true
-  }))
-
-  // Validate the transformed data
-  const validatedData = costCentersArraySchema.parse(transformedData)
-
-  return validatedData
+export async function getAllCostCenters() {
+  return fetchApi<CostCenter>({
+    url: 'api/cost-centers/get-all-cost-centers',
+    method: 'GET',
+  })
 }
 
 export async function createCostCenter(
-  costCenter: Omit<CostCenter, 'costCenterId'> & { costCenterId: string }
+  data: Omit<CostCenter, 'costCenterId'> & { costCenterId: string }
 ) {
-  console.log('API: Creating cost center with data:', costCenter)
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/cost-centers/create-cost-centers`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(costCenter), // Send single object instead of array
-    }
-  )
-
-  console.log('API: Cost center creation response status:', response.status)
-  const responseData = await response.json()
-  console.log('API: Cost center creation response data:', responseData.data)
-
-  if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to create cost center')
-  }
-
-  return responseData.data
+  console.log('Creating bank account:', data)
+  return fetchApi<CostCenter>({
+    url: 'api/cost-centers/create-cost-centers',
+    method: 'POST',
+    body: data,
+  })
 }
 
-export async function updateCostCenter(costCenter: CostCenter) {
-  console.log('API: Updating cost center with data:', costCenter)
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/cost-centers/edit/${costCenter.costCenterId}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(costCenter),
-    }
-  )
-
-  console.log('API: Cost center update response status:', response.status)
-  const responseData = await response.json()
-  console.log('API: Cost center update response data:', responseData.data)
-
-  if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to update cost center')
-  }
-
-  return responseData.data
+export async function updateCostCenter(id: number, data: CostCenter) {
+  console.log('Editing bank account:', id, data)
+  return fetchApi<CostCenter>({
+    url: `api/cost-centers/edit-cost-center/${id}`,
+    method: 'PATCH',
+    body: data,
+  })
 }
 
 export async function activateCostCenter(id: string) {
