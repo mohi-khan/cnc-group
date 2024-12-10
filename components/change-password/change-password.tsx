@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { changePassword } from '@/api/change-password-api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useToast } from '@/hooks/use-toast'
 
 interface User {
   userId: number
@@ -28,6 +29,7 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -58,27 +60,31 @@ const ChangePassword = () => {
 
     setIsLoading(true)
 
-    try {
-      const result = await changePassword(
-        userId,
-        oldPassword,
-        newPassword,
-        confirmPassword
-      )
-      setSuccess(result.message)
-      // Reset form after successful submission
-      setOldPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('An unexpected error occurred')
-      }
-    } finally {
-      setIsLoading(false)
+    const result = await changePassword(
+      userId,
+      oldPassword,
+      newPassword,
+      confirmPassword
+    )
+    if (result.error || !result.data) {
+      console.error('Error changing password:', result.error)
+      toast({
+        title: 'Error',
+        description: result.error?.message || 'Failed to change password',
+      })
+    } else {
+      console.log('password changed successfully')
+      toast({
+        title: 'Success',
+        description: 'password changed successfully',
+      })
     }
+    // setSuccess(result.message)
+    // Reset form after successful submission
+    setOldPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setIsLoading(false)
   }
 
   return (

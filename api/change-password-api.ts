@@ -1,3 +1,4 @@
+import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
 const changePasswordSchema = z
@@ -15,8 +16,6 @@ const changePasswordSchema = z
     path: ['confirmNewPassword'],
   })
 
-type ChangePasswordRequest = z.infer<typeof changePasswordSchema>
-
 interface ChangePasswordResponse {
   status: string
   message: string
@@ -27,47 +26,17 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
   confirmNewPassword: string
-): Promise<ChangePasswordResponse> {
-  try {
-    const validatedData = changePasswordSchema.parse({
-      currentPassword,
-      newPassword,
-      confirmNewPassword,
-    })
-    console.log('alpi fil', userId)
+) {
+  const validatedData = changePasswordSchema.parse({
+    currentPassword,
+    newPassword,
+    confirmNewPassword,
+  })
 
-    // Update the API endpoint to match your backend route
-    const response = await fetch(
-      `http://localhost:4000/api/auth/change-password/${userId}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: validatedData.currentPassword,
-          newPassword: validatedData.newPassword,
-          confirmNewPassword: validatedData.confirmNewPassword,
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({
-        message: 'Failed to change password. Please try again.',
-      }))
-      throw new Error(errorData.message || 'Failed to change password')
-    }
-
-    const data: ChangePasswordResponse = await response.json()
-    return data
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(error.errors[0].message)
-    }
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('An unexpected error occurred')
-  }
+  console.log('Validated data:', validatedData)
+  return fetchApi<ChangePasswordResponse>({
+    url: `api/auth/change-password/${userId}`,
+    method: 'PATCH',
+    body: validatedData,
+  })
 }

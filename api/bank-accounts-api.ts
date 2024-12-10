@@ -1,3 +1,4 @@
+import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
 // Zod schema for bank account validation
@@ -79,75 +80,34 @@ export type BankAccountUpdate = Omit<
   'id' | 'createdBy' | 'createdAt' | 'updatedAt'
 >
 
-const API_BASE_URL = 'http://localhost:4000'
-
-export async function createBankAccount(
-  data: BankAccountCreate
-): Promise<BankAccount> {
+export async function createBankAccount(data: BankAccountCreate) {
   console.log('Creating bank account:', data)
-  const response = await fetch(
-    `${API_BASE_URL}/api/bank-accounts/create-bank-account`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to create bank account')
-  }
-  console.log('Bank account created:', response)
-  return response.json()
+  return fetchApi<BankAccount>({
+    url: 'api/bank-accounts/create-bank-account',
+    method: 'POST',
+    body: data,
+  })
 }
 
-export async function editBankAccount(
-  id: number,
-  data: BankAccountUpdate
-): Promise<BankAccount> {
+export async function editBankAccount(id: number, data: BankAccountUpdate) {
   console.log('Editing bank account:', id, data)
-  const response = await fetch(
-    `${API_BASE_URL}/api/bank-accounts/edit-bank-account/${id}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to edit bank account')
-  }
-  console.log('Bank account edited:', response)
-  return response.json()
+  return fetchApi<BankAccount>({
+    url: `api/bank-accounts/edit-bank-account/${id}`,
+    method: 'PATCH',
+    body: data,
+  })
 }
 
-export async function getAllBankAccounts(): Promise<BankAccount[]> {
-  console.log('Fetching all bank accounts')
-  const response = await fetch(
-    `${API_BASE_URL}/api/bank-accounts/get-all-bank-accounts`
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch bank accounts')
-  }
-  console.log('Fetched bank accounts:', response)
-  return response.json()
+export async function getAllBankAccounts() {
+  return fetchApi<BankAccount>({
+    url: 'api/bank-accounts/get-all-bank-accounts',
+    method: 'GET',
+  })
 }
 
 export async function getAllGlAccounts() {
-  console.log('Fetching all GL accounts')
-  const response = await fetch(
-    `${API_BASE_URL}/api/chart-of-accounts/get-all-coa`
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch GL accounts')
-  }
-  console.log('Fetched GL accounts:', response)
-  return response.json()
+  return fetchApi<BankAccount>({
+    url: 'api/chart-of-accounts/get-all-coa',
+    method: 'GET',
+  })
 }

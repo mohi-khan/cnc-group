@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { companySchema, createCompany } from '../../../api/company-api'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CompanyForm() {
   const [companyName, setCompanyName] = useState('')
@@ -40,6 +41,7 @@ export default function CompanyForm() {
     message: string
   } | null>(null)
   const [errors, setErrors] = useState<z.ZodError | null>(null)
+  const { toast } = useToast()
 
   const isLocationTabEnabled = Boolean(
     companyName.trim() && address.trim() && phone.trim()
@@ -97,62 +99,62 @@ export default function CompanyForm() {
       return
     }
 
-    try {
-      const companyData = {
-        companyName,
-        address,
-        city,
-        state,
-        country,
-        postalCode,
-        phone,
-        email,
-        website,
-        taxId,
-        currencyId,
-        logo,
-        parentCompanyId,
-        locationId,
-      }
-
-      await createCompany(
-        companyData,
-        locations.filter((loc) => loc.trim() !== '')
-      )
-
-      setFeedback({
-        type: 'success',
-        message: 'Company and locations created successfully',
-      })
-      // Reset form
-      setCompanyName('')
-      setAddress('')
-      setCity('')
-      setState('')
-      setCountry('')
-      setPostalCode('')
-      setPhone('')
-      setEmail('')
-      setWebsite('')
-      setTaxId('')
-      setCurrencyId(1)
-      setLogo('https://placeholder.com/logo.png')
-      setParentCompanyId(null)
-      setLocationId(0)
-      setLocations([''])
-      setActiveTab('general')
-    } catch (error) {
-      console.error('Error saving data:', error)
-      setFeedback({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to create company and locations',
-      })
-    } finally {
-      setIsLoading(false)
+    const companyData = {
+      companyName,
+      address,
+      city,
+      state,
+      country,
+      postalCode,
+      phone,
+      email,
+      website,
+      taxId,
+      currencyId,
+      logo,
+      parentCompanyId,
+      locationId,
     }
+    console.log("🚀 ~ handleSave ~ companyData:", companyData)
+    
+    const response = await createCompany(
+      companyData,
+      locations.filter((loc) => loc.trim() !== '')
+    )
+    console.log("🚀 ~ handleSave ~ companyData:", response)
+    if (response.error || !response.data) {
+      console.error('Error creating company or location', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Error creating company or location',
+      })
+    } else {
+      console.log('Company and Location is created successfully')
+      toast({
+        title: 'Success',
+        description: 'Company and Location is created successfully',
+      })
+    }
+
+    // For Reset form and loading state
+    setCompanyName('')
+    setAddress('')
+    setCity('')
+    setState('')
+    setCountry('')
+    setPostalCode('')
+    setPhone('')
+    setEmail('')
+    setWebsite('')
+    setTaxId('')
+    setCurrencyId(1)
+    setLogo('https://placeholder.com/logo.png')
+    setParentCompanyId(null)
+    setLocationId(0)
+    setLocations([''])
+    setActiveTab('general')
+    setIsLoading(false)
   }
 
   return (
