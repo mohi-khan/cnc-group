@@ -626,8 +626,8 @@ export default function CashVoucher() {
                         <Link
                           href={
                             voucher.type.toLowerCase() === 'payment'
-                              ? '/payment-preview'
-                              : '/receipt-preview'
+                              ? '/cash/cash-voucher/payment-preview'
+                              : '/cash/cash-voucher/receipt-preview'
                           }
                         >
                           <Printer className="h-4 w-4" />

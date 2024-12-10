@@ -20,7 +20,7 @@ export default function PaymentPreview() {
     remarks: 'dfsd',
     totalAmount: '21.00',
     status: 'Posted',
-    date: new Date().toLocaleDateString(), // Keeping this as we need a date
+    date: new Date().toLocaleDateString(),
   }
 
   return (
@@ -57,13 +57,6 @@ export default function PaymentPreview() {
           {/* Payment Details */}
           <div className="space-y-4">
             <div>
-              <Label className="text-sm text-gray-500">Amount:</Label>
-              <p className="text-xl font-semibold">
-                {paymentData.currency} {paymentData.totalAmount}
-              </p>
-            </div>
-
-            <div>
               <Label className="text-sm text-gray-500">
                 Method of Payment:
               </Label>
@@ -78,31 +71,33 @@ export default function PaymentPreview() {
                 </div>
               </div>
             </div>
-
             <div>
-              <Label className="text-sm text-gray-500">To:</Label>
+              <Label className="text-sm text-gray-500">Partner Name:</Label>
               <p>{paymentData.partnerName}</p>
             </div>
-
             <div>
-              <Label className="text-sm text-gray-500">The Sum of:</Label>
-              <p>
-                {paymentData.totalAmount} {paymentData.currency}
-              </p>
-            </div>
-
-            <div>
-              <Label className="text-sm text-gray-500">Being:</Label>
+              <Label className="text-sm text-gray-500">Remarks:</Label>
               <p>{paymentData.remarks}</p>
             </div>
-
             <div>
               <Label className="text-sm text-gray-500">Account Details:</Label>
               <div className="grid grid-cols-3 gap-4 mt-1">
-                <p>Account: {paymentData.accountName}</p>
+                <p>Bank Account Name: {paymentData.accountName}</p>
                 <p>Cost Center: {paymentData.costCenter}</p>
                 <p>Department: {paymentData.department}</p>
               </div>
+            </div>
+
+            {/* Added Status field */}
+            <div>
+              <Label className="text-sm text-gray-500">Status:</Label>
+              <p>{paymentData.status}</p>
+            </div>
+            <div className='text-right'>
+              <Label className="text-sm text-gray-500">Amount:</Label>
+              <p className="text-xl font-semibold">
+                {paymentData.currency} {paymentData.totalAmount}
+              </p>
             </div>
           </div>
 
