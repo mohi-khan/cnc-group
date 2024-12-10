@@ -128,7 +128,6 @@ export default function CostCenterManagement() {
 
       const formData = new FormData(formRef.current!)
       const newCostCenter = {
-        costCenterId: formData.get('costCenterId') as string,
         costCenterName: formData.get('name') as string,
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
@@ -138,23 +137,19 @@ export default function CostCenterManagement() {
       }
 
       if (isEdit && selectedCostCenter) {
-        const costCenterId  = selectedCostCenter.costCenterId // Assuming the ID is stored here
-        const response = await updateCostCenter(Number(costCenterId), {
-          ...selectedCostCenter,
-          ...newCostCenter,
-        })
+        newCostCenter.costCenterId = selectedCostCenter.costCenterId
+        const response = await updateCostCenter(newCostCenter)
         if (response.error || !response.data) {
-          console.error('Error updating const center:', response.error)
+          console.error('Error updating cost center:', response.error)
           toast({
             title: 'Error',
-            description:
-              response.error?.message || 'Failed to edit const center',
+            description: response.error?.message || 'Failed to edit cost center',
           })
         } else {
-          console.log('cost center edited successfully')
+          console.log('Cost center edited successfully')
           toast({
             title: 'Success',
-            description: 'const center edited successfully',
+            description: 'Cost center edited successfully',
           })
         }
       } else {
@@ -187,21 +182,6 @@ export default function CostCenterManagement() {
 
     return (
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-        <div
-          className={`${isEdit && 'hidden'} grid grid-cols-4 items-center gap-4`}
-        >
-          <Label htmlFor="cost-center-id" className="text-right">
-            Cost Center ID
-          </Label>
-          <Input
-            id="cost-center-id"
-            name="costCenterId"
-            defaultValue={isEdit ? selectedCostCenter?.costCenterId : ''}
-            className="col-span-3"
-            required
-            readOnly={isEdit}
-          />
-        </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="cost-center-name" className="text-right">
             Cost Center Name
@@ -331,7 +311,6 @@ export default function CostCenterManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Id</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Currency Code</TableHead>
@@ -344,7 +323,6 @@ export default function CostCenterManagement() {
             <TableBody>
               {costCenters.map((center) => (
                 <TableRow key={center.costCenterId}>
-                  <TableCell>{center.costCenterId}</TableCell>
                   <TableCell>{center.costCenterName}</TableCell>
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
@@ -370,7 +348,7 @@ export default function CostCenterManagement() {
                       variant="outline"
                       onClick={() =>
                         handleActivateDeactivate(
-                          center.costCenterId,
+                          center,
                           center.active
                         )
                       }
