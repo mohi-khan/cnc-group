@@ -123,12 +123,12 @@ export default function BankAccounts() {
   })
 
   React.useEffect(() => {
-    console.log('Fetching bank accounts')
+    // console.log('Fetching bank accounts')
     fetchBankAccounts()
   }, [])
 
   React.useEffect(() => {
-    console.log('Fetching gl accounts')
+    // console.log('Fetching gl accounts')
     fetchGlAccounts()
   }, [])
 
@@ -158,72 +158,81 @@ export default function BankAccounts() {
   }, [editingAccount, form, userId])
 
   async function fetchBankAccounts() {
-    console.log('Fetching bank accounts')
-    try {
-      const fetchedAccounts = await getAllBankAccounts()
-      console.log('Fetched accounts:', fetchedAccounts)
-      setAccounts(fetchedAccounts)
-    } catch (error) {
-      console.error('Error fetching bank accounts:', error)
+    const fetchedAccounts = await getAllBankAccounts()
+    console.log('Fetched accounts:', fetchedAccounts)
+    setAccounts(fetchedAccounts.data)
+    if (fetchedAccounts.error || !fetchedAccounts.data) {
+      console.error('Error getting bank account:', fetchedAccounts.error)
       toast({
         title: 'Error',
-        description: 'Failed to fetch bank accounts',
-        variant: 'destructive',
+        description:
+          fetchedAccounts.error?.message || 'Failed to get bank accounts',
+      })
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Banks are getting successfully',
       })
     }
   }
 
   async function fetchGlAccounts() {
-    console.log('Fetching gl accounts')
-    try {
-      const fetchedGlAccounts = await getAllGlAccounts()
-      console.log('Fetched gl accounts:', fetchedGlAccounts)
-      setGlAccounts(fetchedGlAccounts)
-    } catch (error) {
-      console.error('Error fetching gl accounts:', error)
+    const fetchedGlAccounts = await getAllGlAccounts()
+    console.log('Fetched gl accounts:', fetchedGlAccounts)
+    setGlAccounts(fetchedGlAccounts.data)
+    if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
+      console.error('Error getting gl bank account:', fetchedGlAccounts.error)
       toast({
         title: 'Error',
-        description: 'Failed to fetch gl accounts',
-        variant: 'destructive',
+        description:
+          fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
+      })
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Banks are getting gl successfully',
       })
     }
   }
 
   async function onSubmit(values: BankAccount) {
     console.log('Form submitted:', values)
-    try {
-      if (editingAccount) {
-        console.log('Editing account:', editingAccount.id)
-        await editBankAccount(editingAccount.id!, {
-          ...values,
-          updatedBy: userId,
+    if (editingAccount) {
+      console.log('Editing account:', editingAccount.id)
+      const response = await editBankAccount(editingAccount.id!, {
+        ...values,
+        updatedBy: userId,
+      })
+      if (response.error || !response.data) {
+        console.error('Error editing bank account:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to edit bank account',
         })
+      } else {
         console.log('Account edited successfully')
         toast({
           title: 'Success',
           description: 'Bank account updated successfully',
         })
+      }
+    } else {
+      console.log('Creating new account')
+      const response = await createBankAccount(values)
+      if (response.error || !response.data) {
+        console.error('Error creating bank account:', response.error)
       } else {
-        console.log('Creating new account')
-        await createBankAccount(values)
         console.log('Account created successfully')
         toast({
           title: 'Success',
           description: 'Bank account created successfully',
         })
       }
-      setIsDialogOpen(false)
-      setEditingAccount(null)
-      form.reset()
-      fetchBankAccounts()
-    } catch (error) {
-      console.error('Error saving bank account:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save bank account',
-        variant: 'destructive',
-      })
     }
+    setIsDialogOpen(false)
+    setEditingAccount(null)
+    form.reset()
+    fetchBankAccounts()
   }
 
   function handleEdit(account: BankAccount) {
@@ -233,7 +242,7 @@ export default function BankAccounts() {
   }
 
   console.log('Form state errors:', form.formState.errors)
-  console.log('Form values:', form.getValues())
+  // console.log('Form values:', form.getValues())
 
   return (
     <div className="container mx-auto py-10">
