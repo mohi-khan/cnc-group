@@ -1,132 +1,118 @@
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+
+// Updated dummy data
+const voucherData = {
+  voucherNo: 'RV-2023-042',
+  companyName: 'GreenLeaf Innovations',
+  location: 'Austin, TX',
+  currency: 'EUR',
+  accountName: 'Research and Development',
+  costCenter: 'Product Innovation',
+  department: 'Sustainability',
+  partnerName: 'Dr. Emma Rodriguez',
+  remarks: 'Eco-friendly material research project funding',
+  totalAmount: '25,000.00',
+}
 
 export default function ReceiptVoucher() {
   return (
-    <div className="w-full max-w-[800px] mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            RECEIPT VOUCHER
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="voucherNo">Voucher No</Label>
-              <Input id="voucherNo" placeholder="Enter voucher number" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" type="date" />
-            </div>
-          </div>
-
+    <Card className="w-full max-w-3xl mx-auto my-4">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold text-center border-2 p-4 shadow-lg">
+          Receipt Voucher
+        </CardTitle>
+        <p className="text-center text-muted-foreground"></p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name</Label>
-            <Input id="companyName" placeholder="Enter company name" />
+            <Label htmlFor="voucherNo">Voucher No</Label>
+            <p id="voucherNo" className="text-sm font-medium">
+              {voucherData.voucherNo}
+            </p>
           </div>
-
+          <div className="space-y-2">
+            <Label htmlFor="company">Company</Label>
+            <p id="company" className="text-sm font-medium">
+              {voucherData.companyName}
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input id="location" placeholder="Enter location" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Select>
-                <SelectTrigger id="currency">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="usd">USD</SelectItem>
-                  <SelectItem value="eur">EUR</SelectItem>
-                  <SelectItem value="gbp">GBP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank">Bank</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accountName">Account Name</Label>
-            <Input id="accountName" placeholder="Enter account name" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="costCenter">Cost Center</Label>
-              <Input id="costCenter" placeholder="Enter cost center" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <Input id="department" placeholder="Enter department" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="partnerName">Partner Name</Label>
-            <Input id="partnerName" placeholder="Enter partner name" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="remarks">Remarks</Label>
-            <Textarea
-              id="remarks"
-              placeholder="Enter remarks here"
-              className="h-20"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="totalAmount">Total Amount</Label>
-            <Input
-              id="totalAmount"
-              type="number"
-              placeholder="Enter total amount"
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div className="space-y-2">
-            <Label>Prepared by</Label>
-            <Input placeholder="Enter name" />
+            <p id="location" className="text-sm font-medium">
+              {voucherData.location}
+            </p>
           </div>
           <div className="space-y-2">
-            <Label>Approved by</Label>
-            <Input placeholder="Enter name" />
+            <Label htmlFor="currency">Currency</Label>
+            <Badge
+              variant="secondary"
+              className="text-lg font-bold"
+              id="currency"
+            >
+              {voucherData.currency}
+            </Badge>
           </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Item</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Account Name</TableCell>
+              <TableCell>{voucherData.accountName}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Cost Center</TableCell>
+              <TableCell>{voucherData.costCenter}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Department</TableCell>
+              <TableCell>{voucherData.department}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Partner Name</TableCell>
+              <TableCell>{voucherData.partnerName}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Remarks</TableCell>
+              <TableCell>{voucherData.remarks}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </CardContent>
+      <CardFooter className="flex flex-col items-end space-y-2">
+        <Label htmlFor="totalAmount" className="text-lg">
+          Total Funding Amount
+        </Label>
+        <p id="totalAmount" className="text-3xl font-bold text-primary">
+          <span className="text-2xl font-extrabold mr-2">
+            {voucherData.currency}
+          </span>
+          {voucherData.totalAmount}
+        </p>
+      </CardFooter>
+    </Card>
   )
 }
