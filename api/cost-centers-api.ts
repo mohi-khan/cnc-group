@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 // Update the schema to match the exact API response structure
 export const costCenterSchema = z.object({
-  costCenterId: z.string(),
+  costCenterId: z.number(),
   costCenterName: z.string().min(1, 'Cost center name is required'),
   costCenterDescription: z.string(),
   budget: z.number(),
@@ -36,10 +36,10 @@ export async function createCostCenter(
   })
 }
 
-export async function updateCostCenter(id: number, data: CostCenter) {
-  console.log('Editing bank account:', id, data)
+export async function updateCostCenter(data: CostCenter) {
+  console.log('Editing cost center:', data)
   return fetchApi<CostCenter>({
-    url: `api/cost-centers/edit-cost-center/${id}`,
+    url: `api/cost-centers/edit-cost-center/${data.costCenterId}`,
     method: 'PATCH',
     body: data,
   })
