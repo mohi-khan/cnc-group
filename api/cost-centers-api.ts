@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 // Update the schema to match the exact API response structure
 export const costCenterSchema = z.object({
-  costCenterId: z.number(),
+  costCenterId: z.number().min(1, 'Cost center id is required'),
   costCenterName: z.string().min(1, 'Cost center name is required'),
   costCenterDescription: z.string(),
   budget: z.number(),
@@ -15,6 +15,7 @@ export const costCenterSchema = z.object({
 })
 
 export type CostCenter = z.infer<typeof costCenterSchema>
+export type CostCenterActivateDiactivate = z.infer<typeof costCenterSchema.costCenterId>
 
 export const costCentersArraySchema = z.array(costCenterSchema)
 
@@ -25,10 +26,8 @@ export async function getAllCostCenters() {
   })
 }
 
-export async function createCostCenter(
-  data: Omit<CostCenter, 'costCenterId'> & { costCenterId: string }
-) {
-  console.log('Creating bank account:', data)
+export async function createCostCenter(data: Omit<CostCenter, 'costCenterId'>) {
+  console.log('Creating cost center:', data)
   return fetchApi<CostCenter>({
     url: 'api/cost-centers/create-cost-centers',
     method: 'POST',
@@ -45,50 +44,18 @@ export async function updateCostCenter(data: CostCenter) {
   })
 }
 
-export async function activateCostCenter(id: string) {
-  console.log('API: Activating cost center with id:', id)
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/cost-centers/activate/${id}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-
-  console.log('API: Cost center activation response status:', response.status)
-  const responseData = await response.json()
-  console.log('API: Cost center activation response data:', responseData.data)
-
-  if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to activate cost center')
-  }
-
-  return responseData.data
+export async function activateCostCenter(costCenterId: number) {
+  console.log('Activating cost center:', costCenterId)
+  return fetchApi<CostCenter>({
+    url: `api/cost-centers/activate/${costCenterId}`,
+    method: 'PATCH'
+  })
 }
 
-export async function deactivateCostCenter(id: string) {
-  console.log('API: Deactivating cost center with id:', id)
-
-  const response = await fetch(
-    `${API_BASE_URL}/api/cost-centers/deactivate/${id}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-
-  console.log('API: Cost center deactivation response status:', response.status)
-  const responseData = await response.json()
-  console.log('API: Cost center deactivation response data:', responseData.data)
-
-  if (!response.ok) {
-    throw new Error(responseData.message || 'Failed to deactivate cost center')
-  }
-
-  return responseData.data
+export async function deactivateCostCenter(costCenterId: number) {
+  console.log('Deactivating cost center:', costCenterId)
+  return fetchApi<CostCenter>({
+    url: `api/cost-centers/deactivate/${costCenterId}`,
+    method: 'PATCH'
+  })
 }

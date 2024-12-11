@@ -5,38 +5,8 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-
-interface SubItem {
-  name: string
-  source: string
-}
-
-interface Company {
-  companyId: number
-  companyName: string
-}
-interface UserCompany {
-  userId: number
-  companyId: number
-}
-
-interface SubItemGroup {
-  name: string
-  items: SubItem[]
-}
-
-interface MenuItem {
-  name: string
-  subItemGroups: SubItemGroup[]
-}
-
-interface User {
-  userId: number
-  username: string
-  roleId: number
-  roleName: string
-  userCompanies: UserCompany[]
-}
+import { Company, User } from '@/utils/type'
+import { MENU_ITEMS } from '@/utils/constants'
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -50,9 +20,9 @@ export default function Navbar() {
   const router = useRouter()
 
   const handleSignOut = () => {
-    localStorage.removeItem('currentUser') // Remove the current user from local storage
-    setIsProfileOpen(false) // Close the profile dropdown
-    router.push('/') // Redirect to login page
+    localStorage.removeItem('currentUser')
+    setIsProfileOpen(false)
+    router.push('/')
   }
 
   useEffect(() => {
@@ -75,7 +45,6 @@ export default function Navbar() {
           const filteredCompanies = data.filter((company) =>
             userCompanyIds.includes(company.companyId)
           )
-          console.log('company filter', filteredCompanies)
           setCompanies(filteredCompanies)
         }
       } catch (error) {
@@ -85,221 +54,6 @@ export default function Navbar() {
 
     fetchCompanies()
   }, [])
-
-  const menuItems: MenuItem[] = [
-    { name: 'Dashboard', subItemGroups: [] },
-    {
-      name: 'Accounting',
-      subItemGroups: [
-        {
-          name: 'Journal Management',
-          items: [
-            { name: 'Journal Entry', source: '/accounting/journal-entry' },
-            { name: 'Journal Items', source: '/accounting/journal-items' },
-            { name: 'Reverse Entry', source: '/accounting/reverse-entry' },
-          ],
-        },
-        {
-          name: 'Books',
-          items: [{ name: 'Day Books', source: '/accounting/day-books' }],
-        },
-        {
-          name: 'Vouchers',
-          items: [
-            {
-              name: 'Create Repetitive Vouchers',
-              source: '/accounting/repetitive-vouchers',
-            },
-            { name: 'Lock Vouchers', source: '/accounting/lock-vouchers' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Cash',
-      subItemGroups: [
-        {
-          name: 'Cash Management',
-          items: [
-            { name: 'Cash Voucher', source: '/cash/cash-voucher' },
-            { name: 'Cash Reports', source: '/cash/cash-reports' },
-            { name: 'Cntra Vouchers', source: '/cash/cntra-vouchers' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Customers',
-      subItemGroups: [
-        {
-          name: 'Customer Management',
-          items: [
-            { name: 'Invoices', source: '/customers/invoices' },
-            { name: 'Receipt', source: '/customers/receipt' },
-            {
-              name: 'Customer Statement',
-              source: '/customers/customer-statement',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Vendors',
-      subItemGroups: [
-        {
-          name: 'Vendor Management',
-          items: [
-            { name: 'Bills', source: '/vendors/bills' },
-            { name: 'Payments', source: '/vendors/payments' },
-            { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Assets',
-      subItemGroups: [
-        {
-          name: 'Asset Management',
-          items: [
-            {
-              name: 'Create Asset Group',
-              source: '/assets/create-asset-group',
-            },
-            {
-              name: 'Configure Depreciation',
-              source: '/assets/configure-depreciation',
-            },
-            {
-              name: 'Configure Asset Accounting',
-              source: '/assets/configure-asset-accounting',
-            },
-            { name: 'Run Depreciation', source: '/assets/run-depreciation' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Bank',
-      subItemGroups: [
-        {
-          name: 'Bank Management',
-          items: [
-            // {
-            //   name: 'Create Bank Account',
-            //   source: '/bank/create-bank-account',
-            // },
-            { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
-            {
-              name: 'Bank Reconciliation',
-              source: '/bank/bank-reconciliation',
-            },
-            { name: 'Bank Ledger', source: '/bank/bank-ledger' },
-            { name: 'Check Print', source: '/bank/check-print' },
-            { name: 'Bank Balances', source: '/bank/bank-balances' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Budget',
-      subItemGroups: [
-        {
-          name: 'Budget Management',
-          items: [
-            { name: 'Create Budget', source: '/budget/create-budget' },
-            { name: 'Budget Settings', source: '/budget/budget-settings' },
-            { name: 'View Budget', source: '/budget/view-budget' },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Reports',
-      subItemGroups: [
-        {
-          name: 'Financial Reports',
-          items: [
-            { name: 'Trial Balance', source: '/reports/trial-balance' },
-            {
-              name: 'Profit and Loss Accounts',
-              source: '/reports/profit-loss',
-            },
-            { name: 'Balance Sheet', source: '/reports/balance-sheet' },
-          ],
-        },
-        {
-          name: 'Ledger Reports',
-          items: [
-            { name: 'Bank Ledger', source: '/reports/bank-ledger' },
-            { name: 'Customer Ledger', source: '/reports/customer-ledger' },
-          ],
-        },
-        {
-          name: 'Other Reports',
-          items: [
-            {
-              name: 'Bank and Cash Reports',
-              source: '/reports/bank-cash-reports',
-            },
-            {
-              name: 'Fund Flow Statement',
-              source: '/reports/fund-flow-statement',
-            },
-            {
-              name: 'Budget Vs Actual Reports',
-              source: '/reports/budget-vs-actual',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'Settings',
-      subItemGroups: [
-        {
-          name: 'Admin',
-          items: [
-            { name: 'Create User', source: '/settings/create-user' },
-            { name: 'Users List', source: '/settings/users-list' },
-          ],
-        },
-        {
-          name: 'General Settings',
-          items: [
-            { name: 'Company', source: '/settings/company' },
-            {
-              name: 'Chart of Accounts',
-              source: '/settings/chart-of-accounts',
-            },
-            { name: 'Currencies', source: '/settings/currencies' },
-            { name: 'Res Partners', source: '/settings/res-partner' },
-          ],
-        },
-        {
-          name: 'Financial Settings',
-          items: [
-            { name: 'Cost Centers', source: '/settings/cost-centers' },
-            { name: 'Internal Orders', source: '/settings/internal-orders' },
-            { name: 'Bank Accounts', source: '/settings/bank-accounts' },
-            { name: 'Cash Accounts', source: '/settings/cash-accounts' },
-          ],
-        },
-        {
-          name: 'Other Settings',
-          items: [
-            { name: 'Locations', source: '/settings/locations' },
-            {
-              name: 'Withholding Taxes',
-              source: '/settings/withholding-taxes',
-            },
-            { name: 'Financial Year', source: '/settings/financial-year' },
-          ],
-        },
-      ],
-    },
-  ]
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -320,12 +74,29 @@ export default function Navbar() {
     }
   }, [profileRef, companiesRef])
 
+  // Middleware to check route access
+  const checkRouteAccess = (source: string) => {
+    // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
+    if (source.includes('/settings/') && user?.roleId !== 2) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    if (source === '/bank/bank-voucher' && ![1, 2].includes(user?.roleId)) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    if (source === '/cash/cash-voucher' && ![1, 2].includes(user?.roleId)) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    return true
+  }
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            {/* <span className="text-xl font-bold text-gray-800">Logo</span> */}
             <Image
               src="/logo.webp"
               width={70}
@@ -336,7 +107,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center justify-between">
             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
-              {menuItems.map((menuItem, index) => (
+              {MENU_ITEMS.map((menuItem, index) => (
                 <div
                   key={index}
                   className="relative"
@@ -367,6 +138,11 @@ export default function Navbar() {
                                   <Link
                                     key={itemIndex}
                                     href={item.source}
+                                    onClick={(e) => {
+                                      if (!checkRouteAccess(item.source)) {
+                                        e.preventDefault()
+                                      }
+                                    }}
                                     className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
                                   >
                                     <div className="ml-4">
@@ -470,5 +246,3 @@ export default function Navbar() {
     </nav>
   )
 }
-
-// Notes : In settings i have bank accounts. from there i can create bank accounts as well. previously there was banks. i kept the banks code in 'settings/banks' folder location in both page folder and component folder, even though i don't need it for now. i also commented out the create bank accounts route form navbar.
