@@ -20,9 +20,9 @@ export default function Navbar() {
   const router = useRouter()
 
   const handleSignOut = () => {
-    localStorage.removeItem('currentUser') // Remove the current user from local storage
-    setIsProfileOpen(false) // Close the profile dropdown
-    router.push('/') // Redirect to login page
+    localStorage.removeItem('currentUser')
+    setIsProfileOpen(false)
+    router.push('/')
   }
 
   useEffect(() => {
@@ -45,7 +45,6 @@ export default function Navbar() {
           const filteredCompanies = data.filter((company) =>
             userCompanyIds.includes(company.companyId)
           )
-          console.log('company filter', filteredCompanies)
           setCompanies(filteredCompanies)
         }
       } catch (error) {
@@ -75,12 +74,29 @@ export default function Navbar() {
     }
   }, [profileRef, companiesRef])
 
+  // Middleware to check route access
+  const checkRouteAccess = (source: string) => {
+    // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
+    if (source.includes('/settings/') && user?.roleId !== 2) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    if (source === '/bank/bank-voucher' && ![1, 2].includes(user?.roleId)) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    if (source === '/cash/cash-voucher' && ![1, 2].includes(user?.roleId)) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    return true
+  }
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            {/* <span className="text-xl font-bold text-gray-800">Logo</span> */}
             <Image
               src="/logo.webp"
               width={70}
@@ -122,6 +138,11 @@ export default function Navbar() {
                                   <Link
                                     key={itemIndex}
                                     href={item.source}
+                                    onClick={(e) => {
+                                      if (!checkRouteAccess(item.source)) {
+                                        e.preventDefault()
+                                      }
+                                    }}
                                     className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
                                   >
                                     <div className="ml-4">
@@ -225,5 +246,3 @@ export default function Navbar() {
     </nav>
   )
 }
-
-// Notes : In settings i have bank accounts. from there i can create bank accounts as well. previously there was banks. i kept the banks code in 'settings/banks' folder location in both page folder and component folder, even though i don't need it for now. i also commented out the create bank accounts route form navbar.
