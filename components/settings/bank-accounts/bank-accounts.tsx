@@ -58,6 +58,7 @@ import {
   getAllGlAccounts,
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
+import { BANGLADESH_BANKS } from '@/utils/constants'
 
 export default function BankAccounts() {
   // const { user } = useAuthContext()
@@ -87,24 +88,6 @@ export default function BankAccounts() {
       console.log('No user data found in localStorage')
     }
   }, [])
-
-  const bangladeshBanks = [
-    { id: '1', name: 'Bangladesh Bank' },
-    { id: '2', name: 'Standard Chartered Bank' },
-    { id: '3', name: 'Dutch-Bangla Bank Limited' },
-    { id: '4', name: 'BRAC Bank Limited' },
-    { id: '5', name: 'Eastern Bank Limited' },
-    { id: '6', name: 'Social Islami Bank Limited' },
-    { id: '7', name: 'Islami Bank Bangladesh Limited' },
-    { id: '8', name: 'Pubali Bank Limited' },
-    { id: '9', name: 'United Commercial Bank Limited' },
-    { id: '10', name: 'City Bank Limited' },
-    { id: '11', name: 'Jamuna Bank Limited' },
-    { id: '12', name: 'Sonali Bank Limited' },
-    { id: '13', name: 'AB Bank Limited' },
-    { id: '14', name: 'Mercantile Bank Limited' },
-    { id: '15', name: 'Mutual Trust Bank Limited' },
-  ]
 
   const form = useForm<BankAccount>({
     resolver: zodResolver(bankAccountSchema),
@@ -326,7 +309,7 @@ export default function BankAccounts() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {bangladeshBanks.map((bank) => (
+                              {BANGLADESH_BANKS.map((bank) => (
                                 <SelectItem key={bank.id} value={bank.name}>
                                   {bank.name}
                                 </SelectItem>
