@@ -79,26 +79,45 @@ export default function CostCenterManagement() {
     setIsLoading(false)
   }
 
-  const handleActivateDeactivate = async (id: string, isActive: boolean) => {
+  const handleActivateDeactivate = async (id: number, isActive: boolean) => {
     try {
+      let response
       if (isActive) {
-        await deactivateCostCenter(id)
+        response = await deactivateCostCenter(id)
       } else {
-        await activateCostCenter(id)
+        response = await activateCostCenter(id)
       }
-      await fetchCostCenters()
-      setFeedback({
-        type: 'success',
-        message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
-      })
+
+      if (response.error || !response.data) {
+        console.error(
+          `Error ${isActive ? 'deactivating' : 'activating'} cost center:`,
+          response.error
+        )
+        toast({
+          title: 'Error',
+          description:
+            response.error?.message ||
+            `Failed to ${isActive ? 'deactivate' : 'activate'} cost center`,
+        })
+      } else {
+        console.log(
+          `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`
+        )
+        toast({
+          title: 'Success',
+          description: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+        })
+        await fetchCostCenters()
+        setFeedback({
+          type: 'success',
+          message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+        })
+      }
     } catch (error) {
-      console.error('Error updating cost center:', error)
-      setFeedback({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update cost center',
+      console.error('Unexpected error:', error)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
       })
     }
   }
@@ -117,7 +136,7 @@ export default function CostCenterManagement() {
       if (isEdit && selectedCostCenter) {
         setCurrencyCode(selectedCostCenter.currencyCode)
       } else {
-        setCurrencyCode('')
+        setCurrencyCode('BDT')
       }
     }, [isEdit, selectedCostCenter])
 
@@ -131,7 +150,7 @@ export default function CostCenterManagement() {
         costCenterName: formData.get('name') as string,
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
-        budget: Number(formData.get('budget')), // Convert to number
+        budget: Number(formData.get('budget')),
         active: formData.get('active') === 'on',
         actual: parseFloat(formData.get('actual') as string),
       }
@@ -143,7 +162,8 @@ export default function CostCenterManagement() {
           console.error('Error updating cost center:', response.error)
           toast({
             title: 'Error',
-            description: response.error?.message || 'Failed to edit cost center',
+            description:
+              response.error?.message || 'Failed to edit cost center',
           })
         } else {
           console.log('Cost center edited successfully')
@@ -154,6 +174,7 @@ export default function CostCenterManagement() {
         }
       } else {
         const response = await createCostCenter(newCostCenter)
+        console.log('🚀 ~ handleSubmit ~ response:', response)
         if (response.error || !response.data) {
           console.error('Error creating const center:', response.error)
           toast({
@@ -347,10 +368,7 @@ export default function CostCenterManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        handleActivateDeactivate(
-                          center,
-                          center.active
-                        )
+                        handleActivateDeactivate(center, center.active)
                       }
                     >
                       {center.active ? 'Deactivate' : 'Activate'}
