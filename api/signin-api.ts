@@ -2,23 +2,6 @@ import axios from 'axios'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-interface SignInRequest {
-  username: string
-  password: string
-}
-
-interface SignInResponse {
-  status: string
-  data: {
-    token: string
-    user: {
-      id: number
-      username: string
-      [key: string]: any
-    }
-  }
-}
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -26,67 +9,98 @@ const api = axios.create({
   },
 })
 
-export const signin = async (
-  credentials: SignInRequest
-): Promise<{ success: boolean; data?: any; message?: string }> => {
-  try {
-    const response = await api.post<SignInResponse>(
-      'api/auth/login',
-      credentials
-    )
+import { fetchApi } from '@/utils/http'
+import { z } from 'zod'
 
-    if (response.data.status === 'success' && response.data.data) {
-      return {
-        success: true,
-        data: response.data.data,
-      }
-    }
+export const SignInRequestSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+})
+const RoleSchema = z.object({
+  roleId: z.number(),
+  roleName: z.string(),
+  permissions: z.null(),
+})
+const CompanySchema = z.object({
+  companyId: z.number(),
+  companyName: z.string(),
+  address: z.string(),
+  city: z.string(),
+  state: z.string(),
+  country: z.string(),
+  postalCode: z.null(),
+  phone: z.string(),
+  email: z.string(),
+  website: z.string(),
+  taxId: z.string(),
+  currencyId: z.null(),
+  logo: z.null(),
+  parentCompanyId: z.null(),
+  active: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
 
-    return {
-      success: false,
-      message: 'Invalid response format from server',
-    }
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          'Wrong Login/Password. Please Contact with Administrator.',
-      }
-    }
-    return {
-      success: false,
-      message: 'An unexpected error occurred',
-    }
-  }
+const LocationSchema = z.object({
+  locationId: z.number(),
+  companyId: z.number(),
+  branchName: z.string(),
+  address: z.string(),
+  city: z.null(),
+  state: z.null(),
+  country: z.null(),
+  postalCode: z.null(),
+  phone: z.null(),
+  email: z.null(),
+  managerName: z.null(),
+  active: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+const UserCompanySchema = z.object({
+  userId: z.number(),
+  companyId: z.number(),
+  company: CompanySchema,
+})
+
+const UserLocationSchema = z.object({
+  userId: z.number(),
+  locationId: z.number(),
+  location: LocationSchema,
+})
+
+const UserSchema = z.object({
+  userId: z.number(),
+  username: z.string(),
+  password: z.string(),
+  active: z.boolean(),
+  roleId: z.number(),
+  voucherTypes: z.array(z.string()),
+  isPasswordResetRequired: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  role: RoleSchema,
+  userCompanies: z.array(UserCompanySchema),
+  userLocations: z.array(UserLocationSchema),
+})
+
+// Define the main response schema
+const SignInResponseSchema = z.object({
+  status: z.literal('success'),
+  data: z.object({
+    token: z.string(),
+    user: UserSchema,
+  }),
+})
+export type SignInRequest = z.infer<typeof SignInRequestSchema>
+export type SignInResponse = z.infer<typeof SignInResponseSchema>
+
+export async function signIn(credentials: SignInRequest) {
+  return fetchApi<SignInResponse>({
+    url: 'api/auth/login',
+    method: 'POST',
+    body: credentials,
+    schema: SignInResponseSchema,
+  })
 }
-
-// import { fetchApi } from '@/utils/http'
-// import { z } from 'zod'
-
-// export const SignInRequestSchema = z.object({
-//   username: z.string().min(1),
-//   password: z.string().min(1),
-// })
-
-// export const SignInResponseSchema = z.object({
-//   token: z.string(),
-//   user: z.object({
-//     id: z.string(),
-//     email: z.string(),
-//     name: z.string().optional(),
-//   }),
-// })
-
-// export type SignInRequest = z.infer<typeof SignInRequestSchema>
-// export type SignInResponse = z.infer<typeof SignInResponseSchema>
-
-// export async function signIn(credentials: SignInRequest) {
-//   return fetchApi<SignInResponse>({
-//     url: '/api/auth/login',
-//     method: 'POST',
-//     body: credentials,
-//     schema: SignInResponseSchema,
-//   })
-// }

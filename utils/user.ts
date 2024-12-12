@@ -1,11 +1,12 @@
 import { useState } from 'react'
 
-const [user, setUser] = useState([])
 export const userData = () => {
+  const [user, setUser] = useState([])
+
   const userStr = localStorage.getItem('currentUser')
   if (userStr) {
     const userData = JSON.parse(userStr)
-    setUser(userData?.userId)
+    setUser(userData)
     console.log(
       'Current userId from localStorage in everywhere:',
       userData.userId
