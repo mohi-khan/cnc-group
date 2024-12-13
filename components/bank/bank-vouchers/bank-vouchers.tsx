@@ -74,7 +74,7 @@ const voucherSchema = z.object({
 })
 
 type Voucher = z.infer<typeof voucherSchema> & {
-  id: string
+  id: number
   status: 'Draft' | 'Posted'
 }
 

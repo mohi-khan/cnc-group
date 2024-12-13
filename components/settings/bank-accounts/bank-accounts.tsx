@@ -162,7 +162,7 @@ export default function BankAccounts() {
   async function fetchGlAccounts() {
     const fetchedGlAccounts = await getAllGlAccounts()
     console.log('Fetched gl accounts:', fetchedGlAccounts)
-    setGlAccounts(fetchedGlAccounts.data)
+    
     if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
       console.error('Error getting gl bank account:', fetchedGlAccounts.error)
       toast({
@@ -171,6 +171,7 @@ export default function BankAccounts() {
           fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
       })
     } else {
+      setGlAccounts(fetchedGlAccounts.data)
       toast({
         title: 'Success',
         description: 'Banks are getting gl successfully',

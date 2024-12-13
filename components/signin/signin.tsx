@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react'
-import { signin } from '../../api/signin-api'
+import { signIn } from '@/api/signin-api'
+import { toast } from '@/hooks/use-toast'
 
 export default function SignIn() {
   const [username, setUsername] = useState('')
@@ -41,19 +42,24 @@ export default function SignIn() {
     }
 
     try {
-      const response = await signin({ username, password })
-      alert(response.success)
-      if (response.success && response.data?.token) {
+      const response = await signIn({ username, password })
+      console.log("🚀 ~ handleSubmit ~ response:", response)
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to signin',
+        })
+      } else {
         // Log the current user information
 
         // Store token if remember me is checked
         if (rememberMe) {
-          localStorage.setItem('authToken', response.data.token)
+          localStorage.setItem('authToken', response.data.data.token)
         }
-        console.log(response.data.user)
+        console.log(response.data.data.user)
         // Store user information in localStorage
         const { userId, roleId, userCompanies, userLocations, voucherTypes } =
-          response.data.user
+          response.data.data.user
 
         const userInfo = {
           userId,
@@ -67,8 +73,10 @@ export default function SignIn() {
 
         // Redirect to dashboard
         router.push('/dashboard')
-      } else {
-        setError(response.message || 'Login failed. Please try again.')
+        toast({
+          title: 'Success',
+          description: 'you are signined in',
+        })
       }
     } catch (err) {
       console.error('Login error:', err)
