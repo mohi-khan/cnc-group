@@ -1,3 +1,5 @@
+import { fetchApi } from '@/utils/http'
+import { Company } from '@/utils/type'
 import { z } from 'zod'
 
 const API_BASE_URL = 'http://localhost:4000'
@@ -43,71 +45,34 @@ export type ResPartnerUpdate = Omit<
   'id' | 'createdBy' | 'createdAt' | 'updatedAt'
 >
 
-export async function createResPartner(
-  data: ResPartnerCreate
-): Promise<ResPartner> {
-  console.log('Creating res partner:', data)
-  const response = await fetch(
-    `${API_BASE_URL}/api/res-partner/create-res-partner`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to create res partner')
-  }
-  console.log('Res partner created:', response)
-  return response.json()
+export async function createResPartner(data: ResPartner) {
+  console.log('Creating res:', data)
+  return fetchApi<ResPartner>({
+    url: 'api/res-partner/create-res-partner',
+    method: 'POST',
+    body: data,
+  })
 }
 
-export async function editResPartner(
-  id: number,
-  data: ResPartnerUpdate
-): Promise<ResPartner> {
-  console.log('Editing res partner:', id, data)
-  const response = await fetch(
-    `${API_BASE_URL}/api/res-partner/edit-res-partner/${id}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to edit res partner')
-  }
-  console.log('Res partner edited:', response)
-  return response.json()
+export async function editResPartner(id: number, data: ResPartner) {
+  console.log('Editing res:', id, data)
+  return fetchApi<ResPartner>({
+    url: `api/res-partner/edit-res-partner/${id}`,
+    method: 'PATCH',
+    body: data,
+  })
 }
 
-export async function getAllResPartners(): Promise<ResPartner[]> {
-  // console.log('Fetching all res partners');
-  const response = await fetch(
-    `${API_BASE_URL}/api/res-partner/get-all-res-partners`
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch res partners')
-  }
-  console.log('Fetched res partners:', response)
-  return response.json()
+export async function getAllResPartners() {
+  return fetchApi<ResPartner>({
+    url: 'api/res-parter/get-all-res-partners',
+    method: 'GET',
+  })
 }
 
 export async function getAllCompanies() {
-  // console.log('Fetching all companies');
-  const response = await fetch(`${API_BASE_URL}/api/company/get-all-companies`)
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch companies')
-  }
-  console.log('Fetched companies:', response)
-  return response.json()
+  return fetchApi<Company>({
+    url: 'api/company/get-all-companies',
+    method: 'GET',
+  })
 }

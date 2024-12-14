@@ -14,8 +14,12 @@ export const costCenterSchema = z.object({
   active: z.boolean().optional(),
 })
 
+export const activateDeactivateCostCenterSchema = z.object({
+  costCenterId: z.number().min(1, 'Cost center id is required'),
+})
+
 export type CostCenter = z.infer<typeof costCenterSchema>
-export type CostCenterActivateDiactivate = z.infer<typeof costCenterSchema.costCenterId>
+export type CostCenterActivateDeactivate = z.infer<typeof activateDeactivateCostCenterSchema>
 
 export const costCentersArraySchema = z.array(costCenterSchema)
 
@@ -44,18 +48,18 @@ export async function updateCostCenter(data: CostCenter) {
   })
 }
 
-export async function activateCostCenter(costCenterId: number) {
+export  function activateCostCenter(costCenterId: number) {
   console.log('Activating cost center:', costCenterId)
-  return fetchApi<CostCenter>({
-    url: `api/cost-centers/activate/${costCenterId}`,
+  return fetchApi<CostCenterActivateDeactivate>({
+    url: `api/cost-centers/activate-cost-center/${costCenterId}`,
     method: 'PATCH'
   })
 }
 
-export async function deactivateCostCenter(costCenterId: number) {
+export  function deactivateCostCenter(costCenterId: number) {
   console.log('Deactivating cost center:', costCenterId)
-  return fetchApi<CostCenter>({
-    url: `api/cost-centers/deactivate/${costCenterId}`,
+  return fetchApi<CostCenterActivateDeactivate>({
+    url: `api/cost-centers/deactivate-cost-center/${costCenterId}`,
     method: 'PATCH'
   })
 }

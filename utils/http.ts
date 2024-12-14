@@ -99,6 +99,7 @@ export async function fetchApi<T>({
 
   // Validate response with schema if provided
   if (schema) {
+    console.log(jsonData)
     const result = schema.safeParse(jsonData)
     if (!result.success) {
       return {

@@ -29,8 +29,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import {
-  costCenterSchema,
-  createCostCenters,
   updateCostCenter,
   getAllCostCenters,
   CostCenter,
@@ -63,7 +61,6 @@ export default function CostCenterManagement() {
     setIsLoading(true)
     const data = await getAllCostCenters()
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
-    setCostCenters(data.data.data)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
@@ -71,6 +68,7 @@ export default function CostCenterManagement() {
         description: data.error?.message || 'Failed to get cost centers',
       })
     } else {
+      setCostCenters(data.data.data)
       toast({
         title: 'Success',
         description: 'Banks are getting successfully',
@@ -107,7 +105,16 @@ export default function CostCenterManagement() {
           title: 'Success',
           description: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
         })
-        await fetchCostCenters()
+
+        // Update the local state immediately
+        setCostCenters((prevCostCenters) =>
+          prevCostCenters.map((center) =>
+            center.costCenterId === id
+              ? { ...center, active: !isActive }
+              : center
+          )
+        )
+
         setFeedback({
           type: 'success',
           message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
@@ -368,7 +375,10 @@ export default function CostCenterManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        handleActivateDeactivate(center, center.active)
+                        handleActivateDeactivate(
+                          center.costCenterId,
+                          center.active
+                        )
                       }
                     >
                       {center.active ? 'Deactivate' : 'Activate'}

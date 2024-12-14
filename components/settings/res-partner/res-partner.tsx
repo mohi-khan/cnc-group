@@ -54,7 +54,7 @@ import { useToast } from '@/hooks/use-toast'
 export default function ResPartners() {
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [companies, setCompanies] = React.useState<
-    { id: number; name: string }[]
+    { companyId: number; companyName: string }[]
   >([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingPartner, setEditingPartner] = React.useState<ResPartner | null>(
@@ -135,78 +135,84 @@ export default function ResPartners() {
     }
   }, [editingPartner, form, userId])
 
-  async function fetchResPartners() {
-    // console.log('Fetching res partners')
-    try {
-      const fetchedPartners = await getAllResPartners()
-      console.log('Fetched partners:', fetchedPartners.data)
-      setPartners(fetchedPartners.data)
-    } catch (error) {
-      console.error('Error fetching res partners:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch res partners',
-        variant: 'destructive',
-      })
+  const fetchResPartners = async () => {
+    // setIsLoading(true)
+    const data = await getAllResPartners()
+    console.log('🚀 ~ fetchrespartners ~ data:', data)
+    if (data.error || !data.data) {
+      console.error('Error getting res partners:', data.error)
+    } else {
+      console.log('partner', data)
+      setPartners(data.data.data)
     }
+    console.log('companies here', companies)
+    // setIsLoading(false)
   }
 
-  async function fetchCompanies() {
-    // console.log('Fetching companies')
-    try {
-      const response = await getAllCompanies()
-      console.log('companies 1', response)
-      setCompanies(response)
-      console.log('companies datas', companies)
-    } catch (error) {
-      console.error('Error fetching companies:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch companies',
-        variant: 'destructive',
-      })
+  const fetchCompanies = async () => {
+    // setIsLoading(true)
+    const data = await getAllCompanies()
+    console.log('🚀 ~ fetchCompanies ~ data:', data)
+    if (data.error || !data.data) {
+      console.error('Error getting companies:', data.error)
+    } else {
+      console.log('company', data.data)
+      setCompanies(data.data)
     }
+    console.log('companies here', companies)
+    // setIsLoading(false)
   }
 
-  React.useEffect(() => {
-    console.log('Companies state updated:', companies)
-  }, [companies])
+  // React.useEffect(() => {
+  //   fetchCompanies();
+  // }, [companies])
 
   async function onSubmit(values: ResPartner) {
     console.log('Form submitted:', values)
-    try {
-      if (editingPartner) {
-        console.log('Editing partner:', editingPartner.id)
-        await editResPartner(editingPartner.id!, {
-          ...values,
-          updatedBy: userId,
-        })
-        // console.log('Partner edited successfully')
+    if (editingPartner) {
+      console.log('Editing partner:', editingPartner.id)
+      const response = await editResPartner(editingPartner.id!, {
+        ...values,
+        updatedBy: userId,
+      })
+      console.log('🚀 ~ onSubmit ~ response:', response)
+      if (response.error || !response.data) {
+        console.error('Error editing res partner:', response.error)
         toast({
-          title: 'Success',
-          description: 'Res partner updated successfully',
+          title: 'Error',
+          description: response.error?.message || 'Failed to edit res partner',
         })
       } else {
-        // console.log('Creating new partner')
-        await createResPartner(values)
-        // console.log('Partner created successfully')
+        console.log('Account edited successfully')
         toast({
           title: 'Success',
-          description: 'Res partner created successfully',
+          description: 'res partner updated successfully',
         })
       }
-      setIsDialogOpen(false)
-      setEditingPartner(null)
-      form.reset()
-      fetchResPartners()
-    } catch (error) {
-      console.error('Error saving res partner:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to save res partner',
-        variant: 'destructive',
+    } else {
+      console.log('Creating new partner')
+      const response = await createResPartner({
+        ...values,
+        createdBy: userId,
       })
+      if (response.error || !response.data) {
+        console.error('Error editing bank account:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to edit bank account',
+        })
+      } else {
+        console.log('Account edited successfully')
+        toast({
+          title: 'Success',
+          description: 'Bank account updated successfully',
+        })
+      }
     }
+    setIsDialogOpen(false)
+    setEditingPartner(null)
+    form.reset()
+    fetchResPartners()
   }
 
   function handleEdit(partner: ResPartner) {
@@ -214,9 +220,8 @@ export default function ResPartners() {
     setIsDialogOpen(true)
     console.log(partner, 'partner')
   }
-
-  console.log('Form state errors:', form.formState.errors)
-  console.log('Form values:', form.getValues())
+  // console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   return (
     <div className="container mx-auto py-10">
@@ -285,7 +290,7 @@ export default function ResPartners() {
                             <SelectContent>
                               {companies.map((company) => (
                                 <SelectItem
-                                  key={company.id}
+                                  key={company.companyId}
                                   value={company.companyId.toString()}
                                 >
                                   {company.companyName}

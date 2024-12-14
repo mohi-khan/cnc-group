@@ -106,7 +106,7 @@ export async function getAllBankAccounts() {
 }
 
 export async function getAllGlAccounts() {
-  return fetchApi<BankAccount>({
+  return fetchApi<BankAccount[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
