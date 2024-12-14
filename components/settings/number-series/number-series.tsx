@@ -5,6 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Edit, Check } from 'lucide-react'
 import * as z from 'zod'
+import {
+  getAllNumberSeries,
+  createNumberSeries,
+  updateNumberSeries,
+  deleteNumberSeries,
+  NumberSeries as NumberSeriesType,
+  getAllCompanies,
+  getAllLocations,
+} from '../../../api/number-series-api'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -29,58 +38,68 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { Company, Location } from '@/utils/type'
 
-const numberSeriesSchema = z.object({
-  id: z.number().optional(),
-  companyId: z.number().int().positive(),
-  locationId: z.number().int().positive(),
-  voucherType: z.string().min(1, "Voucher type is required").max(50),
-  financialYear: z.string().min(1, "Financial year is required").max(10),
-  seriesFormat: z.string().min(1, "Series format is required").max(255),
-  startingNumber: z.number().int().positive("Starting number must be positive"),
-  endingNumber: z.number().int().positive("Ending number must be positive"),
-}).refine((data) => data.endingNumber >= data.startingNumber, {
-  message: "Ending number must be greater than or equal to starting number",
-  path: ["endingNumber"],
-});
+const numberSeriesSchema = z
+  .object({
+    id: z.number().optional(),
+    companyId: z
+      .union([z.string(), z.number()])
+      .transform((val) => Number(val)),
+    locationId: z
+      .union([z.string(), z.number()])
+      .transform((val) => Number(val)),
+    voucherType: z.string().min(1, 'Voucher type is required').max(50),
+    financialYear: z
+      .union([z.string(), z.number()])
+      .transform((val) => Number(val)),
+    seriesFormat: z.string().min(1, 'Series format is required').max(255),
+    startingNumber: z
+      .union([z.string(), z.number()])
+      .transform((val) => Number(val)),
+    endingNumber: z
+      .union([z.string(), z.number()])
+      .transform((val) => Number(val)),
+    createdBy: z.number().optional(),
+    currentNumber: z.number().optional(),
+  })
+  .refine((data) => data.endingNumber >= data.startingNumber, {
+    message: 'Ending number must be greater than or equal to starting number',
+    path: ['endingNumber'],
+  })
 
-type NumberSeries = z.infer<typeof numberSeriesSchema>
-
-const companies = [
-  { id: 1, name: 'Company A' },
-  { id: 2, name: 'Company B' },
-];
-
-const locations = [
-  { id: 1, name: 'Location X' },
-  { id: 2, name: 'Location Y' },
-];
+type NumberSeries = NumberSeriesType
 
 const voucherTypes = [
-  'Invoice',
-  'Receipt',
-  'Credit Note',
-  'Debit Note',
-  'Purchase Order',
-];
+  'Cash Voucher',
+  'Bank Voucher',
+  'Journal Voucher',
+  'Contra Voucher',
+]
 
 export function NumberSeries() {
   const [series, setSeries] = React.useState<NumberSeries[]>([])
+  const [companies, setCompanies] = React.useState<Company[]>([])
+  const [locations, setLocations] = React.useState<Location[]>([])
   const [editingId, setEditingId] = React.useState<number | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isError, setIsError] = React.useState(false)
   const { toast } = useToast()
 
   const form = useForm<NumberSeries>({
     resolver: zodResolver(numberSeriesSchema),
     defaultValues: {
-      companyId: 1,
-      locationId: 1,
-      voucherType: "",
-      financialYear: "",
-      seriesFormat: "",
+      companyId: undefined,
+      locationId: undefined,
+      voucherType: '',
+      financialYear: undefined,
+      seriesFormat: '',
       startingNumber: 1,
-      endingNumber: 9999,
+      endingNumber: 9,
+      createdBy: 60,
+      currentNumber: 1,
     },
   })
 
@@ -89,101 +108,196 @@ export function NumberSeries() {
   })
 
   React.useEffect(() => {
-    // Simulating fetching data from an API
-    const fetchedSeries = [
-      {
-        id: 1,
-        companyId: 1,
-        locationId: 1,
-        voucherType: 'Invoice',
-        financialYear: '2024',
-        seriesFormat: 'INV-{0000}',
-        startingNumber: 1,
-        endingNumber: 1000,
-      },
-      {
-        id: 2,
-        companyId: 2,
-        locationId: 2,
-        voucherType: 'Receipt',
-        financialYear: '2024',
-        seriesFormat: 'REC-{000}',
-        startingNumber: 1,
-        endingNumber: 1000,
-      },
-    ]
-    setSeries(fetchedSeries)
+    fetchNumberSeries()
+    fetchCompanies()
+    fetchAllLocations()
   }, [])
 
-  const onSubmit = (values: NumberSeries) => {
-    if (values.endingNumber < values.startingNumber) {
+  const fetchNumberSeries = async () => {
+    setIsLoading(true)
+    setIsError(false)
+    const response = await getAllNumberSeries()
+    console.log('Fetched number series:', response.data)
+    if (response.error || !response.data) {
+      console.error('Error fetching number series:', response.error)
       toast({
-        title: "Error",
-        description: "Ending number must be greater than or equal to starting number",
-        variant: "destructive",
-      });
-      return;
+        title: 'Error',
+        description: response.error?.message || 'Failed to show number series',
+      })
+      setIsError(true)
+    } else {
+      setSeries(response.data)
     }
-    setSeries([...series, { ...values, id: Date.now() }]);
-    form.reset();
-    toast({
-      title: "Success",
-      description: "Number series added successfully",
-    });
-  };
+    setIsLoading(false)
+  }
 
-  const handleDelete = (id: number) => {
-    setSeries(series.filter((s) => s.id !== id));
-    toast({
-      title: "Success",
-      description: "Number series deleted successfully",
-    });
-  };
+  const fetchCompanies = async () => {
+    const data = await getAllCompanies()
+    console.log('Fetched companies:', data.data)
+    if (data.error || !data.data) {
+      console.error('Error getting companies:', data.error)
+    } else {
+      setCompanies(data.data)
+    }
+  }
+
+  async function fetchAllLocations() {
+    const response = await getAllLocations()
+    console.log('Fetched locations:', response.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting locations:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get locations',
+      })
+    } else {
+      setLocations(response.data.data)
+    }
+  }
+
+  const onSubmit = async (values: NumberSeriesType) => {
+    console.log('Form values before formatting:', values)
+    // Ensure all numeric fields are properly converted to numbers
+    const formattedValues = {
+      ...values,
+      financialYear: Number(values.financialYear),
+      startingNumber: Number(values.startingNumber),
+      endingNumber: Number(values.endingNumber),
+      companyId: Number(values.companyId),
+      locationId: Number(values.locationId),
+      createdBy: 60, // Add createdBy with a fixed value of 60
+      currentNumber: Number(values.startingNumber),
+    }
+    console.log('Values being sent to the backend:', formattedValues);
+    console.log('Formatted values to be submitted:', formattedValues)
+
+    if (formattedValues.endingNumber < formattedValues.startingNumber) {
+      toast({
+        title: 'Error',
+        description:
+          'Ending number must be greater than or equal to starting number',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      const response = await createNumberSeries(formattedValues)
+      console.log('API response:', response)
+      if (response.error) {
+        throw new Error(
+          response.error.message || 'Failed to create number series'
+        )
+      }
+      fetchNumberSeries()
+      form.reset()
+      toast({
+        title: 'Success',
+        description: 'Number series added successfully',
+      })
+    } catch (error) {
+      console.error('Error creating number series:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create number series',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteNumberSeries(id)
+      fetchNumberSeries()
+      toast({
+        title: 'Success',
+        description: 'Number series deleted successfully',
+      })
+    } catch (error) {
+      console.error('Error deleting number series:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete number series',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const handleEdit = (e: React.MouseEvent, record: NumberSeries) => {
-    e.preventDefault();
-    setEditingId(record.id);
-    editForm.reset(record);
-  };
+    e.preventDefault()
+    setEditingId(record.id)
+    editForm.reset(record)
+  }
 
-  const handleUpdate = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const values = editForm.getValues();
+  const handleUpdate = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    const values = editForm.getValues()
+    console.log('Update values:', values)
     if (values.endingNumber < values.startingNumber) {
       toast({
-        title: "Error",
-        description: "Ending number must be greater than or equal to starting number",
-        variant: "destructive",
-      });
-      return;
+        title: 'Error',
+        description:
+          'Ending number must be greater than or equal to starting number',
+        variant: 'destructive',
+      })
+      return
     }
-    setSeries(series.map(s => s.id === editingId ? { ...values, id: editingId } : s));
-    setEditingId(null);
-    toast({
-      title: "Success",
-      description: "Number series updated successfully",
-    });
-  };
+    try {
+      const response = await updateNumberSeries(values)
+      console.log('Update response:', response)
+      if (response.error) {
+        throw new Error(
+          response.error.message || 'Failed to update number series'
+        )
+      }
+      fetchNumberSeries()
+      setEditingId(null)
+      toast({
+        title: 'Success',
+        description: 'Number series updated successfully',
+      })
+    } catch (error) {
+      console.error('Error updating number series:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update number series',
+        variant: 'destructive',
+      })
+    }
+  }
 
-  const renderTableCell = (id: number, name: keyof NumberSeries) => {
-    if (id === editingId) {
+  const renderTableCell = (record: NumberSeries, name: keyof NumberSeries) => {
+    if (record.id === editingId) {
       if (name === 'companyId' || name === 'locationId') {
-        const options = name === 'companyId' ? companies : locations;
+        const options = name === 'companyId' ? companies : locations
         return (
           <FormField
             control={editForm.control}
             name={name}
             render={({ field }) => (
               <FormItem>
-                <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  defaultValue={field.value?.toString()}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
+                      <SelectValue
+                        placeholder={
+                          name === 'companyId'
+                            ? 'Select Company'
+                            : 'Select Location'
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {options.map((option) => (
-                      <SelectItem key={option.id} value={option.id.toString()}>
+                      <SelectItem
+                        key={option.companyId}
+                        value={option.id.toString()}
+                      >
                         {option.name}
                       </SelectItem>
                     ))}
@@ -193,7 +307,7 @@ export function NumberSeries() {
               </FormItem>
             )}
           />
-        );
+        )
       }
       if (name === 'voucherType') {
         return (
@@ -202,7 +316,10 @@ export function NumberSeries() {
             name={name}
             render={({ field }) => (
               <FormItem>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select..." />
@@ -220,7 +337,7 @@ export function NumberSeries() {
               </FormItem>
             )}
           />
-        );
+        )
       }
       return (
         <FormField
@@ -229,13 +346,16 @@ export function NumberSeries() {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input 
-                  {...field} 
+                <Input
+                  {...field}
                   onChange={(e) => {
-                    const value = name === 'startingNumber' || name === 'endingNumber'
-                      ? parseInt(e.target.value)
-                      : e.target.value;
-                    field.onChange(value);
+                    const value =
+                      name === 'startingNumber' ||
+                      name === 'endingNumber' ||
+                      name === 'financialYear'
+                        ? parseInt(e.target.value)
+                        : e.target.value
+                    field.onChange(value)
                   }}
                 />
               </FormControl>
@@ -243,15 +363,17 @@ export function NumberSeries() {
             </FormItem>
           )}
         />
-      );
+      )
     }
     if (name === 'companyId') {
-      return companies.find(c => c.id === series.find(s => s.id === id)?.[name])?.name;
+      return companies.find((c) => c.companyId === record[name])?.companyName
     }
     if (name === 'locationId') {
-      return locations.find(l => l.id === series.find(s => s.id === id)?.[name])?.name;
+      return (
+        locations.find((l) => l.locationId === record[name])?.address || 'N/A'
+      )
     }
-    return series.find(s => s.id === id)?.[name];
+    return record[name]
   }
 
   return (
@@ -274,45 +396,75 @@ export function NumberSeries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {series.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>{renderTableCell(record.id, 'companyId')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'locationId')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'voucherType')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'financialYear')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'seriesFormat')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'startingNumber')}</TableCell>
-                    <TableCell>{renderTableCell(record.id, 'endingNumber')}</TableCell>
-                    <TableCell className="flex gap-3 justify-end">
-                      {editingId === record.id ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => handleUpdate(e)}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => handleEdit(e, record)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(record.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center">
+                      Loading...
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
+                {isError && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center">
+                      Error fetching number series
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading &&
+                  !isError &&
+                  series.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        {renderTableCell(record, 'companyId')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'locationId')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'voucherType')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'financialYear')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'seriesFormat')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'startingNumber')}
+                      </TableCell>
+                      <TableCell>
+                        {renderTableCell(record, 'endingNumber')}
+                      </TableCell>
+                      <TableCell className="flex gap-3 justify-end">
+                        {editingId === record.id ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => handleUpdate(e)}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => handleEdit(e, record)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(record.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 <TableRow>
                   <TableCell>
                     <FormField
@@ -320,16 +472,25 @@ export function NumberSeries() {
                       name="companyId"
                       render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(parseInt(value))
+                            }
+                            value={field.value?.toString()}
+                            defaultValue={field.value?.toString()}
+                          >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select company" />
+                                <SelectValue placeholder="Select Company" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {companies.map((company) => (
-                                <SelectItem key={company.id} value={company.id.toString()}>
-                                  {company.name}
+                                <SelectItem
+                                  key={company.companyId}
+                                  value={company.companyId.toString()}
+                                >
+                                  {company.companyName}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -345,16 +506,25 @@ export function NumberSeries() {
                       name="locationId"
                       render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(parseInt(value))
+                            }
+                            value={field.value?.toString()}
+                            defaultValue={field.value?.toString()}
+                          >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select location" />
+                                <SelectValue placeholder="Select Location" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {locations.map((location) => (
-                                <SelectItem key={location.id} value={location.id.toString()}>
-                                  {location.name}
+                                <SelectItem
+                                  key={location.locationId}
+                                  value={location.locationId?.toString()}
+                                >
+                                  {location.address}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -370,7 +540,10 @@ export function NumberSeries() {
                       name="voucherType"
                       render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select voucher type" />
@@ -396,7 +569,15 @@ export function NumberSeries() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input placeholder="Financial Year" {...field} />
+                            <Input
+                              type="number"
+                              placeholder="Financial Year"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                              value={field.value || ''}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -424,7 +605,14 @@ export function NumberSeries() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="number" placeholder="Starting Number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                            <Input
+                              type="number"
+                              placeholder="Starting Number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -438,7 +626,14 @@ export function NumberSeries() {
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input type="number" placeholder="Ending Number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                            <Input
+                              type="number"
+                              placeholder="Ending Number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -464,5 +659,5 @@ export function NumberSeries() {
   )
 }
 
-export default NumberSeries;
+export default NumberSeries
 
