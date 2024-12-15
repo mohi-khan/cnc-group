@@ -25,12 +25,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { User } from '@/utils/type'
-import {
-  createFinancialYearSchema,
-  financialYear,
-} from '@/api/financial-year.api'
+import { createFinancialYear, financialYear } from '@/api/financial-year.api'
+import { toast } from '@/hooks/use-toast'
 
 const financial_year = () => {
   const [userId, setUserId] = useState(0)
@@ -59,10 +56,35 @@ const financial_year = () => {
     if (userId !== 0) {
       console.log('UserId after set:', userId)
     }
-  }, [userId, form]) // This effect runs when userId changes
+  }, [userId, form])
+
   async function onSubmit(values: financialYear) {
-    console.log('Form data submitted:', values)
-    alert('Financial year saved successfully!')
+    try {
+      console.log('Form data submitted:', values)
+      const response = await createFinancialYear(values)
+
+      if (response.error || !response.data) {
+        console.error('Error creating Financial year:', response.error)
+        toast({
+          title: 'Error',
+          description: 'Failed to create financial year. Please try again.',
+          variant: 'destructive',
+        })
+      } else {
+        console.log('Financial year created successfully')
+        toast({
+          title: 'Success',
+          description: 'Financial year created successfully',
+        })
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   //console.log(form.getValues())

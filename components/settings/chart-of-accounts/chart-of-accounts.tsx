@@ -60,46 +60,31 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-
-interface Account {
-  id: number
-  code: string
-  name: string
-  parentName: string
-  parentAccountId: number
-  type: string
-  notes: string
-  allowreconcilable: boolean
-  isActive: boolean
-}
-
-interface CodeGroup {
-  id: string
-  code: string
-  isExpanded?: boolean
-  subgroups?: CodeGroup[]
-}
-
-interface ParentCode {
-  code: string
-  name: string
-}
+import { Account, CodeGroup, ParentCode } from '@/utils/type'
+import {
+  ChartOfAccount,
+  chatOfAccount,
+  createChartOfAccounts,
+  getAllCoa,
+  getParentCodes,
+} from '@/api/chart-of-accounts-api'
+import { toast } from '@/hooks/use-toast'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
 const currencyItems = ['BDT', 'USD', 'EUR']
 
-// const parentIds = [
-//   '101',
-//   '102',
-//   '103',
-//   '202',
-//   '203',
-//   '301',
-//   '302',
-//   '401',
-//   '402',
-//   '502',
-// ]
+const parentIds = [
+  '101',
+  '102',
+  '103',
+  '202',
+  '203',
+  '301',
+  '302',
+  '401',
+  '402',
+  '502',
+]
 
 const codeGroups: CodeGroup[] = [
   {
@@ -171,7 +156,7 @@ export default function ChartOfAccountsTable() {
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
-  const [accounts, setAccounts] = React.useState<Account[]>([])
+  const [accounts, setAccounts] = React.useState<ChartOfAccount[]>([])
   const [filteredAccounts, setFilteredAccounts] = React.useState<Account[]>([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
@@ -184,7 +169,7 @@ export default function ChartOfAccountsTable() {
   const [error, setError] = React.useState<string | null>(null)
 
   // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-  const API_BASE_URL = 'http://localhost:4000'
+  // const API_BASE_URL = 'http://localhost:4000'
 
   const form = useForm({
     defaultValues: {
@@ -202,6 +187,7 @@ export default function ChartOfAccountsTable() {
     },
   })
 
+  // code generate
   const generateAccountCode = async (parentCode: string) => {
     const childCount = filteredAccounts.filter(
       (account) =>
@@ -213,54 +199,87 @@ export default function ChartOfAccountsTable() {
 
   // get parentcode with-name
 
-  React.useEffect(() => {
-    const fetchParentCodes = async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/chart-of-accounts/get-pc-w-name-coa`
-        )
-        if (!response.ok) {
-          throw new Error('Failed to fetch parent codes')
-        }
-        const data = await response.json()
-        console.log(data.data[0])
+  // const fetchParentCodes = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/chart-of-accounts/get-pc-w-name-coa`
+  //     )
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch parent codes')
+  //     }
+  //     const data = await response.json()
+  //     console.log(data[1])
 
-        if (data.length > 0) {
-          console.log(data)
-        }
+  //     if (data.length > 0) {
+  //       console.log(data)
+  //     }
 
-        setParentCodes(data)
-      } catch (error) {
-        console.error('Error fetching parent codes:', error)
-        setError('Failed to load parent codes. Please try again later.')
+  //     setParentCodes(data)
+  //   } catch (error) {
+  //     console.error('Error fetching parent codes:', error)
+  //     setError('Failed to load parent codes. Please try again later.')
+  //   }
+  // }
+
+  async function fetchParentCodes() {
+    const fetchedParentCodes = await getParentCodes()
+    console.log('Fetched parent codes:', fetchedParentCodes)
+
+    if (fetchedParentCodes.error || !fetchedParentCodes.data) {
+      console.error('Error fetching parent codes:', fetchedParentCodes.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          fetchedParentCodes.error?.message || 'Failed to fetch parent codes',
+      })
+    } else {
+      setParentCodes(fetchedParentCodes.data)
+      if (fetchedParentCodes.data.length > 0) {
+        console.log(fetchedParentCodes.data)
+        console.log(fetchedParentCodes.data[1])
       }
+      toast({
+        title: 'Success',
+        description: 'Parent codes fetched successfully',
+      })
     }
+  }
 
+  // get all details api chart of accounts
+
+  React.useEffect(() => {
+    fetchCoaAccounts()
     fetchParentCodes()
   }, [])
 
-  // get all details
+  //  async function fetchCoaAccounts() {
+  //     const fetchedAccounts = await getAllCoa()
+  //     console.log('Fetched chart of accounts:', fetchedAccounts)
 
-  React.useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/chart-of-accounts/get-all-coa`
-        )
-        if (!response.ok) {
-          throw new Error('Failed to fetch accounts')
-        }
-        const data = await response.json()
-        console.log(data[0])
+  //     setAccounts(fetchedAccounts.data)
+  //   }
 
-        setAccounts(data)
-      } catch (error) {
-        console.error('Error fetching accounts:', error)
-      }
+  async function fetchCoaAccounts() {
+    const fetchedAccounts = await getAllCoa()
+    console.log('Fetched chart of accounts:', fetchedAccounts)
+
+    if (fetchedAccounts.error || !fetchedAccounts.data) {
+      console.error('Error fetching chart of accounts:', fetchedAccounts.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          fetchedAccounts.error?.message || 'Failed to fetch chart of accounts',
+      })
+    } else {
+      setAccounts(fetchedAccounts.data)
+      toast({
+        title: 'Success',
+        description: 'Chart of accounts fetched successfully',
+      })
     }
-
-    fetchAccounts()
-  }, [])
+  }
 
   React.useEffect(() => {
     let filtered = accounts.filter(
@@ -309,6 +328,7 @@ export default function ChartOfAccountsTable() {
     })
   }
 
+  // this is side bar search by code
   const renderCodeGroups = (groups: CodeGroup[]) => {
     return groups.map((group) => (
       <div key={group.id} className="space-y-1">
@@ -343,6 +363,7 @@ export default function ChartOfAccountsTable() {
     ))
   }
 
+  // Edit accounts
   const handleEditAccount = (account: Account) => {
     setEditingAccount(account)
     setIsEditAccountOpen(true)
@@ -358,7 +379,7 @@ export default function ChartOfAccountsTable() {
     )
   }
 
-  const handleSaveEdit = (editedAccount: Account) => {
+  const handleSaveEdit = (editedAccount) => {
     setAccounts((prevAccounts) =>
       prevAccounts.map((account) =>
         account.code === editedAccount.code ? editedAccount : account
@@ -368,47 +389,41 @@ export default function ChartOfAccountsTable() {
     setEditingAccount(null)
   }
 
-  const handleAddAccount = async (data: any) => {
-    try {
-      if (data.parentAccountId) {
-        data.code = await generateAccountCode(data.parentAccountId)
-      }
+  //Add accounts
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/chart-of-accounts/create-coa`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to create account')
-      }
-
-      const createdAccount = await response.json()
-      setAccounts((prevAccounts) => [...prevAccounts, createdAccount])
-      setIsAddAccountOpen(false)
-      alert('Account created successfully')
-    } catch (error) {
-      console.error('Error creating account:', error)
-      alert('Failed to create account')
+  const handleAddAccount = async (data: chatOfAccount) => {
+    if (data.parentAccountId) {
+      data.code = await generateAccountCode(data.parentAccountId)
     }
+
+    const response = await createChartOfAccounts(data)
+    console.log('response', response.data)
+    if (response.error || !response.data) {
+      console.error('Error creating chart of accounts:', response.error)
+    } else {
+      console.log('Account created successfully')
+      toast({
+        title: 'Success',
+        description: 'Bank account created successfully',
+      })
+    }
+
+    // const createdAccount = await response<chatOfAccount>()
+    // setAccounts((prevAccounts) => [...prevAccounts, createdAccount])
+    // setIsAddAccountOpen(false)
+    // alert('Account created successfully')
   }
 
-  React.useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'parentAccountId' && value.parentAccountId) {
-        generateAccountCode(value.parentAccountId).then((newCode) => {
-          form.setValue('code', newCode)
-        })
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [form])
+  // React.useEffect(() => {
+  //   const subscription = form.watch((value, { name }) => {
+  //     if (name === 'parentAccountId' && value.parentAccountId) {
+  //       generateAccountCode(value.parentAccountId).then((newCode) => {
+  //         form.setValue('code', newCode)
+  //       })
+  //     }
+  //   })
+  //   return () => subscription.unsubscribe()
+  // }, [form])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -522,22 +537,23 @@ export default function ChartOfAccountsTable() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {parentCodes.map((code) => (
+                            {/* fetch data from api */}
+                            {/* {parentCodes.map((code) => (
                               <p
                                 key={code.code}
-                                className="bg-white p-4 rounded shadow"
+                                className="bg-white p-4 rounded shadow-lg"
                               >
                                 <span className="font-semibold">
                                   {code.code}
                                 </span>
                               </p>
-                            ))}
+                            ))} */}
                             {/* for dammy data */}
-                            {/* {parentIds.map((id) => (
+                            {parentIds.map((id) => (
                               <SelectItem key={id} value={id}>
                                 {id}
                               </SelectItem>
-                            ))} */}
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
