@@ -19,6 +19,7 @@ export const companySchema = z.object({
 })
 
 export const locationSchema = z.object({
+  locationId: z.number(),
   companyId: z.number(),
   branchName: z.string().min(1, 'Branch name is required'),
   address: z.string().min(1, 'Address is required'),

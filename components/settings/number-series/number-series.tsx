@@ -136,6 +136,10 @@ export function NumberSeries() {
     console.log('Fetched companies:', data.data)
     if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get companies',
+      })
     } else {
       setCompanies(data.data)
     }

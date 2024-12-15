@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Company } from '@/utils/type'
+import { Company, ResPartner } from '@/utils/type'
 import { z } from 'zod'
 
 const API_BASE_URL = 'http://localhost:4000'
@@ -28,13 +28,6 @@ export const resPartnerSchema = z.object({
   createdBy: z.number().optional(),
   updatedBy: z.number().optional(),
 })
-
-export type ResPartner = z.infer<typeof resPartnerSchema> & {
-  id?: number
-  companyId?: number
-  createdAt?: string
-  updatedAt?: string
-}
 
 export type ResPartnerCreate = Omit<
   ResPartner,

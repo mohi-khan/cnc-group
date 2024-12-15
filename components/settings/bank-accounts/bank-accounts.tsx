@@ -54,11 +54,11 @@ import {
   createBankAccount,
   editBankAccount,
   getAllBankAccounts,
-  BankAccount,
   getAllGlAccounts,
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
+import { BankAccount } from '@/utils/type'
 
 export default function BankAccounts() {
   // const { user } = useAuthContext()
@@ -143,7 +143,6 @@ export default function BankAccounts() {
   async function fetchBankAccounts() {
     const fetchedAccounts = await getAllBankAccounts()
     console.log('Fetched accounts:', fetchedAccounts)
-    setAccounts(fetchedAccounts.data)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting bank account:', fetchedAccounts.error)
       toast({
@@ -152,10 +151,7 @@ export default function BankAccounts() {
           fetchedAccounts.error?.message || 'Failed to get bank accounts',
       })
     } else {
-      toast({
-        title: 'Success',
-        description: 'Banks are getting successfully',
-      })
+      setAccounts(fetchedAccounts.data)
     }
   }
 
@@ -171,11 +167,7 @@ export default function BankAccounts() {
           fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
       })
     } else {
-      setGlAccounts(fetchedGlAccounts.data)
-      toast({
-        title: 'Success',
-        description: 'Banks are getting gl successfully',
-      })
+      setGlAccounts(fetchedGlAccounts.data) //need to add the correct type in api file
     }
   }
 
