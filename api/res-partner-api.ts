@@ -65,7 +65,7 @@ export async function editResPartner(id: number, data: ResPartner) {
 
 export async function getAllResPartners() {
   return fetchApi<ResPartner>({
-    url: 'api/res-parter/get-all-res-partners',
+    url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
   })
 }

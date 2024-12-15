@@ -139,7 +139,7 @@ export default function ResPartners() {
     // setIsLoading(true)
     const data = await getAllResPartners()
     console.log('🚀 ~ fetchrespartners ~ data:', data)
-    if (data.error || !data.data) {
+    if (data.error || !data.data || !data.data.data) {
       console.error('Error getting res partners:', data.error)
     } else {
       console.log('partner', data)
@@ -196,16 +196,16 @@ export default function ResPartners() {
         createdBy: userId,
       })
       if (response.error || !response.data) {
-        console.error('Error editing bank account:', response.error)
+        console.error('Error creating res partner:', response.error)
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to edit bank account',
+          description: response.error?.message || 'Failed to create res partner',
         })
       } else {
-        console.log('Account edited successfully')
+        console.log('Res partner created successfully')
         toast({
           title: 'Success',
-          description: 'Bank account updated successfully',
+          description: 'Res partner created successfully',
         })
       }
     }
@@ -319,7 +319,9 @@ export default function ResPartners() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="contact">Contact</SelectItem>
-                              <SelectItem value="company">Company</SelectItem>
+                              <SelectItem value="invoice">Invoice</SelectItem>
+                              <SelectItem value="delivery">Delivery</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
