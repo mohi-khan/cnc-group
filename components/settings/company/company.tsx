@@ -116,7 +116,7 @@ export default function CompanyForm() {
       locationId,
     }
     console.log("🚀 ~ handleSave ~ companyData:", companyData)
-    
+
     const response = await createCompany(
       companyData,
       locations.filter((loc) => loc.trim() !== '')
@@ -156,6 +156,74 @@ export default function CompanyForm() {
     setActiveTab('general')
     setIsLoading(false)
   }
+
+  // const handleSave = async () => {
+  //   setIsLoading(true)
+  //   setFeedback(null)
+  //   setErrors(null)
+
+  //   if (!validateCompanyData()) {
+  //     setIsLoading(false)
+  //     return
+  //   }
+
+  //   try {
+  //     const companyData = {
+  //       companyName,
+  //       address,
+  //       city,
+  //       state,
+  //       country,
+  //       postalCode,
+  //       phone,
+  //       email,
+  //       website,
+  //       taxId,
+  //       currencyId,
+  //       logo,
+  //       parentCompanyId,
+  //       locationId,
+  //     }
+
+  //     await createCompany(
+  //       companyData,
+  //       locations.filter((loc) => loc.trim() !== '')
+  //     )
+
+  //     setFeedback({
+  //       type: 'success',
+  //       message: 'Company and locations created successfully',
+  //     })
+  //     // Reset form
+  //     setCompanyName('')
+  //     setAddress('')
+  //     setCity('')
+  //     setState('')
+  //     setCountry('')
+  //     setPostalCode('')
+  //     setPhone('')
+  //     setEmail('')
+  //     setWebsite('')
+  //     setTaxId('')
+  //     setCurrencyId(1)
+  //     setLogo('https://placeholder.com/logo.png')
+  //     setParentCompanyId(null)
+  //     setLocationId(0)
+  //     setLocations([''])
+  //     setActiveTab('general')
+  //   } catch (error) {
+  //     console.error('Error saving data:', error)
+  //     setFeedback({
+  //       type: 'error',
+  //       message:
+  //         error instanceof Error
+  //           ? error.message
+  //           : 'Failed to create company and locations',
+  //     })
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
