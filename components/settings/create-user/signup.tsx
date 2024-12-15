@@ -28,6 +28,7 @@ import {
   getAllRoles,
   RoleData,
 } from '../../../api/create-user-api'
+import { toast } from '@/hooks/use-toast'
 
 enum VoucherTypes {
   Cash = 'Cash Voucher',
@@ -133,6 +134,36 @@ export default function SignUp() {
     }
   }
 
+  async function fetchAllCompanies() {
+    const fetchedCompanies = await getAllCompanies()
+    console.log('Fetched companies:', fetchedCompanies.data)
+
+    if (fetchedCompanies.error || !fetchedCompanies.data) {
+      console.error('Error getting company:', fetchedCompanies.error)
+      toast({
+        title: 'Error',
+        description: fetchedCompanies.error?.message || 'Failed to get company',
+      })
+    } else {
+      setCompanies(fetchedCompanies.data)
+    }
+  }
+
+  async function fetchAllLocations() {
+    const fetchedLocations = await getAllLocations()
+    console.log('Fetched locations:', fetchedLocations.data.data)
+
+    if (fetchedLocations.error || !fetchedLocations.data) {
+      console.error('Error getting location:', fetchedLocations.error)
+      toast({
+        title: 'Error',
+        description: fetchedLocations.error?.message || 'Failed to get location',
+      })
+    } else {
+      setLocations(fetchedLocations.data.data)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
@@ -140,12 +171,10 @@ export default function SignUp() {
       try {
         const [fetchedCompanies, fetchedLocations, fetchedRoles] =
           await Promise.all([
-            getAllCompanies(),
-            getAllLocations(),
+            fetchAllCompanies(),
+            fetchAllLocations(),
             getAllRoles(),
           ])
-        setCompanies(fetchedCompanies)
-        setLocations(fetchedLocations)
         setRoles(fetchedRoles)
       } catch (error) {
         console.error('Error fetching data:', error)

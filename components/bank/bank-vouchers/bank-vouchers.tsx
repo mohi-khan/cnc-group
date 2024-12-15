@@ -51,6 +51,15 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useRouter } from 'next/navigation'
+import { getAllCompanies, getAllLocations } from '@/api/number-series-api'
+import { toast } from '@/hooks/use-toast'
+import { BankAccount, Company, CostCenter, LocationData, ResPartner } from '@/utils/type'
+import {
+  getAllBankAccounts,
+  getAllChartOfAccounts,
+  getAllCostCenters,
+  getAllResPartners,
+} from '@/api/bank-vouchers-api'
 
 const voucherItemSchema = z.object({
   accountName: z.string().min(1, 'Account Name is required'),
@@ -74,7 +83,7 @@ const voucherSchema = z.object({
 })
 
 type Voucher = z.infer<typeof voucherSchema> & {
-  id: string
+  id: number
   status: 'Draft' | 'Posted'
 }
 
@@ -86,6 +95,7 @@ interface User {
   // Add other user properties as needed
 }
 
+
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<Voucher[]>([])
   const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>(
@@ -94,6 +104,14 @@ export default function BankVoucher() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
+  const [companies, setCompanies] = React.useState<Company[]>([])
+  const [locations, setLocations] = React.useState<LocationData[]>([])
+  const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<BankAccount[]>(
+    []
+  )
+  const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
+  const [partners, setPartners] = React.useState<ResPartner[]>([]) // Updated type
   const router = useRouter()
 
   React.useEffect(() => {
@@ -154,6 +172,102 @@ export default function BankVoucher() {
     return () => subscription.unsubscribe()
   }, [form.watch])
 
+  const fetchCompanies = async () => {
+    const data = await getAllCompanies()
+    console.log('Fetched companies:', data.data)
+    if (data.error || !data.data) {
+      console.error('Error getting companies:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get companies',
+      })
+    } else {
+      setCompanies(data.data)
+    }
+  }
+
+  async function fetchAllLocations() {
+    const response = await getAllLocations()
+    console.log('Fetched locations:', response.data.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting locations:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get locations',
+      })
+    } else {
+      setLocations(response.data.data)
+    }
+  }
+
+  async function fetchBankAccounts() {
+    const response = await getAllBankAccounts()
+    console.log('Fetched bank accounts:', response.data)
+    if (response.error || !response.data) {
+      console.error('Error getting bank account:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get bank accounts',
+      })
+    } else {
+      setBankAccounts(response.data)
+    }
+  }
+
+  async function fetchChartOfAccounts() {
+    const response = await getAllChartOfAccounts()
+    console.log('Fetched Chart Of accounts:', response.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting ChartOf bank account:', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Failed to get ChartOf bank accounts',
+      })
+    } else {
+      setChartOfAccounts(response.data)
+    }
+  }
+
+  const fetchCostCenters = async () => {
+    const data = await getAllCostCenters()
+    console.log('🚀 ~ fetchCostCenters ~ data:', data.data.data)
+    if (data.error || !data.data) {
+      console.error('Error getting cost centers:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get cost centers',
+      })
+    } else {
+      setCostCenters(data.data.data)
+    }
+  }
+
+  const fetchResPartners = async () => {
+    const data = await getAllResPartners()
+    console.log('🚀 ~ fetchrespartners ~ data:', data.data.data)
+    if (data.error || !data.data || !data.data.data) {
+      console.error('Error getting res partners:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get partners',
+      })
+    } else {
+      setPartners(data.data.data)
+    }
+  }
+
+  React.useEffect(() => {
+    fetchCompanies()
+    fetchAllLocations()
+    fetchBankAccounts()
+    fetchChartOfAccounts()
+    fetchCostCenters()
+    fetchResPartners()
+  }, [])
+
   function onSubmit(
     values: z.infer<typeof voucherSchema>,
     status: 'Draft' | 'Posted'
@@ -163,9 +277,11 @@ export default function BankVoucher() {
       0
     )
     if (totalItemsAmount !== values.amount) {
-      alert(
-        'The sum of journal voucher amounts does not match the journal entry amount. Please correct the amounts before submitting.'
-      )
+      toast({
+        title: 'Error',
+        description:
+          'The sum of journal voucher amounts does not match the journal entry amount',
+      })
       return
     }
     setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
@@ -173,17 +289,17 @@ export default function BankVoucher() {
     form.reset()
   }
 
-  function handleDelete(id: string) {
+  function handleDelete(id: number) {
     setVouchers(vouchers.filter((v) => v.id !== id))
   }
 
-  function handleReverse(id: string) {
+  function handleReverse(id: number) {
     setVouchers(
       vouchers.map((v) => (v.id === id ? { ...v, status: 'Draft' } : v))
     )
   }
 
-  function handlePost(id: string) {
+  function handlePost(id: number) {
     setVouchers(
       vouchers.map((v) => (v.id === id ? { ...v, status: 'Posted' } : v))
     )
@@ -235,8 +351,11 @@ export default function BankVoucher() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="company1">Company 1</SelectItem>
-                            <SelectItem value="company2">Company 2</SelectItem>
+                            {companies.map((company, index) => (
+                              <SelectItem key={company?.companyId || `default-company-${index}`} value={company?.companyId?.toString() || `company-${index}`}>
+                                {company?.companyName || 'Unnamed Company'}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -259,12 +378,11 @@ export default function BankVoucher() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="location1">
-                              Location 1
-                            </SelectItem>
-                            <SelectItem value="location2">
-                              Location 2
-                            </SelectItem>
+                            {locations.map((location, index) => (
+                              <SelectItem key={location?.locationId || `default-location-${index}`} value={location?.locationId?.toString() || `location-${index}`}>
+                                {location?.address || 'Unnamed Location'}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -336,12 +454,11 @@ export default function BankVoucher() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="bank Account 1">
-                              Bank Account 1
-                            </SelectItem>
-                            <SelectItem value="bank Account 2">
-                              Bank Account 2
-                            </SelectItem>
+                            {bankAccounts.map((account, index) => (
+                              <SelectItem key={account?.id || `default-bank-${index}`} value={account?.id?.toString() || `bank-${index}`}>
+                                {account?.accountName || 'Unnamed Account'}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -416,8 +533,7 @@ export default function BankVoucher() {
                         <TableHead>Department</TableHead>
                         <TableHead>Partner Name</TableHead>
                         <TableHead>Remarks</TableHead>
-                        <TableHead>Amount</TableHead>{' '}
-                        {/*this is journal voucher amount*/}
+                        <TableHead>Amount</TableHead>
                         <TableHead>Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -440,12 +556,11 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="account1">
-                                        Account 1
-                                      </SelectItem>
-                                      <SelectItem value="account2">
-                                        Account 2
-                                      </SelectItem>
+                                      {chartOfAccounts.map((account, index) => (
+                                        <SelectItem key={account?.id || `default-chart-${index}`} value={account?.id?.toString() || `chart-${index}`}>
+                                          {account?.name || 'Unnamed Account'}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
@@ -468,12 +583,11 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="cc1">
-                                        Cost Center 1
-                                      </SelectItem>
-                                      <SelectItem value="cc2">
-                                        Cost Center 2
-                                      </SelectItem>
+                                      {costCenters.map((center, index) => (
+                                        <SelectItem key={center?.costCenterId || `default-cost-${index}`} value={center?.costCenterId?.toString() || `cost-${index}`}>
+                                          {center?.costCenterName || 'Unnamed Cost Center'}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
@@ -524,12 +638,11 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="partner1">
-                                        Partner 1
-                                      </SelectItem>
-                                      <SelectItem value="partner2">
-                                        Partner 2
-                                      </SelectItem>
+                                      {partners.map((partner, index) => (
+                                        <SelectItem key={partner?.id || `default-partner-${index}`} value={partner?.id?.toString() || `partner-${index}`}>
+                                          {partner?.name || 'Unnamed Partner'}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
@@ -732,3 +845,4 @@ export default function BankVoucher() {
     </div>
   )
 }
+

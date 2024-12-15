@@ -29,8 +29,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import {
-  costCenterSchema,
-  createCostCenters,
   updateCostCenter,
   getAllCostCenters,
   CostCenter,
@@ -63,7 +61,6 @@ export default function CostCenterManagement() {
     setIsLoading(true)
     const data = await getAllCostCenters()
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
-    setCostCenters(data.data.data)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
@@ -71,34 +68,59 @@ export default function CostCenterManagement() {
         description: data.error?.message || 'Failed to get cost centers',
       })
     } else {
-      toast({
-        title: 'Success',
-        description: 'Banks are getting successfully',
-      })
+      setCostCenters(data.data.data)
     }
     setIsLoading(false)
   }
 
-  const handleActivateDeactivate = async (id: string, isActive: boolean) => {
+  const handleActivateDeactivate = async (id: number, isActive: boolean) => {
     try {
+      let response
       if (isActive) {
-        await deactivateCostCenter(id)
+        response = await deactivateCostCenter(id)
       } else {
-        await activateCostCenter(id)
+        response = await activateCostCenter(id)
       }
-      await fetchCostCenters()
-      setFeedback({
-        type: 'success',
-        message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
-      })
+
+      if (response.error || !response.data) {
+        console.error(
+          `Error ${isActive ? 'deactivating' : 'activating'} cost center:`,
+          response.error
+        )
+        toast({
+          title: 'Error',
+          description:
+            response.error?.message ||
+            `Failed to ${isActive ? 'deactivate' : 'activate'} cost center`,
+        })
+      } else {
+        console.log(
+          `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`
+        )
+        toast({
+          title: 'Success',
+          description: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+        })
+
+        // Update the local state immediately
+        setCostCenters((prevCostCenters) =>
+          prevCostCenters.map((center) =>
+            center.costCenterId === id
+              ? { ...center, active: !isActive }
+              : center
+          )
+        )
+
+        setFeedback({
+          type: 'success',
+          message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+        })
+      }
     } catch (error) {
-      console.error('Error updating cost center:', error)
-      setFeedback({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update cost center',
+      console.error('Unexpected error:', error)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
       })
     }
   }
@@ -117,7 +139,7 @@ export default function CostCenterManagement() {
       if (isEdit && selectedCostCenter) {
         setCurrencyCode(selectedCostCenter.currencyCode)
       } else {
-        setCurrencyCode('')
+        setCurrencyCode('BDT')
       }
     }, [isEdit, selectedCostCenter])
 
@@ -131,7 +153,7 @@ export default function CostCenterManagement() {
         costCenterName: formData.get('name') as string,
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
-        budget: Number(formData.get('budget')), // Convert to number
+        budget: Number(formData.get('budget')),
         active: formData.get('active') === 'on',
         actual: parseFloat(formData.get('actual') as string),
       }
@@ -143,7 +165,8 @@ export default function CostCenterManagement() {
           console.error('Error updating cost center:', response.error)
           toast({
             title: 'Error',
-            description: response.error?.message || 'Failed to edit cost center',
+            description:
+              response.error?.message || 'Failed to edit cost center',
           })
         } else {
           console.log('Cost center edited successfully')
@@ -154,6 +177,7 @@ export default function CostCenterManagement() {
         }
       } else {
         const response = await createCostCenter(newCostCenter)
+        console.log('🚀 ~ handleSubmit ~ response:', response)
         if (response.error || !response.data) {
           console.error('Error creating const center:', response.error)
           toast({
@@ -348,7 +372,7 @@ export default function CostCenterManagement() {
                       variant="outline"
                       onClick={() =>
                         handleActivateDeactivate(
-                          center,
+                          center.costCenterId,
                           center.active
                         )
                       }

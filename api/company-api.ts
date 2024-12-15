@@ -19,6 +19,7 @@ export const companySchema = z.object({
 })
 
 export const locationSchema = z.object({
+  locationId: z.number(),
   companyId: z.number(),
   branchName: z.string().min(1, 'Branch name is required'),
   address: z.string().min(1, 'Address is required'),
@@ -28,43 +29,41 @@ export async function createCompany(
   companyData: z.infer<typeof companySchema>,
   locations: string[]
 ) {
-  return fetchApi({
-    url: 'api/company/create-company-location',
-    method: 'POST',
-    body: { companyData, locations },
-  })
+  console.log('API: Creating company with data:', companyData)
 
-  // if (response.error || !response.data) {
-  //   console.error('Error creating bank account:', response.error)
-  //   throw new Error(response.error?.message || 'Failed to create bank account')
-  // }
-  // console.log('Bank account created:', response.data)
-  // return response.data
+  const response = await fetch(
+    'http://localhost:4000/api/company/create-company-location',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        companydata: companyData,
+        address: locations,
+        branchName: locations,
+      }),
+    }
+  )
 
-  // console.log('API: Creating company with data:', companyData)
+  console.log('API: Company creation response status:', response.status)
+  const data = await response.json()
+  console.log('API: Company creation response data:', data)
 
-  // const response = await fetch(
-  //   `${API_BASE_URL}/api/company/create-company-location`,
-  //   {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({
-  //       companydata: companyData,
-  //       address: locations,
-  //       branchName: locations,
-  //     }),
-  //   }
-  // )
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create company')
+  }
 
-  // console.log('API: Company creation response status:', response.status)
-  // const data = await response.json()
-  // console.log('API: Company creation response data:', data)
-
-  // if (!response.ok) {
-  //   throw new Error(data.message || 'Failed to create company')
-  // }
-
-  // return data
+  return data
 }
+
+// export async function createCompany(
+//   companyData: z.infer<typeof companySchema>,
+//   locations: string[]
+// ) {
+//   return fetchApi({
+//     url: 'api/company/create-company-location',
+//     method: 'POST',
+//     body: { companyData, locations },
+//   })
+// }

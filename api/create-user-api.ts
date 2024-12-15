@@ -1,3 +1,4 @@
+import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -122,14 +123,17 @@ export async function signUp(data: SignUpData) {
 
 // Get all companies function
 export async function getAllCompanies() {
-  const response = await fetch(`${API_BASE_URL}/api/company/get-all-companies`)
+  return fetchApi<CompanyData[]>({
+    url: 'api/company/get-all-companies',
+    method: 'GET',
+  })
+}
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch companies')
-  }
-
-  const data = await response.json()
-  return data.map((company: any) => companySchema.parse(company))
+export async function getAllLocations() {
+  return fetchApi<LocationData[]>({
+    url: 'api/location/get-all-locations',
+    method: 'GET',
+  })
 }
 
 // Get all roles function
@@ -158,26 +162,26 @@ export async function getAllRoles(): Promise<RoleData[]> {
     .filter((role: RoleData | null): role is RoleData => role !== null)
 }
 
-// Get all locations function
-export async function getAllLocations() {
-  const response = await fetch(`${API_BASE_URL}/api/location/get-all-locations`)
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch locations')
-  }
-
-  const responseData = await response.json()
-  const locations = responseData.data
-
-  return locations.map((location: any) => {
-    try {
-      return locationSchema.parse({
-        locationId: location.locationId,
-        address: location.address,
-      })
-    } catch (error) {
-      console.error('Error parsing location:', location, error)
-      return null
-    }
-  })
-}
+// export async function getAllRoles() {
+//   return fetchApi<RoleData[]>({
+//     url: 'api/roles/get-all-roles',
+//     method: 'GET',
+//   }).then((response) => {
+//     if (response.error || !response.data) {
+//       throw new Error(response.error?.message || 'Failed to fetch roles')
+//     }
+//     return response.data
+//       .map((role: any) => {
+//         try {
+//           return roleSchema.parse({
+//             roleId: role.roleId,
+//             roleName: role.roleName,
+//           })
+//         } catch (error) {
+//           console.error('Error parsing role:', role, error)
+//           return null
+//         }
+//       })
+//       .filter((role: RoleData | null): role is RoleData => role !== null)
+//   })
+// }

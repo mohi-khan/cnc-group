@@ -99,14 +99,15 @@ export async function editBankAccount(id: number, data: BankAccountUpdate) {
 }
 
 export async function getAllBankAccounts() {
-  return fetchApi<BankAccount>({
+  return fetchApi<BankAccount[]>({
     url: 'api/bank-accounts/get-all-bank-accounts',
     method: 'GET',
   })
 }
 
-export async function getAllGlAccounts() {
-  return fetchApi<BankAccount>({
+//need to change the type. it should be chartOfAccount type. not BankAccount type.
+export async function getAllGlAccounts() { 
+  return fetchApi<BankAccount[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
