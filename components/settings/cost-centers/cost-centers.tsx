@@ -69,10 +69,6 @@ export default function CostCenterManagement() {
       })
     } else {
       setCostCenters(data.data.data)
-      toast({
-        title: 'Success',
-        description: 'Banks are getting successfully',
-      })
     }
     setIsLoading(false)
   }
