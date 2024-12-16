@@ -133,18 +133,20 @@ export const createFinancialYearSchema = z
 
 //chart of accounts types here:
 export interface Account {
-   name: string;
+  name: string;
   code: string;
   accountType: string;
   parentAccountId?: number;
+  parentName: string;
+  type: string;
   currencyId?: number ;
-  isReconcilable?: boolean;
+  allowreconcilable?: boolean;
   withholdingTax?: boolean;
   budgetTracking?: boolean;
   isActive?: boolean;
   isGroup?: boolean;
   createdBy: number;
-  notes?: string | null ;
+  notes: string;
   
 
 }
@@ -157,13 +159,7 @@ export interface CodeGroup {
 }
  
 export interface ParentCode {
-   accountCode: string
-  accountName: string
-  parentCode: string | null
-  accountType: "Asset" | "Liability" | "Income" | "Expense" | "Equity"
   code: string
-  type: string
-  isActive: boolean
   name: string
 
 }
@@ -172,19 +168,18 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountCode: z.string().min(1, 'Account code is required'),
-  accountName: z.string().min(1, 'Account name is required'),
-  parentCode: z.string().nullable(),
-  accountType: z.enum(['Asset', 'Liability', 'Income', 'Expense', 'Equity']),
+  accountId: z.number().int().positive(),
+  name: z.string().max(255),
+  code: z.string().max(64),
+  accountType: z.string().max(64),
+  parentAccountId: z.number().int().positive(),
+   parentName:z.string(),
+  currencyId: z.number().int().positive(),
+  isReconcilable: z.boolean().default(false),
+  withholdingTax: z.boolean().default(false),
+  budgetTracking: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  isGroup: z.boolean().default(false),
   createdBy: z.number().int().positive(),
-  parentName: z.string(),
-    parentAccountId: z.string(),
-  currencyId: z.number(),
-  allowreconcilable: z.boolean().default(true),
-  type:z.string(),
-   notes:z.string(),
-  name: z.string(), 
-  code: z.string(),
-  
+  notes: z.string(),
 });

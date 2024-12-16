@@ -34,6 +34,9 @@ import {
 import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getAllChartOfAccounts } from '@/api/cash-vouchers-api'
+import { toast } from '@/hooks/use-toast'
+import { BankAccount } from '@/utils/type'
 
 interface Company {
   company: {
@@ -121,6 +124,10 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(125000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<BankAccount[]>(
+    []
+  )
+
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -184,6 +191,28 @@ export default function CashVoucher() {
           locations.filter((l) => l.companyId === selectedCompany.companyId)
         )
       }
+    }
+  }
+
+  useEffect(() => {
+    fetchChartOfAccounts()
+  }, [])
+
+  //
+  async function fetchChartOfAccounts() {
+    const response = await getAllChartOfAccounts()
+    console.log('Fetched Chart Of accounts:', response.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting ChartOf bank account:', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Failed to get ChartOf bank accounts',
+      })
+    } else {
+      setChartOfAccounts(response.data)
+      console.log('data', response.data)
     }
   }
 
