@@ -63,12 +63,12 @@ import {
 import { Account, CodeGroup, ParentCode } from '@/utils/type'
 import {
   ChartOfAccount,
-  chatOfAccount,
   createChartOfAccounts,
   getAllCoa,
   getParentCodes,
 } from '@/api/chart-of-accounts-api'
 import { toast } from '@/hooks/use-toast'
+import { string } from 'zod'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
 const currencyItems = ['BDT', 'USD', 'EUR']
@@ -156,7 +156,7 @@ export default function ChartOfAccountsTable() {
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
-  const [accounts, setAccounts] = React.useState<ChartOfAccount[]>([])
+  const [accounts, setAccounts] = React.useState<Account[]>([])
   const [filteredAccounts, setFilteredAccounts] = React.useState<Account[]>([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
@@ -168,16 +168,13 @@ export default function ChartOfAccountsTable() {
   const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
   const [error, setError] = React.useState<string | null>(null)
 
-  // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-  // const API_BASE_URL = 'http://localhost:4000'
-
   const form = useForm({
     defaultValues: {
       name: '',
       accountType: '',
       parentAccountId: '',
       currencyId: '',
-      isReconcilable: false,
+      allowreconcilable: false,
       withholdingTax: false,
       budgetTracking: false,
       isActive: true,
@@ -197,29 +194,36 @@ export default function ChartOfAccountsTable() {
     return newCode
   }
 
-  // get parentcode with-name
+  //Add accounts
 
-  // const fetchParentCodes = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       `${API_BASE_URL}/api/chart-of-accounts/get-pc-w-name-coa`
-  //     )
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch parent codes')
-  //     }
-  //     const data = await response.json()
-  //     console.log(data[1])
+  const handleAddAccount = async (data: ChartOfAccount) => {
+    if (data.parentAccountId) {
+      data.code = await generateAccountCode(data.parentAccountId)
+    }
 
-  //     if (data.length > 0) {
-  //       console.log(data)
-  //     }
+    const response = await createChartOfAccounts(data)
+    console.log('response', response.data)
+    if (response.error || !response.data) {
+      console.error('Error creating chart of accounts:', response.error)
+    } else {
+      console.log('Chart Of Account created successfully')
+      toast({
+        title: 'Success',
+        description: 'Chart Of account created successfully',
+      })
+    }
+  }
 
-  //     setParentCodes(data)
-  //   } catch (error) {
-  //     console.error('Error fetching parent codes:', error)
-  //     setError('Failed to load parent codes. Please try again later.')
-  //   }
-  // }
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'parentAccountId' && value.parentAccountId) {
+        generateAccountCode(value.parentAccountId).then((newCode) => {
+          form.setValue('code', newCode)
+        })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
 
   async function fetchParentCodes() {
     const fetchedParentCodes = await getParentCodes()
@@ -237,7 +241,6 @@ export default function ChartOfAccountsTable() {
       setParentCodes(fetchedParentCodes.data)
       if (fetchedParentCodes.data.length > 0) {
         console.log(fetchedParentCodes.data)
-        console.log(fetchedParentCodes.data[1])
       }
       toast({
         title: 'Success',
@@ -252,13 +255,6 @@ export default function ChartOfAccountsTable() {
     fetchCoaAccounts()
     fetchParentCodes()
   }, [])
-
-  //  async function fetchCoaAccounts() {
-  //     const fetchedAccounts = await getAllCoa()
-  //     console.log('Fetched chart of accounts:', fetchedAccounts)
-
-  //     setAccounts(fetchedAccounts.data)
-  //   }
 
   async function fetchCoaAccounts() {
     const fetchedAccounts = await getAllCoa()
@@ -388,42 +384,6 @@ export default function ChartOfAccountsTable() {
     setIsEditAccountOpen(false)
     setEditingAccount(null)
   }
-
-  //Add accounts
-
-  const handleAddAccount = async (data: chatOfAccount) => {
-    if (data.parentAccountId) {
-      data.code = await generateAccountCode(data.parentAccountId)
-    }
-
-    const response = await createChartOfAccounts(data)
-    console.log('response', response.data)
-    if (response.error || !response.data) {
-      console.error('Error creating chart of accounts:', response.error)
-    } else {
-      console.log('Account created successfully')
-      toast({
-        title: 'Success',
-        description: 'Bank account created successfully',
-      })
-    }
-
-    // const createdAccount = await response<chatOfAccount>()
-    // setAccounts((prevAccounts) => [...prevAccounts, createdAccount])
-    // setIsAddAccountOpen(false)
-    // alert('Account created successfully')
-  }
-
-  // React.useEffect(() => {
-  //   const subscription = form.watch((value, { name }) => {
-  //     if (name === 'parentAccountId' && value.parentAccountId) {
-  //       generateAccountCode(value.parentAccountId).then((newCode) => {
-  //         form.setValue('code', newCode)
-  //       })
-  //     }
-  //   })
-  //   return () => subscription.unsubscribe()
-  // }, [form])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -590,7 +550,7 @@ export default function ChartOfAccountsTable() {
                   />
                   <FormField
                     control={form.control}
-                    name="isReconcilable"
+                    name="allowreconcilable"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
