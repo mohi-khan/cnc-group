@@ -41,8 +41,6 @@ import {
 import { toast } from '@/hooks/use-toast'
 import {
   Account,
-  BankAccount,
-  chartOfAccountSchema,
   CostCenter,
   DetailRow,
   FormData,
@@ -51,6 +49,7 @@ import {
   Voucher,
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface Company {
   company: {
@@ -93,11 +92,16 @@ export default function CashVoucher() {
     location: '',
     currency: '',
   })
-  const [cashBalance, setCashBalance] = useState(0) // Initial cash balance
+  const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
   const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
+  const [formType, setFormType] = React.useState('Payment')
+  const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
+    Account[]
+  >([])
+  const [isDraft, setIsDraft] = useState(false)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -117,6 +121,24 @@ export default function CashVoucher() {
     }
     setIsLoading(false)
   }, [])
+
+  React.useEffect(() => {
+    console.log(formType)
+    console.log('fdg', chartOfAccounts)
+    const filteredCoa = chartOfAccounts?.filter((account) => {
+      if (account.isGroup == true) {
+        if (formType == 'Receipt') {
+          return account.type == 'Income'
+        } else if (formType == 'Payment') {
+          return account.type == 'Expenses'
+        }
+      } else {
+        return false
+      }
+    })
+    setFilteredChartOfAccounts(filteredCoa)
+    console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
+  }, [formType, chartOfAccounts])
 
   const addDetailRow = () => {
     const newRow: DetailRow = {
@@ -249,6 +271,7 @@ export default function CashVoucher() {
       status: isDraft ? 'Draft' : 'Posted',
     }
     setVoucherList([...voucherList, newVoucher])
+    console.log(newVoucher)
 
     if (!isDraft) {
       setCashBalance((prevBalance) => prevBalance - totalAmount)
@@ -368,7 +391,6 @@ export default function CashVoucher() {
             <Input
               type="date"
               id="date"
-              placeholder="mm/dd/yyyy"
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
             />
@@ -394,21 +416,21 @@ export default function CashVoucher() {
                 <TableRow key={row.id}>
                   <TableCell>
                     <Select
-                      value={row.type}
-                      onValueChange={(value) =>
-                        handleDetailChange(row.id, 'type', value)
-                      }
+                      value={row.type} // Controlled value
+                      defaultValue="Payment" // Default value
+                      onValueChange={(value) => setFormType(value)}
                       required
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="payment">Payment</SelectItem>
-                        <SelectItem value="receipt">Receipt</SelectItem>
+                        <SelectItem value="Payment">Payment</SelectItem>
+                        <SelectItem value="Receipt">Receipt</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
+
                   <TableCell>
                     <Select
                       value={row.accountName}
@@ -421,10 +443,12 @@ export default function CashVoucher() {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        {chartOfAccounts.map((account, index) => (
+                        {filteredChartOfAccounts.map((account, index) => (
                           <SelectItem
                             key={account?.id || `default-chart-${index}`}
-                            value={account?.id?.toString() || `chart-${index}`}
+                            value={
+                              account?.name?.toString() || `chart-${index}`
+                            }
                           >
                             {account?.name || 'Unnamed Account'}
                           </SelectItem>
@@ -445,22 +469,13 @@ export default function CashVoucher() {
                         <SelectValue placeholder="Select cost center" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
-                        <SelectItem value="it">IT</SelectItem>
-                        <SelectItem value="hr">Human Resources</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                        <SelectItem value="rd">
-                          Research & Development
-                        </SelectItem> */}
                         {costCenters.map((center, index) => (
                           <SelectItem
                             key={
                               center?.costCenterId || `default-cost-${index}`
                             }
                             value={
-                              center?.costCenterId?.toString() ||
+                              center?.costCenterName?.toString() ||
                               `cost-${index}`
                             }
                           >
@@ -511,25 +526,16 @@ export default function CashVoucher() {
                         <SelectValue placeholder="Select partner" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="acme_corp">
-                          Acme Corporation
-                        </SelectItem>
-                        <SelectItem value="globex">
-                          Globex Corporation
-                        </SelectItem>
-                        <SelectItem value="initech">Initech</SelectItem>
-                        <SelectItem value="umbrella_corp">
-                          Umbrella Corporation
-                        </SelectItem>
-                        <SelectItem value="stark_industries">
-                          Stark Industries
-                        </SelectItem>
-                        <SelectItem value="wayne_enterprises">
-                          Wayne Enterprises
-                        </SelectItem>
-                        <SelectItem value="oscorp">
-                          Oscorp Industries
-                        </SelectItem>
+                        {partners.map((partner, index) => (
+                          <SelectItem
+                            key={partner?.id || `default-partner-${index}`}
+                            value={
+                              partner?.name?.toString() || `partner-${index}`
+                            }
+                          >
+                            {partner?.name || 'Unnamed Partner'}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -557,13 +563,14 @@ export default function CashVoucher() {
                   </TableCell>
                   <TableCell>
                     {/* Action Buttons */}
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleSubmit(true)}
-                      >
-                        Save as Draft
-                      </Button>
+                    <div className="flex justify-end items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={isDraft} // `isDraft` is a state variable to track if it's checked
+                          onChange={(e) => handleSubmit(e.target.checked)}
+                        />
+                        <p>Draft</p>
+                      </div>
                       <Button onClick={() => handleSubmit(false)}>Post</Button>
                     </div>
                   </TableCell>
@@ -672,7 +679,7 @@ export default function CashVoucher() {
                       <Button variant="outline" size="icon">
                         <Link
                           href={
-                            voucher.type.toLowerCase() === 'payment'
+                            voucher.type.toLowerCase() === 'Payment'
                               ? '/cash/cash-voucher/payment-preview'
                               : '/cash/cash-voucher/receipt-preview'
                           }
