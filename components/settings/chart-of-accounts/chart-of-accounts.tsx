@@ -60,9 +60,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Account, CodeGroup, ParentCode } from '@/utils/type'
+import { CodeGroup, ParentCode, ChartOfAccount } from '@/utils/type'
 import {
-  ChartOfAccount,
+  ChartOfAccounts,
   createChartOfAccounts,
   getAllCoa,
   getParentCodes,
@@ -156,13 +156,13 @@ export default function ChartOfAccountsTable() {
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
-  const [accounts, setAccounts] = React.useState<Account[]>([])
-  const [filteredAccounts, setFilteredAccounts] = React.useState<Account[]>([])
+  const [accounts, setAccounts] = React.useState<ChartOfAccount[]>([])
+  const [filteredAccounts, setFilteredAccounts] = React.useState<ChartOfAccount[]>([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
   const [isAddAccountOpen, setIsAddAccountOpen] = React.useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] = React.useState<Account | null>(
+  const [editingAccount, setEditingAccount] = React.useState<ChartOfAccount | null>(
     null
   )
   const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
@@ -191,6 +191,7 @@ export default function ChartOfAccountsTable() {
         account.code.startsWith(parentCode) && account.code !== parentCode
     ).length
     const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`
+    // const newNumCode = parseInt(newCode)
     return newCode
   }
 
@@ -270,10 +271,6 @@ export default function ChartOfAccountsTable() {
       })
     } else {
       setAccounts(fetchedAccounts.data)
-      toast({
-        title: 'Success',
-        description: 'Chart of accounts fetched successfully',
-      })
     }
   }
 
@@ -283,13 +280,13 @@ export default function ChartOfAccountsTable() {
         (account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.type.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (selectedTypes.length === 0 || selectedTypes.includes(account.type)) &&
+          account.accountType.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (selectedTypes.length === 0 || selectedTypes.includes(account.accountType)) &&
         (selectedCode ? account.code.startsWith(selectedCode) : true)
     )
 
     if (activeAccountOnly) {
-      filtered = filtered.filter((account) => account.allowreconcilable)
+      filtered = filtered.filter((account) => account.isReconcilable)
     }
 
     setFilteredAccounts(filtered)
@@ -360,7 +357,7 @@ export default function ChartOfAccountsTable() {
   }
 
   // Edit accounts
-  const handleEditAccount = (account: Account) => {
+  const handleEditAccount = (account: ChartOfAccount) => {
     setEditingAccount(account)
     setIsEditAccountOpen(true)
   }
@@ -790,10 +787,10 @@ export default function ChartOfAccountsTable() {
                         <TableCell>{account.code}</TableCell>
                         <TableCell>{account.name}</TableCell>
                         <TableCell>{account.parentName}</TableCell>
-                        <TableCell>{account.type}</TableCell>
+                        <TableCell>{account.accountType}</TableCell>
                         <TableCell className="text-center">
                           <Switch
-                            checked={account.allowreconcilable}
+                            checked={account.isReconcilable}
                             onChange={(checked: any) =>
                               handleSwitchChange(account.code, checked)
                             }
@@ -892,11 +889,11 @@ export default function ChartOfAccountsTable() {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="edit-allowreconcilable"
-                  checked={editingAccount.allowreconcilable}
+                  checked={editingAccount.isReconcilable}
                   onCheckedChange={(checked) =>
                     setEditingAccount({
                       ...editingAccount,
-                      allowreconcilable: checked as boolean,
+                      isReconcilable: checked as boolean,
                     })
                   }
                 />

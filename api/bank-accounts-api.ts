@@ -1,4 +1,5 @@
 import { fetchApi } from '@/utils/http'
+import { ChartOfAccount } from '@/utils/type'
 import { z } from 'zod'
 
 // Zod schema for bank account validation
@@ -107,7 +108,7 @@ export async function getAllBankAccounts() {
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
 export async function getAllGlAccounts() { 
-  return fetchApi<BankAccount[]>({
+  return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })

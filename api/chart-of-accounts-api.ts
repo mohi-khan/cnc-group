@@ -1,29 +1,20 @@
-import { fetchApi } from "@/utils/http";
-import { chartOfAccountSchema } from "@/utils/type";
-import { z } from "zod";
-
-
-
-export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
-
+import { fetchApi } from '@/utils/http'
+import { ChartOfAccount } from '@/utils/type'
 
 export type ChartOfAccounts = Omit<
   ChartOfAccount,
   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
 >
 
-
 //create chart of accounts
 
-export async function createChartOfAccounts(data:ChartOfAccounts) {
+export async function createChartOfAccounts(data: ChartOfAccounts) {
   return fetchApi<ChartOfAccount>({
     url: 'api/chart-of-accounts/create-coa',
     method: 'POST',
-    body:data,
-    
+    body: data,
   })
 }
-
 
 //get all data coa
 export async function getAllCoa() {
@@ -32,7 +23,6 @@ export async function getAllCoa() {
     method: 'GET',
   })
 }
-
 
 // Function to get parent codes with names
 export async function getParentCodes() {
