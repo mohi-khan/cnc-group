@@ -34,9 +34,23 @@ import {
 import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getAllChartOfAccounts } from '@/api/cash-vouchers-api'
+import {
+  getAllChartOfAccounts,
+  getAllResPartners,
+} from '@/api/cash-vouchers-api'
 import { toast } from '@/hooks/use-toast'
-import { BankAccount } from '@/utils/type'
+import {
+  Account,
+  BankAccount,
+  chartOfAccountSchema,
+  CostCenter,
+  DetailRow,
+  FormData,
+  ResPartner,
+  User,
+  Voucher,
+} from '@/utils/type'
+import { getAllCostCenters } from '@/api/cost-centers-api'
 
 interface Company {
   company: {
@@ -53,49 +67,6 @@ interface Location {
     address: string
   }
   companyId: number
-}
-
-interface User {
-  userId: number
-  username: string
-  roleId: number
-  roleName: string
-  userCompanies: Company[]
-  userLocations: Location[]
-  voucherTypes: string[]
-}
-
-interface DetailRow {
-  id: number
-  type: string
-  accountName: string
-  costCenter: string
-  department: string
-  partnerName: string
-  remarks: string
-  amount: string
-}
-
-interface Voucher {
-  voucherNo: string
-  companyName: string
-  location: string
-  currency: string
-  type: string
-  accountName: string
-  costCenter: string
-  department: string
-  partnerName: string
-  remarks: string
-  totalAmount: string
-  status: string
-}
-
-interface FormData {
-  date: string
-  company: string
-  location: string
-  currency: string
 }
 
 export default function CashVoucher() {
@@ -122,11 +93,11 @@ export default function CashVoucher() {
     location: '',
     currency: '',
   })
-  const [cashBalance, setCashBalance] = useState(125000) // Initial cash balance
+  const [cashBalance, setCashBalance] = useState(0) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<BankAccount[]>(
-    []
-  )
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
+  const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
+  const [partners, setPartners] = React.useState<ResPartner[]>([])
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -196,9 +167,12 @@ export default function CashVoucher() {
 
   useEffect(() => {
     fetchChartOfAccounts()
+    fetchgetAllCostCenters()
+    fetchgetResPartner()
   }, [])
 
-  //
+  //chart of accounts
+
   async function fetchChartOfAccounts() {
     const response = await getAllChartOfAccounts()
     console.log('Fetched Chart Of accounts:', response.data)
@@ -212,6 +186,39 @@ export default function CashVoucher() {
       })
     } else {
       setChartOfAccounts(response.data)
+      console.log('data', response.data)
+    }
+  }
+  //res partner
+  async function fetchgetAllCostCenters() {
+    const response = await getAllCostCenters()
+    console.log('Fetched cost center data:', response.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting  cost center:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get  cost center',
+      })
+    } else {
+      setCostCenters(response.data)
+      console.log('data', response.data)
+    }
+  }
+
+  //res partner
+  async function fetchgetResPartner() {
+    const response = await getAllResPartners()
+    console.log('Fetched Res partner data:', response.data)
+
+    if (response.error || !response.data) {
+      console.error('Error getting  Res partner:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get  Res partner',
+      })
+    } else {
+      setPartners(response.data)
       console.log('data', response.data)
     }
   }
@@ -414,16 +421,14 @@ export default function CashVoucher() {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cash">Cash</SelectItem>
-                        <SelectItem value="bank">Bank</SelectItem>
-                        <SelectItem value="accounts_receivable">
-                          Accounts Receivable
-                        </SelectItem>
-                        <SelectItem value="accounts_payable">
-                          Accounts Payable
-                        </SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
-                        <SelectItem value="purchases">Purchases</SelectItem>
+                        {chartOfAccounts.map((account, index) => (
+                          <SelectItem
+                            key={account?.id || `default-chart-${index}`}
+                            value={account?.id?.toString() || `chart-${index}`}
+                          >
+                            {account?.name || 'Unnamed Account'}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -440,7 +445,7 @@ export default function CashVoucher() {
                         <SelectValue placeholder="Select cost center" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="marketing">Marketing</SelectItem>
+                        {/* <SelectItem value="marketing">Marketing</SelectItem>
                         <SelectItem value="sales">Sales</SelectItem>
                         <SelectItem value="it">IT</SelectItem>
                         <SelectItem value="hr">Human Resources</SelectItem>
@@ -448,7 +453,20 @@ export default function CashVoucher() {
                         <SelectItem value="operations">Operations</SelectItem>
                         <SelectItem value="rd">
                           Research & Development
-                        </SelectItem>
+                        </SelectItem> */}
+                        {costCenters.map((center, index) => (
+                          <SelectItem
+                            key={
+                              center?.costCenterId || `default-cost-${index}`
+                            }
+                            value={
+                              center?.costCenterId?.toString() ||
+                              `cost-${index}`
+                            }
+                          >
+                            {center?.costCenterName || 'Unnamed Cost Center'}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </TableCell>

@@ -1,27 +1,27 @@
-import { isLastDayOfMonth } from 'date-fns';
+import { isLastDayOfMonth } from 'date-fns'
 import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
 import { costCenterSchema } from '@/api/cost-centers-api'
 import { resPartnerSchema } from '@/api/res-partner-api'
-import {z} from 'zod'
+import { z } from 'zod'
 
-export interface User {
-  userId: number
-  username: string
-  roleId: number
-  roleName: string
-  userCompanies: UserCompany[]
-}
+// export interface User {
+//   userId: number
+//   username: string
+//   roleId: number
+//   roleName: string
+//   userCompanies: UserCompany[]
+// }
 
 export interface UserCompany {
   userId: number
   companyId: number
 }
 
-export interface Company {
-  companyId: number
-  companyName: string
-}
+// export interface Company {
+//   companyId: number
+//   companyName: string
+// }
 
 export interface SubItem {
   name: string
@@ -55,22 +55,21 @@ export type ResPartner = z.infer<typeof resPartnerSchema> & {
 }
 
 export type Period = {
-  periodId: number            
-  yearId: number              
-  periodName: string        
-  startDate: Date             
-  endDate: Date               
-  isOpen: boolean             
-  createdAt: Date            
-  updatedAt: Date             
+  periodId: number
+  yearId: number
+  periodName: string
+  startDate: Date
+  endDate: Date
+  isOpen: boolean
+  createdAt: Date
+  updatedAt: Date
   createdBy: number
 }
 
 export const updatePostingPeriodsSchema = z.object({
-    postingIds: z.array(z.number().positive()).nonempty(),
-    isOpen: z.boolean()
-}); 
-
+  postingIds: z.array(z.number().positive()).nonempty(),
+  isOpen: z.boolean(),
+})
 
 //financial year zod Validation
 
@@ -125,30 +124,23 @@ export const createFinancialYearSchema = z
     }
   )
 
-
-
-
-
-
-
 //chart of accounts types here:
 export interface Account {
-  name: string;
-  code: string;
-  accountType: string;
-  parentAccountId?: number;
-  parentName: string;
-  type: string;
-  currencyId?: number ;
-  allowreconcilable?: boolean;
-  withholdingTax?: boolean;
-  budgetTracking?: boolean;
-  isActive?: boolean;
-  isGroup?: boolean;
-  createdBy: number;
-  notes: string;
-  
-
+  id: number
+  name: string
+  code: string
+  accountType: string
+  parentAccountId?: number
+  parentName: string
+  type: string
+  currencyId?: number
+  allowreconcilable?: boolean
+  withholdingTax?: boolean
+  budgetTracking?: boolean
+  isActive?: boolean
+  isGroup?: boolean
+  createdBy: number
+  notes: string
 }
 
 export interface CodeGroup {
@@ -157,23 +149,21 @@ export interface CodeGroup {
   isExpanded?: boolean
   subgroups?: CodeGroup[]
 }
- 
+
 export interface ParentCode {
   code: string
   name: string
-
 }
-
 
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
+  id: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
   parentAccountId: z.number().int().positive(),
-   parentName:z.string(),
+  parentName: z.string(),
   currencyId: z.number().int().positive(),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -182,4 +172,65 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   createdBy: z.number().int().positive(),
   notes: z.string(),
-});
+})
+
+//Cash Voucher
+export interface FormData {
+  date: string
+  company: string
+  location: string
+  currency: string
+}
+
+export interface Voucher {
+  voucherNo: string
+  companyName: string
+  location: string
+  currency: string
+  type: string
+  accountName: string
+  costCenter: string
+  department: string
+  partnerName: string
+  remarks: string
+  totalAmount: string
+  status: string
+}
+
+export interface DetailRow {
+  id: number
+  type: string
+  accountName: string
+  costCenter: string
+  department: string
+  partnerName: string
+  remarks: string
+  amount: string
+}
+
+export interface User {
+  userId: number
+  username: string
+  roleId: number
+  roleName: string
+  userCompanies: Company[]
+  userLocations: Location[]
+  voucherTypes: string[]
+}
+
+export interface Company {
+  company: {
+    companyName: string
+  }
+  companyId: number
+}
+
+export interface Location {
+  id: number
+  name: string
+  locationId: number
+  location: {
+    address: string
+  }
+  companyId: number
+}
