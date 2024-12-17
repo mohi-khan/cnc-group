@@ -5,13 +5,13 @@ import { costCenterSchema } from '@/api/cost-centers-api'
 import { resPartnerSchema } from '@/api/res-partner-api'
 import { z } from 'zod'
 
-export interface User {
-  userId: number
-  username: string
-  roleId: number
-  roleName: string
-  userCompanies: UserCompany[]
-}
+// export interface User {
+//   userId: number
+//   username: string
+//   roleId: number
+//   roleName: string
+//   userCompanies: UserCompany[]
+// }
 
 export interface UserCompany {
   userId: number
@@ -140,7 +140,7 @@ export const createFinancialYearSchema = z
 
 //chart of accounts types here:
 export interface Account {
-  accountId: number
+  id: number
   name: string
   code: string
   accountType: string
@@ -172,7 +172,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
+  id: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -187,3 +187,64 @@ export const chartOfAccountSchema = z.object({
   createdBy: z.number().int().positive(),
   notes: z.string(),
 })
+
+//Cash Voucher
+export interface FormData {
+  date: string
+  company: string
+  location: string
+  currency: string
+}
+
+export interface Voucher {
+  voucherNo: string
+  companyName: string
+  location: string
+  currency: string
+  type: string
+  accountName: string
+  costCenter: string
+  department: string
+  partnerName: string
+  remarks: string
+  totalAmount: string
+  status: string
+}
+
+export interface DetailRow {
+  id: number
+  type: string
+  accountName: string
+  costCenter: string
+  department: string
+  partnerName: string
+  remarks: string
+  amount: string
+}
+
+export interface User {
+  userId: number
+  username: string
+  roleId: number
+  roleName: string
+  userCompanies: Company[]
+  userLocations: Location[]
+  voucherTypes: string[]
+}
+
+export interface Company {
+  company: {
+    companyName: string
+  }
+  companyId: number
+}
+
+export interface Location {
+  id: number
+  name: string
+  locationId: number
+  location: {
+    address: string
+  }
+  companyId: number
+}
