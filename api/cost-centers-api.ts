@@ -1,4 +1,5 @@
 import { fetchApi } from '@/utils/http'
+import { CostCenter } from '@/utils/type'
 import { z } from 'zod'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -18,7 +19,7 @@ export const activateDeactivateCostCenterSchema = z.object({
   costCenterId: z.number().min(1, 'Cost center id is required'),
 })
 
-export type CostCenter = z.infer<typeof costCenterSchema>
+
 export type CostCenterActivateDeactivate = z.infer<typeof activateDeactivateCostCenterSchema>
 
 export const costCentersArraySchema = z.array(costCenterSchema)

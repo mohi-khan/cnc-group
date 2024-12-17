@@ -1,9 +1,9 @@
-import { isLastDayOfMonth } from 'date-fns';
+import { isLastDayOfMonth } from 'date-fns'
 import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
 import { costCenterSchema } from '@/api/cost-centers-api'
 import { resPartnerSchema } from '@/api/res-partner-api'
-import {z} from 'zod'
+import { z } from 'zod'
 
 export interface User {
   userId: number
@@ -23,6 +23,13 @@ export interface Company {
   companyName: string
 }
 
+export interface CompanyFromLocalstorage {
+  company: {
+    companyId: number
+    companyName: string
+  }
+}
+
 export interface SubItem {
   name: string
   source: string
@@ -40,6 +47,13 @@ export interface MenuItem {
 
 export type LocationData = z.infer<typeof locationSchema>
 
+export interface LocationFromLocalstorage {
+  location: {
+    locationId: number
+    address: string
+  }
+}
+
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
   createdAt?: string
   updatedAt?: string
@@ -55,22 +69,21 @@ export type ResPartner = z.infer<typeof resPartnerSchema> & {
 }
 
 export type Period = {
-  periodId: number            
-  yearId: number              
-  periodName: string        
-  startDate: Date             
-  endDate: Date               
-  isOpen: boolean             
-  createdAt: Date            
-  updatedAt: Date             
+  periodId: number
+  yearId: number
+  periodName: string
+  startDate: Date
+  endDate: Date
+  isOpen: boolean
+  createdAt: Date
+  updatedAt: Date
   createdBy: number
 }
 
 export const updatePostingPeriodsSchema = z.object({
-    postingIds: z.array(z.number().positive()).nonempty(),
-    isOpen: z.boolean()
-}); 
-
+  postingIds: z.array(z.number().positive()).nonempty(),
+  isOpen: z.boolean(),
+})
 
 //financial year zod Validation
 
@@ -125,30 +138,23 @@ export const createFinancialYearSchema = z
     }
   )
 
-
-
-
-
-
-
 //chart of accounts types here:
 export interface Account {
-  name: string;
-  code: string;
-  accountType: string;
-  parentAccountId?: number;
-  parentName: string;
-  type: string;
-  currencyId?: number ;
-  allowreconcilable?: boolean;
-  withholdingTax?: boolean;
-  budgetTracking?: boolean;
-  isActive?: boolean;
-  isGroup?: boolean;
-  createdBy: number;
-  notes: string;
-  
-
+  accountId: number
+  name: string
+  code: string
+  accountType: string
+  parentAccountId?: number
+  parentName: string
+  type: string
+  currencyId?: number
+  allowreconcilable?: boolean
+  withholdingTax?: boolean
+  budgetTracking?: boolean
+  isActive?: boolean
+  isGroup?: boolean
+  createdBy: number
+  notes: string
 }
 
 export interface CodeGroup {
@@ -157,13 +163,11 @@ export interface CodeGroup {
   isExpanded?: boolean
   subgroups?: CodeGroup[]
 }
- 
+
 export interface ParentCode {
   code: string
   name: string
-
 }
-
 
 // Zod schema for Chart of Accounts
 
@@ -173,7 +177,7 @@ export const chartOfAccountSchema = z.object({
   code: z.string().max(64),
   accountType: z.string().max(64),
   parentAccountId: z.number().int().positive(),
-   parentName:z.string(),
+  parentName: z.string(),
   currencyId: z.number().int().positive(),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -182,4 +186,4 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   createdBy: z.number().int().positive(),
   notes: z.string(),
-});
+})
