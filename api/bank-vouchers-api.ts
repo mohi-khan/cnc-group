@@ -1,5 +1,13 @@
-import { fetchApi } from "@/utils/http"
-import { Account, BankAccount, Company, CostCenter, LocationData, ResPartner } from "@/utils/type"
+import { z } from 'zod'
+import { fetchApi } from '@/utils/http'
+import {
+  Account,
+  BankAccount,
+  Company,
+  CostCenter,
+  LocationData,
+  ResPartner,
+} from '@/utils/type'
 
 export async function getAllCompanies() {
   return fetchApi<Company[]>({
@@ -23,7 +31,7 @@ export async function getAllBankAccounts() {
 }
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
-export async function getAllChartOfAccounts() { 
+export async function getAllChartOfAccounts() {
   return fetchApi<Account[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
