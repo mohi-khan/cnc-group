@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Plus, Trash, Printer, RotateCcw, Check } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -51,13 +50,24 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useRouter } from 'next/navigation'
-import { getAllCompanies, getAllLocations } from '@/api/number-series-api'
+
 import { toast } from '@/hooks/use-toast'
-import { BankAccount, Company, CostCenter, LocationData, ResPartner } from '@/utils/type'
+import {
+  Account,
+  BankAccount,
+  Company,
+  CompanyFromLocalstorage,
+  CostCenter,
+  LocationData,
+  LocationFromLocalstorage,
+  ResPartner,
+} from '@/utils/type'
 import {
   getAllBankAccounts,
   getAllChartOfAccounts,
+  getAllCompanies,
   getAllCostCenters,
+  getAllLocations,
   getAllResPartners,
 } from '@/api/bank-vouchers-api'
 
@@ -79,7 +89,7 @@ const voucherSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   amount: z.number().min(0, 'Amount must be positive'),
   items: z.array(voucherItemSchema),
-  checkNumber: z.number().min(1, 'Check Number is required'),
+  checkNumber: z.string(),
 })
 
 type Voucher = z.infer<typeof voucherSchema> & {
@@ -95,7 +105,6 @@ interface User {
   // Add other user properties as needed
 }
 
-
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<Voucher[]>([])
   const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>(
@@ -104,14 +113,16 @@ export default function BankVoucher() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
-  const [companies, setCompanies] = React.useState<Company[]>([])
-  const [locations, setLocations] = React.useState<LocationData[]>([])
+  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>([])
+  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>([])
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<BankAccount[]>(
-    []
-  )
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
+  const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
+    Account[]
+  >([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([]) // Updated type
+  const [formType, setFormType] = React.useState('Credit')
   const router = useRouter()
 
   React.useEffect(() => {
@@ -119,7 +130,9 @@ export default function BankVoucher() {
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUser(userData)
-      console.log('Current user from localStorage:', userData.voucherTypes)
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+      console.log('Current user from localStorage:', userData)
 
       // Check if 'Bank Voucher' is in the voucherTypes array
       if (!userData.voucherTypes.includes('Bank Voucher')) {
@@ -161,45 +174,34 @@ export default function BankVoucher() {
     name: 'items',
   })
 
-  React.useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (name?.startsWith('items') || name === 'amount') {
-        const totalItemsAmount =
-          value.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
-        setAmountMismatch(totalItemsAmount !== value.amount)
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [form.watch])
+  // const fetchCompanies = async () => {
+  //   const data = await getAllCompanies()
+  //   console.log('Fetched companies:', data.data)
+  //   if (data.error || !data.data) {
+  //     console.error('Error getting companies:', data.error)
+  //     toast({
+  //       title: 'Error',
+  //       description: data.error?.message || 'Failed to get companies',
+  //     })
+  //   } else {
+  //     setCompanies(data.data)
+  //   }
+  // }
 
-  const fetchCompanies = async () => {
-    const data = await getAllCompanies()
-    console.log('Fetched companies:', data.data)
-    if (data.error || !data.data) {
-      console.error('Error getting companies:', data.error)
-      toast({
-        title: 'Error',
-        description: data.error?.message || 'Failed to get companies',
-      })
-    } else {
-      setCompanies(data.data)
-    }
-  }
+  // async function fetchAllLocations() {
+  //   const response = await getAllLocations()
+  //   console.log('Fetched locations:', response.data)
 
-  async function fetchAllLocations() {
-    const response = await getAllLocations()
-    console.log('Fetched locations:', response.data.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting locations:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get locations',
-      })
-    } else {
-      setLocations(response.data.data)
-    }
-  }
+  //   if (response.error || !response.data) {
+  //     console.error('Error getting locations:', response.error)
+  //     toast({
+  //       title: 'Error',
+  //       description: response.error?.message || 'Failed to get locations',
+  //     })
+  //   } else {
+  //     setLocations(response.data)
+  //   }
+  // }
 
   async function fetchBankAccounts() {
     const response = await getAllBankAccounts()
@@ -233,7 +235,7 @@ export default function BankVoucher() {
 
   const fetchCostCenters = async () => {
     const data = await getAllCostCenters()
-    console.log('🚀 ~ fetchCostCenters ~ data:', data.data.data)
+    console.log('🚀 ~ fetchCostCenters ~ data:', data.data)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
@@ -241,32 +243,50 @@ export default function BankVoucher() {
         description: data.error?.message || 'Failed to get cost centers',
       })
     } else {
-      setCostCenters(data.data.data)
+      setCostCenters(data.data)
     }
   }
 
   const fetchResPartners = async () => {
     const data = await getAllResPartners()
-    console.log('🚀 ~ fetchrespartners ~ data:', data.data.data)
-    if (data.error || !data.data || !data.data.data) {
+    console.log('🚀 ~ fetchrespartners ~ data:', data.data)
+    if (data.error || !data.data || !data.data) {
       console.error('Error getting res partners:', data.error)
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get partners',
       })
     } else {
-      setPartners(data.data.data)
+      setPartners(data.data)
     }
   }
 
   React.useEffect(() => {
-    fetchCompanies()
-    fetchAllLocations()
+    // fetchCompanies()
+    // fetchAllLocations()
     fetchBankAccounts()
     fetchChartOfAccounts()
     fetchCostCenters()
     fetchResPartners()
   }, [])
+
+  React.useEffect(() => {
+    console.log(formType)
+    console.log('fdg',chartOfAccounts)
+    const filteredCoa = chartOfAccounts?.filter((account) => {
+      if (account.isGroup == true) {
+        if (formType == 'Debit') {
+          return account.type == 'Income'
+        } else if (formType == 'Credit') {
+          return account.type == 'Expenses'
+        }
+      } else {
+        return false
+      }
+    })
+    setFilteredChartOfAccounts(filteredCoa)
+    console.log("🚀 ~ React.useEffect ~ filteredCoa:", filteredCoa)
+  }, [formType, chartOfAccounts])
 
   function onSubmit(
     values: z.infer<typeof voucherSchema>,
@@ -284,7 +304,7 @@ export default function BankVoucher() {
       })
       return
     }
-    setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
+    // setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
     setIsDialogOpen(false)
     form.reset()
   }
@@ -304,6 +324,16 @@ export default function BankVoucher() {
       vouchers.map((v) => (v.id === id ? { ...v, status: 'Posted' } : v))
     )
   }
+
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'type') {
+        // Force re-render of chart of accounts
+        setChartOfAccounts((prev) => [...prev])
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
 
   return (
     <div className="container mx-auto py-10">
@@ -352,8 +382,17 @@ export default function BankVoucher() {
                           </FormControl>
                           <SelectContent>
                             {companies.map((company, index) => (
-                              <SelectItem key={company?.companyId || `default-company-${index}`} value={company?.companyId?.toString() || `company-${index}`}>
-                                {company?.companyName || 'Unnamed Company'}
+                              <SelectItem
+                                key={
+                                  company?.company.companyId ||
+                                  `default-company-${index}`
+                                }
+                                value={
+                                  company?.company.companyId?.toString() ||
+                                  `company-${index}`
+                                }
+                              >
+                                {company?.company.companyName || 'Unnamed Company'}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -379,8 +418,17 @@ export default function BankVoucher() {
                           </FormControl>
                           <SelectContent>
                             {locations.map((location, index) => (
-                              <SelectItem key={location?.locationId || `default-location-${index}`} value={location?.locationId?.toString() || `location-${index}`}>
-                                {location?.address || 'Unnamed Location'}
+                              <SelectItem
+                                key={
+                                  location?.location.locationId ||
+                                  `default-location-${index}`
+                                }
+                                value={
+                                  location?.location.locationId?.toString() ||
+                                  `location-${index}`
+                                }
+                              >
+                                {location?.location.address || 'Unnamed Location'}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -421,7 +469,10 @@ export default function BankVoucher() {
                       <FormItem>
                         <FormLabel>Type</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value)
+                            setFormType(value)
+                          }}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -440,7 +491,7 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="bankAccountName"
+                    name="bankName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Bank Account Name</FormLabel>
@@ -455,7 +506,12 @@ export default function BankVoucher() {
                           </FormControl>
                           <SelectContent>
                             {bankAccounts.map((account, index) => (
-                              <SelectItem key={account?.id || `default-bank-${index}`} value={account?.id?.toString() || `bank-${index}`}>
+                              <SelectItem
+                                key={account?.id || `default-bank-${index}`}
+                                value={
+                                  account?.id?.toString() || `bank-${index}`
+                                }
+                              >
                                 {account?.accountName || 'Unnamed Account'}
                               </SelectItem>
                             ))}
@@ -556,8 +612,17 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {chartOfAccounts.map((account, index) => (
-                                        <SelectItem key={account?.id || `default-chart-${index}`} value={account?.id?.toString() || `chart-${index}`}>
+                                      {filteredChartOfAccounts.map((account, index) => (
+                                        <SelectItem
+                                          key={
+                                            account?.accountId ||
+                                            `default-chart-${index}`
+                                          }
+                                          value={
+                                            account?.accountId?.toString() ||
+                                            `chart-${index}`
+                                          }
+                                        >
                                           {account?.name || 'Unnamed Account'}
                                         </SelectItem>
                                       ))}
@@ -584,8 +649,18 @@ export default function BankVoucher() {
                                     </FormControl>
                                     <SelectContent>
                                       {costCenters.map((center, index) => (
-                                        <SelectItem key={center?.costCenterId || `default-cost-${index}`} value={center?.costCenterId?.toString() || `cost-${index}`}>
-                                          {center?.costCenterName || 'Unnamed Cost Center'}
+                                        <SelectItem
+                                          key={
+                                            center?.costCenterId ||
+                                            `default-cost-${index}`
+                                          }
+                                          value={
+                                            center?.costCenterId?.toString() ||
+                                            `cost-${index}`
+                                          }
+                                        >
+                                          {center?.costCenterName ||
+                                            'Unnamed Cost Center'}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
@@ -639,7 +714,16 @@ export default function BankVoucher() {
                                     </FormControl>
                                     <SelectContent>
                                       {partners.map((partner, index) => (
-                                        <SelectItem key={partner?.id || `default-partner-${index}`} value={partner?.id?.toString() || `partner-${index}`}>
+                                        <SelectItem
+                                          key={
+                                            partner?.id ||
+                                            `default-partner-${index}`
+                                          }
+                                          value={
+                                            partner?.id?.toString() ||
+                                            `partner-${index}`
+                                          }
+                                        >
                                           {partner?.name || 'Unnamed Partner'}
                                         </SelectItem>
                                       ))}
@@ -845,4 +929,3 @@ export default function BankVoucher() {
     </div>
   )
 }
-

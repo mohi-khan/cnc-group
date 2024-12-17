@@ -1,6 +1,7 @@
 import { fetchApi } from '@/utils/http'
 import { Company } from '@/utils/type'
 import { z } from 'zod'
+import { locationSchema } from './company-api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
@@ -25,10 +26,7 @@ export const numberSeriesSchema = z
     path: ['endingNumber'],
   })
 
-const locationSchema = z.object({
-  locationId: z.number(),
-  address: z.string().min(1, 'Location address is required'),
-})
+
 
 export type NumberSeries = z.infer<typeof numberSeriesSchema>
 export type LocationData = z.infer<typeof locationSchema>

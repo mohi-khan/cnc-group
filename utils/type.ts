@@ -18,10 +18,17 @@ export interface UserCompany {
   companyId: number
 }
 
-// export interface Company {
-//   companyId: number
-//   companyName: string
-// }
+export interface Company {
+  companyId: number
+  companyName: string
+}
+
+export interface CompanyFromLocalstorage {
+  company: {
+    companyId: number
+    companyName: string
+  }
+}
 
 export interface SubItem {
   name: string
@@ -39,6 +46,13 @@ export interface MenuItem {
 }
 
 export type LocationData = z.infer<typeof locationSchema>
+
+export interface LocationFromLocalstorage {
+  location: {
+    locationId: number
+    address: string
+  }
+}
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
   createdAt?: string
