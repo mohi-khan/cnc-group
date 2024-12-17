@@ -36,7 +36,6 @@ export async function fetchApi<T>({
   headers = {},
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
-  console.log(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`)
   const response = await fetch(
     `${API_BASE_URL}/${url}`,
     {

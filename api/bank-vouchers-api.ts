@@ -1,5 +1,5 @@
 import { fetchApi } from "@/utils/http"
-import { BankAccount, Company, CostCenter, LocationData, ResPartner } from "@/utils/type"
+import { Account, BankAccount, Company, CostCenter, LocationData, ResPartner } from "@/utils/type"
 
 export async function getAllCompanies() {
   return fetchApi<Company[]>({
@@ -24,21 +24,21 @@ export async function getAllBankAccounts() {
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
 export async function getAllChartOfAccounts() { 
-  return fetchApi<BankAccount[]>({
+  return fetchApi<Account[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
 }
 
 export async function getAllCostCenters() {
-  return fetchApi<CostCenter>({
+  return fetchApi<CostCenter[]>({
     url: 'api/cost-centers/get-all-cost-centers',
     method: 'GET',
   })
 }
 
 export async function getAllResPartners() {
-  return fetchApi<ResPartner>({
+  return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
   })
