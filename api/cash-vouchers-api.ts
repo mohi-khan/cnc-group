@@ -15,7 +15,7 @@ export async function getAllChartOfAccounts() {
 
 //cost center get all data
 export async function getAllCostCenters() {
-  return fetchApi<CostCenter>({
+  return fetchApi<CostCenter[]>({
     url: 'api/cost-centers/get-all-cost-centers',
     method: 'GET',
   })
@@ -23,7 +23,7 @@ export async function getAllCostCenters() {
 
 // get all res partner data
 export async function getAllResPartners() {
-  return fetchApi<ResPartner>({
+  return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
   })
