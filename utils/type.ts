@@ -248,3 +248,39 @@ export interface Location {
   }
   companyId: number
 }
+
+//journal entry
+const JournalEntrySchema = z.object({
+  voucherNo: z.string().nullable().optional(), // Will calcualte automatically on backend
+  date: z.string(),
+  journalType: z.string(),
+  state: z.number().default(0),
+  companyId: z.number(),
+  locationId: z.number(),
+  currencyId: z.number(),
+  amountTotal: z.string(),
+  notes: z.string().optional(),
+  periodid: z.number().nullable().optional(), // Will calcualte automatically on backend
+  createdBy: z.number(),
+})
+
+const JournalDetailSchema = z.object({
+  voucherId: z.number(),
+  accountId: z.number(),
+  costCenterId: z.number(),
+  departmentId: z.number().nullable().optional(),
+  debit: z.string(),
+  credit: z.string(),
+  analyticTags: z.string().nullable().optional(),
+  taxId: z.number().nullable().optional(),
+  resPartnerId: z.number().nullable().optional(),
+  notes: z.string().optional(),
+  createdBy: z.number(),
+})
+
+export const JournalEntryWithDetailsSchema = z.object({
+  journalEntry: JournalEntrySchema,
+  journalDetails: z.array(JournalDetailSchema),
+})
+
+export type JournalEntryWithDetails = z.infer<typeof JournalEntryWithDetailsSchema>

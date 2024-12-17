@@ -58,6 +58,8 @@ import {
   Company,
   CompanyFromLocalstorage,
   CostCenter,
+  JournalEntryWithDetails,
+  JournalEntryWithDetailsSchema,
   LocationData,
   LocationFromLocalstorage,
   ResPartner,
@@ -71,31 +73,6 @@ import {
   getAllResPartners,
 } from '@/api/bank-vouchers-api'
 
-const voucherItemSchema = z.object({
-  accountName: z.string().min(1, 'Account Name is required'),
-  costCenter: z.string().min(1, 'Cost Center is required'),
-  department: z.string().min(1, 'Department is required'),
-  partnerName: z.string().min(1, 'Partner Name is required'),
-  remarks: z.string(),
-  amount: z.number().min(0, 'Amount must be positive'),
-})
-
-const voucherSchema = z.object({
-  companyName: z.string().min(1, 'Company Name is required'),
-  location: z.string().min(1, 'Location is required'),
-  currency: z.string().min(1, 'Currency is required'),
-  type: z.enum(['Credit', 'Debit']),
-  bankName: z.string().min(1, 'Bank Name is required'),
-  date: z.string().min(1, 'Date is required'),
-  amount: z.number().min(0, 'Amount must be positive'),
-  items: z.array(voucherItemSchema),
-  checkNumber: z.string(),
-})
-
-type Voucher = z.infer<typeof voucherSchema> & {
-  id: number
-  status: 'Draft' | 'Posted'
-}
 
 interface User {
   userId: number
@@ -106,15 +83,17 @@ interface User {
 }
 
 export default function BankVoucher() {
-  const [vouchers, setVouchers] = React.useState<Voucher[]>([])
-  const [checkUserVouchers, setCheckUserVouchers] = React.useState<Voucher[]>(
-    []
-  )
+
+  const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
-  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>([])
-  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>([])
+  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
+    []
+  )
+  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>(
+    []
+  )
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
@@ -145,25 +124,31 @@ export default function BankVoucher() {
     }
   }, [router])
 
-  const form = useForm<z.infer<typeof voucherSchema>>({
-    resolver: zodResolver(voucherSchema),
+  const form = useForm<JournalEntryWithDetails>({
+    resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
-      checkNumber: '',
-      companyName: '',
-      location: '',
-      currency: '',
-      type: 'Credit',
-      bankName: '',
-      date: '',
-      amount: 0,
-      items: [
+      journalEntry: {
+        date: "",
+        journalType: "",
+        companyId: 0,
+        locationId: 0,
+        currencyId: 0,
+        amountTotal: "0",
+        notes: "",
+        createdBy: 0,
+      },
+      journalDetails: [
         {
-          accountName: '',
-          costCenter: '',
-          department: '',
-          partnerName: '',
-          remarks: '',
-          amount: 0,
+          accountId: 0,
+          costCenterId: 0,
+          departmentId: null,
+          debit: "0",
+          credit: "0",
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: "",
+          createdBy: 0,
         },
       ],
     },
@@ -171,7 +156,7 @@ export default function BankVoucher() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: "journalDetails",
   })
 
   // const fetchCompanies = async () => {
@@ -250,7 +235,7 @@ export default function BankVoucher() {
   const fetchResPartners = async () => {
     const data = await getAllResPartners()
     console.log('🚀 ~ fetchrespartners ~ data:', data.data)
-    if (data.error || !data.data || !data.data) {
+    if (data.error || !data.data) {
       console.error('Error getting res partners:', data.error)
       toast({
         title: 'Error',
@@ -272,7 +257,7 @@ export default function BankVoucher() {
 
   React.useEffect(() => {
     console.log(formType)
-    console.log('fdg',chartOfAccounts)
+    console.log('fdg', chartOfAccounts)
     const filteredCoa = chartOfAccounts?.filter((account) => {
       if (account.isGroup == true) {
         if (formType == 'Debit') {
@@ -285,15 +270,15 @@ export default function BankVoucher() {
       }
     })
     setFilteredChartOfAccounts(filteredCoa)
-    console.log("🚀 ~ React.useEffect ~ filteredCoa:", filteredCoa)
+    console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
   }, [formType, chartOfAccounts])
 
   function onSubmit(
-    values: z.infer<typeof voucherSchema>,
+    values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) {
-    const totalItemsAmount = values.items.reduce(
-      (sum, item) => sum + item.amount,
+    const totalItemsAmount = values.journalDetails.reduce(
+      (sum, item) => sum + item.credit,
       0
     )
     if (totalItemsAmount !== values.amount) {
@@ -304,7 +289,7 @@ export default function BankVoucher() {
       })
       return
     }
-    // setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
+    setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
     setIsDialogOpen(false)
     form.reset()
   }
@@ -326,14 +311,19 @@ export default function BankVoucher() {
   }
 
   React.useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'type') {
-        // Force re-render of chart of accounts
-        setChartOfAccounts((prev) => [...prev])
+    const subscription = form.watch((value, { name, type }) => {
+      if (name?.startsWith('items') || name === '') {
+        if (!value.items) {
+          return
+        } else {
+          const totalItemsAmount =
+            value.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
+          setAmountMismatch(totalItemsAmount !== value.amount)
+        }
       }
     })
     return () => subscription.unsubscribe()
-  }, [form])
+  }, [form.watch])
 
   return (
     <div className="container mx-auto py-10">
@@ -367,13 +357,13 @@ export default function BankVoucher() {
                 <div className="grid grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
-                    name="companyName"
+                    name="journalEntry.companyId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Company Name</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                        
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -392,7 +382,8 @@ export default function BankVoucher() {
                                   `company-${index}`
                                 }
                               >
-                                {company?.company.companyName || 'Unnamed Company'}
+                                {company?.company.companyName ||
+                                  'Unnamed Company'}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -403,13 +394,13 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="location"
+                    name="journalEntry.locationId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                    
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -428,7 +419,8 @@ export default function BankVoucher() {
                                   `location-${index}`
                                 }
                               >
-                                {location?.location.address || 'Unnamed Location'}
+                                {location?.location.address ||
+                                  'Unnamed Location'}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -439,13 +431,13 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="currency"
+                    name="journalEntry.currencyId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                      
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -473,8 +465,7 @@ export default function BankVoucher() {
                             field.onChange(value)
                             setFormType(value)
                           }}
-                          defaultValue={field.value}
-                        >
+                         >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select type" />
@@ -491,13 +482,13 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="bankName"
+                    name="journalDetails"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Bank Account Name</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                         
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -523,17 +514,16 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="checkNumber"
+                    name="journalEntry.notes"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Check Number</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
                             placeholder="Enter check number"
                             {...field}
                             onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value))
+                              field.onChange(e.target.value)
                             }
                           />
                         </FormControl>
@@ -543,7 +533,7 @@ export default function BankVoucher() {
                   />
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="journalEntry.date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date</FormLabel>
@@ -561,7 +551,7 @@ export default function BankVoucher() {
                   {/* this is journal entry amount  */}
                   <FormField
                     control={form.control}
-                    name="amount"
+                    name="journalEntry.amountTotal"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Amount</FormLabel>
@@ -599,12 +589,12 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.accountName`}
+                              name={`journalDetails.${index}.accountId`}
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                   
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -612,20 +602,22 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {filteredChartOfAccounts.map((account, index) => (
-                                        <SelectItem
-                                          key={
-                                            account?.accountId ||
-                                            `default-chart-${index}`
-                                          }
-                                          value={
-                                            account?.accountId?.toString() ||
-                                            `chart-${index}`
-                                          }
-                                        >
-                                          {account?.name || 'Unnamed Account'}
-                                        </SelectItem>
-                                      ))}
+                                      {filteredChartOfAccounts.map(
+                                        (account, index) => (
+                                          <SelectItem
+                                            key={
+                                              account?.id ||
+                                              `default-chart-${index}`
+                                            }
+                                            value={
+                                              account?.id?.toString() ||
+                                              `chart-${index}`
+                                            }
+                                          >
+                                            {account?.name || 'Unnamed Account'}
+                                          </SelectItem>
+                                        )
+                                      )}
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
@@ -635,12 +627,12 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.costCenter`}
+                              name={`journalDetails.${index}.costCenterId`}
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                   
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -672,12 +664,12 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.department`}
+                              name={`journalDetails.${index}.departmentId`}
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                   
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -700,12 +692,12 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.partnerName`}
+                              name={`journalDetails.${index}.resPartnerId`}
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                 
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -736,7 +728,7 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.remarks`}
+                              name={`journalDetails.${index}.notes`}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
@@ -752,7 +744,7 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`items.${index}.amount`}
+                              name={`journalDetails.${index}.debit`}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
@@ -791,15 +783,19 @@ export default function BankVoucher() {
                     size="sm"
                     className="mt-2"
                     onClick={() =>
-                      append({
-                        accountName: '',
-                        costCenter: '',
-                        department: '',
-                        partnerName: '',
-                        remarks: '',
-                        amount: 0,
-                      })
-                    }
+                     append({
+                      voucherId:0,
+                      accountId: 0,
+                      costCenterId: 0,
+                      departmentId: null,
+                      debit: "0",
+                      credit: "0",
+                      analyticTags: null,
+                      taxId: null,
+                      resPartnerId: null,
+                      notes: "",
+                      createdBy: 0,})}
+            
                   >
                     Add Another
                   </Button>
@@ -850,8 +846,8 @@ export default function BankVoucher() {
         </TableHeader>
         <TableBody>
           {vouchers.map((voucher) => (
-            <TableRow key={voucher.id} className="border-b">
-              <TableCell className="">{voucher.id}</TableCell>
+            <TableRow key={voucher.journalEntry.companyId} className="border-b">
+             <TableCell className="">{voucher.}</TableCell>
               <TableCell className="">{voucher.checkNumber}</TableCell>
               <TableCell className="">{voucher.companyName}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
