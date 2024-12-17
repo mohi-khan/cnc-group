@@ -42,7 +42,6 @@ import { toast } from '@/hooks/use-toast'
 import {
   Account,
   CostCenter,
-  DetailRow,
   FormData,
   ResPartner,
   User,
@@ -50,6 +49,8 @@ import {
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
+
+//i will be shift this type in the types file...not shifting  right now because of not to make conflict.
 
 interface Company {
   company: {
@@ -68,6 +69,18 @@ interface Location {
   companyId: number
 }
 
+interface DetailRow {
+  id: number
+  type: string
+  accountName: string
+  costCenter: string
+  department: string
+  partnerName: string
+  remarks: string
+  amount: string
+  isDraft: boolean
+}
+
 export default function CashVoucher() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -83,6 +96,7 @@ export default function CashVoucher() {
       costCenter: '',
       remarks: '',
       amount: '',
+      isDraft: false,
     },
   ])
   const [voucherList, setVoucherList] = useState<Voucher[]>([])
@@ -101,7 +115,6 @@ export default function CashVoucher() {
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     Account[]
   >([])
-  const [isDraft, setIsDraft] = useState(false)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -150,6 +163,7 @@ export default function CashVoucher() {
       costCenter: '',
       remarks: '',
       amount: '',
+      isDraft: false,
     }
     setDetailRows([...detailRows, newRow])
   }
@@ -157,7 +171,7 @@ export default function CashVoucher() {
   const handleDetailChange = (
     id: number,
     field: keyof DetailRow,
-    value: string
+    value: string | boolean
   ) => {
     setDetailRows(
       detailRows.map((row) =>
@@ -245,11 +259,11 @@ export default function CashVoucher() {
     }
   }
 
-  const handleSubmit = (isDraft: boolean) => {
-    const totalAmount = detailRows.reduce(
-      (sum, row) => sum + Number(row.amount || 0),
-      0
-    )
+  const handleSubmit = (rowId: number) => {
+    const row = detailRows.find((r) => r.id === rowId)
+    if (!row) return
+
+    const totalAmount = Number(row.amount || 0)
 
     if (totalAmount > cashBalance) {
       alert('Error: Total amount exceeds cash balance.')
@@ -261,40 +275,27 @@ export default function CashVoucher() {
       companyName: formData.company,
       currency: formData.currency,
       location: formData.location,
-      type: detailRows[0]?.type || '',
-      accountName: detailRows[0]?.accountName || '',
-      costCenter: detailRows[0]?.costCenter || '',
-      department: detailRows[0]?.department || '',
-      partnerName: detailRows[0]?.partnerName || '',
-      remarks: detailRows[0]?.remarks || '',
+      type: row.type,
+      accountName: row.accountName,
+      costCenter: row.costCenter,
+      department: row.department,
+      partnerName: row.partnerName,
+      remarks: row.remarks,
       totalAmount: totalAmount.toFixed(2),
-      status: isDraft ? 'Draft' : 'Posted',
+      status: row.isDraft ? 'Draft' : 'Posted',
     }
     setVoucherList([...voucherList, newVoucher])
     console.log(newVoucher)
 
-    if (!isDraft) {
+    if (!row.isDraft) {
       setCashBalance((prevBalance) => prevBalance - totalAmount)
     }
 
-    setFormData({
-      date: '',
-      company: '',
-      location: '',
-      currency: '',
-    })
-    setDetailRows([
-      {
-        id: 1,
-        type: '',
-        accountName: '',
-        costCenter: '',
-        department: '',
-        partnerName: '',
-        remarks: '',
-        amount: '',
-      },
-    ])
+    // Reset the form and remove the submitted row
+    setDetailRows(detailRows.filter((r) => r.id !== rowId))
+    if (detailRows.length === 1) {
+      addDetailRow() // Add a new empty row if this was the last one
+    }
   }
 
   const handleDelete = (voucherNo: string) => {
@@ -416,9 +417,11 @@ export default function CashVoucher() {
                 <TableRow key={row.id}>
                   <TableCell>
                     <Select
-                      value={row.type} // Controlled value
-                      defaultValue="Payment" // Default value
-                      onValueChange={(value) => setFormType(value)}
+                      value={row.type}
+                      onValueChange={(value) => {
+                        handleDetailChange(row.id, 'type', value)
+                        setFormType(value)
+                      }}
                       required
                     >
                       <SelectTrigger className="w-full">
@@ -564,14 +567,22 @@ export default function CashVoucher() {
                   <TableCell>
                     {/* Action Buttons */}
                     <div className="flex justify-end items-center gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center space-x-2">
                         <Checkbox
-                          checked={isDraft} // `isDraft` is a state variable to track if it's checked
-                          onChange={(e) => handleSubmit(e.target.checked)}
+                          id={`draft-${row.id}`}
+                          checked={row.isDraft}
+                          onCheckedChange={(checked) =>
+                            handleDetailChange(row.id, 'isDraft', checked)
+                          }
                         />
-                        <p>Draft</p>
+                        <label
+                          htmlFor={`draft-${row.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Draft
+                        </label>
                       </div>
-                      <Button onClick={() => handleSubmit(false)}>Post</Button>
+                      <Button onClick={() => handleSubmit(row.id)}>Post</Button>
                     </div>
                   </TableCell>
                 </TableRow>
