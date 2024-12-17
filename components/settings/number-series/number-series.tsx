@@ -156,7 +156,7 @@ export function NumberSeries() {
         description: response.error?.message || 'Failed to get locations',
       })
     } else {
-      setLocations(response.data.data)
+      setLocations(response.data)
     }
   }
 
@@ -204,7 +204,7 @@ export function NumberSeries() {
       console.error('Error creating number series:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create number series',
+        description: 'Failed to create number series',
         variant: 'destructive',
       })
     }
@@ -230,7 +230,7 @@ export function NumberSeries() {
 
   const handleEdit = (e: React.MouseEvent, record: NumberSeries) => {
     e.preventDefault()
-    setEditingId(record.id)
+    setEditingId(record.companyId)
     editForm.reset(record)
   }
 
@@ -265,7 +265,7 @@ export function NumberSeries() {
       console.error('Error updating number series:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update number series',
+        description: 'Failed to update number series',
         variant: 'destructive',
       })
     }
@@ -300,9 +300,9 @@ export function NumberSeries() {
                     {options.map((option) => (
                       <SelectItem
                         key={option.companyId}
-                        value={option.id.toString()}
+                        value={option.companyId.toString()}
                       >
-                        {option.name}
+                        {option.address}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -460,7 +460,7 @@ export function NumberSeries() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDelete(record.id)}
+                              onClick={() => handleDelete(record.locationId)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

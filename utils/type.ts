@@ -20,6 +20,7 @@ export interface UserCompany {
 
 export interface Company {
   companyId: number
+  address: string,
   companyName: string
 }
 
@@ -138,24 +139,6 @@ export const createFinancialYearSchema = z
     }
   )
 
-//chart of accounts types here:
-export interface Account {
-  id: number
-  name: string
-  code: string
-  accountType: string
-  parentAccountId?: number
-  parentName: string
-  type: string
-  currencyId?: number
-  allowreconcilable?: boolean
-  withholdingTax?: boolean
-  budgetTracking?: boolean
-  isActive?: boolean
-  isGroup?: boolean
-  createdBy: number
-  notes: string
-}
 
 export interface CodeGroup {
   id: string
@@ -187,6 +170,8 @@ export const chartOfAccountSchema = z.object({
   createdBy: z.number().int().positive(),
   notes: z.string(),
 })
+
+export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
 
 //Cash Voucher
 export interface FormData {
@@ -220,6 +205,7 @@ export interface DetailRow {
   partnerName: string
   remarks: string
   amount: string
+  isDraft: boolean
 }
 
 export interface User {
@@ -232,20 +218,9 @@ export interface User {
   voucherTypes: string[]
 }
 
-export interface Company {
-  company: {
-    companyName: string
-  }
-  companyId: number
-}
-
 export interface Location {
-  id: number
-  name: string
   locationId: number
-  location: {
-    address: string
-  }
+  address: string
   companyId: number
 }
 

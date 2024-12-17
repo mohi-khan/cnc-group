@@ -151,8 +151,7 @@ export default function SignUp() {
 
   async function fetchAllLocations() {
     const fetchedLocations = await getAllLocations()
-    console.log('Fetched locations:', fetchedLocations.data.data)
-
+    
     if (fetchedLocations.error || !fetchedLocations.data) {
       console.error('Error getting location:', fetchedLocations.error)
       toast({
@@ -160,7 +159,8 @@ export default function SignUp() {
         description: fetchedLocations.error?.message || 'Failed to get location',
       })
     } else {
-      setLocations(fetchedLocations.data.data)
+      console.log('Fetched locations:', fetchedLocations.data)
+      setLocations(fetchedLocations.data)
     }
   }
 
