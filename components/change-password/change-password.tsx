@@ -9,14 +9,7 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { changePassword } from '@/api/change-password-api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-
-interface User {
-  userId: number
-  username: string
-  roleId: number
-  roleName: string
-  // Add other user properties as needed
-}
+import { User } from '@/utils/type'
 
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState('')

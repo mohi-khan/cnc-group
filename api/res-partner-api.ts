@@ -57,14 +57,14 @@ export async function editResPartner(id: number, data: ResPartner) {
 }
 
 export async function getAllResPartners() {
-  return fetchApi<ResPartner>({
+  return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
   })
 }
 
 export async function getAllCompanies() {
-  return fetchApi<Company>({
+  return fetchApi<Company[]>({
     url: 'api/company/get-all-companies',
     method: 'GET',
   })
