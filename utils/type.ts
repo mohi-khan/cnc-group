@@ -266,6 +266,7 @@ const JournalDetailSchema = z.object({
   analyticTags: z.string().nullable().optional(),
   taxId: z.number().nullable().optional(),
   resPartnerId: z.number().nullable().optional(),
+  bankaccountid:z.number().nullable().optional(),
   notes: z.string().optional(),
   createdBy: z.number(),
 })
@@ -294,6 +295,7 @@ const JournalResultSchema = z.object({
   debit: z.number().default(0),
   credit: z.number().default(0),
   partnar: z.string().nullable(),
+  bankaccount:z.string().nullable(),
   detail_notes: z.string().nullable(),
 })
 
