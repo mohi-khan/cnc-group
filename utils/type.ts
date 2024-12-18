@@ -20,7 +20,7 @@ export interface UserCompany {
 
 export interface Company {
   companyId: number
-  address: string,
+  address: string
   companyName: string
 }
 
@@ -52,6 +52,7 @@ export interface LocationFromLocalstorage {
   location: {
     locationId: number
     address: string
+    companyId: number
   }
 }
 
@@ -138,7 +139,6 @@ export const createFinancialYearSchema = z
       }
     }
   )
-
 
 export interface CodeGroup {
   id: string
@@ -258,4 +258,6 @@ export const JournalEntryWithDetailsSchema = z.object({
   journalDetails: z.array(JournalDetailSchema),
 })
 
-export type JournalEntryWithDetails = z.infer<typeof JournalEntryWithDetailsSchema>
+export type JournalEntryWithDetails = z.infer<
+  typeof JournalEntryWithDetailsSchema
+>
