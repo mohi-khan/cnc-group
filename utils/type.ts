@@ -172,6 +172,20 @@ export const chartOfAccountSchema = z.object({
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
+//Zod schema for Accounts ( Chart of Accounts with Parent Code)
+export const AccountsHeadSchema = z.object({
+  accountId: z.number().int().positive(),
+  code: z.string(),
+  name: z.string(),
+  type: z.string(),
+  parentCode: z.string().nullable(),
+  parentName: z.string().nullable(),
+  allowreconcilable: z.boolean(),
+  notes: z.string(),
+  isGroup: z.boolean(),
+})
+export type AccountsHead = z.infer<typeof AccountsHeadSchema>
+//Zod schema for Accounts ( Chart of Accounts with Parent Code)
 
 //Cash Voucher
 export interface FormData {
@@ -233,7 +247,7 @@ const JournalEntrySchema = z.object({
   companyId: z.number(),
   locationId: z.number(),
   currencyId: z.number(),
-  amountTotal: z.string(),
+  amountTotal: z.number(),
   notes: z.string().optional(),
   periodid: z.number().nullable().optional(), // Will calcualte automatically on backend
   createdBy: z.number(),
@@ -244,8 +258,8 @@ const JournalDetailSchema = z.object({
   accountId: z.number(),
   costCenterId: z.number(),
   departmentId: z.number().nullable().optional(),
-  debit: z.string(),
-  credit: z.string(),
+  debit: z.number(),
+  credit: z.number(),
   analyticTags: z.string().nullable().optional(),
   taxId: z.number().nullable().optional(),
   resPartnerId: z.number().nullable().optional(),
@@ -261,3 +275,25 @@ export const JournalEntryWithDetailsSchema = z.object({
 export type JournalEntryWithDetails = z.infer<
   typeof JournalEntryWithDetailsSchema
 >
+//For holding Journal Deta
+const JournalResultSchema = z.object({
+  voucherno: z.string(),
+  date: z.date(),
+  journaltype: z.string(),
+  state: z.string(),
+  companyname: z.string().nullable(),
+  location: z.string().nullable(),
+  currency: z.string().nullable(),
+  totalamount: z.number(),
+  notes: z.string().nullable(),
+  id: z.number(),
+  accountsname: z.string(),
+  costcenter: z.string(),
+  department: z.string().nullable(),
+  debit: z.number().default(0),
+  credit: z.number().default(0),
+  partnar: z.string().nullable(),
+  detail_notes: z.string().nullable(),
+})
+
+export type JournalResult = z.infer<typeof JournalResultSchema>
