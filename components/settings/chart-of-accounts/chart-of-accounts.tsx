@@ -1,19 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Filter,
-  Group,
-  Star,
-  ChevronDown,
-  Plus,
-  Edit,
-  Power,
-} from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, X, Filter, Group, Star, ChevronDown, Plus, Edit, Power } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -71,20 +59,24 @@ import { toast } from '@/hooks/use-toast'
 import { string } from 'zod'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
-const currencyItems = ['BDT', 'USD', 'EUR']
+// const currencyItems = ['BDT', 'USD', 'EUR']
 
-const parentIds = [
-  '101',
-  '102',
-  '103',
-  '202',
-  '203',
-  '301',
-  '302',
-  '401',
-  '402',
-  '502',
+const currencyItems = [
+  {
+    currencyId: 1,
+    currency: 'BDT',
+  },
+  {
+    currencyId: 2,
+    currency: 'USD',
+  },
+  {
+    currencyId: 3,
+    currency: 'USD',
+  },
 ]
+
+const parentIds = [101, 102, 103, 202, 203, 301, 302, 401, 402, 502]
 
 const codeGroups: CodeGroup[] = [
   {
@@ -157,14 +149,15 @@ export default function ChartOfAccountsTable() {
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
   const [accounts, setAccounts] = React.useState<ChartOfAccount[]>([])
-  const [filteredAccounts, setFilteredAccounts] = React.useState<ChartOfAccount[]>([])
+  const [filteredAccounts, setFilteredAccounts] = React.useState<
+    ChartOfAccount[]
+  >([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
   const [isAddAccountOpen, setIsAddAccountOpen] = React.useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] = React.useState<ChartOfAccount | null>(
-    null
-  )
+  const [editingAccount, setEditingAccount] =
+    React.useState<ChartOfAccount | null>(null)
   const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
   const [error, setError] = React.useState<string | null>(null)
 
@@ -172,8 +165,8 @@ export default function ChartOfAccountsTable() {
     defaultValues: {
       name: '',
       accountType: '',
-      parentAccountId: '',
-      currencyId: '',
+      parentAccountId: 1,
+      currencyId: 1,
       allowreconcilable: false,
       withholdingTax: false,
       budgetTracking: false,
@@ -181,39 +174,48 @@ export default function ChartOfAccountsTable() {
       isGroup: false,
       notes: '',
       code: '',
+      createdBy: 60,
     },
   })
 
   // code generate
-  const generateAccountCode = async (parentCode: string) => {
+  const generateAccountCode = async (parentAccountId: number) => {
+    // Convert parentAccountId to string for code comparison
+    const parentCode = parentAccountId.toString();
+    
     const childCount = filteredAccounts.filter(
       (account) =>
         account.code.startsWith(parentCode) && account.code !== parentCode
-    ).length
-    const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`
-    // const newNumCode = parseInt(newCode)
-    return newCode
-  }
+    ).length;
+
+    const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`;
+    return newCode;
+  };
 
   //Add accounts
 
   const handleAddAccount = async (data: ChartOfAccount) => {
     if (data.parentAccountId) {
-      data.code = await generateAccountCode(data.parentAccountId)
+      // Ensure parentAccountId is a number
+      const parentAccountId = typeof data.parentAccountId === 'string' 
+        ? parseInt(data.parentAccountId, 10) 
+        : data.parentAccountId;
+      
+      data.code = await generateAccountCode(parentAccountId);
     }
 
-    const response = await createChartOfAccounts(data)
-    console.log('response', response.data)
+    const response = await createChartOfAccounts(data);
+    console.log('response', response);
     if (response.error || !response.data) {
-      console.error('Error creating chart of accounts:', response.error)
+      console.error('Error creating chart of accounts:', response.error);
     } else {
-      console.log('Chart Of Account created successfully')
+      console.log('Chart Of Account created successfully');
       toast({
         title: 'Success',
         description: 'Chart Of account created successfully',
-      })
+      });
     }
-  }
+  };
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -280,8 +282,11 @@ export default function ChartOfAccountsTable() {
         (account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.accountType.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (selectedTypes.length === 0 || selectedTypes.includes(account.accountType)) &&
+          account.accountType
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())) &&
+        (selectedTypes.length === 0 ||
+          selectedTypes.includes(account.accountType)) &&
         (selectedCode ? account.code.startsWith(selectedCode) : true)
     )
 
@@ -485,8 +490,10 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Parent Account ID</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(value) =>
+                            field.onChange(Number(value))
+                          } // Convert to number before updating the field
+                          defaultValue={field.value?.toString()} // Ensure compatibility by converting field value to a string
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -494,20 +501,10 @@ export default function ChartOfAccountsTable() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {/* fetch data from api */}
-                            {/* {parentCodes.map((code) => (
-                              <p
-                                key={code.code}
-                                className="bg-white p-4 rounded shadow-lg"
-                              >
-                                <span className="font-semibold">
-                                  {code.code}
-                                </span>
-                              </p>
-                            ))} */}
-                            {/* for dammy data */}
                             {parentIds.map((id) => (
-                              <SelectItem key={id} value={id}>
+                              <SelectItem key={id} value={id.toString()}>
+                                {' '}
+                                {/* Convert id to string for the SelectItem value */}
                                 {id}
                               </SelectItem>
                             ))}
@@ -525,8 +522,10 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(value) =>
+                            field.onChange(Number(value))
+                          } // Ensure currencyId is saved as a number
+                          defaultValue={field.value?.toString()} // Convert to string for Select compatibility
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -535,8 +534,11 @@ export default function ChartOfAccountsTable() {
                           </FormControl>
                           <SelectContent>
                             {currencyItems.map((currency) => (
-                              <SelectItem key={currency} value={currency}>
-                                {currency}
+                              <SelectItem
+                                key={currency.currencyId}
+                                value={currency.currencyId.toString()}
+                              >
+                                {currency.currency}
                               </SelectItem>
                             ))}
                           </SelectContent>

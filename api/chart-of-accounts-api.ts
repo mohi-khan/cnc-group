@@ -9,6 +9,7 @@ export type ChartOfAccounts = Omit<
 //create chart of accounts
 
 export async function createChartOfAccounts(data: ChartOfAccounts) {
+  console.log('dddddddddd', data)
   return fetchApi<ChartOfAccount>({
     url: 'api/chart-of-accounts/create-coa',
     method: 'POST',
