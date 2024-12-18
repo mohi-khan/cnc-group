@@ -47,9 +47,9 @@ import {
   editResPartner,
   getAllResPartners,
   getAllCompanies,
-  ResPartner,
 } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
+import { ResPartner } from '@/utils/type'
 
 export default function ResPartners() {
   const [partners, setPartners] = React.useState<ResPartner[]>([])
@@ -139,11 +139,11 @@ export default function ResPartners() {
     // setIsLoading(true)
     const data = await getAllResPartners()
     console.log('🚀 ~ fetchrespartners ~ data:', data)
-    if (data.error || !data.data || !data.data.data) {
+    if (data.error || !data.data || !data.data) {
       console.error('Error getting res partners:', data.error)
     } else {
       console.log('partner', data)
-      setPartners(data.data.data)
+      setPartners(data.data)
     }
     console.log('companies here', companies)
     // setIsLoading(false)

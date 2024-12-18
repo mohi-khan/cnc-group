@@ -101,10 +101,6 @@ export default function BankAccounts() {
   React.useEffect(() => {
     // console.log('Fetching bank accounts')
     fetchBankAccounts()
-  }, [])
-
-  React.useEffect(() => {
-    // console.log('Fetching gl accounts')
     fetchGlAccounts()
   }, [])
 
@@ -150,7 +146,7 @@ export default function BankAccounts() {
 
   async function fetchGlAccounts() {
     const fetchedGlAccounts = await getAllGlAccounts()
-    console.log('Fetched gl accounts:', fetchedGlAccounts)
+    console.log('Fetched gl accounts:', fetchedGlAccounts.data)
 
     if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
       console.error('Error getting gl bank account:', fetchedGlAccounts.error)
@@ -160,7 +156,8 @@ export default function BankAccounts() {
           fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
       })
     } else {
-      setGlAccounts(fetchedGlAccounts.data) //need to add the correct type in api file
+      setGlAccounts(fetchedGlAccounts.data)
+      console.log('dkdkei', glAccounts)
     }
   }
 
@@ -508,7 +505,7 @@ export default function BankAccounts() {
                               {glAccounts?.map((glaccount) => (
                                 <SelectItem
                                   key={glaccount.id}
-                                  value={glaccount.id.toString()}
+                                  value={glaccount.id?.toString()}
                                 >
                                   {glaccount.name} ({glaccount.code})
                                 </SelectItem>

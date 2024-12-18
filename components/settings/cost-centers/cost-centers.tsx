@@ -31,12 +31,12 @@ import { Switch } from '@/components/ui/switch'
 import {
   updateCostCenter,
   getAllCostCenters,
-  CostCenter,
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
 } from '../../../api/cost-centers-api'
 import { useToast } from '@/hooks/use-toast'
+import { CostCenter } from '@/utils/type'
 
 export default function CostCenterManagement() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -49,6 +49,7 @@ export default function CostCenterManagement() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
+  const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
 
   const formRef = useRef<HTMLFormElement>(null)
@@ -68,7 +69,7 @@ export default function CostCenterManagement() {
         description: data.error?.message || 'Failed to get cost centers',
       })
     } else {
-      setCostCenters(data.data.data)
+      setCostCenters(data.data)
     }
     setIsLoading(false)
   }
@@ -130,6 +131,17 @@ export default function CostCenterManagement() {
     setIsEditDialogOpen(true)
   }
 
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
   const CostCenterForm = ({ isEdit = false }) => {
     const [currencyCode, setCurrencyCode] = useState<
       'BDT' | 'USD' | 'EUR' | 'GBP'
@@ -150,12 +162,14 @@ export default function CostCenterManagement() {
 
       const formData = new FormData(formRef.current!)
       const newCostCenter = {
+        costCenterId: 0,
         costCenterName: formData.get('name') as string,
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
         budget: Number(formData.get('budget')),
         active: formData.get('active') === 'on',
         actual: parseFloat(formData.get('actual') as string),
+        createdBy: userId,
       }
 
       if (isEdit && selectedCostCenter) {

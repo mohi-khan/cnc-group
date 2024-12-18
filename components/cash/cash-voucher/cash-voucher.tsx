@@ -35,14 +35,19 @@ import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
+  createJournalEntryWithDetails,
   getAllChartOfAccounts,
   getAllResPartners,
 } from '@/api/cash-vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
-  Account,
+  ChartOfAccount,
+  CompanyFromLocalstorage,
   CostCenter,
+  DetailRow,
   FormData,
+  JournalEntryWithDetailsSchema,
+  LocationFromLocalstorage,
   ResPartner,
   User,
   Voucher,
@@ -50,42 +55,11 @@ import {
 import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
 
-//i will be shift this type in the types file...not shifting  right now because of not to make conflict.
-
-interface Company {
-  company: {
-    companyName: string
-  }
-  companyId: number
-}
-
-interface Location {
-  id: number
-  name: string
-  locationId: number
-  location: {
-    address: string
-  }
-  companyId: number
-}
-
-interface DetailRow {
-  id: number
-  type: string
-  accountName: string
-  costCenter: string
-  department: string
-  partnerName: string
-  remarks: string
-  amount: string
-  isDraft: boolean
-}
-
 export default function CashVoucher() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [locations, setLocations] = useState<Location[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+  const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [detailRows, setDetailRows] = useState<DetailRow[]>([
     {
       id: 1,
@@ -108,12 +82,14 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<
+    ChartOfAccount[]
+  >([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [formType, setFormType] = React.useState('Payment')
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
-    Account[]
+    ChartOfAccount[]
   >([])
 
   useEffect(() => {
@@ -141,9 +117,9 @@ export default function CashVoucher() {
     const filteredCoa = chartOfAccounts?.filter((account) => {
       if (account.isGroup == true) {
         if (formType == 'Receipt') {
-          return account.type == 'Income'
+          return account.accountType == 'Income'
         } else if (formType == 'Payment') {
-          return account.type == 'Expenses'
+          return account.accountType == 'Expenses'
         }
       } else {
         return false
@@ -195,7 +171,9 @@ export default function CashVoucher() {
       )
       if (selectedCompany) {
         setLocations(
-          locations.filter((l) => l.companyId === selectedCompany.companyId)
+          locations.filter(
+            (l) => l.location.companyId === selectedCompany.company.companyId
+          )
         )
       }
     }
@@ -259,10 +237,31 @@ export default function CashVoucher() {
     }
   }
 
-  const handleSubmit = (rowId: number) => {
+  const handleSubmit = async (rowId: number) => {
     const row = detailRows.find((r) => r.id === rowId)
     if (!row) return
+    /******
+     * if you un-comment this section, we can't see the data that is getting from user input. so i commented this *section.
+     ******/
 
+    // const response = await createJournalEntryWithDetails(
+    //   JournalEntryWithDetailsSchema
+    // )
+    // console.log('create journal create respons:', response)
+    // if (response.error || !response.data) {
+    //   console.error('Error creating company or location', response.error)
+    //   toast({
+    //     title: 'Error',
+    //     description:
+    //       response.error?.message || 'Error creating company or location',
+    //   })
+    // } else {
+    //   console.log('Company and Location is created successfully')
+    //   toast({
+    //     title: 'Success',
+    //     description: 'Company and Location is created successfully',
+    //   })
+    // }
     const totalAmount = Number(row.amount || 0)
 
     if (totalAmount > cashBalance) {
@@ -338,7 +337,7 @@ export default function CashVoucher() {
               <SelectContent>
                 {companies.map((company) => (
                   <SelectItem
-                    key={company.companyId}
+                    key={company.company.companyId}
                     value={company.company.companyName}
                   >
                     {company.company.companyName}
@@ -361,7 +360,7 @@ export default function CashVoucher() {
               <SelectContent>
                 {locations.map((location) => (
                   <SelectItem
-                    key={location.locationId}
+                    key={location.location.locationId}
                     value={location.location.address}
                   >
                     {location.location.address}

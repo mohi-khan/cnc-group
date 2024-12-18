@@ -20,7 +20,7 @@ export interface UserCompany {
 
 export interface Company {
   companyId: number
-  address: string,
+  address: string
   companyName: string
 }
 
@@ -52,6 +52,7 @@ export interface LocationFromLocalstorage {
   location: {
     locationId: number
     address: string
+    companyId: number
   }
 }
 
@@ -139,7 +140,6 @@ export const createFinancialYearSchema = z
     }
   )
 
-
 export interface CodeGroup {
   id: string
   code: string
@@ -155,7 +155,6 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  id: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -173,22 +172,19 @@ export const chartOfAccountSchema = z.object({
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
-export const AccountsHeadSchema = z.object(
-{
+export const AccountsHeadSchema = z.object({
   accountId: z.number().int().positive(),
   code: z.string(),
   name: z.string(),
   type: z.string(),
-  parentCode:z.string().nullable(),
+  parentCode: z.string().nullable(),
   parentName: z.string().nullable(),
   allowreconcilable: z.boolean(),
   notes: z.string(),
-  isGroup: z.boolean()
+  isGroup: z.boolean(),
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
-
-
 
 //Cash Voucher
 export interface FormData {
@@ -276,11 +272,13 @@ export const JournalEntryWithDetailsSchema = z.object({
   journalDetails: z.array(JournalDetailSchema),
 })
 
-export type JournalEntryWithDetails = z.infer<typeof JournalEntryWithDetailsSchema>
+export type JournalEntryWithDetails = z.infer<
+  typeof JournalEntryWithDetailsSchema
+>
 //For holding Journal Deta
 const JournalResultSchema = z.object({
   voucherno: z.string(),
-  date: z.date(), 
+  date: z.date(),
   journaltype: z.string(),
   state: z.string(),
   companyname: z.string().nullable(),
