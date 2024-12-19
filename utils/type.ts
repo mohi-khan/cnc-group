@@ -253,9 +253,9 @@ const JournalEntrySchema = z.object({
 })
 
 const JournalDetailSchema = z.object({
-  voucherId: z.number(),
+  voucherId: z.number().optional(), //Will get from Master Data
   accountId: z.number(),
-  costCenterId: z.number(),
+  costCenterId: z.number().nullable().optional(),
   departmentId: z.number().nullable().optional(),
   debit: z.number(),
   credit: z.number(),
@@ -275,10 +275,26 @@ export const JournalEntryWithDetailsSchema = z.object({
 export type JournalEntryWithDetails = z.infer<
   typeof JournalEntryWithDetailsSchema
 >
+//Voucher Type Enum
+export enum VoucherTypes {
+  PaymentVoucher = "Cash Voucher",
+    BankVoucher = "Bank Voucher",
+  JournalVoucher = "Journal Voucher",
+  ContraVoucher = "Contra Voucher",
+}
+//For Sending Journal Query
+export const JournalQuerySchema = z.object({
+  date: z.string(),
+  companyId: z.array(z.number()),
+  locationId: z.array(z.number()),
+  voucherType: z.nativeEnum(VoucherTypes),
+}); 
+export type JournalQuery = z.infer<typeof JournalQuerySchema>
 //For holding Journal Deta
-const JournalResultSchema = z.object({
+export const JournalResultSchema = z.object({
+  voucherid:z.number(),
   voucherno: z.string(),
-  date: z.date(),
+  date: z.string(),
   journaltype: z.string(),
   state: z.string(),
   companyname: z.string().nullable(),
@@ -292,8 +308,8 @@ const JournalResultSchema = z.object({
   department: z.string().nullable(),
   debit: z.number().default(0),
   credit: z.number().default(0),
-  partnar: z.string().nullable(),
-  bankaccount:z.string().nullable(),
+  partner: z.number().nullable(),
+  bankaccount:z.number().nullable(),
   detail_notes: z.string().nullable(),
 })
 

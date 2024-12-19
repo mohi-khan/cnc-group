@@ -53,7 +53,7 @@ import { useRouter } from 'next/navigation'
 
 import { toast } from '@/hooks/use-toast'
 import {
-  Account,
+  ChartOfAccount,
   BankAccount,
   Company,
   CompanyFromLocalstorage,
@@ -63,6 +63,10 @@ import {
   LocationData,
   LocationFromLocalstorage,
   ResPartner,
+  JournalResult,
+  AccountsHead,
+  JournalQuery,
+  VoucherTypes
 } from '@/utils/type'
 import {
   getAllBankAccounts,
@@ -71,7 +75,9 @@ import {
   getAllCostCenters,
   getAllLocations,
   getAllResPartners,
-} from '@/api/bank-vouchers-api'
+  } from '@/api/bank-vouchers-api'
+import { userData } from '@/utils/user'
+import { createJournalEntryWithDetails, getAllVoucher } from '@/api/vouchers-api'
 
 
 interface User {
@@ -85,6 +91,7 @@ interface User {
 export default function BankVoucher() {
 
   const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
+  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
@@ -95,13 +102,15 @@ export default function BankVoucher() {
     []
   )
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>([])
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
-    Account[]
+  AccountsHead[]
   >([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([]) // Updated type
   const [formType, setFormType] = React.useState('Credit')
+  const [status,setStatus]=React.useState<'Draft'|'Posted'>('Draft')
+  const [selectedBankAccount, setSelectedBankAccount] = React.useState<{ id: number, glCode: number } | null>(null);
   const router = useRouter()
 
   React.useEffect(() => {
@@ -133,17 +142,17 @@ export default function BankVoucher() {
         companyId: 0,
         locationId: 0,
         currencyId: 0,
-        amountTotal: "0",
+        amountTotal: 0,
         notes: "",
         createdBy: 0,
       },
       journalDetails: [
         {
           accountId: 0,
-          costCenterId: 0,
+          costCenterId: null,
           departmentId: null,
-          debit: "0",
-          credit: "0",
+          debit: 0,
+          credit: 0,
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
@@ -159,35 +168,39 @@ export default function BankVoucher() {
     name: "journalDetails",
   })
 
-  // const fetchCompanies = async () => {
-  //   const data = await getAllCompanies()
-  //   console.log('Fetched companies:', data.data)
-  //   if (data.error || !data.data) {
-  //     console.error('Error getting companies:', data.error)
-  //     toast({
-  //       title: 'Error',
-  //       description: data.error?.message || 'Failed to get companies',
-  //     })
-  //   } else {
-  //     setCompanies(data.data)
-  //   }
-  // }
+// For Getting All The Vouchers
 
-  // async function fetchAllLocations() {
-  //   const response = await getAllLocations()
-  //   console.log('Fetched locations:', response.data)
+function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+  return data.map(company => company.company.companyId);
+}
+function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+  return data.map(location => location.location.locationId);
+}
+  
+async function getallVoucher(company:number[],location:number[]){
+  const voucherQuery:JournalQuery={
+    date:"2024-12-18",
+    companyId:company,
+    locationId:location,
+    voucherType:VoucherTypes.BankVoucher
+  }
+  const response=await getAllVoucher(voucherQuery)
+  if (response.error || !response.data) {
+    console.error('Error getting Voucher Data:', response.error)
+    toast({
+      title: 'Error',
+      description: response.error?.message || 'Failed to get Voucher Data',
+    })}
+    else {
+      setVoucherGrid(response.data)
+    }
+}
+React.useEffect(()=>{
+  const mycompanies=getCompanyIds(companies)
+  const mylocations=getLocationIds(locations)
+  getallVoucher(mycompanies,mylocations)
 
-  //   if (response.error || !response.data) {
-  //     console.error('Error getting locations:', response.error)
-  //     toast({
-  //       title: 'Error',
-  //       description: response.error?.message || 'Failed to get locations',
-  //     })
-  //   } else {
-  //     setLocations(response.data)
-  //   }
-  // }
-
+},[companies,locations])
   async function fetchBankAccounts() {
     const response = await getAllBankAccounts()
     console.log('Fetched bank accounts:', response.data)
@@ -215,6 +228,7 @@ export default function BankVoucher() {
       })
     } else {
       setChartOfAccounts(response.data)
+      setFilteredChartOfAccounts(response.data)
     }
   }
 
@@ -251,18 +265,21 @@ export default function BankVoucher() {
     // fetchAllLocations()
     fetchBankAccounts()
     fetchChartOfAccounts()
+    console.log('within use Effect')
     fetchCostCenters()
     fetchResPartners()
   }, [])
-
+ //Run When Type is Changed
   React.useEffect(() => {
     console.log(formType)
-    console.log('fdg', chartOfAccounts)
+  
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      if (account.isGroup == true) {
-        if (formType == 'Debit') {
+      if (account.isGroup == false) {
+        if (formType === 'Debit') {
+          console.log('within Debit')
           return account.type == 'Income'
-        } else if (formType == 'Credit') {
+        } else if (formType === 'Credit') {
+          console.log('within credit')
           return account.type == 'Expenses'
         }
       } else {
@@ -273,15 +290,72 @@ export default function BankVoucher() {
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
   }, [formType, chartOfAccounts])
 
-  function onSubmit(
+  const onSubmit=async(
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
-  ) {
+  )=> {
+    console.log('Before Any edit' + values)
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      console.log('Current userId from localStorage:', userData.userId)
+      setUser(userData)
+    }
+    // To update the missing fields on the list
+    const updatedValues = {
+      ...values,
+      journalEntry: {
+        ...values.journalEntry,
+        status: status === 'Draft' ? 0 : 1,
+        journalType:"Bank Voucher",  
+        createdBy: user?.userId||0,
+      },
+      journalDetails: values.journalDetails.map(detail => ({
+        ...detail,
+        createdBy: user?.userId||0,
+      }))
+    };
+    console.log('After Adding created by'+updatedValues)
+    /// To add new row for Bank Transaction on JournalDetails
+    const updateValueswithBank={...updatedValues,
+    journalDetails: [
+      ...updatedValues.journalDetails, // Spread existing journalDetails
+      {
+        accountId: selectedBankAccount?.glCode||0 ,
+        costCenterId: null,
+        departmentId: null,
+        debit: formType === 'Debit' ? values.journalEntry.amountTotal : 0,
+        credit: formType === 'Credit' ? values.journalEntry.amountTotal : 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: null,
+        bankaccountid:selectedBankAccount?.id,
+        notes: updatedValues.journalEntry.notes,
+        createdBy: user?.userId||0,
+      
+    },   
+    ]}
+
+    console.log('Submitted values:', JSON.stringify(updateValueswithBank, null, 2));
+    const response = await createJournalEntryWithDetails(updateValueswithBank);  // Calling API to Enter at Generate
+    if (response.error || !response.data) {
+      console.error('Error creating Journal', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Error creating Journal',
+      })
+    } else {
+      console.log('Voucher is created successfully',response.data)
+      toast({
+        title: 'Success',
+        description: 'Voucher is created successfully',
+      })}
     const totalItemsAmount = values.journalDetails.reduce(
       (sum, item) => sum + item.credit,
       0
     )
-    if (totalItemsAmount !== values.amount) {
+    if (totalItemsAmount !== values.journalEntry.amountTotal) {
       toast({
         title: 'Error',
         description:
@@ -289,36 +363,38 @@ export default function BankVoucher() {
       })
       return
     }
-    setVouchers([...vouchers, { ...values, id: Date.now().toString(), status }])
-    setIsDialogOpen(false)
+ //   setVouchers(vouchers);
+  
+   /* setVouchers([...vouchers, { ...values, journalEntry.date: Date.now().toString(), status }])
+    setIsDialogOpen(false)*/
     form.reset()
   }
 
-  function handleDelete(id: number) {
-    setVouchers(vouchers.filter((v) => v.id !== id))
+  function handleDelete(id: string) {
+    setVouchers(vouchers.filter((v) => v.journalEntry.voucherNo !== id))
   }
 
-  function handleReverse(id: number) {
+  function handleReverse(id: string) {
     setVouchers(
-      vouchers.map((v) => (v.id === id ? { ...v, status: 'Draft' } : v))
+      vouchers.map((v) => (v.journalEntry.voucherNo === id ? { ...v, status: 'Draft' } : v))
     )
   }
 
-  function handlePost(id: number) {
+  function handlePost(id: string) {
     setVouchers(
-      vouchers.map((v) => (v.id === id ? { ...v, status: 'Posted' } : v))
+      vouchers.map((v) => (v.journalEntry.voucherNo === id ? { ...v, status: 'Posted' } : v))
     )
   }
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      if (name?.startsWith('items') || name === '') {
-        if (!value.items) {
+      if (name?.startsWith('items') ) {
+        if (!value.journalDetails) {
           return
         } else {
           const totalItemsAmount =
-            value.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0
-          setAmountMismatch(totalItemsAmount !== value.amount)
+            value.journalDetails?.reduce((sum, item) => sum + (item?.credit || 0), 0) || 0
+          setAmountMismatch(totalItemsAmount !== value.journalEntry?.amountTotal)
         }
       }
     })
@@ -350,7 +426,7 @@ export default function BankVoucher() {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((values) =>
-                  onSubmit(values, 'Draft')
+                  onSubmit(values, status)
                 )}
                 className="space-y-8"
               >
@@ -362,7 +438,8 @@ export default function BankVoucher() {
                       <FormItem>
                         <FormLabel>Company Name</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          value={field.value?.toString()}
                         
                         >
                           <FormControl>
@@ -399,7 +476,8 @@ export default function BankVoucher() {
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          value={field.value?.toString()}
                     
                         >
                           <FormControl>
@@ -436,7 +514,8 @@ export default function BankVoucher() {
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          value={field.value?.toString()}
                       
                         >
                           <FormControl>
@@ -445,51 +524,45 @@ export default function BankVoucher() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
-                            <SelectItem value="GBP">GBP</SelectItem>
+                            <SelectItem value= "1" >USD</SelectItem>
+                            <SelectItem value="2">EUR</SelectItem>
+                            <SelectItem value="3">GBP</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select
+                   <div>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={setFormType}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Credit">Credit</SelectItem>
+                        <SelectItem value="Debit">Debit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <FormLabel>Bank Account</FormLabel>
+                    <Select 
                           onValueChange={(value) => {
-                            field.onChange(value)
-                            setFormType(value)
+                            const selectedAccount = bankAccounts.find(account => account.id.toString() === value);
+                            if (selectedAccount) {
+                              setSelectedBankAccount({
+                                id: selectedAccount.id,
+                                glCode: selectedAccount.glAccountId ||0
+                              });
+                             // field.onChange(value); // Update the form field
+                            }
                           }}
-                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Credit">Credit</SelectItem>
-                            <SelectItem value="Debit">Debit</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="journalDetails"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bank Account Name</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                         
+                          ///value={field.value}
                         >
+                 
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select bank account" />
@@ -509,9 +582,10 @@ export default function BankVoucher() {
                           </SelectContent>
                         </Select>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      
+                  
+               
+                  </div>
                   <FormField
                     control={form.control}
                     name="journalEntry.notes"
@@ -593,7 +667,8 @@ export default function BankVoucher() {
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={field.onChange}
+                                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                    value={field.value?.toString()}
                                    
                                   >
                                     <FormControl>
@@ -606,15 +681,15 @@ export default function BankVoucher() {
                                         (account, index) => (
                                           <SelectItem
                                             key={
-                                              account?.id ||
+                                              account.accountId ||
                                               `default-chart-${index}`
                                             }
                                             value={
-                                              account?.id?.toString() ||
+                                              account.accountId.toString() ||
                                               `chart-${index}`
                                             }
                                           >
-                                            {account?.name || 'Unnamed Account'}
+                                            {account.name || 'Unnamed Account'}
                                           </SelectItem>
                                         )
                                       )}
@@ -631,7 +706,8 @@ export default function BankVoucher() {
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={field.onChange}
+                                     onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                     value={field.value?.toString()}
                                    
                                   >
                                     <FormControl>
@@ -668,7 +744,8 @@ export default function BankVoucher() {
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={field.onChange}
+                                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                      value={field.value?.toString()}
                                    
                                   >
                                     <FormControl>
@@ -677,10 +754,10 @@ export default function BankVoucher() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="dept1">
+                                      <SelectItem value="1">
                                         Department 1
                                       </SelectItem>
-                                      <SelectItem value="dept2">
+                                      <SelectItem value="2">
                                         Department 2
                                       </SelectItem>
                                     </SelectContent>
@@ -696,7 +773,8 @@ export default function BankVoucher() {
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={field.onChange}
+                                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                    value={field.value?.toString()}
                                  
                                   >
                                     <FormControl>
@@ -744,7 +822,7 @@ export default function BankVoucher() {
                           <TableCell>
                             <FormField
                               control={form.control}
-                              name={`journalDetails.${index}.debit`}
+                              name={`journalDetails.${index}.${formType === 'Credit' ? 'debit' : 'credit'}`}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
@@ -788,8 +866,8 @@ export default function BankVoucher() {
                       accountId: 0,
                       costCenterId: 0,
                       departmentId: null,
-                      debit: "0",
-                      credit: "0",
+                      debit: 0,
+                      credit: 0,
                       analyticTags: null,
                       taxId: null,
                       resPartnerId: null,
@@ -808,17 +886,22 @@ export default function BankVoucher() {
                 )}
                 <div className="flex justify-end space-x-2">
                   <Button
-                    variant="outline"
-                    onClick={form.handleSubmit((values) =>
-                      onSubmit(values, 'Draft')
-                    )}
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const values=form.getValues();
+                    onSubmit(values, 'Draft');
+                  }}
                   >
                     Save as Draft
                   </Button>
                   <Button
-                    onClick={form.handleSubmit((values) =>
-                      onSubmit(values, 'Posted')
-                    )}
+                   type="button"
+                   variant="outline"
+                   onClick={() => {
+                    const values=form.getValues();
+                    onSubmit(values, 'Posted');
+                   }}
                   >
                     Save as Post
                   </Button>
@@ -836,7 +919,6 @@ export default function BankVoucher() {
             <TableHead>Company Name</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Currency</TableHead>
-            <TableHead>Type</TableHead>
             <TableHead>Bank Name</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Amount</TableHead>
@@ -845,18 +927,17 @@ export default function BankVoucher() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchers.map((voucher) => (
-            <TableRow key={voucher.journalEntry.companyId} className="border-b">
-             <TableCell className="">{voucher.}</TableCell>
-              <TableCell className="">{voucher.checkNumber}</TableCell>
-              <TableCell className="">{voucher.companyName}</TableCell>
+          {vouchergrid.map((voucher) => (
+            <TableRow key={voucher.voucherid} className="border-b">
+             <TableCell className="">{voucher.voucherno}</TableCell>
+              <TableCell className="">{voucher.notes}</TableCell>
+              <TableCell className="">{voucher.companyname}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
               <TableCell className="">{voucher.currency}</TableCell>
-              <TableCell className="">{voucher.type}</TableCell>
-              <TableCell className="">{voucher.bankName}</TableCell>
-              <TableCell className="">{voucher.date || 'N/A'}</TableCell>
-              <TableCell className="">{voucher.amount}</TableCell>
-              <TableCell className="">{voucher.status}</TableCell>
+              <TableCell className="">{voucher.partner}</TableCell>
+              <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
+              <TableCell className="">{voucher.totalamount}</TableCell>
+              <TableCell className="">{voucher.state}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <AlertDialog>
@@ -876,7 +957,7 @@ export default function BankVoucher() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDelete(voucher.id)}
+                          onClick={() => handleDelete(voucher.voucherno)}
                         >
                           Delete
                         </AlertDialogAction>
@@ -899,7 +980,7 @@ export default function BankVoucher() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleReverse(voucher.id)}
+                          onClick={() => handleReverse(voucher.voucherno)}
                         >
                           Reverse
                         </AlertDialogAction>
@@ -909,7 +990,7 @@ export default function BankVoucher() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handlePost(voucher.id)}
+                    onClick={() => handlePost(voucher.voucherno)}
                   >
                     <Check className="h-4 w-4" />
                   </Button>
