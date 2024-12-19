@@ -104,8 +104,8 @@ export default function DepartmentManagement() {
     const newDepartment = {
       ...values,
       createdBy: userId,
-      startDate: values.startDate ? new Date(values.startDate).toISOString() : null,
-      endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
+      startDate: values.startDate ? new Date(values.startDate) : null,
+      endDate: values.endDate ? new Date(values.endDate) : null,
     };
 
     try {
@@ -248,7 +248,7 @@ export default function DepartmentManagement() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency Code</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value.toString()}>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select currency code" />

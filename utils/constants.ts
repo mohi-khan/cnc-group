@@ -189,6 +189,7 @@ export const MENU_ITEMS: MenuItem[] = [
           },
           { name: 'Currencies', source: '/settings/currencies' },
           { name: 'Res Partners', source: '/settings/res-partner' },
+          { name: 'Department', source: '/settings/department' },
         ],
       },
       {
@@ -209,6 +210,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/settings/withholding-taxes',
           },
           { name: 'Financial Year', source: '/settings/financial-year' },
+          { name: 'Number Series', source: '/settings/number-series' },
         ],
       },
     ],

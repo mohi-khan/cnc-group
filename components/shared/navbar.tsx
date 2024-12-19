@@ -128,7 +128,7 @@ export default function Navbar() {
                     activeMenu === menuItem.name && (
                       <div className="absolute z-10 -ml-4 transform px-2 w-screen max-w-[300px] sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2">
                         <div className="rounded-lg shadow-lg ring-1 ring-slate-800 ring-opacity-5 overflow-hidden">
-                          <div className="relative grid gap-6 bg-white px-5 py-6 sm:gap-4 sm:p-8">
+                          <div className="relative max-h-[520px] overflow-y-auto grid gap-6 bg-white px-5 py-6 sm:gap-4 sm:p-8">
                             {menuItem.subItemGroups.map((group, groupIndex) => (
                               <div key={groupIndex}>
                                 <p className="text-base font-bold text-gray-900 mb-2">

@@ -1,7 +1,6 @@
 import { isLastDayOfMonth } from 'date-fns'
 import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
-import { costCenterSchema } from '@/api/cost-centers-api'
 import { resPartnerSchema } from '@/api/res-partner-api'
 import { z } from 'zod'
 
@@ -60,8 +59,6 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
   createdAt?: string
   updatedAt?: string
 }
-
-export type CostCenter = z.infer<typeof costCenterSchema>
 
 export type ResPartner = z.infer<typeof resPartnerSchema> & {
   id?: number
@@ -262,7 +259,7 @@ const JournalDetailSchema = z.object({
   analyticTags: z.string().nullable().optional(),
   taxId: z.number().nullable().optional(),
   resPartnerId: z.number().nullable().optional(),
-  bankaccountid:z.number().nullable().optional(),
+  bankaccountid: z.number().nullable().optional(),
   notes: z.string().optional(),
   createdBy: z.number(),
 })
@@ -277,10 +274,10 @@ export type JournalEntryWithDetails = z.infer<
 >
 //Voucher Type Enum
 export enum VoucherTypes {
-  PaymentVoucher = "Cash Voucher",
-    BankVoucher = "Bank Voucher",
-  JournalVoucher = "Journal Voucher",
-  ContraVoucher = "Contra Voucher",
+  PaymentVoucher = 'Cash Voucher',
+  BankVoucher = 'Bank Voucher',
+  JournalVoucher = 'Journal Voucher',
+  ContraVoucher = 'Contra Voucher',
 }
 //For Sending Journal Query
 export const JournalQuerySchema = z.object({
@@ -288,11 +285,12 @@ export const JournalQuerySchema = z.object({
   companyId: z.array(z.number()),
   locationId: z.array(z.number()),
   voucherType: z.nativeEnum(VoucherTypes),
-}); 
+})
 export type JournalQuery = z.infer<typeof JournalQuerySchema>
+
 //For holding Journal Deta
 export const JournalResultSchema = z.object({
-  voucherid:z.number(),
+  voucherid: z.number(),
   voucherno: z.string(),
   date: z.string(),
   journaltype: z.string(),
@@ -309,24 +307,41 @@ export const JournalResultSchema = z.object({
   debit: z.number().default(0),
   credit: z.number().default(0),
   partner: z.number().nullable(),
-  bankaccount:z.number().nullable(),
+  bankaccount: z.number().nullable(),
   detail_notes: z.string().nullable(),
 })
-
 export type JournalResult = z.infer<typeof JournalResultSchema>
-
 
 //department
 export const departmentSchema = z.object({
-  departmentName: z.string().min(1, "Department name is required"),
+  departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   currencyCode: z.number().optional(),
   isActive: z.boolean().optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
   actual: z.number().optional(),
-});
-
+})
 export type Department = z.infer<typeof departmentSchema>
-
 export const departmentsArraySchema = z.array(departmentSchema)
+
+//cost center
+const costCenterSchema = z.object({
+  costCenterId: z.number().min(1, 'Cost center id is required'),
+  costCenterName: z.string().min(1, 'Cost center name is required'),
+  costCenterDescription: z.string(),
+  budget: z.number(),
+  actual: z.number().optional(),
+  currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
+  isActive: z.boolean(),
+  createdBy: z.number().optional(),
+})
+
+export const activateDeactivateCostCenterSchema = z.object({
+  costCenterId: z.number().min(1, 'Cost center id is required'),
+})
+export type CostCenter = z.infer<typeof costCenterSchema>
+export const costCentersArraySchema = z.array(costCenterSchema)
+export type CostCenterActivateDeactivate = z.infer<
+  typeof activateDeactivateCostCenterSchema
+>
