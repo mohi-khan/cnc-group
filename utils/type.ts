@@ -159,7 +159,7 @@ export const chartOfAccountSchema = z.object({
   code: z.string().max(64),
   accountType: z.string().max(64),
   parentAccountId: z.number().int().positive(),
-  parentName: z.string(),
+  parentName: z.string().optional(),
   currencyId: z.number().int().positive(),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -179,7 +179,7 @@ export const AccountsHeadSchema = z.object({
   type: z.string(),
   parentCode: z.string().nullable(),
   parentName: z.string().nullable(),
-  allowreconcilable: z.boolean(),
+  isReconcilable: z.boolean(),
   notes: z.string(),
   isGroup: z.boolean(),
 })
