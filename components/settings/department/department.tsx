@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState, useRef, useEffect } from 'react'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { PlusIcon } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -19,215 +20,128 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Switch } from '@/components/ui/switch'
-import { useToast } from '@/hooks/use-toast'
-import { createDepartment, getAllDepartments } from '@/api/department-api'
-
-const createDepartmentSchema = z.object({
-  departmentName: z.string().min(1, "Department name is required"),
-  budget: z.string().optional(),
-  currencyCode: z.number().optional(),
-  isActive: z.boolean().optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
-  actual: z.string().optional(),
-});
-
-type Department = z.infer<typeof createDepartmentSchema>
+} from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { createDepartment, getAllDepartments } from '@/api/department-api';
+import { Department, departmentsArraySchema, departmentSchema } from '@/utils/type';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 export default function DepartmentManagement() {
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
-    message: string
-  } | null>(null)
-  const { toast } = useToast()
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const [userId, setUserId] = React.useState<number | undefined>();
+  const { toast } = useToast();
 
-  const formRef = useRef<HTMLFormElement>(null)
+  const form = useForm<z.infer<typeof departmentSchema>>({
+    resolver: zodResolver(departmentSchema),
+    defaultValues: {
+      departmentName: "",
+      budget: 0,
+      currencyCode: 1,
+      isActive: true,
+      actual: 0,
+      startDate: null,
+      endDate: null,
+    },
+  });
 
   useEffect(() => {
-    fetchDepartments()
-  }, [])
+    fetchDepartments();
+  }, []);
 
   const fetchDepartments = async () => {
-    setIsLoading(true)
-    const data = await getAllDepartments()
+    setIsLoading(true);
+    const data = await getAllDepartments();
     if (data.error || !data.data) {
-      console.error('Error getting departments:', data.error)
+      console.error('Error getting departments:', data.error);
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get departments',
-      })
+      });
     } else {
-      setDepartments(data.data)
+      setDepartments(data.data);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
-  const DepartmentForm = () => {
-    const [currencyCode, setCurrencyCode] = useState<number>(0)
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser');
+    if (userStr) {
+      const userData = JSON.parse(userStr);
+      setUserId(userData?.userId);
+      console.log('Current userId from localStorage:', userData.userId);
+    } else {
+      console.log('No user data found in localStorage');
+    }
+  }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      setIsLoading(true)
-      setFeedback(null)
+  const onSubmit = async (values: z.infer<typeof departmentSchema>) => {
+    setIsLoading(true);
+    setFeedback(null);
 
-      const formData = new FormData(formRef.current!)
-      const newDepartment = {
-        departmentName: formData.get('name') as string,
-        budget: formData.get('budget') as string,
-        currencyCode: currencyCode,
-        isActive: formData.get('active') === 'on',
-        startDate: formData.get('startDate') ? new Date(formData.get('startDate') as string) : undefined,
-        endDate: formData.get('endDate') ? new Date(formData.get('endDate') as string) : undefined,
-        actual: formData.get('actual') as string,
-      }
+    const newDepartment = {
+      ...values,
+      createdBy: userId,
+      startDate: values.startDate ? new Date(values.startDate).toISOString() : null,
+      endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
+    };
 
-      try {
-        createDepartmentSchema.parse(newDepartment)
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          console.error('Validation error:', error.errors)
-          toast({
-            title: 'Error',
-            description: 'Invalid form data. Please check your inputs.',
-          })
-          setIsLoading(false)
-          return
-        }
-      }
-
-      const response = await createDepartment(newDepartment)
-      if (response.error || !response.data) {
-        console.error('Error creating department:', response.error)
+    try {
+      const departmentSchema = departmentsArraySchema.element;
+      departmentSchema.parse(newDepartment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to create department',
-        })
-      } else {
-        console.log('Department created successfully')
-        toast({
-          title: 'Success',
-          description: 'Department created successfully',
-        })
-        setDepartments((prevDepartments) => [...prevDepartments, response.data])
+          description: 'Invalid form data. Please check your inputs.',
+        });
+        setIsLoading(false);
+        return;
       }
-
-      setIsAddDialogOpen(false)
-      setFeedback({
-        type: 'success',
-        message: 'Department created successfully',
-      })
-      setIsLoading(false)
     }
 
-    return (
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="department-name" className="text-right">
-            Department Name
-          </Label>
-          <Input
-            id="department-name"
-            name="name"
-            className="col-span-3"
-            required
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="budget" className="text-right">
-            Budget
-          </Label>
-          <Input
-            id="budget"
-            name="budget"
-            type="number"
-            className="col-span-3"
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="currency-code" className="text-right">
-            Currency Code
-          </Label>
-          <Select
-            name="currencyCode"
-            onValueChange={(value) => setCurrencyCode(Number(value))}
-          >
-            <SelectTrigger className="col-span-3">
-              <SelectValue placeholder="Select currency code" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">BDT</SelectItem>
-              <SelectItem value="2">USD</SelectItem>
-              <SelectItem value="3">EUR</SelectItem>
-              <SelectItem value="4">GBP</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="active" className="text-right">
-            Active
-          </Label>
-          <Switch id="active" name="active" defaultChecked={true} />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="start-date" className="text-right">
-            Start Date
-          </Label>
-          <Input
-            id="start-date"
-            name="startDate"
-            type="date"
-            className="col-span-3"
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="end-date" className="text-right">
-            End Date
-          </Label>
-          <Input
-            id="end-date"
-            name="endDate"
-            type="date"
-            className="col-span-3"
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="actual" className="text-right">
-            Actual
-          </Label>
-          <Input
-            id="actual"
-            name="actual"
-            type="number"
-            className="col-span-3"
-          />
-        </div>
-        <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsAddDialogOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Saving...' : 'Add Department'}
-          </Button>
-        </div>
-      </form>
-    )
-  }
+    const response = await createDepartment(newDepartment);
+    if (response.error || !response.data) {
+      console.error('Error creating department:', response.error);
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to create department',
+      });
+    } else {
+      console.log('Department created successfully');
+      toast({
+        title: 'Success',
+        description: 'Department created successfully',
+      });
+      await fetchDepartments();
+    }
+
+    setIsAddDialogOpen(false);
+    setIsLoading(false);
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -273,8 +187,20 @@ export default function DepartmentManagement() {
                   <TableCell>{department.budget}</TableCell>
                   <TableCell>{department.currencyCode}</TableCell>
                   <TableCell>{department.isActive ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>{department.startDate?.toLocaleDateString()}</TableCell>
-                  <TableCell>{department.endDate?.toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {department.startDate instanceof Date
+                      ? department.startDate.toLocaleDateString()
+                      : department.startDate
+                        ? new Date(department.startDate).toLocaleDateString()
+                        : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {department.endDate instanceof Date
+                      ? department.endDate.toLocaleDateString()
+                      : department.endDate
+                        ? new Date(department.endDate).toLocaleDateString()
+                        : '-'}
+                  </TableCell>
                   <TableCell>{department.actual}</TableCell>
                 </TableRow>
               ))}
@@ -288,10 +214,139 @@ export default function DepartmentManagement() {
           <DialogHeader>
             <DialogTitle>Add New Department</DialogTitle>
           </DialogHeader>
-          <DepartmentForm />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+              <FormField
+                control={form.control}
+                name="departmentName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="budget"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currencyCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency Code</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value.toString()}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency code" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">BDT</SelectItem>
+                        <SelectItem value="2">USD</SelectItem>
+                        <SelectItem value="3">EUR</SelectItem>
+                        <SelectItem value="4">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Active</FormLabel>
+                      <FormDescription>
+                        Is this department currently active?
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="actual"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actual</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Saving...' : 'Add Department'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
