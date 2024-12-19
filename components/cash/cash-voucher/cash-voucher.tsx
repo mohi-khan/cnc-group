@@ -67,6 +67,7 @@ import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod';
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -216,7 +217,7 @@ export default function CashVoucher() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         journalType: '',
         companyId: 0,
         locationId: 0,
@@ -290,115 +291,132 @@ export default function CashVoucher() {
         <Form
           {...form}
           onSubmit={form.handleSubmit((data) => {
-            console.log(data)
-            // Here you can call your API to submit the form data
+            
           })}
         >
-          <form className="space-y-6">
-            <FormField
-              control={form.control}
-              name="journalEntry.companyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Name</FormLabel>
-                  <Select
-                    onValueChange={(value) =>
-                      field.onChange(parseInt(value, 10))
-                    }
-                    value={field.value?.toString()}
-                  >
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+            <div className="grid grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="journalEntry.companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(parseInt(value, 10))
+                      }
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {companies.map((company, index) => (
+                          <SelectItem
+                            key={
+                              company?.company.companyId ||
+                              `default-company-${index}`
+                            }
+                            value={
+                              company?.company.companyId?.toString() ||
+                              `company-${index}`
+                            }
+                          >
+                            {company?.company.companyName || 'Unnamed Company'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="journalEntry.locationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(parseInt(value, 10))
+                      }
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {locations.map((location, index) => (
+                          <SelectItem
+                            key={
+                              location?.location.locationId ||
+                              `default-location-${index}`
+                            }
+                            value={
+                              location?.location.locationId?.toString() ||
+                              `location-${index}`
+                            }
+                          >
+                            {location?.location.address || 'Unnamed Location'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="journalEntry.currencyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select
+                      onValueChange={(value) =>
+                        field.onChange(parseInt(value, 10))
+                      }
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">USD</SelectItem>
+                        <SelectItem value="2">EUR</SelectItem>
+                        <SelectItem value="3">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="journalEntry.date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company" />
-                      </SelectTrigger>
+                      <Input
+                        type="date"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {companies.map((company, index) => (
-                        <SelectItem
-                          key={
-                            company?.company.companyId ||
-                            `default-company-${index}`
-                          }
-                          value={
-                            company?.company.companyId?.toString() ||
-                            `company-${index}`
-                          }
-                        >
-                          {company?.company.companyName || 'Unnamed Company'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="journalEntry.locationId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <Select
-                    onValueChange={(value) =>
-                      field.onChange(parseInt(value, 10))
-                    }
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {locations.map((location, index) => (
-                        <SelectItem
-                          key={
-                            location?.location.locationId ||
-                            `default-location-${index}`
-                          }
-                          value={
-                            location?.location.locationId?.toString() ||
-                            `location-${index}`
-                          }
-                        >
-                          {location?.location.address || 'Unnamed Location'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="journalEntry.currencyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Currency</FormLabel>
-                  <Select
-                    onValueChange={(value) =>
-                      field.onChange(parseInt(value, 10))
-                    }
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="1">USD</SelectItem>
-                      <SelectItem value="2">EUR</SelectItem>
-                      <SelectItem value="3">GBP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div></div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="mb-6">
               <Table className="border">
@@ -648,7 +666,7 @@ export default function CashVoucher() {
                 </TableBody>
               </Table>
               <div className="text-right">
-                <Button onClick={addDetailRow} className="mt-4">
+                <Button type="button" onClick={addDetailRow} className="mt-4">
                   Add Another
                 </Button>
               </div>
@@ -776,3 +794,4 @@ export default function CashVoucher() {
     </div>
   )
 }
+
