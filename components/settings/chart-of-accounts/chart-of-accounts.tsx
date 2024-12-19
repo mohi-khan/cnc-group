@@ -1,7 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import { Search, ChevronLeft, ChevronRight, X, Filter, Group, Star, ChevronDown, Plus, Edit, Power } from 'lucide-react'
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Filter,
+  Group,
+  Star,
+  ChevronDown,
+  Plus,
+  Edit,
+  Power,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -54,9 +66,9 @@ import {
   createChartOfAccounts,
   getAllCoa,
   getParentCodes,
+  updateChartOfAccounts,
 } from '@/api/chart-of-accounts-api'
 import { toast } from '@/hooks/use-toast'
-import { string } from 'zod'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
 // const currencyItems = ['BDT', 'USD', 'EUR']
@@ -159,7 +171,6 @@ export default function ChartOfAccountsTable() {
   const [editingAccount, setEditingAccount] =
     React.useState<ChartOfAccount | null>(null)
   const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
-  const [error, setError] = React.useState<string | null>(null)
 
   const form = useForm({
     defaultValues: {
@@ -167,7 +178,7 @@ export default function ChartOfAccountsTable() {
       accountType: '',
       parentAccountId: 1,
       currencyId: 1,
-      allowreconcilable: false,
+      isReconcilable: false,
       withholdingTax: false,
       budgetTracking: false,
       isActive: true,
@@ -181,41 +192,42 @@ export default function ChartOfAccountsTable() {
   // code generate
   const generateAccountCode = async (parentAccountId: number) => {
     // Convert parentAccountId to string for code comparison
-    const parentCode = parentAccountId.toString();
-    
+    const parentCode = parentAccountId.toString()
+
     const childCount = filteredAccounts.filter(
       (account) =>
         account.code.startsWith(parentCode) && account.code !== parentCode
-    ).length;
+    ).length
 
-    const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`;
-    return newCode;
-  };
+    const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`
+    return newCode
+  }
 
   //Add accounts
 
   const handleAddAccount = async (data: ChartOfAccount) => {
     if (data.parentAccountId) {
       // Ensure parentAccountId is a number
-      const parentAccountId = typeof data.parentAccountId === 'string' 
-        ? parseInt(data.parentAccountId, 10) 
-        : data.parentAccountId;
-      
-      data.code = await generateAccountCode(parentAccountId);
+      const parentAccountId =
+        typeof data.parentAccountId === 'string'
+          ? parseInt(data.parentAccountId, 10)
+          : data.parentAccountId
+
+      data.code = await generateAccountCode(parentAccountId)
     }
 
-    const response = await createChartOfAccounts(data);
-    console.log('response', response);
+    const response = await createChartOfAccounts(data)
+    console.log('response', response)
     if (response.error || !response.data) {
-      console.error('Error creating chart of accounts:', response.error);
+      console.error('Error creating chart of accounts:', response.error)
     } else {
-      console.log('Chart Of Account created successfully');
+      console.log('Chart Of Account created successfully')
       toast({
         title: 'Success',
         description: 'Chart Of account created successfully',
-      });
+      })
     }
-  };
+  }
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -245,10 +257,6 @@ export default function ChartOfAccountsTable() {
       if (fetchedParentCodes.data.length > 0) {
         console.log(fetchedParentCodes.data)
       }
-      toast({
-        title: 'Success',
-        description: 'Parent codes fetched successfully',
-      })
     }
   }
 
@@ -305,7 +313,7 @@ export default function ChartOfAccountsTable() {
     setAccounts((prevAccounts) =>
       prevAccounts.map((account) =>
         account.code === code
-          ? { ...account, allowreconcilable: checked }
+          ? { ...account, isReconcilable: checked }
           : account
       )
     )
@@ -363,7 +371,12 @@ export default function ChartOfAccountsTable() {
 
   // Edit accounts
   const handleEditAccount = (account: ChartOfAccount) => {
-    setEditingAccount(account)
+    setEditingAccount({
+      ...account,
+      name: account.name,
+      notes: account.notes,
+      isReconcilable: account.isReconcilable,
+    })
     setIsEditAccountOpen(true)
   }
 
@@ -377,14 +390,42 @@ export default function ChartOfAccountsTable() {
     )
   }
 
-  const handleSaveEdit = (editedAccount) => {
-    setAccounts((prevAccounts) =>
-      prevAccounts.map((account) =>
-        account.code === editedAccount.code ? editedAccount : account
-      )
-    )
-    setIsEditAccountOpen(false)
-    setEditingAccount(null)
+  const handleSaveEdit = async (data: Partial<ChartOfAccount>) => {
+    if (editingAccount) {
+      const updatedAccount = {
+        ...editingAccount,
+        name: data.name || editingAccount.name,
+        notes: data.notes || editingAccount.notes,
+        isReconcilable:
+          data.isReconcilable !== undefined
+            ? data.isReconcilable
+            : editingAccount.isReconcilable,
+      }
+
+      const response = await updateChartOfAccounts(updatedAccount)
+      if (response.error || !response.data) {
+        console.error('Error updating chart of accounts:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to update chart of account',
+        })
+      } else {
+        console.log('Chart Of Account updated successfully')
+        toast({
+          title: 'Success',
+          description: 'Chart Of account updated successfully',
+        })
+        setAccounts((prevAccounts) =>
+          prevAccounts.map((account) =>
+            account.code === updatedAccount.code ? updatedAccount : account
+          )
+        )
+      }
+      setIsEditAccountOpen(false)
+      setEditingAccount(null)
+    }
   }
 
   return (
@@ -549,7 +590,7 @@ export default function ChartOfAccountsTable() {
                   />
                   <FormField
                     control={form.control}
-                    name="allowreconcilable"
+                    name="isReconcilable"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
@@ -890,7 +931,7 @@ export default function ChartOfAccountsTable() {
 
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="edit-allowreconcilable"
+                  id="edit-isReconcilable"
                   checked={editingAccount.isReconcilable}
                   onCheckedChange={(checked) =>
                     setEditingAccount({
@@ -899,7 +940,7 @@ export default function ChartOfAccountsTable() {
                     })
                   }
                 />
-                <Label htmlFor="edit-allowreconcilable">
+                <Label htmlFor="edit-isReconcilable">
                   Allow Reconciliation
                 </Label>
               </div>
