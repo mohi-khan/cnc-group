@@ -107,7 +107,7 @@ export default function CostCenterManagement() {
         setCostCenters((prevCostCenters) =>
           prevCostCenters.map((center) =>
             center.costCenterId === id
-              ? { ...center, active: !isActive }
+              ? { ...center, isActive: !isActive }
               : center
           )
         )
@@ -170,6 +170,7 @@ export default function CostCenterManagement() {
         active: formData.get('active') === 'on',
         actual: parseFloat(formData.get('actual') as string),
         createdBy: userId,
+        updatedBy: userId, // Add this line for both create and update
       }
 
       if (isEdit && selectedCostCenter) {
@@ -188,27 +189,35 @@ export default function CostCenterManagement() {
             title: 'Success',
             description: 'Cost center edited successfully',
           })
+          // Update the local state immediately
+          setCostCenters((prevCostCenters) =>
+            prevCostCenters.map((center) =>
+              center.costCenterId === newCostCenter.costCenterId
+                ? { ...center, ...newCostCenter }
+                : center
+            )
+          )
         }
       } else {
         const response = await createCostCenter(newCostCenter)
-        console.log('🚀 ~ handleSubmit ~ response:', response)
         if (response.error || !response.data) {
-          console.error('Error creating const center:', response.error)
+          console.error('Error creating cost center:', response.error)
           toast({
             title: 'Error',
             description:
-              response.error?.message || 'Failed to create const center',
+              response.error?.message || 'Failed to create cost center',
           })
         } else {
-          console.log('cost center created successfully')
+          console.log('Cost center created successfully')
           toast({
             title: 'Success',
-            description: 'const center created successfully',
+            description: 'Cost center created successfully',
           })
+          // Add the new cost center to the local state
+          setCostCenters((prevCostCenters) => [...prevCostCenters, response.data])
         }
       }
 
-      await fetchCostCenters()
       setIsAddDialogOpen(false)
       setIsEditDialogOpen(false)
       setSelectedCostCenter(null)
@@ -216,6 +225,7 @@ export default function CostCenterManagement() {
         type: 'success',
         message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
       })
+      setIsLoading(false)
     }
 
     return (
@@ -365,8 +375,7 @@ export default function CostCenterManagement() {
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
                   <TableCell>
-                    {center.active == true && 'Yes'}
-                    {center.active == false && 'No'}
+                    {center.isActive ? 'Yes' : 'No'}
                   </TableCell>
                   <TableCell>
                     {Number(center.budget).toLocaleString()}
@@ -387,11 +396,11 @@ export default function CostCenterManagement() {
                       onClick={() =>
                         handleActivateDeactivate(
                           center.costCenterId,
-                          center.active
+                          center.isActive
                         )
                       }
                     >
-                      {center.active ? 'Deactivate' : 'Activate'}
+                      {center.isActive ? 'Deactivate' : 'Activate'}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -421,3 +430,4 @@ export default function CostCenterManagement() {
     </div>
   )
 }
+

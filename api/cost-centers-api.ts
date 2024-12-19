@@ -12,7 +12,8 @@ export const costCenterSchema = z.object({
   budget: z.number(),
   actual: z.number().optional(),
   currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
-  active: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  createdBy: z.number().optional(),
 })
 
 export const activateDeactivateCostCenterSchema = z.object({
@@ -41,7 +42,7 @@ export async function createCostCenter(data: Omit<CostCenter, 'costCenterId'>) {
   })
 }
 
-export async function updateCostCenter(data: CostCenter) {
+export async function updateCostCenter(data: Omit<CostCenter, 'updatedBy'>) {
   console.log('Editing cost center:', data)
   return fetchApi<CostCenter>({
     url: `api/cost-centers/edit-cost-center/${data.costCenterId}`,
