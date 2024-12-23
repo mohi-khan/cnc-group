@@ -21,15 +21,18 @@ import {
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
 } from '@/utils/type'
+import { createJournalEntryWithDetails } from '@/api/journal-voucher-api'
+import { toast } from '@/hooks/use-toast'
 
 export function JournalVoucherPopup() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: '',
+        date: new Date().toISOString().split('T')[0], // Set default date to today
         journalType: '',
         state: 0,
         companyId: 0,
@@ -49,10 +52,49 @@ export function JournalVoucherPopup() {
     },
   })
 
-  const handleSubmit = (data: JournalEntryWithDetails) => {
-    console.log('Submitting voucher:', data)
-    setIsOpen(false)
-    form.reset()
+  const handleSubmit = async (data: JournalEntryWithDetails) => {
+    try {
+      setIsSubmitting(true)
+      console.log('Submitting voucher:', data)
+      
+      // Calculate total amount from details
+      const amountTotal = data.journalDetails.reduce(
+        (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
+        0
+      )
+      
+      // Update the total amount before submission
+      const submissionData = {
+        ...data,
+        journalEntry: {
+          ...data.journalEntry,
+          amountTotal,
+        },
+      }
+
+      const response = await createJournalEntryWithDetails(submissionData)
+      
+      if (response.error || !response.data) {
+        throw new Error(response.error?.message || 'Failed to create voucher')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Voucher created successfully',
+      })
+      
+      setIsOpen(false)
+      form.reset()
+    } catch (error) {
+      console.error('Error creating voucher:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create voucher',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const addEntry = () => {
@@ -105,6 +147,7 @@ export function JournalVoucherPopup() {
             <JournalVoucherSubmit
               form={form}
               onSubmit={form.handleSubmit(handleSubmit)}
+              isSubmitting={isSubmitting}
             />
           </form>
         </Form>
@@ -112,3 +155,4 @@ export function JournalVoucherPopup() {
     </Dialog>
   )
 }
+

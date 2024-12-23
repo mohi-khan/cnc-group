@@ -4,6 +4,7 @@ import {
   Company,
   CostCenter,
   Department,
+  JournalEntryWithDetails,
   JournalQuery,
   LocationData,
 } from '@/utils/type'
@@ -54,5 +55,17 @@ export async function getAllVoucher(data: JournalQuery) {
   return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
+  })
+}
+
+export async function createJournalEntryWithDetails(
+  data: JournalEntryWithDetails
+) {
+  console.log("Under APi:");
+  console.log(data);
+  return fetchApi<JournalEntryWithDetails>({
+    url: 'api/journal/entry',
+    method: 'POST',
+    body: data,
   })
 }
