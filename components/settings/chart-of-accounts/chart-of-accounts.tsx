@@ -407,6 +407,7 @@ export default function ChartOfAccountsTable() {
         console.error('Error updating chart of accounts:', response.error)
         toast({
           variant: 'destructive',
+
           title: 'Error',
           description:
             response.error?.message || 'Failed to update chart of account',
@@ -544,8 +545,6 @@ export default function ChartOfAccountsTable() {
                           <SelectContent>
                             {parentIds.map((id) => (
                               <SelectItem key={id} value={id.toString()}>
-                                {' '}
-                                {/* Convert id to string for the SelectItem value */}
                                 {id}
                               </SelectItem>
                             ))}
