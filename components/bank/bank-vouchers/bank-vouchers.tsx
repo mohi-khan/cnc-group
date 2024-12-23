@@ -182,30 +182,8 @@ function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
 function getLocationIds(data: LocationFromLocalstorage[]): number[] {
   return data.map(location => location.location.locationId);
 }
-  
-async function getallVoucher(company:number[],location:number[]){
-  console.log(new Date().toISOString().split('T')[0])
-  const voucherQuery:JournalQuery={
-    date:new Date().toISOString().split('T')[0],
-    companyId:company,
-    locationId:location,
-    voucherType:VoucherTypes.BankVoucher
-  }
-  const response=await getAllVoucher(voucherQuery)
-  if (response.error || !response.data) {
-    console.error('Error getting Voucher Data:', response.error)
-    toast({
-      title: 'Error',
-      description: response.error?.message || 'Failed to get Voucher Data',
-    })}
-    else {
-  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
-    return data.map((company) => company.company.companyId)
-  }
-  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
-    return data.map((location) => location.location.locationId)
-  }
-
+ 
+    
   async function getallVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
       date: '2024-12-18',
