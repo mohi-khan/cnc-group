@@ -178,8 +178,9 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
 }
   
 async function getallVoucher(company:number[],location:number[]){
+  console.log(new Date().toISOString().split('T')[0])
   const voucherQuery:JournalQuery={
-    date:"2024-12-18",
+    date:new Date().toISOString().split('T')[0],
     companyId:company,
     locationId:location,
     voucherType:VoucherTypes.BankVoucher
@@ -324,8 +325,8 @@ React.useEffect(()=>{
         accountId: selectedBankAccount?.glCode||0 ,
         costCenterId: null,
         departmentId: null,
-        debit: formType === 'Debit' ? values.journalEntry.amountTotal : 0,
-        credit: formType === 'Credit' ? values.journalEntry.amountTotal : 0,
+        debit: formType === 'Debit' ? updatedValues.journalEntry.amountTotal : 0,
+        credit: formType === 'Credit' ? updatedValues.journalEntry.amountTotal : 0,
         analyticTags: null,
         taxId: null,
         resPartnerId: null,
@@ -934,10 +935,10 @@ React.useEffect(()=>{
               <TableCell className="">{voucher.companyname}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
               <TableCell className="">{voucher.currency}</TableCell>
-              <TableCell className="">{voucher.partner}</TableCell>
+              <TableCell className="">{voucher.bankaccount}</TableCell>
               <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
               <TableCell className="">{voucher.totalamount}</TableCell>
-              <TableCell className="">{voucher.state}</TableCell>
+              <TableCell className="">{voucher.state === 0 ? "Draft" : "Post"}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <AlertDialog>

@@ -277,7 +277,7 @@ export type JournalEntryWithDetails = z.infer<
 >
 //Voucher Type Enum
 export enum VoucherTypes {
-  PaymentVoucher = "Cash Voucher",
+  CashVoucher = "Cash Voucher",
     BankVoucher = "Bank Voucher",
   JournalVoucher = "Journal Voucher",
   ContraVoucher = "Contra Voucher",
@@ -296,7 +296,7 @@ export const JournalResultSchema = z.object({
   voucherno: z.string(),
   date: z.string(),
   journaltype: z.string(),
-  state: z.string(),
+  state: z.number(),
   companyname: z.string().nullable(),
   location: z.string().nullable(),
   currency: z.string().nullable(),
@@ -304,7 +304,7 @@ export const JournalResultSchema = z.object({
   notes: z.string().nullable(),
   id: z.number(),
   accountsname: z.string(),
-  costcenter: z.string(),
+  costcenter: z.string().nullable(),
   department: z.string().nullable(),
   debit: z.number().default(0),
   credit: z.number().default(0),

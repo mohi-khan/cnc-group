@@ -32,8 +32,8 @@ export async function getAllVoucher(data:JournalQuery) {
     locationId: JSON.stringify(data.locationId), // Convert array to JSON string
     voucherType: data.voucherType,
   }).toString();
-  
-  return fetchApi<JournalResult[]>({
+  console.log(queryParams)
+  return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
     

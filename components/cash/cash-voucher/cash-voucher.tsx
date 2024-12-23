@@ -45,6 +45,7 @@ import {
   createJournalEntryWithDetails,
   getAllChartOfAccounts,
   getAllResPartners,
+  getAllVoucher,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -57,11 +58,14 @@ import {
   FormData,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
+  JournalQuery,
+  JournalResult,
   Location,
   LocationFromLocalstorage,
   ResPartner,
   User,
   Voucher,
+  VoucherTypes,
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -88,6 +92,7 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
+  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -118,7 +123,40 @@ export default function CashVoucher() {
     }
     setIsLoading(false)
   }, [])
+// For Getting All The Vouchers
 
+function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+  return data.map(company => company.company.companyId);
+}
+function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+  return data.map(location => location.location.locationId);
+}
+  
+async function getallVoucher(company:number[],location:number[]){
+  console.log(new Date().toISOString().split('T')[0])
+  const voucherQuery:JournalQuery={
+    date:new Date().toISOString().split('T')[0],
+    companyId:company,
+    locationId:location,
+    voucherType:VoucherTypes.CashVoucher
+  }
+  const response=await getAllVoucher(voucherQuery)
+  if (response.error || !response.data) {
+    console.error('Error getting Voucher Data:', response.error)
+    toast({
+      title: 'Error',
+      description: response.error?.message || 'Failed to get Voucher Data',
+    })}
+    else {
+      setVoucherGrid(response.data)
+    }
+}
+React.useEffect(()=>{
+  const mycompanies=getCompanyIds(companies)
+  const mylocations=getLocationIds(locations)
+  getallVoucher(mycompanies,mylocations)
+
+},[companies,locations])
   React.useEffect(() => {
     console.log(formType)
     console.log('fdg', chartOfAccounts)
@@ -242,7 +280,70 @@ export default function CashVoucher() {
       ],
     },
   })
+ const onSubmit=async(
+    values: z.infer<typeof JournalEntryWithDetailsSchema>,
+    status: 'Draft' | 'Posted'
+  )=> {
+    console.log('Before Any edit' + values)
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      console.log('Current userId from localStorage:', userData.userId)
+      setUser(userData)
+    }
+    // To update the missing fields on the list
+    const totalAmount = values.journalDetails.reduce((sum, detail) => sum + (detail.debit || detail.credit || 0), 0);
+// To Update the total Amount
+    const updatedValues = {
+      ...values,
+      journalEntry: {
+        ...values.journalEntry,
+        status: status === 'Draft' ? 0 : 1,
+        journalType:"Cash Voucher",
+        amountTotal:totalAmount,
+        createdBy: user?.userId||0,
+      },
+      journalDetails: values.journalDetails.map(detail => ({
+        ...detail,
+        createdBy: user?.userId||0,
+      }))
+    };
+    console.log('After Adding created by'+updatedValues)
+    /// To add new row for Bank Transaction on JournalDetails
+    const updateValueswithCash={...updatedValues,
+    journalDetails: [
+      ...updatedValues.journalDetails, // Spread existing journalDetails
+      {
+        accountId: 1 ,
+        costCenterId: null,
+        departmentId: null,
+        debit: formType === 'Receipt' ? updatedValues.journalEntry.amountTotal : 0,
+        credit: formType === 'Payment' ? updatedValues.journalEntry.amountTotal : 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: null,
+        bankaccountid:null,
+        notes: updatedValues.journalEntry.notes,
+        createdBy: user?.userId||0,
+      
+    },   
+    ]}
 
+    console.log('Submitted values:', JSON.stringify(updateValueswithCash, null, 2));
+    const response = await createJournalEntryWithDetails(updateValueswithCash);  // Calling API to Enter at Generate
+    if (response.error || !response.data) {
+      console.error('Error creating Journal', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Error creating Journal',
+      })
+    } else {
+      console.log('Voucher is created successfully',response.data)
+      toast({
+        title: 'Success',
+        description: 'Voucher is created successfully',
+      })}}
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'journalDetails',
@@ -290,9 +391,6 @@ export default function CashVoucher() {
 
         <Form
           {...form}
-          onSubmit={form.handleSubmit((data) => {
-            
-          })}
         >
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <div className="grid grid-cols-4 gap-4">
@@ -641,9 +739,8 @@ export default function CashVoucher() {
                             type="button"
                             variant="outline"
                             onClick={() => {
-                              const values = form.getValues()
-                              console.log('Draft:', values)
-                              //  onSubmit(values, 'Draft');
+                              const values = form.getValues();
+                               onSubmit(values, 'Draft');
                             }}
                           >
                             Save as Draft
@@ -653,8 +750,8 @@ export default function CashVoucher() {
                             variant="outline"
                             onClick={() => {
                               const values = form.getValues()
-                              console.log('Posted:', values)
-                              // onSubmit(values, 'Posted');
+                              //console.log('Posted:', values)
+                               onSubmit(values, 'Posted');
                             }}
                           >
                             Save as Post
@@ -680,11 +777,7 @@ export default function CashVoucher() {
                     <TableHead>Company Name</TableHead>
                     <TableHead>Currency</TableHead>
                     <TableHead>Location</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Account Name</TableHead>
-                    <TableHead>Cost Center</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Partner Name</TableHead>
+                    <TableHead>Date </TableHead>
                     <TableHead>Remarks</TableHead>
                     <TableHead>Total Amount</TableHead>
                     <TableHead>Status</TableHead>
@@ -692,20 +785,17 @@ export default function CashVoucher() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {voucherList.map((voucher) => (
-                    <TableRow key={voucher.voucherNo}>
-                      <TableCell>{voucher.voucherNo}</TableCell>
-                      <TableCell>{voucher.companyName}</TableCell>
+                  {vouchergrid.map((voucher) => (
+                    <TableRow key={voucher.voucherid}>
+                      <TableCell>{voucher.voucherno}</TableCell>
+                      <TableCell>{voucher.companyname}</TableCell>
                       <TableCell>{voucher.currency}</TableCell>
                       <TableCell>{voucher.location}</TableCell>
-                      <TableCell>{voucher.type}</TableCell>
-                      <TableCell>{voucher.accountName}</TableCell>
-                      <TableCell>{voucher.costCenter}</TableCell>
-                      <TableCell>{voucher.department}</TableCell>
-                      <TableCell>{voucher.partnerName}</TableCell>
-                      <TableCell>{voucher.remarks}</TableCell>
-                      <TableCell>{voucher.totalAmount}</TableCell>
-                      <TableCell>{voucher.status}</TableCell>
+                       <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
+                      <TableCell>{voucher.notes}</TableCell>
+                      <TableCell>{voucher.debit}</TableCell>
+                      <TableCell>{voucher.totalamount}</TableCell>
+                      <TableCell className="">{voucher.state === 0 ? "Draft" : "Post"}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <AlertDialog>
@@ -728,7 +818,7 @@ export default function CashVoucher() {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() =>
-                                    handleDelete(voucher.voucherNo)
+                                    handleDelete(voucher.voucherno)
                                   }
                                 >
                                   Delete
@@ -755,7 +845,7 @@ export default function CashVoucher() {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() =>
-                                    handleReverse(voucher.voucherNo)
+                                    handleReverse(voucher.voucherno)
                                   }
                                 >
                                   Reverse
@@ -766,20 +856,13 @@ export default function CashVoucher() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handlePost(voucher.voucherNo)}
+                            onClick={() => handlePost(voucher.voucherno)}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="icon">
-                            <Link
-                              href={
-                                voucher.type.toLowerCase() === 'Payment'
-                                  ? '/cash/cash-voucher/payment-preview'
-                                  : '/cash/cash-voucher/receipt-preview'
-                              }
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Link>
+                          
+                           
                           </Button>
                         </div>
                       </TableCell>
