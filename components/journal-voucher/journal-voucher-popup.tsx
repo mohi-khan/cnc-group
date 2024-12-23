@@ -85,7 +85,7 @@ export function JournalVoucherPopup() {
           <Plus className="mr-2 h-4 w-4" /> Add Voucher
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Journal Voucher</DialogTitle>
         </DialogHeader>
