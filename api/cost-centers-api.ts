@@ -1,30 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { CostCenter } from '@/utils/type'
-import { z } from 'zod'
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-// Update the schema to match the exact API response structure
-export const costCenterSchema = z.object({
-  costCenterId: z.number().min(1, 'Cost center id is required'),
-  costCenterName: z.string().min(1, 'Cost center name is required'),
-  costCenterDescription: z.string(),
-  budget: z.number(),
-  actual: z.number().optional(),
-  currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
-  isActive: z.boolean().optional(),
-  createdBy: z.number().optional(),
-})
-
-export const activateDeactivateCostCenterSchema = z.object({
-  costCenterId: z.number().min(1, 'Cost center id is required'),
-})
-
-export type CostCenterActivateDeactivate = z.infer<
-  typeof activateDeactivateCostCenterSchema
->
-
-export const costCentersArraySchema = z.array(costCenterSchema)
+import { CostCenter, CostCenterActivateDeactivate } from '@/utils/type'
 
 export async function getAllCostCenters() {
   return fetchApi<CostCenter[]>({

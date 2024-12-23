@@ -145,7 +145,7 @@ export default function CostCenterManagement() {
   const CostCenterForm = ({ isEdit = false }) => {
     const [currencyCode, setCurrencyCode] = useState<
       'BDT' | 'USD' | 'EUR' | 'GBP'
-    >(isEdit ? selectedCostCenter?.currencyCode || 'BDT' : '')
+    >(isEdit && selectedCostCenter?.currencyCode || 'BDT')
 
     useEffect(() => {
       if (isEdit && selectedCostCenter) {
@@ -167,10 +167,10 @@ export default function CostCenterManagement() {
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
         budget: Number(formData.get('budget')),
-        active: formData.get('active') === 'on',
+        isActive: formData.get('isActive') === 'on',
         actual: parseFloat(formData.get('actual') as string),
         createdBy: userId,
-        updatedBy: userId, // Add this line for both create and update
+        updatedBy: userId,
       }
 
       if (isEdit && selectedCostCenter) {
@@ -307,10 +307,10 @@ export default function CostCenterManagement() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="active" className="text-right">
+              <Label htmlFor="isActive" className="text-right">
                 Active
               </Label>
-              <Switch id="active" name="active" defaultChecked={true} />
+              <Switch id="isActive" name="isActive" defaultChecked={true} />
             </div>
           </>
         )}
@@ -330,6 +330,12 @@ export default function CostCenterManagement() {
       </form>
     )
   }
+
+  React.useEffect(() => {
+    if (feedback && feedback.type === 'success') {
+      fetchCostCenters()
+    }
+  }, [feedback])
 
   return (
     <div className="container mx-auto py-10">
