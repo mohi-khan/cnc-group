@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { ChartOfAccount, Company, CostCenter, LocationData } from '@/utils/type'
+import { ChartOfAccount, Company, CostCenter, Department, LocationData } from '@/utils/type'
 
 export async function getAllCompanies() {
   return fetchApi<Company[]>({
@@ -25,6 +25,13 @@ export async function getAllChartOfAccounts() {
 export async function getAllCostCenters() {
   return fetchApi<CostCenter[]>({
     url: 'api/cost-centers/get-all-cost-centers',
+    method: 'GET',
+  })
+}
+
+export async function getAllDepartments() {
+  return fetchApi<Department[]>({
+    url: 'api/department/get-all-departments',
     method: 'GET',
   })
 }

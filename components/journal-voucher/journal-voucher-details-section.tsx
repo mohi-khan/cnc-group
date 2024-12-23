@@ -19,12 +19,14 @@ import {
   ChartOfAccount,
   CostCenter,
   JournalEntryWithDetails,
+  Department
 } from '@/utils/type'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { toast } from '@/hooks/use-toast'
 import {
   getAllChartOfAccounts,
   getAllCostCenters,
+  getAllDepartments
 } from '@/api/journal-voucher-api'
 
 interface JournalVoucherDetailsSectionProps {
@@ -39,31 +41,25 @@ export function JournalVoucherDetailsSection({
   onRemoveEntry,
 }: JournalVoucherDetailsSectionProps) {
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<
-    ChartOfAccount[]
-  >([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<ChartOfAccount[]>([])
+  const [departments, setDepartments] = React.useState<Department[]>([])
   const entries = form.watch('journalDetails')
 
   async function fetchChartOfAccounts() {
     const response = await getAllChartOfAccounts()
-    console.log('Fetched Chart Of accounts:', response.data)
-
     if (response.error || !response.data) {
-      console.error('Error getting ChartOf bank account:', response.error)
+      console.error('Error getting Chart Of accounts:', response.error)
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Failed to get ChartOf bank accounts',
+        description: response.error?.message || 'Failed to get Chart Of accounts',
       })
     } else {
       setChartOfAccounts(response.data)
-      //   setFilteredChartOfAccounts(response.data)
     }
   }
 
   const fetchCostCenters = async () => {
     const data = await getAllCostCenters()
-    console.log('🚀 ~ fetchCostCenters ~ data:', data.data)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
@@ -75,11 +71,69 @@ export function JournalVoucherDetailsSection({
     }
   }
 
-  React.useEffect(() => {
+  async function fetchDepartments() {
+    const response = await getAllDepartments()
+    if (response.error || !response.data) {
+      console.error('Error getting departments:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get departments',
+      })
+    } else {
+      setDepartments(response.data)
+    }
+  }
+
+  useEffect(() => {
     fetchChartOfAccounts()
-    console.log('within use Effect')
     fetchCostCenters()
+    fetchDepartments()
   }, [])
+
+  useEffect(() => {
+    // Initialize with two rows
+    if (entries.length === 0) {
+      form.setValue('journalDetails', [
+        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null },
+        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null }
+      ])
+    }
+  }, [])
+
+  const addEntry = () => {
+    form.setValue('journalDetails', [
+      ...entries,
+      { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null }
+    ])
+  }
+
+  const handleDebitChange = (index: number, value: number) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].debit = value
+    updatedEntries[index].credit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
+  const handleCreditChange = (index: number, value: number) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].credit = value
+    updatedEntries[index].debit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
+  const calculateTotals = () => {
+    return entries.reduce(
+      (totals, entry) => {
+        totals.debit += entry.debit
+        totals.credit += entry.credit
+        return totals
+      },
+      { debit: 0, credit: 0 }
+    )
+  }
+
+  const totals = calculateTotals()
+  const isBalanced = totals.debit === totals.credit
 
   return (
     <div className="space-y-4">
@@ -113,8 +167,14 @@ export function JournalVoucherDetailsSection({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="1">Account 1</SelectItem>
-                    <SelectItem value="2">Account 2</SelectItem>
+                    {chartOfAccounts.map((account) => (
+                      <SelectItem 
+                        key={account.accountId} 
+                        value={account.accountId.toString()}
+                      >
+                        {account.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -139,8 +199,14 @@ export function JournalVoucherDetailsSection({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="1">CC 1</SelectItem>
-                    <SelectItem value="2">CC 2</SelectItem>
+                    {costCenters.map((center) => (
+                      <SelectItem 
+                        key={center.costCenterId} 
+                        value={center?.costCenterId?.toString()}
+                      >
+                        {center.costCenterName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -165,8 +231,14 @@ export function JournalVoucherDetailsSection({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="1">Dept 1</SelectItem>
-                    <SelectItem value="2">Dept 2</SelectItem>
+                    {departments?.map((department) => (
+                      <SelectItem
+                        key={department.departmentID}
+                        value={department.departmentID.toString()}
+                      >
+                        {department.departmentName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -183,7 +255,7 @@ export function JournalVoucherDetailsSection({
                   <Input
                     type="number"
                     {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => handleDebitChange(index, Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -200,7 +272,7 @@ export function JournalVoucherDetailsSection({
                   <Input
                     type="number"
                     {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => handleCreditChange(index, Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -226,16 +298,30 @@ export function JournalVoucherDetailsSection({
             variant="ghost"
             size="icon"
             onClick={() => onRemoveEntry(index)}
-            disabled={entries.length === 1}
+            disabled={entries.length <= 2}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ))}
 
-      <Button type="button" variant="outline" onClick={onAddEntry}>
+      <Button type="button" variant="outline" onClick={addEntry}>
         Add Another Line
       </Button>
+
+      <div className="flex justify-between items-center">
+        <div>
+          <p>Total Debit: {totals.debit}</p>
+          <p>Total Credit: {totals.credit}</p>
+        </div>
+        <div>
+          {!isBalanced && (
+            <p className="text-red-500">
+              Debit and Credit totals must be equal to post/draft the voucher.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
