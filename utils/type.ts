@@ -295,7 +295,7 @@ export const JournalResultSchema = z.object({
   voucherno: z.string(),
   date: z.string(),
   journaltype: z.string(),
-  state: z.string(),
+  state: z.number(),
   companyname: z.string().nullable(),
   location: z.string().nullable(),
   currency: z.string().nullable(),
@@ -303,7 +303,7 @@ export const JournalResultSchema = z.object({
   notes: z.string().nullable(),
   id: z.number(),
   accountsname: z.string(),
-  costcenter: z.string(),
+  costcenter: z.string().nullable(),
   department: z.string().nullable(),
   debit: z.number().default(0),
   credit: z.number().default(0),
@@ -315,6 +315,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
+  departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   currencyCode: z.number().optional(),

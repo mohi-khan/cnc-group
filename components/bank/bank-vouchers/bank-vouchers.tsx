@@ -66,7 +66,7 @@ import {
   JournalResult,
   AccountsHead,
   JournalQuery,
-  VoucherTypes
+  VoucherTypes,
 } from '@/utils/type'
 import {
   getAllBankAccounts,
@@ -75,10 +75,12 @@ import {
   getAllCostCenters,
   getAllLocations,
   getAllResPartners,
-  } from '@/api/bank-vouchers-api'
+} from '@/api/bank-vouchers-api'
 import { userData } from '@/utils/user'
-import { createJournalEntryWithDetails, getAllVoucher } from '@/api/vouchers-api'
-
+import {
+  createJournalEntryWithDetails,
+  getAllVoucher,
+} from '@/api/vouchers-api'
 
 interface User {
   userId: number
@@ -89,7 +91,6 @@ interface User {
 }
 
 export default function BankVoucher() {
-
   const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
   const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
@@ -102,15 +103,20 @@ export default function BankVoucher() {
     []
   )
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
+    []
+  )
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
-  AccountsHead[]
+    AccountsHead[]
   >([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([]) // Updated type
   const [formType, setFormType] = React.useState('Credit')
-  const [status,setStatus]=React.useState<'Draft'|'Posted'>('Draft')
-  const [selectedBankAccount, setSelectedBankAccount] = React.useState<{ id: number, glCode: number } | null>(null);
+  const [status, setStatus] = React.useState<'Draft' | 'Posted'>('Draft')
+  const [selectedBankAccount, setSelectedBankAccount] = React.useState<{
+    id: number
+    glCode: number
+  } | null>(null)
   const router = useRouter()
 
   React.useEffect(() => {
@@ -137,13 +143,13 @@ export default function BankVoucher() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: "",
-        journalType: "",
+        date: '',
+        journalType: '',
         companyId: 0,
         locationId: 0,
         currencyId: 0,
         amountTotal: 0,
-        notes: "",
+        notes: '',
         createdBy: 0,
       },
       journalDetails: [
@@ -156,7 +162,7 @@ export default function BankVoucher() {
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
-          notes: "",
+          notes: '',
           createdBy: 0,
         },
       ],
@@ -165,10 +171,10 @@ export default function BankVoucher() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "journalDetails",
+    name: 'journalDetails',
   })
 
-// For Getting All The Vouchers
+  // For Getting All The Vouchers
 
 function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
   return data.map(company => company.company.companyId);
@@ -176,31 +182,33 @@ function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
 function getLocationIds(data: LocationFromLocalstorage[]): number[] {
   return data.map(location => location.location.locationId);
 }
-  
-async function getallVoucher(company:number[],location:number[]){
-  const voucherQuery:JournalQuery={
-    date:"2024-12-18",
-    companyId:company,
-    locationId:location,
-    voucherType:VoucherTypes.BankVoucher
-  }
-  const response=await getAllVoucher(voucherQuery)
-  if (response.error || !response.data) {
-    console.error('Error getting Voucher Data:', response.error)
-    toast({
-      title: 'Error',
-      description: response.error?.message || 'Failed to get Voucher Data',
-    })}
-    else {
+ 
+    
+  async function getallVoucher(company: number[], location: number[]) {
+    const voucherQuery: JournalQuery = {
+      date: '2024-12-18',
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.BankVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery)
+    if (response.error || !response.data) {
+      console.error('Error getting Voucher Data:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get Voucher Data',
+      })
+    } else {
       setVoucherGrid(response.data)
     }
-}
-React.useEffect(()=>{
-  const mycompanies=getCompanyIds(companies)
-  const mylocations=getLocationIds(locations)
-  getallVoucher(mycompanies,mylocations)
+  }
+  
+  React.useEffect(() => {
+    const mycompanies = getCompanyIds(companies)
+    const mylocations = getLocationIds(locations)
+    getallVoucher(mycompanies, mylocations)
+  }, [companies, locations])
 
-},[companies,locations])
   async function fetchBankAccounts() {
     const response = await getAllBankAccounts()
     console.log('Fetched bank accounts:', response.data)
@@ -269,10 +277,10 @@ React.useEffect(()=>{
     fetchCostCenters()
     fetchResPartners()
   }, [])
- //Run When Type is Changed
+  //Run When Type is Changed
   React.useEffect(() => {
     console.log(formType)
-  
+
     const filteredCoa = chartOfAccounts?.filter((account) => {
       if (account.isGroup == false) {
         if (formType === 'Debit') {
@@ -290,10 +298,10 @@ React.useEffect(()=>{
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
   }, [formType, chartOfAccounts])
 
-  const onSubmit=async(
+  const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
-  )=> {
+  ) => {
     console.log('Before Any edit' + values)
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -307,15 +315,15 @@ React.useEffect(()=>{
       journalEntry: {
         ...values.journalEntry,
         status: status === 'Draft' ? 0 : 1,
-        journalType:"Bank Voucher",  
-        createdBy: user?.userId||0,
+        journalType: 'Bank Voucher',
+        createdBy: user?.userId || 0,
       },
-      journalDetails: values.journalDetails.map(detail => ({
+      journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        createdBy: user?.userId||0,
-      }))
-    };
-    console.log('After Adding created by'+updatedValues)
+        createdBy: user?.userId || 0,
+      })),
+    }
+    console.log('After Adding created by' + updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithBank={...updatedValues,
     journalDetails: [
@@ -324,8 +332,8 @@ React.useEffect(()=>{
         accountId: selectedBankAccount?.glCode||0 ,
         costCenterId: null,
         departmentId: null,
-        debit: formType === 'Debit' ? values.journalEntry.amountTotal : 0,
-        credit: formType === 'Credit' ? values.journalEntry.amountTotal : 0,
+        debit: formType === 'Debit' ? updatedValues.journalEntry.amountTotal : 0,
+        credit: formType === 'Credit' ? updatedValues.journalEntry.amountTotal : 0,
         analyticTags: null,
         taxId: null,
         resPartnerId: null,
@@ -336,21 +344,24 @@ React.useEffect(()=>{
     },   
     ]}
 
-    console.log('Submitted values:', JSON.stringify(updateValueswithBank, null, 2));
-    const response = await createJournalEntryWithDetails(updateValueswithBank);  // Calling API to Enter at Generate
+    console.log(
+      'Submitted values:',
+      JSON.stringify(updateValueswithBank, null, 2)
+    )
+    const response = await createJournalEntryWithDetails(updateValueswithBank) // Calling API to Enter at Generate
     if (response.error || !response.data) {
       console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Error creating Journal',
+        description: response.error?.message || 'Error creating Journal',
       })
     } else {
-      console.log('Voucher is created successfully',response.data)
+      console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
-      })}
+      })
+    }
     const totalItemsAmount = values.journalDetails.reduce(
       (sum, item) => sum + item.credit,
       0
@@ -363,9 +374,9 @@ React.useEffect(()=>{
       })
       return
     }
- //   setVouchers(vouchers);
-  
-   /* setVouchers([...vouchers, { ...values, journalEntry.date: Date.now().toString(), status }])
+    //   setVouchers(vouchers);
+
+    /* setVouchers([...vouchers, { ...values, journalEntry.date: Date.now().toString(), status }])
     setIsDialogOpen(false)*/
     form.reset()
   }
@@ -376,25 +387,34 @@ React.useEffect(()=>{
 
   function handleReverse(id: string) {
     setVouchers(
-      vouchers.map((v) => (v.journalEntry.voucherNo === id ? { ...v, status: 'Draft' } : v))
+      vouchers.map((v) =>
+        v.journalEntry.voucherNo === id ? { ...v, status: 'Draft' } : v
+      )
     )
   }
 
   function handlePost(id: string) {
     setVouchers(
-      vouchers.map((v) => (v.journalEntry.voucherNo === id ? { ...v, status: 'Posted' } : v))
+      vouchers.map((v) =>
+        v.journalEntry.voucherNo === id ? { ...v, status: 'Posted' } : v
+      )
     )
   }
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      if (name?.startsWith('items') ) {
+      if (name?.startsWith('items')) {
         if (!value.journalDetails) {
           return
         } else {
           const totalItemsAmount =
-            value.journalDetails?.reduce((sum, item) => sum + (item?.credit || 0), 0) || 0
-          setAmountMismatch(totalItemsAmount !== value.journalEntry?.amountTotal)
+            value.journalDetails?.reduce(
+              (sum, item) => sum + (item?.credit || 0),
+              0
+            ) || 0
+          setAmountMismatch(
+            totalItemsAmount !== value.journalEntry?.amountTotal
+          )
         }
       }
     })
@@ -438,9 +458,10 @@ React.useEffect(()=>{
                       <FormItem>
                         <FormLabel>Company Name</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value, 10))
+                          }
                           value={field.value?.toString()}
-                        
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -476,9 +497,10 @@ React.useEffect(()=>{
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value, 10))
+                          }
                           value={field.value?.toString()}
-                    
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -514,9 +536,10 @@ React.useEffect(()=>{
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value, 10))
+                          }
                           value={field.value?.toString()}
-                      
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -524,7 +547,7 @@ React.useEffect(()=>{
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value= "1" >USD</SelectItem>
+                            <SelectItem value="1">USD</SelectItem>
                             <SelectItem value="2">EUR</SelectItem>
                             <SelectItem value="3">GBP</SelectItem>
                           </SelectContent>
@@ -533,7 +556,7 @@ React.useEffect(()=>{
                       </FormItem>
                     )}
                   />
-                   <div>
+                  <div>
                     <FormLabel>Type</FormLabel>
                     <Select onValueChange={setFormType}>
                       <FormControl>
@@ -549,42 +572,38 @@ React.useEffect(()=>{
                   </div>
                   <div>
                     <FormLabel>Bank Account</FormLabel>
-                    <Select 
-                          onValueChange={(value) => {
-                            const selectedAccount = bankAccounts.find(account => account.id.toString() === value);
-                            if (selectedAccount) {
-                              setSelectedBankAccount({
-                                id: selectedAccount.id,
-                                glCode: selectedAccount.glAccountId ||0
-                              });
-                             // field.onChange(value); // Update the form field
-                            }
-                          }}
-                          ///value={field.value}
-                        >
-                 
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select bank account" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {bankAccounts.map((account, index) => (
-                              <SelectItem
-                                key={account?.id || `default-bank-${index}`}
-                                value={
-                                  account?.id?.toString() || `bank-${index}`
-                                }
-                              >
-                                {account?.accountName || 'Unnamed Account'}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      
-                  
-               
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedAccount = bankAccounts.find(
+                          (account) => account.id.toString() === value
+                        )
+                        if (selectedAccount) {
+                          setSelectedBankAccount({
+                            id: selectedAccount.id,
+                            glCode: selectedAccount.glAccountId || 0,
+                          })
+                          // field.onChange(value); // Update the form field
+                        }
+                      }}
+                      ///value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select bank account" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {bankAccounts.map((account, index) => (
+                          <SelectItem
+                            key={account?.id || `default-bank-${index}`}
+                            value={account?.id?.toString() || `bank-${index}`}
+                          >
+                            {account?.accountName || 'Unnamed Account'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
                   </div>
                   <FormField
                     control={form.control}
@@ -596,9 +615,7 @@ React.useEffect(()=>{
                           <Input
                             placeholder="Enter check number"
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(e.target.value)
-                            }
+                            onChange={(e) => field.onChange(e.target.value)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -667,9 +684,10 @@ React.useEffect(()=>{
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                    onValueChange={(value) =>
+                                      field.onChange(parseInt(value, 10))
+                                    }
                                     value={field.value?.toString()}
-                                   
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -706,9 +724,10 @@ React.useEffect(()=>{
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                     onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                                     value={field.value?.toString()}
-                                   
+                                    onValueChange={(value) =>
+                                      field.onChange(parseInt(value, 10))
+                                    }
+                                    value={field.value?.toString()}
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -744,9 +763,10 @@ React.useEffect(()=>{
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                                      value={field.value?.toString()}
-                                   
+                                    onValueChange={(value) =>
+                                      field.onChange(parseInt(value, 10))
+                                    }
+                                    value={field.value?.toString()}
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -773,9 +793,10 @@ React.useEffect(()=>{
                               render={({ field }) => (
                                 <FormItem>
                                   <Select
-                                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                                    onValueChange={(value) =>
+                                      field.onChange(parseInt(value, 10))
+                                    }
                                     value={field.value?.toString()}
-                                 
                                   >
                                     <FormControl>
                                       <SelectTrigger>
@@ -861,19 +882,20 @@ React.useEffect(()=>{
                     size="sm"
                     className="mt-2"
                     onClick={() =>
-                     append({
-                      voucherId:0,
-                      accountId: 0,
-                      costCenterId: 0,
-                      departmentId: null,
-                      debit: 0,
-                      credit: 0,
-                      analyticTags: null,
-                      taxId: null,
-                      resPartnerId: null,
-                      notes: "",
-                      createdBy: 0,})}
-            
+                      append({
+                        voucherId: 0,
+                        accountId: 0,
+                        costCenterId: 0,
+                        departmentId: null,
+                        debit: 0,
+                        credit: 0,
+                        analyticTags: null,
+                        taxId: null,
+                        resPartnerId: null,
+                        notes: '',
+                        createdBy: 0,
+                      })
+                    }
                   >
                     Add Another
                   </Button>
@@ -886,22 +908,22 @@ React.useEffect(()=>{
                 )}
                 <div className="flex justify-end space-x-2">
                   <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    const values=form.getValues();
-                    onSubmit(values, 'Draft');
-                  }}
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const values = form.getValues()
+                      onSubmit(values, 'Draft')
+                    }}
                   >
                     Save as Draft
                   </Button>
                   <Button
-                   type="button"
-                   variant="outline"
-                   onClick={() => {
-                    const values=form.getValues();
-                    onSubmit(values, 'Posted');
-                   }}
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const values = form.getValues()
+                      onSubmit(values, 'Posted')
+                    }}
                   >
                     Save as Post
                   </Button>
@@ -929,15 +951,15 @@ React.useEffect(()=>{
         <TableBody>
           {vouchergrid.map((voucher) => (
             <TableRow key={voucher.voucherid} className="border-b">
-             <TableCell className="">{voucher.voucherno}</TableCell>
+              <TableCell className="">{voucher.voucherno}</TableCell>
               <TableCell className="">{voucher.notes}</TableCell>
               <TableCell className="">{voucher.companyname}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
               <TableCell className="">{voucher.currency}</TableCell>
-              <TableCell className="">{voucher.partner}</TableCell>
+              <TableCell className="">{voucher.bankaccount}</TableCell>
               <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
               <TableCell className="">{voucher.totalamount}</TableCell>
-              <TableCell className="">{voucher.state}</TableCell>
+              <TableCell className="">{voucher.state === 0 ? "Draft" : "Post"}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <AlertDialog>
