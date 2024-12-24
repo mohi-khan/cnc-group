@@ -173,7 +173,7 @@ export const AccountsHeadSchema = z.object({
   accountId: z.number().int().positive(),
   code: z.string(),
   name: z.string(),
-  type: z.string(),
+  accountType: z.string(),
   parentCode: z.string().nullable(),
   parentName: z.string().nullable(),
   isReconcilable: z.boolean(),
@@ -274,7 +274,7 @@ export type JournalEntryWithDetails = z.infer<
 >
 //Voucher Type Enum
 export enum VoucherTypes {
-  PaymentVoucher = 'Cash Voucher',
+  CashVoucher = 'Cash Voucher',
   BankVoucher = 'Bank Voucher',
   JournalVoucher = 'Journal Voucher',
   ContraVoucher = 'Contra Voucher',

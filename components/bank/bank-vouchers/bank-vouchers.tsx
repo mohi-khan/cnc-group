@@ -280,20 +280,12 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
   //Run When Type is Changed
   React.useEffect(() => {
     console.log(formType)
-
+    const accounttype = formType=='Debit' ?  'Expenses':'Income';
+    console.log(accounttype)
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      if (account.isGroup == false) {
-        if (formType === 'Debit') {
-          console.log('within Debit')
-          return account.type == 'Income'
-        } else if (formType === 'Credit') {
-          console.log('within credit')
-          return account.type == 'Expenses'
-        }
-      } else {
-        return false
-      }
+      return (account.isGroup==false && account.accountType==accounttype)
     })
+    console.log('COA',chartOfAccounts)
     setFilteredChartOfAccounts(filteredCoa)
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
   }, [formType, chartOfAccounts])

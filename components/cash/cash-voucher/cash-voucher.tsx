@@ -158,18 +158,10 @@ React.useEffect(()=>{
 
 },[companies,locations])
   React.useEffect(() => {
-    console.log(formType)
-    console.log('fdg', chartOfAccounts)
+    const accounttype = formType=='Debit' ?  'Expenses':'Income';
+    console.log(accounttype)
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      if (account.isGroup == true) {
-        if (formType == 'Receipt') {
-          return account.type == 'Income'
-        } else if (formType == 'Payment') {
-          return account.type == 'Expenses'
-        }
-      } else {
-        return false
-      }
+      return (account.isGroup==false && account.accountType==accounttype)
     })
     setFilteredChartOfAccounts(filteredCoa)
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
