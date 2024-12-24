@@ -27,6 +27,7 @@ import {
 import React from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
+import { CURRENCY_ITEMS } from '@/utils/constants'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -160,7 +161,9 @@ export function JournalVoucherMasterSection({
             </FormItem>
           )}
         />
+      </div>
 
+      <div className="grid grid-cols-3 gap-4">
         <FormField
           control={form.control}
           name="journalEntry.date"
@@ -177,12 +180,43 @@ export function JournalVoucherMasterSection({
 
         <FormField
           control={form.control}
+          name="journalEntry.currencyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(Number(value))}
+                value={field.value?.toString() || ''}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Currency" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {CURRENCY_ITEMS.map((currency) => (
+                    <SelectItem
+                      key={currency.currencyId}
+                      value={currency.currencyId.toString()}
+                    >
+                      {currency.currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="journalEntry.journalType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Analysis tags</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input />
               </FormControl>
               <FormMessage />
             </FormItem>

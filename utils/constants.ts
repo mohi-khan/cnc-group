@@ -234,3 +234,18 @@ export const BANGLADESH_BANKS = [
   { id: '14', name: 'Mercantile Bank Limited' },
   { id: '15', name: 'Mutual Trust Bank Limited' },
 ]
+
+export const CURRENCY_ITEMS = [
+  {
+    currencyId: 1,
+    currency: 'BDT',
+  },
+  {
+    currencyId: 2,
+    currency: 'USD',
+  },
+  {
+    currencyId: 3,
+    currency: 'USD',
+  },
+]

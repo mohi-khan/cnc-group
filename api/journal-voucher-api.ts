@@ -44,6 +44,14 @@ export async function getAllDepartments() {
   })
 }
 
+export async function getSingleVoucher(voucherid: string) {
+  console.log(voucherid)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/getJournalDetail/${voucherid}`,
+    method: 'GET',
+  })
+}
+
 export async function getAllVoucher(data: JournalQuery) {
   const queryParams = new URLSearchParams({
     date: data.date,

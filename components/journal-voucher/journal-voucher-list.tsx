@@ -20,6 +20,7 @@ import {
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
+import Link from 'next/link'
 
 interface Voucher {
   id: number
@@ -81,7 +82,7 @@ export default function VoucherTable() {
 
   async function fetchAllVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
-      date: '2024-12-18',
+      date: new Date().toISOString().split('T')[0],
       companyId: company,
       locationId: location,
       voucherType: VoucherTypes.JournalVoucher,
@@ -138,7 +139,13 @@ export default function VoucherTable() {
         <TableBody>
           {vouchergrid.map((voucher) => (
             <TableRow key={voucher.id}>
-              <TableCell className="font-medium">{voucher.voucherno}</TableCell>
+              <TableCell className="font-medium">
+                <Link
+                  href={`/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
+                >
+                  {voucher.voucherno}
+                </Link>
+              </TableCell>
               <TableCell>{voucher.date}</TableCell>
               <TableCell>{voucher.notes}</TableCell>
               <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>

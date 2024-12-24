@@ -1,90 +1,84 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Edit2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-
-interface JournalItem {
-  account: string
-  costCenter?: string
-  department?: string
-  partner?: string
-  notes?: string
-  debit: number
-  credit: number
-}
-
-interface JournalVoucherProps {
-  voucherNo: string
-  accountingDate: string
-  createdBy: string
-  items: JournalItem[]
-  reference?: string
-}
-
-// Example data - replace with actual data from your application
-const exampleData: JournalVoucherProps = {
-  voucherNo: "JV-2023-001",
-  accountingDate: "2023-12-22",
-  createdBy: "John Doe",
-  items: [
-    {
-      account: "Cash Account",
-      costCenter: "CC001",
-      department: "Finance",
-      partner: "ABC Corp",
-      notes: "Payment received",
-      debit: 1000,
-      credit: 0
-    },
-    {
-      account: "Revenue Account",
-      costCenter: "CC001",
-      department: "Finance",
-      partner: "ABC Corp",
-      notes: "Service income",
-      debit: 0,
-      credit: 1000
-    }
-  ],
-  reference: "Invoice #12345"
-}
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/hooks/use-toast'
+import { getSingleVoucher } from '@/api/journal-voucher-api'
+import { JournalEntryWithDetails } from '@/utils/type'
 
 export default function SingleJournalVoucher() {
-  const [data, setData] = useState(exampleData) // Replace with your actual data source
+  const { voucherid } = useParams() // Get voucherid from URL
+  console.log('🚀 ~ SingleJournalVoucher ~ voucherid:', voucherid)
+  const [data, setData] = useState<JournalEntryWithDetails>()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null)
-  const [editingNotes, setEditingNotes] = useState("")
+  const [editingNotes, setEditingNotes] = useState('')
+
+  useEffect(() => {
+    async function fetchVoucher() {
+      if (!voucherid) return
+      try {
+        const response = await getSingleVoucher(voucherid as string)
+        if (response.error || !response.data) {
+          console.error('Error getting Voucher Data:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get Voucher Data',
+          })
+        } else {
+          setData(response.data.data)
+          console.log('data', response.data.data)
+        }
+      } catch (error) {
+        console.error('Error fetching voucher:', error)
+        toast({
+          title: 'Error',
+          description:
+            'An unexpected error occurred while fetching the voucher.',
+        })
+      }
+    }
+
+    fetchVoucher()
+  }, [voucherid])
 
   const handleEditClick = (index: number) => {
+    if (!data) return
     setEditingItemIndex(index)
-    setEditingNotes(data.items[index].notes || "")
+    setEditingNotes(data.items[index].notes || '')
     setIsEditDialogOpen(true)
   }
 
   const handleSaveNotes = () => {
-    if (editingItemIndex !== null) {
+    if (data && editingItemIndex !== null) {
       const newItems = [...data.items]
       newItems[editingItemIndex] = {
         ...newItems[editingItemIndex],
-        notes: editingNotes
+        notes: editingNotes,
       }
       setData({
         ...data,
-        items: newItems
+        items: newItems,
       })
       setIsEditDialogOpen(false)
       setEditingItemIndex(null)
     }
+  }
+
+  if (!data) {
+    return <p>Loading...</p>
   }
 
   return (
@@ -96,11 +90,11 @@ export default function SingleJournalVoucher() {
             <div className="space-y-4">
               <div className="grid grid-cols-[120px,1fr] gap-2">
                 <span className="font-medium">Voucher No:</span>
-                <span>{data.voucherNo}</span>
+                <span>{data[0].voucherno}</span>
               </div>
               <div className="grid grid-cols-[120px,1fr] gap-2">
                 <span className="font-medium">Accounting Date:</span>
-                <span>{data.accountingDate}</span>
+                <span>{data[0].date}</span>
               </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -108,7 +102,7 @@ export default function SingleJournalVoucher() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reverse
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={()=> window.print()}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print
               </Button>
@@ -137,13 +131,13 @@ export default function SingleJournalVoucher() {
                 <div>Credit</div>
                 <div>Action</div>
               </div>
-              {data.items.map((item, index) => (
+              {data.map((item) => (
                 <div
-                  key={index}
+                  key={item.voucherid}
                   className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 border-t items-center text-sm"
                 >
-                  <div>{item.account}</div>
-                  <div>{item.costCenter}</div>
+                  <div>{item.accountsname}</div>
+                  <div>{item.costcenter}</div>
                   <div>{item.department}</div>
                   <div>{item.partner}</div>
                   <div>{item.notes}</div>
@@ -153,7 +147,7 @@ export default function SingleJournalVoucher() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEditClick(index)}
+                      onClick={() => handleEditClick(item.voucherid)}
                     >
                       Edit
                     </Button>
@@ -167,7 +161,7 @@ export default function SingleJournalVoucher() {
           <div className="mt-6">
             <div className="grid grid-cols-[120px,1fr] gap-2">
               <span className="font-medium">Reference:</span>
-              <span>{data.reference}</span>
+              <span>{data[0].reference}</span>
             </div>
           </div>
         </CardContent>
@@ -190,12 +184,13 @@ export default function SingleJournalVoucher() {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSaveNotes}>
-                Save
-              </Button>
+              <Button onClick={handleSaveNotes}>Save</Button>
             </div>
           </div>
         </DialogContent>

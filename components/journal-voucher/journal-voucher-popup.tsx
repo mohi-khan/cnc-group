@@ -20,6 +20,7 @@ import { JournalVoucherSubmit } from './journal-voucher-submit'
 import {
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
+  VoucherTypes,
 } from '@/utils/type'
 import { createJournalEntryWithDetails } from '@/api/journal-voucher-api'
 import { toast } from '@/hooks/use-toast'
@@ -32,21 +33,21 @@ export function JournalVoucherPopup() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: new Date().toISOString().split('T')[0], // Set default date to today
-        journalType: '',
+        date: new Date().toISOString().split('T')[0],
+        journalType: VoucherTypes.JournalVoucher,
         state: 0,
         companyId: 0,
         locationId: 0,
-        currencyId: 0,
+        currencyId: 1,
         amountTotal: 0,
-        createdBy: 0,
+        createdBy: 60,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: 0,
+          createdBy: 60,
         },
       ],
     },
