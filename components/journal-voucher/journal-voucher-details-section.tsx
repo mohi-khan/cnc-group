@@ -94,8 +94,8 @@ export function JournalVoucherDetailsSection({
     // Initialize with two rows
     if (entries.length === 0) {
       form.setValue('journalDetails', [
-        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null },
-        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null }
+        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null },
+        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null }
       ])
     }
   }, [])
@@ -103,7 +103,7 @@ export function JournalVoucherDetailsSection({
   const addEntry = () => {
     form.setValue('journalDetails', [
       ...entries,
-      { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 0, analyticTags: null, taxId: null }
+      { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null }
     ])
   }
 
