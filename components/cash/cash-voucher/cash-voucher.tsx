@@ -46,6 +46,7 @@ import {
   getAllChartOfAccounts,
   getAllResPartners,
   getAllVoucher,
+  getAllVoucherById,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -71,7 +72,7 @@ import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod';
+import { z } from 'zod'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -123,45 +124,45 @@ export default function CashVoucher() {
     }
     setIsLoading(false)
   }, [])
-// For Getting All The Vouchers
+  // For Getting All The Vouchers
 
-function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
-  return data.map(company => company.company.companyId);
-}
-function getLocationIds(data: LocationFromLocalstorage[]): number[] {
-  return data.map(location => location.location.locationId);
-}
-  
-async function getallVoucher(company:number[],location:number[]){
-  console.log(new Date().toISOString().split('T')[0])
-  const voucherQuery:JournalQuery={
-    date:new Date().toISOString().split('T')[0],
-    companyId:company,
-    locationId:location,
-    voucherType:VoucherTypes.CashVoucher
+  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+    return data.map((company) => company.company.companyId)
   }
-  const response=await getAllVoucher(voucherQuery)
-  if (response.error || !response.data) {
-    console.error('Error getting Voucher Data:', response.error)
-    toast({
-      title: 'Error',
-      description: response.error?.message || 'Failed to get Voucher Data',
-    })}
-    else {
-      setVoucherGrid(response.data)
-    }
-}
-React.useEffect(()=>{
-  const mycompanies=getCompanyIds(companies)
-  const mylocations=getLocationIds(locations)
-  getallVoucher(mycompanies,mylocations)
+  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+    return data.map((location) => location.location.locationId)
+  }
 
-},[companies,locations])
+  async function getallVoucher(company: number[], location: number[]) {
+    console.log(new Date().toISOString().split('T')[0])
+    const voucherQuery: JournalQuery = {
+      date: new Date().toISOString().split('T')[0],
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.CashVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery)
+    if (response.error || !response.data) {
+      console.error('Error getting Voucher Data:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get Voucher Data',
+      })
+    } else {
+      setVoucherGrid(response.data)
+      console.log(response.data)
+    }
+  }
   React.useEffect(() => {
-    const accounttype = formType=='Debit' ?  'Expenses':'Income';
+    const mycompanies = getCompanyIds(companies)
+    const mylocations = getLocationIds(locations)
+    getallVoucher(mycompanies, mylocations)
+  }, [companies, locations])
+  React.useEffect(() => {
+    const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
     console.log(accounttype)
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      return (account.isGroup==false && account.accountType==accounttype)
+      return account.isGroup == false && account.accountType == accounttype
     })
     setFilteredChartOfAccounts(filteredCoa)
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
@@ -243,6 +244,7 @@ React.useEffect(()=>{
       console.log('data', response.data)
     }
   }
+
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
@@ -272,10 +274,10 @@ React.useEffect(()=>{
       ],
     },
   })
- const onSubmit=async(
+  const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
-  )=> {
+  ) => {
     console.log('Before Any edit' + values)
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -284,58 +286,68 @@ React.useEffect(()=>{
       setUser(userData)
     }
     // To update the missing fields on the list
-    const totalAmount = values.journalDetails.reduce((sum, detail) => sum + (detail.debit || detail.credit || 0), 0);
-// To Update the total Amount
+    const totalAmount = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.debit || detail.credit || 0),
+      0
+    )
+    // To Update the total Amount
     const updatedValues = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
         status: status === 'Draft' ? 0 : 1,
-        journalType:"Cash Voucher",
-        amountTotal:totalAmount,
-        createdBy: user?.userId||0,
+        journalType: 'Cash Voucher',
+        amountTotal: totalAmount,
+        createdBy: user?.userId || 0,
       },
-      journalDetails: values.journalDetails.map(detail => ({
+      journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        createdBy: user?.userId||0,
-      }))
-    };
-    console.log('After Adding created by'+updatedValues)
+        createdBy: user?.userId || 0,
+      })),
+    }
+    console.log('After Adding created by' + updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
-    const updateValueswithCash={...updatedValues,
-    journalDetails: [
-      ...updatedValues.journalDetails, // Spread existing journalDetails
-      {
-        accountId: 1 ,
-        costCenterId: null,
-        departmentId: null,
-        debit: formType === 'Receipt' ? updatedValues.journalEntry.amountTotal : 0,
-        credit: formType === 'Payment' ? updatedValues.journalEntry.amountTotal : 0,
-        analyticTags: null,
-        taxId: null,
-        resPartnerId: null,
-        bankaccountid:null,
-        notes: updatedValues.journalEntry.notes,
-        createdBy: user?.userId||0,
-      
-    },   
-    ]}
+    const updateValueswithCash = {
+      ...updatedValues,
+      journalDetails: [
+        ...updatedValues.journalDetails, // Spread existing journalDetails
+        {
+          accountId: 1,
+          costCenterId: null,
+          departmentId: null,
+          debit:
+            formType === 'Receipt' ? updatedValues.journalEntry.amountTotal : 0,
+          credit:
+            formType === 'Payment' ? updatedValues.journalEntry.amountTotal : 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          bankaccountid: null,
+          notes: updatedValues.journalEntry.notes,
+          createdBy: user?.userId || 0,
+        },
+      ],
+    }
 
-    console.log('Submitted values:', JSON.stringify(updateValueswithCash, null, 2));
-    const response = await createJournalEntryWithDetails(updateValueswithCash);  // Calling API to Enter at Generate
+    console.log(
+      'Submitted values:',
+      JSON.stringify(updateValueswithCash, null, 2)
+    )
+    const response = await createJournalEntryWithDetails(updateValueswithCash) // Calling API to Enter at Generate
     if (response.error || !response.data) {
       console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Error creating Journal',
+        description: response.error?.message || 'Error creating Journal',
       })
     } else {
-      console.log('Voucher is created successfully',response.data)
+      console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
-      })}}
+      })
+    }
+  }
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'journalDetails',
@@ -381,9 +393,7 @@ React.useEffect(()=>{
       <div className="w-full my-10 p-6">
         <h1 className="text-xl font-semibold mb-6">Cash Voucher</h1>
 
-        <Form
-          {...form}
-        >
+        <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <div className="grid grid-cols-4 gap-4">
               <FormField
@@ -731,8 +741,8 @@ React.useEffect(()=>{
                             type="button"
                             variant="outline"
                             onClick={() => {
-                              const values = form.getValues();
-                               onSubmit(values, 'Draft');
+                              const values = form.getValues()
+                              onSubmit(values, 'Draft')
                             }}
                           >
                             Save as Draft
@@ -743,7 +753,7 @@ React.useEffect(()=>{
                             onClick={() => {
                               const values = form.getValues()
                               //console.log('Posted:', values)
-                               onSubmit(values, 'Posted');
+                              onSubmit(values, 'Posted')
                             }}
                           >
                             Save as Post
@@ -783,11 +793,15 @@ React.useEffect(()=>{
                       <TableCell>{voucher.companyname}</TableCell>
                       <TableCell>{voucher.currency}</TableCell>
                       <TableCell>{voucher.location}</TableCell>
-                       <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
+                      <TableCell className="">
+                        {voucher.date.toString() || 'N/A'}
+                      </TableCell>
                       <TableCell>{voucher.notes}</TableCell>
                       <TableCell>{voucher.debit}</TableCell>
                       <TableCell>{voucher.totalamount}</TableCell>
-                      <TableCell className="">{voucher.state === 0 ? "Draft" : "Post"}</TableCell>
+                      <TableCell className="">
+                        {voucher.state === 0 ? 'Draft' : 'Post'}
+                      </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <AlertDialog>
@@ -852,10 +866,14 @@ React.useEffect(()=>{
                           >
                             <Check className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="icon">
-                          
-                           
-                          </Button>
+                          <Link
+                            href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
+                          >
+                            <Button variant="outline" size="icon">
+                              <Printer className="h-4 w-4" />{' '}
+                              {/* ShadCN-compatible icon */}
+                            </Button>
+                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -869,4 +887,3 @@ React.useEffect(()=>{
     </div>
   )
 }
-
