@@ -11,14 +11,13 @@ import {
 } from '@/utils/type'
 import { z } from 'zod'
 
-
 export type CostCenter = z.infer<typeof costCentersArraySchema>
 
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails
 ) {
-  console.log("Under APi:");
-  console.log(data);
+  console.log('Under APi:')
+  console.log(data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
@@ -26,18 +25,17 @@ export async function createJournalEntryWithDetails(
   })
 }
 // Get All Voucher Data
-export async function getAllVoucher(data:JournalQuery) {
-  const queryParams=new URLSearchParams({
+export async function getAllVoucher(data: JournalQuery) {
+  const queryParams = new URLSearchParams({
     date: data.date,
     companyId: JSON.stringify(data.companyId), // Convert array to JSON string
     locationId: JSON.stringify(data.locationId), // Convert array to JSON string
     voucherType: data.voucherType,
-  }).toString();
+  }).toString()
   console.log(queryParams)
   return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
-    
   })
 }
 // chart of accouts get all data
@@ -60,6 +58,14 @@ export async function getAllCostCenters() {
 export async function getAllResPartners() {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
+    method: 'GET',
+  })
+}
+
+export async function getAllVoucherById(voucherid: string) {
+  console.log(voucherid)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
     method: 'GET',
   })
 }
