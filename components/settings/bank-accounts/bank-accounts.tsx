@@ -58,7 +58,7 @@ import {
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
-import { BankAccount, ChartOfAccount } from '@/utils/type'
+import { AccountsHead, BankAccount, ChartOfAccount } from '@/utils/type'
 
 export default function BankAccounts() {
   // const { user } = useAuthContext()
@@ -69,7 +69,7 @@ export default function BankAccounts() {
     React.useState<BankAccount | null>(null)
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
-  const [glAccounts, setGlAccounts] = React.useState<ChartOfAccount[]>([])
+  const [glAccounts, setGlAccounts] = React.useState<AccountsHead[]>([])
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -94,13 +94,17 @@ export default function BankAccounts() {
       isActive: true,
       isReconcilable: true,
       createdBy: userId,
-      glAccountId: '',
+      glAccountId: 0,
     },
   })
 
   React.useEffect(() => {
     // console.log('Fetching bank accounts')
     fetchBankAccounts()
+  }, [])
+
+  React.useEffect(() => {
+    // console.log('Fetching gl accounts')
     fetchGlAccounts()
   }, [])
 
@@ -111,7 +115,7 @@ export default function BankAccounts() {
         ...editingAccount,
         openingBalance: Number(editingAccount.openingBalance),
         updatedBy: userId,
-        glAccountId: editingAccount.glAccountId || '',
+        glAccountId: editingAccount.glAccountId || 0,
       })
     } else {
       form.reset({
@@ -124,7 +128,7 @@ export default function BankAccounts() {
         isActive: true,
         isReconcilable: true,
         createdBy: userId,
-        glAccountId: '',
+        glAccountId: 0,
       })
     }
   }, [editingAccount, form, userId])
@@ -146,7 +150,7 @@ export default function BankAccounts() {
 
   async function fetchGlAccounts() {
     const fetchedGlAccounts = await getAllGlAccounts()
-    console.log('Fetched gl accounts:', fetchedGlAccounts.data)
+    console.log('Fetched gl accounts:', fetchedGlAccounts)
 
     if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
       console.error('Error getting gl bank account:', fetchedGlAccounts.error)
@@ -156,8 +160,7 @@ export default function BankAccounts() {
           fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
       })
     } else {
-      setGlAccounts(fetchedGlAccounts.data)
-      console.log('dkdkei', glAccounts)
+      setGlAccounts(fetchedGlAccounts.data) //need to add the correct type in api file
     }
   }
 
@@ -494,7 +497,7 @@ export default function BankAccounts() {
                           <FormLabel>GL Account</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            defaultValue={field.value?.toString()}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -504,8 +507,8 @@ export default function BankAccounts() {
                             <SelectContent>
                               {glAccounts?.map((glaccount) => (
                                 <SelectItem
-                                  key={glaccount.id}
-                                  value={glaccount.id?.toString()}
+                                  key={glaccount.accountId}
+                                  value={glaccount.accountId.toString()}
                                 >
                                   {glaccount.name} ({glaccount.code})
                                 </SelectItem>

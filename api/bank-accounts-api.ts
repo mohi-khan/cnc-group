@@ -1,10 +1,10 @@
 import { fetchApi } from '@/utils/http'
-import { ChartOfAccount } from '@/utils/type'
+import { AccountsHead, ChartOfAccount } from '@/utils/type'
 import { z } from 'zod'
 
 // Zod schema for bank account validation
 export const bankAccountSchema = z.object({
-  id: z.number().optional(),
+  id: z.number(),
   accountName: z
     .string()
     .min(2, 'Account name must be at least 2 characters.')
@@ -49,8 +49,7 @@ export const bankAccountSchema = z.object({
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
   glAccountId: z
-    .string()
-    .max(36, 'GL Account ID must not exceed 36 characters')
+    .number()
     .optional(),
   bankCode: z
     .string()
@@ -108,7 +107,7 @@ export async function getAllBankAccounts() {
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
 export async function getAllGlAccounts() { 
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })

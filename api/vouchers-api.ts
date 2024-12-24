@@ -2,6 +2,7 @@ import { fetchApi } from '@/utils/http'
 import {
   AccountsHead,
   ChartOfAccount,
+  costCentersArraySchema,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   JournalQuery,
@@ -9,9 +10,9 @@ import {
   ResPartner,
 } from '@/utils/type'
 import { z } from 'zod'
-import { costCenterSchema } from './cost-centers-api'
 
-export type CostCenter = z.infer<typeof costCenterSchema>
+
+export type CostCenter = z.infer<typeof costCentersArraySchema>
 
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails

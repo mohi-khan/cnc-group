@@ -36,6 +36,9 @@ export async function fetchApi<T>({
   headers = {},
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
+  console.log(`${API_BASE_URL}/${url}`)
+  console.log(JSON.stringify(body))
+
   const response = await fetch(
     `${API_BASE_URL}/${url}`,
     {
@@ -46,8 +49,8 @@ export async function fetchApi<T>({
       },
       body: body ? JSON.stringify(body) : undefined,
     }
-  ).catch(() => null)
-
+  )
+console.log(`${API_BASE_URL}/${url}`)
   // Handle network errors
   if (!response) {
     return {
@@ -83,7 +86,7 @@ export async function fetchApi<T>({
       },
     }
   }
-
+  console.log(response);
   // Parse JSON response
   const jsonData = await response.json().catch(() => null)
   if (!jsonData) {
@@ -114,4 +117,5 @@ export async function fetchApi<T>({
   }
 
   return { data: jsonData as T, error: null }
+  
 }

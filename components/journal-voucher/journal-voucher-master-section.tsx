@@ -18,10 +18,15 @@ import {
 import {
   CompanyFromLocalstorage,
   JournalEntryWithDetails,
+  JournalQuery,
+  JournalResult,
   LocationFromLocalstorage,
   User,
+  VoucherTypes,
 } from '@/utils/type'
 import React from 'react'
+import { toast } from '@/hooks/use-toast'
+import { getAllVoucher } from '@/api/journal-voucher-api'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -37,6 +42,7 @@ export function JournalVoucherMasterSection({
     []
   )
   const [user, setUser] = React.useState<User | null>(null)
+  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -46,10 +52,49 @@ export function JournalVoucherMasterSection({
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
       console.log('Current user from localStorage:', userData)
+
+      const companyIds = getCompanyIds(userData.userCompanies)
+      const locationIds = getLocationIds(userData.userLocations)
+      console.log({ companyIds, locationIds })
+      fetchAllVoucher(companyIds, locationIds)
     } else {
       console.log('No user data found in localStorage')
     }
   }, [])
+
+  async function fetchAllVoucher(company: number[], location: number[]) {
+    const voucherQuery: JournalQuery = {
+      date: '2024-12-18',
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.JournalVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery)
+    if (response.error || !response.data) {
+      console.error('Error getting Voucher Data:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get Voucher Data',
+      })
+    } else {
+      console.log('voucher', response.data)
+      setVoucherGrid(response.data)
+    }
+  }
+
+  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+    return data.map((company) => company.company.companyId)
+  }
+  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+    return data.map((location) => location.location.locationId)
+  }
+
+  // React.useEffect(() => {
+  //   const mycompanies = getCompanyIds(companies)
+  //   const mylocations = getLocationIds(locations)
+  //   console.log(mycompanies, mylocations)
+  //   fetchAllVoucher(mycompanies, mylocations)
+  // }, [companies, locations])
 
   return (
     <div className="space-y-6">

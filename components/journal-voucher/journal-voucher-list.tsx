@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -10,6 +10,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { JournalVoucherPopup } from './journal-voucher-popup'
+import {
+  CompanyFromLocalstorage,
+  JournalQuery,
+  JournalResult,
+  LocationFromLocalstorage,
+  User,
+  VoucherTypes,
+} from '@/utils/type'
+import { toast } from '@/hooks/use-toast'
+import { getAllVoucher } from '@/api/journal-voucher-api'
 
 interface Voucher {
   id: number
@@ -42,6 +52,59 @@ const initialVouchers: Voucher[] = [
 
 export default function VoucherTable() {
   const [vouchers, setVouchers] = useState<Voucher[]>(initialVouchers)
+  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
+    []
+  )
+  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>(
+    []
+  )
+  const [user, setUser] = React.useState<User | null>(null)
+  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+      console.log('Current user from localStorage:', userData)
+
+      const companyIds = getCompanyIds(userData.userCompanies)
+      const locationIds = getLocationIds(userData.userLocations)
+      console.log({ companyIds, locationIds })
+      fetchAllVoucher(companyIds, locationIds)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
+  async function fetchAllVoucher(company: number[], location: number[]) {
+    const voucherQuery: JournalQuery = {
+      date: '2024-12-18',
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.JournalVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery)
+    if (response.error || !response.data) {
+      console.error('Error getting Voucher Data:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get Voucher Data',
+      })
+    } else {
+      console.log('voucher', response.data)
+      setVoucherGrid(response.data)
+    }
+  }
+
+  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+    return data.map((company) => company.company.companyId)
+  }
+  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+    return data.map((location) => location.location.locationId)
+  }
 
   const handleSubmit = (voucherData: Omit<Voucher, 'id'>) => {
     // Here you would typically send the data to your backend
@@ -73,14 +136,14 @@ export default function VoucherTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchers.map((voucher) => (
+          {vouchergrid.map((voucher) => (
             <TableRow key={voucher.id}>
-              <TableCell className="font-medium">{voucher.voucherNo}</TableCell>
-              <TableCell>{voucher.voucherDate}</TableCell>
+              <TableCell className="font-medium">{voucher.voucherno}</TableCell>
+              <TableCell>{voucher.date}</TableCell>
               <TableCell>{voucher.notes}</TableCell>
-              <TableCell>{voucher.companyNameLocation}</TableCell>
+              <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
               <TableCell className="text-right">
-                ${voucher.amount.toFixed(2)}
+                ${voucher.totalamount.toFixed(2)}
               </TableCell>
             </TableRow>
           ))}

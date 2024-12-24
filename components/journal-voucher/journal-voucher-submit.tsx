@@ -8,30 +8,31 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Upload } from 'lucide-react'
+import { Loader2, Upload } from 'lucide-react'
 import { JournalEntryWithDetails } from '@/utils/type'
 
 interface JournalVoucherSubmitProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onSubmit: () => void
+  isSubmitting: boolean
 }
 
 export function JournalVoucherSubmit({
   form,
   onSubmit,
+  isSubmitting,
 }: JournalVoucherSubmitProps) {
   return (
     <div className="space-y-4">
       <FormField
         control={form.control}
         name="attachment"
-        render={({ field: { value, onChange, ...field } }) => (
+        render={({ field: { value, ...field } }) => (
           <FormItem>
             <FormLabel>Attachment</FormLabel>
             <div className="flex items-center gap-2">
               <Input
                 type="file"
-                onChange={(e) => onChange(e.target.files?.[0] || null)}
                 className="hidden"
                 id="file-upload"
                 {...field}
@@ -44,7 +45,7 @@ export function JournalVoucherSubmit({
               </FormLabel>
               {value && (
                 <span className="text-sm text-muted-foreground">
-                  {value.name}
+                  {value instanceof File ? value.name : 'File selected'}
                 </span>
               )}
             </div>
@@ -61,20 +62,31 @@ export function JournalVoucherSubmit({
               <Checkbox
                 checked={field.value === 1}
                 onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                disabled={isSubmitting}
               />
             </FormControl>
-            <FormLabel>Draft</FormLabel>
+            <FormLabel className={isSubmitting ? 'opacity-50' : ''}>Draft</FormLabel>
           </FormItem>
         )}
       />
 
       <div className="flex justify-end gap-4">
-        <Button type="submit" onClick={onSubmit}>
-          {form.getValues('journalEntry.state') === 1
-            ? 'Save as Draft'
-            : 'Post'}
+        <Button 
+          type="submit" 
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {form.getValues('journalEntry.state') === 1 ? 'Saving...' : 'Posting...'}
+            </>
+          ) : (
+            form.getValues('journalEntry.state') === 1 ? 'Save as Draft' : 'Post'
+          )}
         </Button>
       </div>
     </div>
   )
 }
+

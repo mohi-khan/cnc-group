@@ -1,13 +1,15 @@
 import { z } from 'zod'
 import { fetchApi } from '@/utils/http'
 import {
-  Account,
+  ChartOfAccount,
   BankAccount,
   Company,
   CostCenter,
   LocationData,
   ResPartner,
+  AccountsHead,
 } from '@/utils/type'
+import { ChartOfAccounts } from './chart-of-accounts-api'
 
 export async function getAllCompanies() {
   return fetchApi<Company[]>({
@@ -32,7 +34,7 @@ export async function getAllBankAccounts() {
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
 export async function getAllChartOfAccounts() {
-  return fetchApi<Account[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
