@@ -1,22 +1,27 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { getSingleVoucher } from '@/api/journal-voucher-api'
+import {
+  getSingleVoucher,
+  reverseJournalVoucher,
+} from '@/api/journal-voucher-api'
 import { JournalEntryWithDetails } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
 
 export default function SingleJournalVoucher() {
   const { voucherid } = useParams()
+  const router = useRouter()
   const [data, setData] = useState<JournalEntryWithDetails>()
   const [editingReferenceIndex, setEditingReferenceIndex] = useState<
     number | null
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
+  const [isReversingVoucher, setIsReversingVoucher] = useState(false)
 
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
@@ -54,16 +59,24 @@ export default function SingleJournalVoucher() {
 
   const handleReferenceSave = () => {
     if (data && editingReferenceIndex !== null) {
-      const updatedData = [...data.items]
+      const updatedData = [...data]
       updatedData[editingReferenceIndex] = {
         ...updatedData[editingReferenceIndex],
         notes: editingReferenceText,
       }
-      setData({
-        ...data,
-        items: updatedData,
-      })
+      setData(updatedData)
       setEditingReferenceIndex(null)
+    }
+  }
+
+  const handleReverseVoucher = async () => {
+    if (!voucherid || !data) return
+    const createdId = 60 // Replace with the actual user ID or fetch it from your auth system
+    const response = await reverseJournalVoucher(voucherid, createdId)
+    if (!response.data || response.error) {
+      console.log(response.error)
+    } else {
+      setIsReversingVoucher(true)
     }
   }
 
@@ -81,15 +94,28 @@ export default function SingleJournalVoucher() {
               <span className="font-medium">Voucher No:</span>
               <span>{data[0].voucherno}</span>
             </div>
-            <div className="grid grid-cols-[120px,1fr] gap-2">
-              <span className="font-medium">Accounting Date:</span>
+            <div className="grid grid-cols-[120px,1fr] gap-8">
+              <span className="font-medium whitespace-nowrap">
+                Accounting Date:
+              </span>
               <span>{data[0].date}</span>
+            </div>
+            <div className="grid grid-cols-[120px,1fr] gap-8">
+              <span className="font-medium whitespace-nowrap">
+                Created By:
+              </span>
+              <span></span>
             </div>
           </div>
           <div className="flex justify-end gap-2 no-print">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReverseVoucher}
+              disabled={isReversingVoucher}
+            >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Reverse
+              {isReversingVoucher ? 'Reversing...' : 'Reverse'}
             </Button>
             <Button variant="outline" size="sm" onClick={reactToPrintFn}>
               <Printer className="w-4 h-4 mr-2" />

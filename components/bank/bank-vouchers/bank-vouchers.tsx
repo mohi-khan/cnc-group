@@ -957,30 +957,6 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" size="icon">
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-white">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the voucher.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(voucher.voucherno)}
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="icon">
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
@@ -1008,9 +984,9 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
                   >
                     <Check className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  {/* <Button variant="outline" size="icon">
                     <Printer className="h-4 w-4" />
-                  </Button>
+                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>
