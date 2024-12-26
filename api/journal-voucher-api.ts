@@ -52,6 +52,14 @@ export async function getSingleVoucher(voucherid: string) {
   })
 }
 
+export async function reverseJournalVoucher(voucherid: number, createid: number) {
+  console.log(voucherid, createid)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/postJournal/${voucherid}/${createid}`,
+    method: 'POST',
+  })
+}
+
 export async function getAllVoucher(data: JournalQuery) {
   const queryParams = new URLSearchParams({
     date: data.date,
