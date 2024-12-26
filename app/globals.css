@@ -11,3 +11,9 @@ body {
     --radius: 0.5rem;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
