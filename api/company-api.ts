@@ -25,6 +25,8 @@ export const locationSchema = z.object({
   address: z.string().min(1, 'Address is required'),
 })
 
+export type CompanyType = z.infer<typeof companySchema>
+
 export async function createCompany(
   companyData: z.infer<typeof companySchema>,
   locations: string[]
@@ -55,6 +57,14 @@ export async function createCompany(
   }
 
   return data
+}
+
+//get all companies api
+export async function getAllCompany() {
+  return fetchApi<CompanyType[]>({
+    url: 'api/company/get-all-companies',
+    method: 'GET',
+  })
 }
 
 // export async function createCompany(
