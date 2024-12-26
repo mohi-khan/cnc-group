@@ -789,7 +789,11 @@ export default function CashVoucher() {
                 <TableBody>
                   {vouchergrid.map((voucher) => (
                     <TableRow key={voucher.voucherid}>
-                      <TableCell>{voucher.voucherno}</TableCell>
+                      <Link
+                        href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
+                      >
+                        <TableCell>{voucher.voucherno}</TableCell>
+                      </Link>
                       <TableCell>{voucher.companyname}</TableCell>
                       <TableCell>{voucher.currency}</TableCell>
                       <TableCell>{voucher.location}</TableCell>
@@ -804,34 +808,6 @@ export default function CashVoucher() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="icon">
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-white">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Are you sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will
-                                  permanently delete the voucher.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDelete(voucher.voucherno)
-                                  }
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="outline" size="icon">
@@ -866,14 +842,6 @@ export default function CashVoucher() {
                           >
                             <Check className="h-4 w-4" />
                           </Button>
-                          <Link
-                            href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
-                          >
-                            <Button variant="outline" size="icon">
-                              <Printer className="h-4 w-4" />{' '}
-                              {/* ShadCN-compatible icon */}
-                            </Button>
-                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
