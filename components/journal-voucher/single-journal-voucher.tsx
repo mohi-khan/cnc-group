@@ -72,7 +72,8 @@ export default function SingleJournalVoucher() {
   const handleReverseVoucher = async () => {
     if (!voucherid || !data) return
     const createdId = 60 // Replace with the actual user ID or fetch it from your auth system
-    const response = await reverseJournalVoucher(voucherid, createdId)
+    const response = await reverseJournalVoucher(data[0].voucherno, createdId)
+    console.log("🚀 ~ handleReverseVoucher ~ data[0].voucherno:", data[0].voucherno)
     if (!response.data || response.error) {
       console.log(response.error)
     } else {

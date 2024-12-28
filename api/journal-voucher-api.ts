@@ -52,7 +52,15 @@ export async function getSingleVoucher(voucherid: string) {
   })
 }
 
-export async function reverseJournalVoucher(voucherid: number, createid: number) {
+export async function reverseJournalVoucher(voucherNo: number, createdId: number) {
+  console.log('api file',voucherNo, createdId)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/reverseEntry`,
+    method: 'POST',
+  })
+}
+
+export async function editJournalVoucher(voucherid: number, createid: number) {
   console.log(voucherid, createid)
   return fetchApi<JournalEntryWithDetails[]>({
     url: `api/journal/postJournal/${voucherid}/${createid}`,
