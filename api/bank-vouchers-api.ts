@@ -8,6 +8,8 @@ import {
   LocationData,
   ResPartner,
   AccountsHead,
+  JournalQuery,
+  JournalEntryWithDetails,
 } from '@/utils/type'
 import { ChartOfAccounts } from './chart-of-accounts-api'
 
@@ -50,6 +52,33 @@ export async function getAllCostCenters() {
 export async function getAllResPartners() {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
+    method: 'GET',
+  })
+}
+
+export async function reverseVoucher(voucherNo: number, createdId: number) {
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/reverseEntry`,
+    method: 'POST',
+    body: { voucherNo, createdId },
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function editJournalVoucher(voucherid: number, createid: number) {
+  console.log(voucherid, createid)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/postJournal/${voucherid}/${createid}`,
+    method: 'POST',
+  })
+}
+
+export async function getSingleVoucher(voucherid: string) {
+  console.log(voucherid)
+  return fetchApi<JournalEntryWithDetails[]>({
+    url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
   })
 }

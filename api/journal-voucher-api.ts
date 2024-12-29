@@ -53,10 +53,13 @@ export async function getSingleVoucher(voucherid: string) {
 }
 
 export async function reverseJournalVoucher(voucherNo: number, createdId: number) {
-  console.log('api file',voucherNo, createdId)
   return fetchApi<JournalEntryWithDetails[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
+    body: { voucherNo, createdId },
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 }
 

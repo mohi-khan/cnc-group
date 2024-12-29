@@ -81,6 +81,7 @@ import {
   createJournalEntryWithDetails,
   getAllVoucher,
 } from '@/api/vouchers-api'
+import Link from 'next/link'
 
 interface User {
   userId: number
@@ -176,14 +177,13 @@ export default function BankVoucher() {
 
   // For Getting All The Vouchers
 
-function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
-  return data.map(company => company.company.companyId);
-}
-function getLocationIds(data: LocationFromLocalstorage[]): number[] {
-  return data.map(location => location.location.locationId);
-}
- 
-    
+  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+    return data.map((company) => company.company.companyId)
+  }
+  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+    return data.map((location) => location.location.locationId)
+  }
+
   async function getallVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
       date: '2024-12-18',
@@ -202,7 +202,7 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
       setVoucherGrid(response.data)
     }
   }
-  
+
   React.useEffect(() => {
     const mycompanies = getCompanyIds(companies)
     const mylocations = getLocationIds(locations)
@@ -280,12 +280,12 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
   //Run When Type is Changed
   React.useEffect(() => {
     console.log(formType)
-    const accounttype = formType=='Debit' ?  'Expenses':'Income';
+    const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
     console.log(accounttype)
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      return (account.isGroup==false && account.accountType==accounttype)
+      return account.isGroup == false && account.accountType == accounttype
     })
-    console.log('COA',chartOfAccounts)
+    console.log('COA', chartOfAccounts)
     setFilteredChartOfAccounts(filteredCoa)
     console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
   }, [formType, chartOfAccounts])
@@ -317,24 +317,27 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     }
     console.log('After Adding created by' + updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
-    const updateValueswithBank={...updatedValues,
-    journalDetails: [
-      ...updatedValues.journalDetails, // Spread existing journalDetails
-      {
-        accountId: selectedBankAccount?.glCode||0 ,
-        costCenterId: null,
-        departmentId: null,
-        debit: formType === 'Debit' ? updatedValues.journalEntry.amountTotal : 0,
-        credit: formType === 'Credit' ? updatedValues.journalEntry.amountTotal : 0,
-        analyticTags: null,
-        taxId: null,
-        resPartnerId: null,
-        bankaccountid:selectedBankAccount?.id,
-        notes: updatedValues.journalEntry.notes,
-        createdBy: user?.userId||0,
-      
-    },   
-    ]}
+    const updateValueswithBank = {
+      ...updatedValues,
+      journalDetails: [
+        ...updatedValues.journalDetails, // Spread existing journalDetails
+        {
+          accountId: selectedBankAccount?.glCode || 0,
+          costCenterId: null,
+          departmentId: null,
+          debit:
+            formType === 'Debit' ? updatedValues.journalEntry.amountTotal : 0,
+          credit:
+            formType === 'Credit' ? updatedValues.journalEntry.amountTotal : 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          bankaccountid: selectedBankAccount?.id,
+          notes: updatedValues.journalEntry.notes,
+          createdBy: user?.userId || 0,
+        },
+      ],
+    }
 
     console.log(
       'Submitted values:',
@@ -943,15 +946,21 @@ function getLocationIds(data: LocationFromLocalstorage[]): number[] {
         <TableBody>
           {vouchergrid.map((voucher) => (
             <TableRow key={voucher.voucherid} className="border-b">
-              <TableCell className="">{voucher.voucherno}</TableCell>
+              <TableCell className="">
+                <Link href={`/bank/bank-vouchers/single-bank-voucher/${voucher.voucherid}`}>{voucher.voucherno}</Link>
+              </TableCell>
               <TableCell className="">{voucher.notes}</TableCell>
               <TableCell className="">{voucher.companyname}</TableCell>
               <TableCell className="">{voucher.location}</TableCell>
               <TableCell className="">{voucher.currency}</TableCell>
               <TableCell className="">{voucher.bankaccount}</TableCell>
-              <TableCell className="">{voucher.date.toString() || 'N/A'}</TableCell>
+              <TableCell className="">
+                {voucher.date.toString() || 'N/A'}
+              </TableCell>
               <TableCell className="">{voucher.totalamount}</TableCell>
-              <TableCell className="">{voucher.state === 0 ? "Draft" : "Post"}</TableCell>
+              <TableCell className="">
+                {voucher.state === 0 ? 'Draft' : 'Post'}
+              </TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <AlertDialog>

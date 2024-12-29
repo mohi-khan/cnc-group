@@ -6,14 +6,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import {
-  getSingleVoucher,
-  reverseJournalVoucher,
-} from '@/api/journal-voucher-api'
-import { JournalEntryWithDetails } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
+import { JournalEntryWithDetails } from '@/utils/type'
+import { getSingleVoucher, reverseVoucher } from '@/api/bank-vouchers-api'
 
-export default function SingleJournalVoucher() {
+export default function SingleBankVoucher() {
   const { voucherid } = useParams()
   const router = useRouter()
   const [data, setData] = useState<JournalEntryWithDetails>()
@@ -35,16 +32,17 @@ export default function SingleJournalVoucher() {
           toast({
             title: 'Error',
             description:
-              response.error?.message || 'Failed to get Voucher Data',
+              response.error?.message || 'Failed to get Bank Voucher Data',
           })
         } else {
           setData(response.data.data)
         }
+          console.log("🚀 ~ fetchVoucher ~ response.data.data:", response.data.data)
       } catch (error) {
         toast({
           title: 'Error',
           description:
-            'An unexpected error occurred while fetching the voucher.',
+            'An unexpected error occurred while fetching the bank voucher.',
         })
       }
     }
@@ -74,35 +72,36 @@ export default function SingleJournalVoucher() {
     const createdId = 60 // Replace with actual user ID
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(
-        Number(data[0].voucherno), // Ensure number type
+      const response = await reverseVoucher(
+        Number(data[0].voucherno),
         createdId
       )
     
       if (!response.data || response.error) {
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to reverse the voucher',
+          description: response.error?.message || 'Failed to reverse the bank voucher',
           variant: 'destructive',
         })
       } else {
         toast({
           title: 'Success',
-          description: 'Voucher reversed successfully',
+          description: 'Bank voucher reversed successfully',
         })
-        router.refresh() // Refresh the page data
+        router.refresh()
       }
     } catch (error: any) {
-      console.error('Reverse voucher error:', error)
+      console.error('Reverse bank voucher error:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to reverse the voucher',
+        description: error.message || 'Failed to reverse the bank voucher',
         variant: 'destructive',
       })
     } finally {
       setIsReversingVoucher(false)
     }
   }
+
   if (!data) {
     return <p>Loading...</p>
   }
@@ -147,9 +146,9 @@ export default function SingleJournalVoucher() {
           </div>
         </div>
 
-        {/* Journal Items Table */}
+        {/* Bank Items Table */}
         <div className="mb-6">
-          <h3 className="font-medium mb-4">Journal Items</h3>
+          <h3 className="font-medium mb-4">Bank Items</h3>
           <div className="border rounded-lg">
             <div className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 bg-muted text-sm font-medium">
               <div>Accounts</div>
@@ -217,3 +216,4 @@ export default function SingleJournalVoucher() {
     </Card>
   )
 }
+
