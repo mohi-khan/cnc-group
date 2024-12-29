@@ -141,7 +141,7 @@ export default function VoucherTable() {
             <TableRow key={voucher.id}>
               <TableCell className="font-medium">
                 <Link
-                  href={`/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
+                  href={`/accounting/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
                 >
                   {voucher.voucherno}
                 </Link>

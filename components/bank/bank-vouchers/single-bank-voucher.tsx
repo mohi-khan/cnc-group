@@ -8,7 +8,7 @@ import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useReactToPrint } from 'react-to-print'
 import { JournalEntryWithDetails } from '@/utils/type'
-import { getSingleVoucher, reverseVoucher } from '@/api/bank-vouchers-api'
+import { getSingleVoucher, reverseBankVoucher } from '@/api/bank-vouchers-api'
 
 export default function SingleBankVoucher() {
   const { voucherid } = useParams()
@@ -25,28 +25,21 @@ export default function SingleBankVoucher() {
 
   useEffect(() => {
     async function fetchVoucher() {
-      if (!voucherid) return
-      try {
-        const response = await getSingleVoucher(voucherid as string)
-        if (response.error || !response.data) {
-          toast({
-            title: 'Error',
-            description:
-              response.error?.message || 'Failed to get Bank Voucher Data',
-          })
-        } else {
-          setData(response.data.data)
-        }
-          console.log("🚀 ~ fetchVoucher ~ response.data.data:", response.data.data)
-      } catch (error) {
+      const response = await getSingleVoucher(voucherid as string)
+      if (response.error || !response.data) {
         toast({
           title: 'Error',
           description:
-            'An unexpected error occurred while fetching the bank voucher.',
+            response.error?.message || 'Failed to get Bank Voucher Data',
         })
+      } else {
+        setData(response.data)
+        console.log(
+          '🚀 ~ fetchVoucher ~ response.data.data:',
+          response.data
+        )
       }
     }
-
     fetchVoucher()
   }, [voucherid])
 
@@ -68,39 +61,47 @@ export default function SingleBankVoucher() {
   }
 
   const handleReverseVoucher = async () => {
-    if (!voucherid || !data) return
-    const createdId = 60 // Replace with actual user ID
-    try {
-      setIsReversingVoucher(true)
-      const response = await reverseVoucher(
-        Number(data[0].voucherno),
-        createdId
-      )
-    
-      if (!response.data || response.error) {
+      const createdId = 60 // Replace with actual user ID
+      const voucherId = data[0]?.voucherid
+      if (!voucherId || !data) return
+      
+      if (!voucherId) {
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to reverse the bank voucher',
+          description: 'Invalid voucher number',
           variant: 'destructive',
         })
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Bank voucher reversed successfully',
-        })
-        router.refresh()
+        return
       }
-    } catch (error: any) {
-      console.error('Reverse bank voucher error:', error)
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to reverse the bank voucher',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsReversingVoucher(false)
+  
+      try {
+        setIsReversingVoucher(true)
+        const response = await reverseBankVoucher(voucherId, createdId)
+        
+        if (!response.data || response.error) {
+          toast({
+            title: 'Error',
+            description: response.error?.message || 'Failed to reverse the voucher',
+            variant: 'destructive',
+          })
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Voucher reversed successfully',
+          })
+          router.refresh()
+        }
+      } catch (error: any) {
+        console.error('Reverse voucher error:', error)
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to reverse the voucher',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsReversingVoucher(false)
+      }
     }
-  }
 
   if (!data) {
     return <p>Loading...</p>
@@ -123,9 +124,7 @@ export default function SingleBankVoucher() {
               <span>{data[0].date}</span>
             </div>
             <div className="grid grid-cols-[120px,1fr] gap-8">
-              <span className="font-medium whitespace-nowrap">
-                Created By:
-              </span>
+              <span className="font-medium whitespace-nowrap">Created By:</span>
               <span></span>
             </div>
           </div>
@@ -216,4 +215,3 @@ export default function SingleBankVoucher() {
     </Card>
   )
 }
-

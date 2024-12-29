@@ -1,4 +1,4 @@
-import JournalVoucher from '@/components/journal-voucher/journal-voucher'
+import JournalVoucher from '@/components/accounting/journal-voucher/journal-voucher'
 import React from 'react'
 
 const JournalVoucherPage = () => {
