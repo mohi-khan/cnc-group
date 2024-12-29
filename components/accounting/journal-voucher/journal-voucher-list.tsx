@@ -32,27 +32,9 @@ interface Voucher {
 }
 
 // This would typically come from a database or API
-const initialVouchers: Voucher[] = [
-  {
-    id: 1,
-    voucherNo: 'V001',
-    voucherDate: '2023-05-15',
-    notes: 'Monthly expense report',
-    companyNameLocation: 'Acme Corp, New York',
-    amount: 1500.0,
-  },
-  {
-    id: 2,
-    voucherNo: 'V002',
-    voucherDate: '2023-05-16',
-    notes: 'Office supplies',
-    companyNameLocation: 'Globex Inc, Los Angeles',
-    amount: 250.75,
-  },
-]
 
 export default function VoucherTable() {
-  const [vouchers, setVouchers] = useState<Voucher[]>(initialVouchers)
+  const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
   )
@@ -123,7 +105,7 @@ export default function VoucherTable() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Vouchers</h1>
+        <h1 className="text-2xl font-bold">Journal Vouchers</h1>
         <JournalVoucherPopup onSubmit={handleSubmit} />
       </div>
       <Table>
