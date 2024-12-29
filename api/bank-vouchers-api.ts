@@ -10,6 +10,7 @@ import {
   AccountsHead,
   JournalQuery,
   JournalEntryWithDetails,
+  VoucherById,
 } from '@/utils/type'
 import { ChartOfAccounts } from './chart-of-accounts-api'
 
@@ -56,8 +57,9 @@ export async function getAllResPartners() {
   })
 }
 
-export async function reverseVoucher(voucherNo: number, createdId: number) {
-  return fetchApi<JournalEntryWithDetails[]>({
+export async function reverseBankVoucher(voucherNo: number, createdId: number) {
+  console.log("🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:", voucherNo, createdId)
+  return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
     body: { voucherNo, createdId },

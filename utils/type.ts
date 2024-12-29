@@ -347,3 +347,28 @@ export const costCentersArraySchema = z.array(costCenterSchema)
 export type CostCenterActivateDeactivate = z.infer<
   typeof activateDeactivateCostCenterSchema
 >
+
+//Voucher Type by id
+const VoucherSchemaById = z.object({
+  voucherid: z.number(),
+  voucherno: z.string(),
+  date: z.string(),
+  journaltype: z.string(),
+  state: z.number(),
+  companyname: z.string(),
+  location: z.string(),
+  currency: z.string(),
+  totalamount: z.number(),
+  notes: z.string(),
+  id: z.number(),
+  accountsname: z.string(),
+  costcenter: z.string().nullable(),
+  department: z.any().nullable(), // If you know the type, replace z.any() with the correct type
+  debit: z.number(),
+  credit: z.number(),
+  partnar: z.any().nullable(), // If you know the type, replace z.any() with the correct type
+  bankaccount: z.any().nullable(), // If you know the type, replace z.any() with the correct type
+  detail_notes: z.string(),
+})
+
+export type VoucherById = z.infer<typeof VoucherSchemaById>

@@ -5,8 +5,10 @@ import {
   CostCenter,
   Department,
   JournalEntryWithDetails,
+  JournalEntryWithDetailsSchema,
   JournalQuery,
   LocationData,
+  VoucherById,
 } from '@/utils/type'
 
 export async function getAllCompanies() {
@@ -46,14 +48,15 @@ export async function getAllDepartments() {
 
 export async function getSingleVoucher(voucherid: string) {
   console.log(voucherid)
-  return fetchApi<JournalEntryWithDetails[]>({
+  return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
   })
 }
 
 export async function reverseJournalVoucher(voucherNo: number, createdId: number) {
-  return fetchApi<JournalEntryWithDetails[]>({
+  console.log("🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:", voucherNo, createdId)
+  return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
     body: { voucherNo, createdId },
@@ -65,7 +68,7 @@ export async function reverseJournalVoucher(voucherNo: number, createdId: number
 
 export async function editJournalVoucher(voucherid: number, createid: number) {
   console.log(voucherid, createid)
-  return fetchApi<JournalEntryWithDetails[]>({
+  return fetchApi<VoucherById[]>({
     url: `api/journal/postJournal/${voucherid}/${createid}`,
     method: 'POST',
   })
