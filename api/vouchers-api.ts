@@ -8,6 +8,7 @@ import {
   JournalQuery,
   JournalResult,
   ResPartner,
+  VoucherById,
 } from '@/utils/type'
 import { z } from 'zod'
 
@@ -64,7 +65,7 @@ export async function getAllResPartners() {
 
 export async function getAllVoucherById(voucherid: string) {
   console.log(voucherid)
-  return fetchApi<JournalEntryWithDetails[]>({
+  return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
     method: 'GET',
   })
