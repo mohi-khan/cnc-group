@@ -21,25 +21,6 @@ export default function Voucher() {
   const reactToPrintFn = useReactToPrint({ contentRef })
   const [companyData, setCompanyData] = useState<CompanyType[]>()
 
-  // async function getVoucherDetailsById() {
-  //   if (!voucherid) {
-  //     throw new Error('Voucher ID is missing')
-  //   }
-
-  //   const response = await getAllVoucherById(voucherid as string)
-
-  //   if (response.error || !response.data) {
-  //     console.error('Error getting voucher details:', response.error)
-  //     toast({
-  //       title: 'Error',
-  //       description: response.error?.message || 'Failed to get voucher details',
-  //     })
-  //     return
-  //   }
-  //   setVoucherData(response.data.data)
-  //   console.log('Get all data by id:', response.data.data)
-  // }
-
   async function getVoucherDetailsById() {
     if (!voucherid) {
       throw new Error('Voucher ID is missing')
@@ -81,8 +62,12 @@ export default function Voucher() {
       })
       return
     }
-    setCompanyData(response.data)
-    console.log('get all company data:', response.data)
+
+    const filterCompanyId = response.data.filter(
+      (item) => item.companyId === 75
+    )
+    setCompanyData(filterCompanyId)
+    console.log('get all company data:', filterCompanyId)
   }
 
   useEffect(() => {
@@ -95,20 +80,19 @@ export default function Voucher() {
   }
 
   return (
-    <div ref={contentRef}>
-      <Card className="w-full max-w-4xl mx-auto my-8 p-4 border shadow-lg">
-        {/* Header Section */}
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reverse
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => reactToPrintFn()}>
-            Print
-          </Button>
-        </div>
-
-        <CardHeader className="grid grid-cols-2 gap-4 border-b pb-4">
+    <Card className="w-full max-w-4xl mx-auto my-8 p-4 border shadow-lg">
+      {/* Header Section */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm">
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reverse
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => reactToPrintFn()}>
+          Print
+        </Button>
+      </div>
+      <div ref={contentRef}>
+        {/* <CardHeader className="grid grid-cols-2 gap-4 border-b pb-4">
           {companyData?.map((Item) => (
             <div key={Item.companyId} className="space-y-2">
               <div className="text-center py-4 bg-yellow-100">
@@ -121,6 +105,64 @@ export default function Voucher() {
               <p>State: {Item.state}</p>
               <p>Address 1: {Item.address}</p>
               <p>Address 2: {Item.city}</p>
+
+              <img
+                src="/logo.webp"
+                alt="Company Logo"
+                className="w-24 h-24 object-contain"
+              />
+
+              <Label>Date</Label>
+              <p>{voucherData.date}</p>
+              <Label>Voucher No</Label>
+              <p>{voucherData.voucherno}</p>
+              <Label>Payable To</Label>
+              <p>{voucherData.payableTo}</p>
+            </div>
+          ))}
+        </CardHeader> */}
+        <CardHeader className="space-y-4 border-b pb-4">
+          {companyData?.map((Item) => (
+            <div key={Item.companyId} className="space-y-4">
+              {/* Headline */}
+              <div className="text-center py-4 bg-yellow-100">
+                <h1 className="text-xl font-bold uppercase">
+                  {Item.companyName}
+                </h1>
+              </div>
+
+              {/* Two Columns */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left Column */}
+                <div className="space-y-2">
+                  <p>Phone: {Item.phone}</p>
+                  <p>Email: {Item.email}</p>
+                  <p>State: {Item.state}</p>
+                  <p>Address 1: {Item.address}</p>
+                  <p>Address 2: {Item.city}</p>
+                </div>
+
+                {/* Right Column */}
+                <div className="flex flex-col items-end space-y-2">
+                  <img
+                    src="/logo.webp"
+                    alt="Company Logo"
+                    className="w-24 h-24 object-contain"
+                  />
+                  <div>
+                    <Label>Date</Label>
+                    <p>{Item.date}</p>
+                  </div>
+                  <div>
+                    <Label>Voucher No</Label>
+                    <p>{voucherData.voucherno}</p>
+                  </div>
+                  <div>
+                    <Label>Payable To</Label>
+                    <p>{voucherData.payableTo}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </CardHeader>
@@ -171,6 +213,7 @@ export default function Voucher() {
                 <h4 className="text-sm font-medium mb-2">
                   Terms & Conditions:
                 </h4>
+
                 <p className="text-sm text-gray-700 mb-4">
                   {voucherData.map((item, id) => (
                     <div key={id}>
@@ -200,9 +243,8 @@ export default function Voucher() {
             </div>
           </div>
         </div>
-
-        {/* Footer Section */}
-      </Card>
-    </div>
+      </div>
+      {/* Footer Section */}
+    </Card>
   )
 }
