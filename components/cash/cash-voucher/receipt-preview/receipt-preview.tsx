@@ -5,40 +5,19 @@ import { getAllVoucherById } from '@/api/vouchers-api'
 import { useParams } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 import { useEffect, useState } from 'react'
-import { JournalEntryWithDetails } from '@/utils/type'
+import { VoucherById } from '@/utils/type'
 import { Button } from '@/components/ui/button'
-import { Printer, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
-import { CompanyType, getAllCompany } from '@/api/company-api'
-import clsx from 'clsx'
+import { toWords } from 'number-to-words'
 
 export default function Voucher() {
   const { voucherid } = useParams() // Extract voucherId from the URL
   console.log(voucherid)
-  const [voucherData, setVoucherData] = useState<JournalEntryWithDetails>()
+  const [voucherData, setVoucherData] = useState<VoucherById[]>()
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
-  const [companyData, setCompanyData] = useState<CompanyType[]>()
-
-  // async function getVoucherDetailsById() {
-  //   if (!voucherid) {
-  //     throw new Error('Voucher ID is missing')
-  //   }
-
-  //   const response = await getAllVoucherById(voucherid as string)
-
-  //   if (response.error || !response.data) {
-  //     console.error('Error getting voucher details:', response.error)
-  //     toast({
-  //       title: 'Error',
-  //       description: response.error?.message || 'Failed to get voucher details',
-  //     })
-  //     return
-  //   }
-  //   setVoucherData(response.data.data)
-  //   console.log('Get all data by id:', response.data.data)
-  // }
 
   async function getVoucherDetailsById() {
     if (!voucherid) {
@@ -57,8 +36,8 @@ export default function Voucher() {
     }
 
     // Filter out records where accountsname is 'cash in hand'
-    const filteredData = response.data.data.filter(
-      (item) => item.accountsname !== 'cash in hand'
+    const filteredData = response.data.filter(
+      (item) => item.accountsname !== 'Cash in Hand'
     )
 
     // Set the filtered data to state
@@ -66,63 +45,77 @@ export default function Voucher() {
 
     console.log('Filtered data (without cash in hand):', filteredData)
   }
-  async function getAllCompanyData() {
-    if (!voucherid) {
-      throw new Error('Voucher ID is missing')
-    }
-
-    const response = await getAllCompany()
-
-    if (response.error || !response.data) {
-      console.error('Error getting voucher details:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get voucher details',
-      })
-      return
-    }
-    setCompanyData(response.data)
-    console.log('get all company data:', response.data)
-  }
 
   useEffect(() => {
     getVoucherDetailsById()
-    getAllCompanyData()
+    // getAllCompanyData()
   }, [voucherid])
 
   if (!voucherData) {
     return <p>Loading...</p>
   }
 
-  return (
-    <div ref={contentRef}>
-      <Card className="w-full max-w-4xl mx-auto my-8 p-4 border shadow-lg">
-        {/* Header Section */}
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reverse
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => reactToPrintFn()}>
-            Print
-          </Button>
-        </div>
+  // Calculate total amount
+  const totalAmount = voucherData.reduce(
+    (total, item) => total + item.totalamount,
+    0
+  )
 
-        <CardHeader className="grid grid-cols-2 gap-4 border-b pb-4">
-          {companyData?.map((Item) => (
-            <div key={Item.companyId} className="space-y-2">
-              <div className="text-center py-4 bg-yellow-100">
-                <h1 className="text-xl font-bold uppercase">
-                  {Item.companyName}
-                </h1>
-              </div>
-              <p>Phone: {Item.phone}</p>
-              <p>Email: {Item.email}</p>
-              <p>State: {Item.state}</p>
-              <p>Address 1: {Item.address}</p>
-              <p>Address 2: {Item.city}</p>
+  return (
+    <Card className="w-full max-w-4xl mx-auto my-8 p-4 border shadow-lg">
+      {/* Header Section */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm">
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reverse
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => reactToPrintFn()}>
+          Print
+        </Button>
+      </div>
+      <div ref={contentRef}>
+        <CardHeader className="space-y-4 border-b pb-4">
+          <div className="space-y-4">
+            {/* Headline */}
+            <div className="text-center py-4 bg-yellow-100">
+              <h1 className="text-xl font-bold uppercase">
+                {voucherData[0].companyname}
+              </h1>
             </div>
-          ))}
+
+            {/* Two Columns */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left Column */}
+              <div className="space-y-2">
+                <p>Phone: {}</p>
+                <p>Email: {}</p>
+                <p>State: {voucherData[0].state}</p>
+                <p>Address 1: {voucherData[0].location}</p>
+                <p>Address 2: {}</p>
+              </div>
+
+              {/* Right Column */}
+              <div className="flex flex-col items-end space-y-2">
+                <img
+                  src="/logo.webp"
+                  alt="Company Logo"
+                  className="w-24 h-24 object-contain"
+                />
+                <div className="flex items-center space-x-2">
+                  <Label>Date:</Label>
+                  <p>{voucherData[0].date}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label>Voucher No:</Label>
+                  <p>{voucherData[0].voucherno}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label>Payable To:</Label>
+                  <p>{}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardHeader>
 
         {/* Table Section */}
@@ -152,11 +145,7 @@ export default function Voucher() {
               <div></div>
               <div></div>
               <div>Total:</div>
-              <div>
-                {voucherData
-                  .reduce((total, item) => total + item.totalamount, 0)
-                  .toLocaleString()}
-              </div>
+              <div>{totalAmount.toLocaleString()}</div>
             </div>
           </div>
           {/* Bottom Section */}
@@ -165,34 +154,30 @@ export default function Voucher() {
             <div>
               <div className="border-2 py-4 px-2 bg-[#fff2cc]">
                 <h4 className="text-sm font-medium mb-2">Amount in Words:</h4>
-                <p className="text-sm text-gray-700 mb-4">Two Thousand Only</p>
+                <p className="text-sm text-gray-700 mb-4">
+                  {toWords(totalAmount)} Only
+                </p>
               </div>
               <div className="border-2 py-4 px-2 bg-[#fff2cc] mt-2">
                 <h4 className="text-sm font-medium mb-2">
                   Terms & Conditions:
                 </h4>
-                <p className="text-sm text-gray-700 mb-4">
+                <div className="text-sm text-gray-700 mb-4">
                   {voucherData.map((item, id) => (
-                    <div key={id}>
-                      <p>{item.notes}</p>
-                    </div>
+                    <p key={id}>{item.detail_notes}</p>
                   ))}
-                </p>
+                </div>
               </div>
             </div>
             {/* Right Column */}
             <div className="border rounded-lg">
               <div className="grid grid-cols-2 gap-2 text-sm font-medium mb-2 bg-[#bf8f00] p-2 text-white">
                 <div>Total Amount:</div>
-                <div className="text-right">
-                  {voucherData
-                    .reduce((total, item) => total + item.totalamount, 0)
-                    .toLocaleString()}
-                </div>
+                <div className="text-right">{totalAmount.toLocaleString()}</div>
               </div>
             </div>
             <div>
-              <CardFooter className=" mt-4 space-y-2 bg-[#fff2cc] p-2">
+              <CardFooter className="mt-4 space-y-2 bg-[#fff2cc] p-2">
                 <p className="text-sm text-muted-foreground py-10">
                   Authorized Signatory
                 </p>
@@ -200,9 +185,7 @@ export default function Voucher() {
             </div>
           </div>
         </div>
-
-        {/* Footer Section */}
-      </Card>
-    </div>
+      </div>
+    </Card>
   )
 }

@@ -363,11 +363,11 @@ const VoucherSchemaById = z.object({
   id: z.number(),
   accountsname: z.string(),
   costcenter: z.string().nullable(),
-  department: z.any().nullable(), // If you know the type, replace z.any() with the correct type
+  department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
-  partnar: z.any().nullable(), // If you know the type, replace z.any() with the correct type
-  bankaccount: z.any().nullable(), // If you know the type, replace z.any() with the correct type
+  partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
 })
 
