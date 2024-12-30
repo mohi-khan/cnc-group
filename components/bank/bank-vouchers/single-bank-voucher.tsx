@@ -7,25 +7,26 @@ import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useReactToPrint } from 'react-to-print'
-import { JournalEntryWithDetails } from '@/utils/type'
+import { VoucherById } from '@/utils/type'
 import { getSingleVoucher, reverseBankVoucher } from '@/api/bank-vouchers-api'
 
 export default function SingleBankVoucher() {
   const { voucherid } = useParams()
   const router = useRouter()
-  const [data, setData] = useState<JournalEntryWithDetails>()
+  const [data, setData] = useState<VoucherById[]>()
   const [editingReferenceIndex, setEditingReferenceIndex] = useState<
     number | null
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
+  const [userId, setUserId] = React.useState<number>()
 
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
 
   useEffect(() => {
     async function fetchVoucher() {
-      const response = await getSingleVoucher(voucherid as string)
+      const response = await getSingleVoucher(voucherid)
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -34,10 +35,7 @@ export default function SingleBankVoucher() {
         })
       } else {
         setData(response.data)
-        console.log(
-          '🚀 ~ fetchVoucher ~ response.data.data:',
-          response.data
-        )
+        console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
       }
     }
     fetchVoucher()
@@ -60,48 +58,63 @@ export default function SingleBankVoucher() {
     }
   }
 
+  React.useEffect(() => {
+      const userStr = localStorage.getItem('currentUser')
+      if (userStr) {
+        const userData = JSON.parse(userStr)
+        setUserId(userData?.userId)
+        console.log('Current userId from localStorage:', userData.userId)
+      } else {
+        console.log('No user data found in localStorage')
+      }
+    }, [])
+
   const handleReverseVoucher = async () => {
-      const createdId = 60 // Replace with actual user ID
-      const voucherId = data[0]?.voucherid
-      if (!voucherId || !data) return
-      
-      if (!voucherId) {
-        toast({
-          title: 'Error',
-          description: 'Invalid voucher number',
-          variant: 'destructive',
-        })
-        return
-      }
-  
-      try {
-        setIsReversingVoucher(true)
-        const response = await reverseBankVoucher(voucherId, createdId)
-        
-        if (!response.data || response.error) {
-          toast({
-            title: 'Error',
-            description: response.error?.message || 'Failed to reverse the voucher',
-            variant: 'destructive',
-          })
-        } else {
-          toast({
-            title: 'Success',
-            description: 'Voucher reversed successfully',
-          })
-          router.refresh()
-        }
-      } catch (error: any) {
-        console.error('Reverse voucher error:', error)
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to reverse the voucher',
-          variant: 'destructive',
-        })
-      } finally {
-        setIsReversingVoucher(false)
-      }
+    const createdId = userId // Replace with actual user ID
+    let voucherId
+    if (data && data[0]) {
+      voucherId = data[0].voucherid
     }
+    if (!voucherId || !data) return
+
+    if (!voucherId) {
+      toast({
+        title: 'Error',
+        description: 'Invalid voucher number',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setIsReversingVoucher(true)
+      const response = await reverseBankVoucher(voucherId, createdId)
+
+      if (!response.data || response.error) {
+        toast({
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to reverse the voucher',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Voucher reversed successfully',
+        })
+        router.refresh()
+      }
+    } catch (error: any) {
+      console.error('Reverse voucher error:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to reverse the voucher',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsReversingVoucher(false)
+    }
+  }
 
   if (!data) {
     return <p>Loading...</p>
@@ -138,7 +151,11 @@ export default function SingleBankVoucher() {
               <RotateCcw className="w-4 h-4 mr-2" />
               {isReversingVoucher ? 'Reversing...' : 'Reverse'}
             </Button>
-            <Button variant="outline" size="sm" onClick={reactToPrintFn}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reactToPrintFn && reactToPrintFn()}
+            >
               <Printer className="w-4 h-4 mr-2" />
               Print
             </Button>

@@ -77,9 +77,9 @@ export async function editJournalVoucher(voucherid: number, createid: number) {
   })
 }
 
-export async function getSingleVoucher(voucherid: string) {
+export async function getSingleVoucher(voucherid: number) {
   console.log(voucherid)
-  return fetchApi<JournalEntryWithDetails[]>({
+  return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
   })

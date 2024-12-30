@@ -46,7 +46,7 @@ export async function getAllDepartments() {
   })
 }
 
-export async function getSingleVoucher(voucherid: string) {
+export async function getSingleVoucher(voucherid: number) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
@@ -82,7 +82,7 @@ export async function getAllVoucher(data: JournalQuery) {
     voucherType: data.voucherType,
   }).toString()
   console.log(queryParams)
-  return fetchApi({
+  return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
   })
