@@ -366,9 +366,17 @@ const VoucherSchemaById = z.object({
   department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
-  partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
+
+const bankAccountDateRangeSchema = z.object({
+  bankaccount: z.number(),
+  fromdate: z.string(),
+  todate: z.string(),
+});
+
+export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>

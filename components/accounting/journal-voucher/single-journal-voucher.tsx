@@ -22,15 +22,17 @@ export default function SingleJournalVoucher() {
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
+  const [userId, setUserId] = React.useState<number>()
 
   const contentRef = useRef<HTMLDivElement>(null)
+
   const reactToPrintFn = useReactToPrint({ contentRef })
 
   useEffect(() => {
     async function fetchVoucher() {
       if (!voucherid) return
       try {
-        const response = await getSingleVoucher(voucherid as string)
+        const response = await getSingleVoucher(voucherid)
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -39,7 +41,7 @@ export default function SingleJournalVoucher() {
           })
         } else {
           setData(response.data)
-          console.log("🚀 ~ fetchVoucher ~ response.data.data:", response.data)
+          console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
         }
       } catch (error) {
         toast({
@@ -70,11 +72,25 @@ export default function SingleJournalVoucher() {
     }
   }
 
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
   const handleReverseVoucher = async () => {
-    const createdId = 60 // Replace with actual user ID
-    const voucherId = data[0]?.voucherid
+    const createdId = userId
+    let voucherId
+    if (data && data[0]) {
+      voucherId = data[0].voucherid
+    }
     if (!voucherId || !data) return
-    
+
     if (!voucherId) {
       toast({
         title: 'Error',
@@ -87,11 +103,12 @@ export default function SingleJournalVoucher() {
     try {
       setIsReversingVoucher(true)
       const response = await reverseJournalVoucher(voucherId, createdId)
-      
+
       if (!response.data || response.error) {
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to reverse the voucher',
+          description:
+            response.error?.message || 'Failed to reverse the voucher',
           variant: 'destructive',
         })
       } else {
@@ -112,7 +129,6 @@ export default function SingleJournalVoucher() {
       setIsReversingVoucher(false)
     }
   }
-
 
   if (!data) {
     return <p>Loading...</p>
@@ -135,9 +151,7 @@ export default function SingleJournalVoucher() {
               <span>{data[0].date}</span>
             </div>
             <div className="grid grid-cols-[120px,1fr] gap-8">
-              <span className="font-medium whitespace-nowrap">
-                Created By:
-              </span>
+              <span className="font-medium whitespace-nowrap">Created By:</span>
               <span></span>
             </div>
           </div>
@@ -151,7 +165,11 @@ export default function SingleJournalVoucher() {
               <RotateCcw className="w-4 h-4 mr-2" />
               {isReversingVoucher ? 'Reversing...' : 'Reverse'}
             </Button>
-            <Button variant="outline" size="sm" onClick={reactToPrintFn}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reactToPrintFn && reactToPrintFn()}
+            >
               <Printer className="w-4 h-4 mr-2" />
               Print
             </Button>

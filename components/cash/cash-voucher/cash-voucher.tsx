@@ -529,7 +529,7 @@ export default function CashVoucher() {
                     <TableHead>Partner Name</TableHead>
                     <TableHead>Remarks</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Actions</TableHead>
+                    {/* <TableHead>Actions</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -734,40 +734,37 @@ export default function CashVoucher() {
                           )}
                         />
                       </TableCell>
-                      <TableCell>
-                        {/* Action Buttons */}
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const values = form.getValues()
-                              onSubmit(values, 'Draft')
-                            }}
-                          >
-                            Save as Draft
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const values = form.getValues()
-                              //console.log('Posted:', values)
-                              onSubmit(values, 'Posted')
-                            }}
-                          >
-                            Save as Post
-                          </Button>
-                        </div>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
               <div className="text-right">
-                <Button type="button" onClick={addDetailRow} className="mt-4">
-                  Add Another
-                </Button>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const values = form.getValues()
+                      onSubmit(values, 'Draft')
+                    }}
+                  >
+                    Save as Draft
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const values = form.getValues()
+                      //console.log('Posted:', values)
+                      onSubmit(values, 'Posted')
+                    }}
+                  >
+                    Save as Post
+                  </Button>
+                  <Button type="button" onClick={addDetailRow} className="">
+                    Add Another
+                  </Button>
+                </div>
               </div>
             </div>
             {/* List Section */}
@@ -781,6 +778,7 @@ export default function CashVoucher() {
                     <TableHead>Location</TableHead>
                     <TableHead>Date </TableHead>
                     <TableHead>Remarks</TableHead>
+                    <TableHead>debit</TableHead>
                     <TableHead>Total Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Action</TableHead>
