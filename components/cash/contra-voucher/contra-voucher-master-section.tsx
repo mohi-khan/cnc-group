@@ -64,10 +64,10 @@ export function ContraVoucherMasterSection({
 
   async function fetchAllVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
-      date: '2024-12-18',
+      date: '2024-12-31',
       companyId: company,
       locationId: location,
-      voucherType: VoucherTypes.JournalVoucher,
+      voucherType: VoucherTypes.ContraVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
     if (response.error || !response.data) {
