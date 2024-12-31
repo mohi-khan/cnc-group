@@ -152,7 +152,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive().optional(),
+  accountId: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),

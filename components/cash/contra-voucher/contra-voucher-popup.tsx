@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -35,20 +34,20 @@ export function ContraVoucherPopup() {
     defaultValues: {
       journalEntry: {
         date: new Date().toISOString().split('T')[0],
-        journalType: VoucherTypes.JournalVoucher,
+        journalType: VoucherTypes.ContraVoucher,
         state: 0,
         companyId: 0,
         locationId: 0,
         currencyId: 1,
         amountTotal: 0,
-        createdBy: 60,
+        createdBy: 70,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: 60,
+          createdBy: 71,
         },
       ],
     },
