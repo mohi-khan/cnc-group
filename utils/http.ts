@@ -61,7 +61,7 @@ console.log(`${API_BASE_URL}/${url}`)
       },
     }
   }
-
+ console.log(response.status)
   // Handle unauthorized access
   if (response.status === 401) {
     handleLogout()
@@ -73,9 +73,21 @@ console.log(`${API_BASE_URL}/${url}`)
       },
     }
   }
+ //Handle No Data Found Status:404
 
+ if (response.status === 404) {
+  
+  return {
+    data: null,
+    error: {
+      message: 'No Data Found',
+      status: 404,
+    },
+  }
+}
   // Handle non-200 responses
   if (!response.ok) {
+    console.log(response);
     const errorData = await response.json().catch(() => null)
     return {
       data: null,
@@ -101,7 +113,7 @@ console.log(`${API_BASE_URL}/${url}`)
 
   // Validate response with schema if provided
   if (schema) {
-    console.log(jsonData)
+ //   console.log(jsonData)
     const result = schema.safeParse(jsonData)
     if (!result.success) {
       return {

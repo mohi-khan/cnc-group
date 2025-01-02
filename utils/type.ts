@@ -240,7 +240,7 @@ const JournalEntrySchema = z.object({
   voucherNo: z.string().nullable().optional(), // Will calcualte automatically on backend
   date: z.string(),
   journalType: z.string(),
-  state: z.number().default(0),
+  state: z.number().default(0).optional(),
   companyId: z.number(),
   locationId: z.number(),
   currencyId: z.number(),

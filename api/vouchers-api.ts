@@ -67,5 +67,6 @@ export async function getAllVoucherById(voucherid: string) {
   return fetchApi<JournalEntryWithDetails[]>({
     url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
     method: 'GET',
+    schema:  JournalEntryWithDetailsSchema 
   })
 }
