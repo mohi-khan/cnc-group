@@ -9,12 +9,13 @@ import { toast } from '@/hooks/use-toast'
 import {
   getSingleVoucher,
   reverseJournalVoucher,
+  editJournalDetail,
 } from '@/api/journal-voucher-api'
 import { VoucherById } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
 
 export default function SingleJournalVoucher() {
-  const { voucherid } = useParams()
+  const voucherid: number = parseInt(useParams().voucherid as string, 10);
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
   const [editingReferenceIndex, setEditingReferenceIndex] = useState<
@@ -23,6 +24,8 @@ export default function SingleJournalVoucher() {
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
   const [userId, setUserId] = React.useState<number>()
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -31,8 +34,10 @@ export default function SingleJournalVoucher() {
   useEffect(() => {
     async function fetchVoucher() {
       if (!voucherid) return
+      console.log('Initial fetch for voucher:', voucherid);
       try {
         const response = await getSingleVoucher(voucherid)
+        console.log('Initial fetch response:', response);
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -40,8 +45,8 @@ export default function SingleJournalVoucher() {
               response.error?.message || 'Failed to get Voucher Data',
           })
         } else {
+          console.log('Setting initial data:', response.data);
           setData(response.data)
-          console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
         }
       } catch (error) {
         toast({
@@ -51,7 +56,7 @@ export default function SingleJournalVoucher() {
         })
       }
     }
-
+  
     fetchVoucher()
   }, [voucherid])
 
@@ -60,17 +65,62 @@ export default function SingleJournalVoucher() {
     setEditingReferenceText(currentText)
   }
 
-  const handleReferenceSave = () => {
-    if (data && editingReferenceIndex !== null) {
-      const updatedData = [...data]
-      updatedData[editingReferenceIndex] = {
-        ...updatedData[editingReferenceIndex],
-        notes: editingReferenceText,
-      }
-      setData(updatedData)
-      setEditingReferenceIndex(null)
+  const handleReferenceSave = async () => {
+    if (editingReferenceIndex === null || !data) {
+      return;
     }
-  }
+  
+    const journalDetail = data[editingReferenceIndex];
+    console.log('Before update - Current data:', data);
+    
+    setIsUpdating(true);
+    setError(null);
+  
+    try {
+      const response = await editJournalDetail({
+        id: journalDetail.id,
+        notes: editingReferenceText
+      });
+  
+      console.log('API Response:', response);
+  
+      if (response.error) {
+        throw new Error(response.error?.message || 'Failed to update notes');
+      }
+  
+      // Reset editing state
+      setEditingReferenceIndex(null);
+      setEditingReferenceText('');
+  
+      // Refetch the data to ensure we have the latest from the database
+      if (voucherid) {
+        console.log('Refetching data for voucher:', voucherid);
+        const refreshResponse = await getSingleVoucher(voucherid);
+        console.log('Refresh response:', refreshResponse);
+        
+        if (refreshResponse.error || !refreshResponse.data) {
+          throw new Error(refreshResponse.error?.message || 'Failed to refresh data');
+        }
+        console.log('Setting new data:', refreshResponse.data);
+        setData(refreshResponse.data);
+      }
+  
+      toast({
+        title: 'Success',
+        description: 'Notes updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update notes');
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update notes',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -219,8 +269,9 @@ export default function SingleJournalVoucher() {
                       variant="outline"
                       size="sm"
                       onClick={handleReferenceSave}
+                      disabled={isUpdating}
                     >
-                      <Check className="w-4 h-4" />
+                      {isUpdating ? 'Saving...' : <Check className="w-4 h-4" />}
                     </Button>
                   ) : (
                     <Button
@@ -242,7 +293,9 @@ export default function SingleJournalVoucher() {
             </div>
           </div>
         </div>
+        {error && <div className="text-red-500 mt-2">{error}</div>}
       </CardContent>
     </Card>
   )
 }
+
