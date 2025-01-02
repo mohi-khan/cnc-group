@@ -152,7 +152,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive().optional(),
+  accountId: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -347,3 +347,36 @@ export const costCentersArraySchema = z.array(costCenterSchema)
 export type CostCenterActivateDeactivate = z.infer<
   typeof activateDeactivateCostCenterSchema
 >
+
+//Voucher Type by id
+const VoucherSchemaById = z.object({
+  voucherid: z.number(),
+  voucherno: z.string(),
+  date: z.string(),
+  journaltype: z.string(),
+  state: z.number(),
+  companyname: z.string(),
+  location: z.string(),
+  currency: z.string(),
+  totalamount: z.number(),
+  notes: z.string(),
+  id: z.number(),
+  accountsname: z.string(),
+  costcenter: z.string().nullable(),
+  department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  debit: z.number(),
+  credit: z.number(),
+  partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  detail_notes: z.string(),
+})
+
+export type VoucherById = z.infer<typeof VoucherSchemaById>
+
+const bankAccountDateRangeSchema = z.object({
+  bankaccount: z.number(),
+  fromdate: z.string(),
+  todate: z.string(),
+});
+
+export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>

@@ -1,11 +1,11 @@
 import { fetchApi } from '@/utils/http'
 import {
+  BankAccount,
   ChartOfAccount,
   Company,
   CostCenter,
   Department,
   JournalEntryWithDetails,
-  JournalEntryWithDetailsSchema,
   JournalQuery,
   LocationData,
   VoucherById,
@@ -32,21 +32,7 @@ export async function getAllChartOfAccounts() {
   })
 }
 
-export async function getAllCostCenters() {
-  return fetchApi<CostCenter[]>({
-    url: 'api/cost-centers/get-all-cost-centers',
-    method: 'GET',
-  })
-}
-
-export async function getAllDepartments() {
-  return fetchApi<Department[]>({
-    url: 'api/department/get-all-departments',
-    method: 'GET',
-  })
-}
-
-export async function getSingleVoucher(voucherid: number) {
+export async function getSingleVoucher(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
@@ -54,8 +40,15 @@ export async function getSingleVoucher(voucherid: number) {
   })
 }
 
-export async function reverseJournalVoucher(voucherNo: number, createdId: number) {
-  console.log("🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:", voucherNo, createdId)
+export async function reverseJournalVoucher(
+  voucherNo: number,
+  createdId: number
+) {
+  console.log(
+    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
+    voucherNo,
+    createdId
+  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
@@ -82,7 +75,7 @@ export async function getAllVoucher(data: JournalQuery) {
     voucherType: data.voucherType,
   }).toString()
   console.log(queryParams)
-  return fetchApi<VoucherById[]>({
+  return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
   })
@@ -91,11 +84,18 @@ export async function getAllVoucher(data: JournalQuery) {
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails
 ) {
-  console.log("Under APi:");
-  console.log(data);
+  console.log('Under APi:')
+  console.log(data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
     body: data,
+  })
+}
+
+export async function getAllBankAccounts() {
+  return fetchApi<BankAccount[]>({
+    url: 'api/bank-accounts/get-all-bank-accounts',
+    method: 'GET',
   })
 }

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { JournalVoucherPopup } from './journal-voucher-popup'
+
 import {
   CompanyFromLocalstorage,
   JournalQuery,
@@ -21,6 +21,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import Link from 'next/link'
+import { ContraVoucherPopup } from './contra-voucher-popup'
 
 interface Voucher {
   id: number
@@ -51,7 +52,7 @@ const initialVouchers: Voucher[] = [
   },
 ]
 
-export default function VoucherTable() {
+export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<Voucher[]>(initialVouchers)
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
@@ -85,7 +86,7 @@ export default function VoucherTable() {
       date: new Date().toISOString().split('T')[0],
       companyId: company,
       locationId: location,
-      voucherType: VoucherTypes.JournalVoucher,
+      voucherType: VoucherTypes.ContraVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
     if (response.error || !response.data) {
@@ -123,8 +124,8 @@ export default function VoucherTable() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Vouchers</h1>
-        <JournalVoucherPopup onSubmit={handleSubmit} />
+        <h1 className="text-2xl font-bold">Contra Vouchers</h1>
+        <ContraVoucherPopup onSubmit={handleSubmit} />
       </div>
       <Table>
         <TableHeader>
@@ -141,7 +142,7 @@ export default function VoucherTable() {
             <TableRow key={voucher.id}>
               <TableCell className="font-medium">
                 <Link
-                  href={`/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
+                  href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
                 >
                   {voucher.voucherno}
                 </Link>

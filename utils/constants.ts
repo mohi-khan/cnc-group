@@ -8,7 +8,7 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Journal Management',
         items: [
-          { name: 'Journal Entry', source: '/accounting/journal-entry' },
+          { name: 'Journal Entry', source: '/accounting/journal-voucher' },
           { name: 'Journal Items', source: '/accounting/journal-items' },
           { name: 'Reverse Entry', source: '/accounting/reverse-entry' },
         ],
@@ -37,7 +37,7 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: 'Cash Voucher', source: '/cash/cash-voucher' },
           { name: 'Cash Reports', source: '/cash/cash-reports' },
-          { name: 'Cntra Vouchers', source: '/cash/cntra-vouchers' },
+          { name: 'Contra Vouchers', source: '/cash/contra-vouchers' },
         ],
       },
     ],

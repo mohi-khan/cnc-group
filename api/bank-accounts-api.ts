@@ -48,9 +48,7 @@ export const bankAccountSchema = z.object({
     .nullable(),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
-  glAccountId: z
-    .number()
-    .optional(),
+  glAccountId: z.number(),
   bankCode: z
     .string()
     .max(50, 'Bank code must not exceed 50 characters')
@@ -106,7 +104,7 @@ export async function getAllBankAccounts() {
 }
 
 //need to change the type. it should be chartOfAccount type. not BankAccount type.
-export async function getAllGlAccounts() { 
+export async function getAllGlAccounts() {
   return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',

@@ -6,11 +6,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { useReactToPrint } from 'react-to-print'
-import { VoucherById } from '@/utils/type'
-import { getSingleVoucher, reverseBankVoucher } from '@/api/bank-vouchers-api'
 
-export default function SingleBankVoucher() {
+import { VoucherById } from '@/utils/type'
+import { useReactToPrint } from 'react-to-print'
+import {
+  getSingleVoucher,
+  reverseJournalVoucher,
+} from '@/api/contra-voucher-api'
+
+export default function SingleContraVoucher() {
   const { voucherid } = useParams()
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
@@ -19,25 +23,34 @@ export default function SingleBankVoucher() {
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
-  const [userId, setUserId] = React.useState<number>()
 
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
 
   useEffect(() => {
     async function fetchVoucher() {
-      const response = await getSingleVoucher(voucherid)
-      if (response.error || !response.data) {
+      if (!voucherid) return
+      try {
+        const response = await getSingleVoucher(voucherid as string)
+        if (response.error || !response.data) {
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get Voucher Data',
+          })
+        } else {
+          setData(response.data)
+          console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
+        }
+      } catch (error) {
         toast({
           title: 'Error',
           description:
-            response.error?.message || 'Failed to get Bank Voucher Data',
+            'An unexpected error occurred while fetching the voucher.',
         })
-      } else {
-        setData(response.data)
-        console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
       }
     }
+
     fetchVoucher()
   }, [voucherid])
 
@@ -58,23 +71,9 @@ export default function SingleBankVoucher() {
     }
   }
 
-  React.useEffect(() => {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUserId(userData?.userId)
-        console.log('Current userId from localStorage:', userData.userId)
-      } else {
-        console.log('No user data found in localStorage')
-      }
-    }, [])
-
   const handleReverseVoucher = async () => {
-    const createdId = userId // Replace with actual user ID
-    let voucherId
-    if (data && data[0]) {
-      voucherId = data[0].voucherid
-    }
+    const createdId = 70 // Replace with actual user ID
+    let voucherId = data?.[0].voucherno
     if (!voucherId || !data) return
 
     if (!voucherId) {
@@ -88,7 +87,7 @@ export default function SingleBankVoucher() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseBankVoucher(voucherId, createdId)
+      const response = await reverseJournalVoucher(voucherId, createdId)
 
       if (!response.data || response.error) {
         toast({
@@ -151,26 +150,21 @@ export default function SingleBankVoucher() {
               <RotateCcw className="w-4 h-4 mr-2" />
               {isReversingVoucher ? 'Reversing...' : 'Reverse'}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => reactToPrintFn && reactToPrintFn()}
-            >
+            <Button variant="outline" size="sm" onClick={reactToPrintFn}>
               <Printer className="w-4 h-4 mr-2" />
               Print
             </Button>
           </div>
         </div>
 
-        {/* Bank Items Table */}
+        {/* Journal Items Table */}
         <div className="mb-6">
-          <h3 className="font-medium mb-4">Bank Items</h3>
+          <h3 className="font-medium mb-4">Journal Items</h3>
           <div className="border rounded-lg">
             <div className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 bg-muted text-sm font-medium">
               <div>Accounts</div>
-              <div>Cost Center</div>
-              <div>Department</div>
-              <div>Partner</div>
+              <div>Bank Account</div>
+
               <div>Notes</div>
               <div>Debit</div>
               <div>Credit</div>
@@ -178,13 +172,11 @@ export default function SingleBankVoucher() {
             </div>
             {data.map((item, index) => (
               <div
-                key={item.voucherid}
+                key={item.id}
                 className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 border-t items-center text-sm"
               >
                 <div>{item.accountsname}</div>
-                <div>{item.costcenter}</div>
-                <div>{item.department}</div>
-                <div>{item.partner}</div>
+                <div>{item.bankaccount}</div>
                 <div>
                   {editingReferenceIndex === index ? (
                     <input
@@ -197,8 +189,8 @@ export default function SingleBankVoucher() {
                     item.notes
                   )}
                 </div>
-                <div>{item.debit.toLocaleString()}</div>
-                <div>{item.credit.toLocaleString()}</div>
+                <div>{item.debit}</div>
+                <div>{item.credit}</div>
                 <div>
                   {editingReferenceIndex === index ? (
                     <Button

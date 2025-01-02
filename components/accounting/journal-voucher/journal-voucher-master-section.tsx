@@ -79,7 +79,7 @@ export function JournalVoucherMasterSection({
       })
     } else {
       console.log('voucher', response.data)
-      setVoucherGrid(response.data)
+      // setVoucherGrid(response.data)
     }
   }
 
