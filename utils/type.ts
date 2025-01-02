@@ -380,3 +380,17 @@ const bankAccountDateRangeSchema = z.object({
 });
 
 export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>
+
+//edit journal notes
+export const DetailNoteSchema = z.object({
+  id: z.number(),
+  notes: z.string()
+})
+
+export const JournalNotesSchema = z.object({
+  id: z.number(),
+  notes: z.string(),
+})
+
+export type JournalNotes = z.infer<typeof JournalNotesSchema>
+export type DetailNote = z.infer<typeof DetailNoteSchema>

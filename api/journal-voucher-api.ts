@@ -6,6 +6,7 @@ import {
   Department,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
+  JournalNotes,
   JournalQuery,
   LocationData,
   VoucherById,
@@ -66,13 +67,21 @@ export async function reverseJournalVoucher(voucherNo: number, createdId: number
   })
 }
 
-export async function editJournalVoucher(voucherid: number, createid: number) {
-  console.log(voucherid, createid)
-  return fetchApi<VoucherById[]>({
-    url: `api/journal/postJournal/${voucherid}/${createid}`,
-    method: 'POST',
+export async function editJournalDetail(data: JournalNotes) {
+  return fetchApi<JournalNotes>({
+    url: `api/journal/edit-notes`,
+    method: 'PATCH',
+    body: data
   })
 }
+
+// export async function editJournalVoucher(voucherid: number, createid: number) {
+//   console.log(voucherid, createid)
+//   return fetchApi<VoucherById[]>({
+//     url: `api/journal/postJournal/${voucherid}/${createid}`,
+//     method: 'POST',
+//   })
+// }
 
 export async function getAllVoucher(data: JournalQuery) {
   const queryParams = new URLSearchParams({

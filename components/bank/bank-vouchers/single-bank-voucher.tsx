@@ -11,7 +11,7 @@ import { VoucherById } from '@/utils/type'
 import { getSingleVoucher, reverseBankVoucher } from '@/api/bank-vouchers-api'
 
 export default function SingleBankVoucher() {
-  const { voucherid } = useParams()
+  const voucherid: number = parseInt(useParams().voucherid as string, 10);
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
   const [editingReferenceIndex, setEditingReferenceIndex] = useState<
