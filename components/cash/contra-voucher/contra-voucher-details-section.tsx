@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+'use client'
+import React, { useEffect, useState, useMemo } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,40 +39,40 @@ export function ContraVoucherDetailsSection({
   onAddEntry,
   onRemoveEntry,
 }: JournalVoucherDetailsSectionProps) {
-  const [accounts, setAccounts] = React.useState<BankAccount[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<
-    ChartOfAccount[]
-  >([])
-  const [userId, setUserId] = React.useState<number | undefined>()
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
+  const [disabledStates, setDisabledStates] = useState<
+    Record<number, { bank: boolean; account: boolean }>
+  >({})
 
   const entries = form.watch('journalDetails')
 
-  async function fetchChartOfAccounts() {
+  const fetchChartOfAccounts = async () => {
     const response = await getAllChartOfAccounts()
     if (response.error || !response.data) {
       toast({
         title: 'Error',
         description:
-          response.error?.message || 'Failed to get Chart Of accounts',
+          response.error?.message || 'Failed to fetch Chart of Accounts',
       })
     } else {
       setChartOfAccounts(response.data)
     }
   }
 
-  async function fetchBankAccounts() {
+  const fetchBankAccounts = async () => {
     const response = await getAllBankAccounts()
     if (response.error || !response.data) {
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get Bank accounts',
+        description: response.error?.message || 'Failed to fetch Bank Accounts',
       })
     } else {
       setAccounts(response.data)
     }
   }
 
-  const glAccountIdToChartName = React.useMemo(() => {
+  const glAccountIdToChartName = useMemo(() => {
     const map: Record<number, { name: string; id: number }> = {}
     chartOfAccounts.forEach((account) => {
       map[account.accountId] = { name: account.name, id: account.accountId }
@@ -79,16 +80,24 @@ export function ContraVoucherDetailsSection({
     return map
   }, [chartOfAccounts])
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchChartOfAccounts()
     fetchBankAccounts()
-
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      setUserId(userData?.userId)
-    }
   }, [])
+
+  const updateDisabledStates = (
+    index: number,
+    field: 'bank' | 'account',
+    value: boolean
+  ) => {
+    setDisabledStates((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        [field]: value,
+      },
+    }))
+  }
 
   const handleBankAccountChange = (index: number, bankAccountId: number) => {
     const selectedBank = accounts.find(
@@ -98,9 +107,10 @@ export function ContraVoucherDetailsSection({
 
     if (glAccountId && glAccountIdToChartName[glAccountId]) {
       const { id } = glAccountIdToChartName[glAccountId]
-      const updatedEntries = [...entries]
-      updatedEntries[index].accountId = id
-      form.setValue('journalDetails', updatedEntries)
+      form.setValue(`journalDetails.${index}.accountId`, id)
+      updateDisabledStates(index, 'account', true)
+    } else {
+      updateDisabledStates(index, 'account', false)
     }
   }
 
@@ -108,14 +118,13 @@ export function ContraVoucherDetailsSection({
     const accountName = chartOfAccounts.find(
       (account) => account.accountId === accountId
     )?.name
-    const updatedEntries = [...entries]
-    updatedEntries[index].accountId = accountId
+    form.setValue(`journalDetails.${index}.accountId`, accountId)
 
-    // If the account name is "Cash in Hand" (case-insensitive), disable bank account selection
-    updatedEntries[index].isBankAccountDisabled =
-      accountName?.toLowerCase() === 'cash in hand'
-
-    form.setValue('journalDetails', updatedEntries)
+    if (accountName?.toLowerCase() === 'cash in hand') {
+      updateDisabledStates(index, 'bank', true)
+    } else {
+      updateDisabledStates(index, 'bank', false)
+    }
   }
 
   const addEntry = () => {
@@ -127,26 +136,15 @@ export function ContraVoucherDetailsSection({
         debit: 0,
         credit: 0,
         notes: '',
-        createdBy: userId,
+        createdBy: 70,
         analyticTags: null,
         taxId: null,
-        isBankAccountDisabled: false,
       },
     ])
-  }
-
-  const handleDebitChange = (index: number, value: number) => {
-    const updatedEntries = [...entries]
-    updatedEntries[index].debit = value
-    updatedEntries[index].credit = 0
-    form.setValue('journalDetails', updatedEntries)
-  }
-
-  const handleCreditChange = (index: number, value: number) => {
-    const updatedEntries = [...entries]
-    updatedEntries[index].credit = value
-    updatedEntries[index].debit = 0
-    form.setValue('journalDetails', updatedEntries)
+    setDisabledStates((prev) => ({
+      ...prev,
+      [entries.length]: { bank: false, account: false },
+    }))
   }
 
   const calculateTotals = () => {
@@ -177,9 +175,8 @@ export function ContraVoucherDetailsSection({
       {entries.map((entry, index) => (
         <div
           key={index}
-          className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center"
+          className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium"
         >
-          {/* Bank Account Dropdown */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.bankaccountid`}
@@ -191,7 +188,7 @@ export function ContraVoucherDetailsSection({
                     handleBankAccountChange(index, Number(value))
                   }}
                   value={field.value?.toString()}
-                  disabled={entry.isBankAccountDisabled}
+                  disabled={disabledStates[index]?.bank}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -204,8 +201,7 @@ export function ContraVoucherDetailsSection({
                         key={account.id}
                         value={account.id.toString()}
                       >
-                        {account.accountName}-{account.accountNumber} -{' '}
-                        {account.bankName}-{account.branchName}
+                        {account.accountName}-{account.accountNumber}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -215,7 +211,6 @@ export function ContraVoucherDetailsSection({
             )}
           />
 
-          {/* Account Name Dropdown */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.accountId`}
@@ -227,6 +222,7 @@ export function ContraVoucherDetailsSection({
                     handleAccountNameChange(index, Number(value))
                   }}
                   value={field.value?.toString()}
+                  disabled={disabledStates[index]?.account}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -249,47 +245,32 @@ export function ContraVoucherDetailsSection({
             )}
           />
 
-          {/* Debit Field */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.debit`}
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) =>
-                      handleDebitChange(index, Number(e.target.value))
-                    }
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Credit Field */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.credit`}
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) =>
-                      handleCreditChange(index, Number(e.target.value))
-                    }
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Notes Field */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.notes`}
@@ -303,13 +284,11 @@ export function ContraVoucherDetailsSection({
             )}
           />
 
-          {/* Remove Entry Button */}
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => onRemoveEntry(index)}
-            disabled={entries.length <= 2}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -317,19 +296,19 @@ export function ContraVoucherDetailsSection({
       ))}
 
       <Button type="button" variant="outline" onClick={addEntry}>
-        Add Another Note
+        Add Another Entry
       </Button>
 
-      <div className="flex justify-between items-center">
+      <div className="mt-4 flex justify-between">
         <div>
           <p>Total Debit: {totals.debit}</p>
           <p>Total Credit: {totals.credit}</p>
         </div>
         <div>
-          {!isBalanced && (
-            <p className="text-red-500">
-              Debit and Credit totals must be equal to post/draft the voucher.
-            </p>
+          {isBalanced ? (
+            <p className="text-green-500">Voucher is Balanced</p>
+          ) : (
+            <p className="text-red-500">Voucher is Not Balanced</p>
           )}
         </div>
       </div>
