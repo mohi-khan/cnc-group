@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -15,14 +15,40 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
+import { getAllBankAccounts } from '@/api/bank-accounts-api'
+import { toast } from '@/hooks/use-toast'
+import { BankAccount } from '@/utils/type'
 
 export default function TrialBalanceHeading() {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [selectedPeriod, setSelectedPeriod] = useState('custom')
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  async function fetchBankAccounts() {
+    const fetchedAccounts = await getAllBankAccounts()
+    if (fetchedAccounts.error || !fetchedAccounts.data) {
+      console.error('Error getting bank account:', fetchedAccounts.error)
+      toast({
+        title: 'Error',
+        description:
+          fetchedAccounts.error?.message || 'Failed to get bank accounts',
+      })
+    } else {
+      setAccounts(fetchedAccounts.data)
+      if (fetchedAccounts.data.length > 0) {
+        setSelectedAccountId(fetchedAccounts.data[0].id.toString())
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchBankAccounts()
+  }, [])
 
   return (
     <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
@@ -89,83 +115,105 @@ export default function TrialBalanceHeading() {
 
       {/* Date and Company Selection */}
       <div className="flex items-center gap-4 flex-1 justify-center">
-        {/* Year and Comparison */}
+        {/* Date Select Box */}
+        <Popover
+          open={isDropdownOpen}
+          onOpenChange={(open) => setIsDropdownOpen(open)}
+        >
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-[230px] h-10 justify-start text-left truncate"
+            >
+              <CalendarIcon className="mr-2 h-5 w-5" />
+              {startDate && endDate
+                ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                : 'Select Date Range'}
+            </Button>
+          </PopoverTrigger>
 
-        {/* Period Selection */}
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-          <SelectTrigger className="w-[140px] h-8">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="month">Month</SelectItem>
-            <SelectItem value="quarter">Quarter</SelectItem>
-            <SelectItem value="year">Year</SelectItem>
-            <SelectItem value="custom">Custom Dates</SelectItem>
-          </SelectContent>
-        </Select>
+          <PopoverContent className="w-auto p-4" align="start">
+            <div className="flex flex-col gap-4">
+              {/* Start Date Field */}
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Start Date:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-[180px] h-10 justify-start text-left truncate ${
+                        !startDate ? 'text-muted-foreground' : ''
+                      }`}
+                    >
+                      <CalendarIcon className="mr-2 h-5 w-5" />
+                      {startDate
+                        ? format(startDate, 'dd/MM/yyyy')
+                        : 'Select Start Date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date)
+                        setIsDropdownOpen(false) // Close the popover when a date is selected
+                      }}
+                      className="rounded-md border"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-        {/* Custom Date Range */}
-        {selectedPeriod === 'custom' && (
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-[160px] h-8 justify-start text-left font-normal',
-                    !startDate && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, 'dd/MM/yyyy') : 'Start date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <span>to</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-[160px] h-8 justify-start text-left font-normal',
-                    !endDate && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, 'dd/MM/yyyy') : 'End date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
+              {/* End Date Field */}
+              <div className="flex items-center gap-2">
+                <span className="font-medium">End Date:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-[180px] h-10 justify-start text-left truncate ${
+                        !endDate ? 'text-muted-foreground' : ''
+                      }`}
+                    >
+                      <CalendarIcon className="mr-2 h-5 w-5" />
+                      {endDate
+                        ? format(endDate, 'dd/MM/yyyy')
+                        : 'Select End Date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date)
+                        setIsDropdownOpen(false) // Close the popover when a date is selected
+                      }}
+                      className="rounded-md border"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Company Selection */}
-        <Select defaultValue="company1">
-          <SelectTrigger className="w-[200px] h-8">
-            <SelectValue placeholder="Select company" />
+        <Select
+          value={selectedAccountId}
+          onValueChange={(value) => setSelectedAccountId(value)}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select a bank account" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="company1">Company 1</SelectItem>
-            <SelectItem value="company2">Company 2</SelectItem>
-            <SelectItem value="company3">Company 3</SelectItem>
-            <SelectItem value="company4">Company 4</SelectItem>
-            <SelectItem value="company5">Company 5</SelectItem>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={account.id.toString()}>
+                {account.accountName}-{account.accountNumber}-{account.bankName}
+                -{account.branchName}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
