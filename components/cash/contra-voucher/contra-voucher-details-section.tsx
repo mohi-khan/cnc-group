@@ -47,6 +47,24 @@ export function ContraVoucherDetailsSection({
 
   const entries = form.watch('journalDetails')
 
+  // Initialize with one entry if empty
+  useEffect(() => {
+    if (entries.length === 0) {
+      const defaultEntry = {
+        bankaccountid: 0,
+        accountId: 0,
+        debit: 0,
+        credit: 0,
+        notes: '',
+        createdBy: 70,
+        analyticTags: null,
+        taxId: null,
+      }
+
+      form.setValue('journalDetails', [defaultEntry])
+    }
+  }, [])
+
   const fetchChartOfAccounts = async () => {
     const response = await getAllChartOfAccounts()
     if (response.error || !response.data) {
@@ -127,6 +145,19 @@ export function ContraVoucherDetailsSection({
     }
   }
 
+  const handleNumberInput = (value: string) => {
+    // Remove any non-numeric characters except decimal point
+    const sanitizedValue = value.replace(/[^\d.]/g, '')
+
+    // Ensure only one decimal point
+    const parts = sanitizedValue.split('.')
+    if (parts.length > 2) {
+      return parts[0] + '.' + parts.slice(1).join('')
+    }
+
+    return sanitizedValue
+  }
+
   const addEntry = () => {
     form.setValue('journalDetails', [
       ...entries,
@@ -150,8 +181,8 @@ export function ContraVoucherDetailsSection({
   const calculateTotals = () => {
     return entries.reduce(
       (totals, entry) => {
-        totals.debit += entry.debit
-        totals.credit += entry.credit
+        totals.debit += Number(entry.debit) || 0
+        totals.credit += Number(entry.credit) || 0
         return totals
       },
       { debit: 0, credit: 0 }
@@ -159,7 +190,13 @@ export function ContraVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const isBalanced = totals.debit === totals.credit
+  const isBalanced = Math.abs(totals.debit - totals.credit) < 0.01
+
+  const handleRemoveEntry = (index: number) => {
+    if (entries.length > 2) {
+      onRemoveEntry(index)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -251,7 +288,18 @@ export function ContraVoucherDetailsSection({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const sanitizedValue = handleNumberInput(e.target.value)
+                      field.onChange(
+                        sanitizedValue ? Number(sanitizedValue) : 0
+                      )
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -264,7 +312,18 @@ export function ContraVoucherDetailsSection({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const sanitizedValue = handleNumberInput(e.target.value)
+                      field.onChange(
+                        sanitizedValue ? Number(sanitizedValue) : 0
+                      )
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -288,7 +347,8 @@ export function ContraVoucherDetailsSection({
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => onRemoveEntry(index)}
+            onClick={() => handleRemoveEntry(index)}
+            disabled={entries.length <= 2}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -301,8 +361,8 @@ export function ContraVoucherDetailsSection({
 
       <div className="mt-4 flex justify-between">
         <div>
-          <p>Total Debit: {totals.debit}</p>
-          <p>Total Credit: {totals.credit}</p>
+          <p>Total Debit: {totals.debit.toFixed(2)}</p>
+          <p>Total Credit: {totals.credit.toFixed(2)}</p>
         </div>
         <div>
           {isBalanced ? (

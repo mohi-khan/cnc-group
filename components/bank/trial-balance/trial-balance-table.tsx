@@ -1,3 +1,4 @@
+'use'
 import React from 'react'
 import {
   Table,
@@ -7,7 +8,33 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+
+import { BankAccountDateRange } from '@/utils/type'
+import { getTrialBalance } from '@/api/trial-balance-api'
+
 export default function TrialBalanceTable() {
+  const [trialBalanceData, setTrialBalanceData] = React.useState<
+    BankAccountDateRange[]
+  >([])
+
+  async function fetchTrialBalanceTableData() {
+    const response = await getTrialBalance()
+
+    if (!response || response.error || !response.data) {
+      console.error(
+        'Error getting trial balance:',
+        response?.error || 'No data available'
+      )
+      return
+    }
+
+    setTrialBalanceData(response.data) // Update state or variable
+    console.log(response.data) // Log the data
+  }
+
+  React.useEffect(() => {
+    fetchTrialBalanceTableData()
+  }, [])
   return (
     <div>
       <div className="border rounded-lg">
