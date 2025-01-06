@@ -394,3 +394,28 @@ export const JournalNotesSchema = z.object({
 
 export type JournalNotes = z.infer<typeof JournalNotesSchema>
 export type DetailNote = z.infer<typeof DetailNoteSchema>
+
+//asset-category
+export const createAssetCategorySchema = z.object({
+  category_name: z
+    .string()
+    .min(2, "Category name must be at least 2 characters.")
+    .max(255, "Category name must not exceed 255 characters."),
+  depreciation_rate: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/, { message: "Invalid decimal format" }),
+  account_code: z.number().int("Account code must be an integer.").optional(),
+  depreciation_account_code: z
+    .number()
+    .int("Depreciation account code must be an integer."),
+  created_by: z.number().int("Created by must be an integer."),
+})
+
+export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
+
+export interface AssetCategoryType extends CreateAssetCategoryData {
+  category_id: number
+  created_time: string
+  updated_by?: number
+  updated_time?: string
+}
