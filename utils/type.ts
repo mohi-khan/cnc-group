@@ -152,7 +152,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
+  accountId: z.number().int().positive().optional(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -377,14 +377,14 @@ const bankAccountDateRangeSchema = z.object({
   bankaccount: z.number(),
   fromdate: z.string(),
   todate: z.string(),
-});
+})
 
 export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>
 
 //edit journal notes
 export const DetailNoteSchema = z.object({
   id: z.number(),
-  notes: z.string()
+  notes: z.string(),
 })
 
 export const JournalNotesSchema = z.object({
