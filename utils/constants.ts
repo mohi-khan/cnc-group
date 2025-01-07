@@ -78,6 +78,10 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Asset Management',
         items: [
           {
+            name: 'Create Asset',
+            source: '/assets/assets',
+          },
+          {
             name: 'Create Asset Group',
             source: '/assets/create-asset-group',
           },
