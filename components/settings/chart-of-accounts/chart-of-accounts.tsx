@@ -284,6 +284,7 @@ export default function ChartOfAccountsTable() {
     }
   }
 
+  // Filter accounts based on search term, selected types, and active accounts
   React.useEffect(() => {
     let filtered = accounts.filter(
       (account) =>
@@ -369,7 +370,7 @@ export default function ChartOfAccountsTable() {
     ))
   }
 
-  // Edit accounts
+  // Edit accounts function open dialog box
   const handleEditAccount = (account: ChartOfAccount) => {
     setEditingAccount({
       ...account,
@@ -380,16 +381,47 @@ export default function ChartOfAccountsTable() {
     setIsEditAccountOpen(true)
   }
 
-  const handleDisableAccount = (code: string) => {
-    setAccounts((prevAccounts) =>
-      prevAccounts.map((account) =>
-        account.code === code
-          ? { ...account, isActive: !account.isActive }
-          : account
-      )
-    )
+  // disable account and enable account function with api
+  const handleDisableAccount = async (code: string) => {
+    // Find the account to update
+    const accountToUpdate = accounts.find((account) => account.code === code)
+
+    if (accountToUpdate) {
+      // Toggle the isActive status
+      const updatedAccount = {
+        ...accountToUpdate,
+        isActive: !accountToUpdate.isActive,
+      }
+
+      // API request to update the account
+      const response = await updateChartOfAccounts(updatedAccount)
+
+      if (response.error || !response.data) {
+        console.error('Error updating chart of accounts:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to update chart of account',
+        })
+      } else {
+        console.log('Chart Of Account updated successfully')
+        toast({
+          title: 'Success',
+          description: 'Chart Of account updated successfully',
+        })
+
+        // Update the accounts state
+        setAccounts((prevAccounts) =>
+          prevAccounts.map((account) =>
+            account.code === updatedAccount.code ? updatedAccount : account
+          )
+        )
+      }
+    }
   }
 
+  // save edit account function
   const handleSaveEdit = async (data: Partial<ChartOfAccount>) => {
     if (editingAccount) {
       const updatedAccount = {
@@ -429,6 +461,7 @@ export default function ChartOfAccountsTable() {
     }
   }
 
+  // return function for chart of accounts
   return (
     <div className="flex flex-col min-h-screen">
       <div className="p-2">

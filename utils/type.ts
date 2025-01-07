@@ -152,7 +152,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
+  accountId: z.number().int().positive().optional(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -377,6 +377,45 @@ const bankAccountDateRangeSchema = z.object({
   bankaccount: z.number(),
   fromdate: z.string(),
   todate: z.string(),
-});
+})
 
 export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>
+
+//edit journal notes
+export const DetailNoteSchema = z.object({
+  id: z.number(),
+  notes: z.string(),
+})
+
+export const JournalNotesSchema = z.object({
+  id: z.number(),
+  notes: z.string(),
+})
+
+export type JournalNotes = z.infer<typeof JournalNotesSchema>
+export type DetailNote = z.infer<typeof DetailNoteSchema>
+
+//asset-category
+export const createAssetCategorySchema = z.object({
+  category_name: z
+    .string()
+    .min(2, "Category name must be at least 2 characters.")
+    .max(255, "Category name must not exceed 255 characters."),
+  depreciation_rate: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/, { message: "Invalid decimal format" }),
+  account_code: z.number().int("Account code must be an integer.").optional(),
+  depreciation_account_code: z
+    .number()
+    .int("Depreciation account code must be an integer."),
+  created_by: z.number().int("Created by must be an integer."),
+})
+
+export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
+
+export interface AssetCategoryType extends CreateAssetCategoryData {
+  category_id: number
+  created_time: string
+  updated_by?: number
+  updated_time?: string
+}
