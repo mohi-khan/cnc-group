@@ -395,20 +395,50 @@ export const JournalNotesSchema = z.object({
 export type JournalNotes = z.infer<typeof JournalNotesSchema>
 export type DetailNote = z.infer<typeof DetailNoteSchema>
 
+//asset
+export const createAssetSchema = z.object({
+  id: z.bigint(), // For bigint
+  name: z
+    .string()
+    .min(2, 'Asset name must be at least 2 characters.')
+    .max(255, 'Asset name must not exceed 255 characters.'),
+  type: z.number().int('Category ID must be an integer.'),
+  purchaseDate: z.string(),
+  purchaseValue: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for purchase value.'),
+  currentValue: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for current value.')
+    .optional(),
+  salvageValue: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for salvage value.')
+    .optional(),
+  depreciationMethod: z.enum(['Straight Line', 'Diminishing Balance']),
+  usefulLifeYears: z.number().int('Useful life must be an integer.').optional(),
+  status: z.enum(['Active', 'Disposed']).default('Active'),
+  company: z.number().int('Company ID must be an integer.'),
+  location: z.number().int('Location ID must be an integer.').optional(),
+  created_by: z.number().int('Created by must be an integer.'),
+})
+
+export type CreateAssetData = z.infer<typeof createAssetSchema>
+
 //asset-category
 export const createAssetCategorySchema = z.object({
   category_name: z
     .string()
-    .min(2, "Category name must be at least 2 characters.")
-    .max(255, "Category name must not exceed 255 characters."),
+    .min(2, 'Category name must be at least 2 characters.')
+    .max(255, 'Category name must not exceed 255 characters.'),
   depreciation_rate: z
     .string()
-    .regex(/^\d+(\.\d+)?$/, { message: "Invalid decimal format" }),
-  account_code: z.number().int("Account code must be an integer.").optional(),
+    .regex(/^\d+(\.\d+)?$/, { message: 'Invalid decimal format' }),
+  account_code: z.number().int('Account code must be an integer.').optional(),
   depreciation_account_code: z
     .number()
-    .int("Depreciation account code must be an integer."),
-  created_by: z.number().int("Created by must be an integer."),
+    .int('Depreciation account code must be an integer.'),
+  created_by: z.number().int('Created by must be an integer.'),
 })
 
 export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
@@ -418,4 +448,22 @@ export interface AssetCategoryType extends CreateAssetCategoryData {
   created_time: string
   updated_by?: number
   updated_time?: string
+}
+
+// Trial Balance type
+export interface TrialBalanceData {
+  id: number
+  code: string
+  name: string
+  level: number
+  parentCode: string | null
+  initialDebit: number
+  initialCredit: number
+  initialBalance: number
+  periodDebit: number
+  periodCredit: number
+  closingDebit: number
+  closingCredit: number
+  closingBalance: number
+  children: TrialBalanceData[] // Nested structure for sub-items
 }

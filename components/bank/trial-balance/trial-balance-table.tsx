@@ -2,24 +2,7 @@
 import React, { useState } from 'react'
 import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react' // Importing lucide-react arrow icons
-
-// Define the type for API response
-export interface TrialBalanceData {
-  id: number
-  code: string
-  name: string
-  level: number
-  parentCode: string | null
-  initialDebit: number
-  initialCredit: number
-  initialBalance: number
-  periodDebit: number
-  periodCredit: number
-  closingDebit: number
-  closingCredit: number
-  closingBalance: number
-  children: TrialBalanceData[] // Nested structure for sub-items
-}
+import { TrialBalanceData } from '@/utils/type'
 
 export default function TrialBalanceTable() {
   const [trialBalanceData, setTrialBalanceData] = React.useState<
@@ -67,7 +50,7 @@ export default function TrialBalanceTable() {
         {/* Parent Row with Arrow */}
         <div
           onClick={() => toggleRowExpansion(item.id)}
-          className={`grid grid-cols-12 gap-4 cursor-pointer p-2 border-b ${expandedRows.has(item.id) ? 'font-bold' : 'font-normal'}`}
+          className={`grid grid-cols-12 gap-10 cursor-pointer p-2 border-b ${expandedRows.has(item.id) ? 'font-bold' : 'font-normal'}`}
         >
           <div className="col-span-1 flex justify-center items-center">
             {item.children && item.children.length > 0 && (
@@ -84,6 +67,7 @@ export default function TrialBalanceTable() {
               </span>
             )}
           </div>
+          <div className="col-span-1 text-center">{item.name}</div>
           <div className="col-span-1 text-center">{item.initialDebit}</div>
           <div className="col-span-1 text-center">{item.initialCredit}</div>
           <div className="col-span-1 text-center">{item.initialBalance}</div>
@@ -113,17 +97,33 @@ export default function TrialBalanceTable() {
   return (
     <div>
       <div className="border rounded-lg">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b font-bold">
-          <div className="col-span-1"></div>
-          <div className="col-span-1 text-center">Initial Debit</div>
-          <div className="col-span-1 text-center">Initial Credit</div>
-          <div className="col-span-1 text-center">Initial Balance</div>
-          <div className="col-span-1 text-center">Debit (2024)</div>
-          <div className="col-span-1 text-center">Credit (2024)</div>
-          <div className="col-span-1 text-center">Balance (2024)</div>
-          <div className="col-span-1 text-center">Closing Debit</div>
-          <div className="col-span-1 text-center">Closing Credit</div>
-          <div className="col-span-1 text-center">Closing Balance</div>
+        <div className="grid grid-cols-12 gap-10 p-4 ">
+          <div className="col-span-1 "></div>
+          <div className="col-span-1 px- "></div>
+          <div className="col-span-3 text-center border border-gray-300">
+            <p className="border  border-gray-300"> Initial Balance</p>
+            <div className="grid grid-cols-3 gap-10 border-gray-300">
+              <div className="text-center ">Debit</div>
+              <div className="text-center">Credit</div>
+              <div className="text-center ">Balance</div>
+            </div>
+          </div>
+          <div className="col-span-3 text-center border border-gray-300">
+            <p className="border  border-gray-300"> Date 2024</p>
+            <div className="grid grid-cols-3 gap-2 border-t border-gray-300">
+              <div className="text-center ">Debit </div>
+              <div className="text-center ">Credit </div>
+              <div className="text-center ">Balance </div>
+            </div>
+          </div>
+          <div className="col-span-3 text-center border border-gray-300">
+            <p className="border   border-gray-300"> End Balance</p>
+            <div className="grid grid-cols-3 gap-2 border-t border-gray-300">
+              <div className="text-center ">Debit</div>
+              <div className="text-center ">Credit</div>
+              <div className="text-center ">Balance</div>
+            </div>
+          </div>
         </div>
         <div>
           {trialBalanceData.length > 0 ? (
