@@ -3,8 +3,9 @@ import React, { useState } from 'react'
 import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react' // Importing lucide-react arrow icons
 import { TrialBalanceData } from '@/utils/type'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function TrialBalanceTable() {
+export default function TrialBalanceTable({ targetRef }) {
   const [trialBalanceData, setTrialBalanceData] = React.useState<
     TrialBalanceData[]
   >([])
@@ -16,7 +17,7 @@ export default function TrialBalanceTable() {
       const response = await getTrialBalance()
       if (response.data) {
         setTrialBalanceData(response.data)
-        console.log('trial balance: ', response.data)
+        console.log('trial balance data : ', response.data)
       } else {
         console.error(
           'Error fetching trial balance data:',
@@ -95,44 +96,67 @@ export default function TrialBalanceTable() {
   }
 
   return (
-    <div>
-      <div className="border rounded-lg">
-        <div className="grid grid-cols-12 gap-10 p-4 ">
-          <div className="col-span-1 "></div>
-          <div className="col-span-1 px- "></div>
-          <div className="col-span-3 text-center border border-gray-300">
-            <p className="border  border-gray-300"> Initial Balance</p>
-            <div className="grid grid-cols-3 gap-10 border-gray-300">
-              <div className="text-center ">Debit</div>
-              <div className="text-center">Credit</div>
-              <div className="text-center ">Balance</div>
-            </div>
+    <div ref={targetRef}>
+      <Card className="border rounded-lg">
+        <CardContent>
+          <div className="grid grid-cols-12 gap-4 p-2">
+            <div className="col-span-1"></div>
+            <div className="col-span-1"></div>
+
+            <Card className="col-span-3 border">
+              <CardHeader className="border-b p-2">
+                <CardTitle className="text-center text-lg font-bold p-1">
+                  Initial Balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">Debit</div>
+                  <div className="text-center">Credit</div>
+                  <div className="text-center">Balance</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3 border">
+              <CardHeader className="border-b p-2">
+                <CardTitle className="text-center text-lg font-bold p-1">
+                  Date 2024
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">Debit</div>
+                  <div className="text-center">Credit</div>
+                  <div className="text-center">Balance</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3 border">
+              <CardHeader className="border-b p-2">
+                <CardTitle className="text-center text-lg font-bold p-1">
+                  End Balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">Debit</div>
+                  <div className="text-center">Credit</div>
+                  <div className="text-center">Balance</div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="col-span-3 text-center border border-gray-300">
-            <p className="border  border-gray-300"> Date 2024</p>
-            <div className="grid grid-cols-3 gap-2 border-t border-gray-300">
-              <div className="text-center ">Debit </div>
-              <div className="text-center ">Credit </div>
-              <div className="text-center ">Balance </div>
-            </div>
+          <div>
+            {trialBalanceData.length > 0 ? (
+              renderRows(trialBalanceData)
+            ) : (
+              <div className="text-center p-4">Loading...</div>
+            )}
           </div>
-          <div className="col-span-3 text-center border border-gray-300">
-            <p className="border   border-gray-300"> End Balance</p>
-            <div className="grid grid-cols-3 gap-2 border-t border-gray-300">
-              <div className="text-center ">Debit</div>
-              <div className="text-center ">Credit</div>
-              <div className="text-center ">Balance</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          {trialBalanceData.length > 0 ? (
-            renderRows(trialBalanceData)
-          ) : (
-            <div className="text-center p-4">loading...</div>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
