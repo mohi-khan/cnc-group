@@ -397,32 +397,29 @@ export type DetailNote = z.infer<typeof DetailNoteSchema>
 
 //asset
 export const createAssetSchema = z.object({
-  asset_id: z.bigint(), // For bigint
-  asset_name: z
+  id: z.bigint(), // For bigint
+  name: z
     .string()
     .min(2, 'Asset name must be at least 2 characters.')
     .max(255, 'Asset name must not exceed 255 characters.'),
-  category_id: z.number().int('Category ID must be an integer.'),
-  purchase_date: z.string(),
-  purchase_value: z
+  type: z.number().int('Category ID must be an integer.'),
+  purchaseDate: z.string(),
+  purchaseValue: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for purchase value.'),
-  current_value: z
+  currentValue: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for current value.')
     .optional(),
-  salvage_value: z
+  salvageValue: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for salvage value.')
     .optional(),
-  depreciation_method: z.enum(['Straight Line', 'Diminishing Balance']),
-  useful_life_years: z
-    .number()
-    .int('Useful life must be an integer.')
-    .optional(),
+  depreciationMethod: z.enum(['Straight Line', 'Diminishing Balance']),
+  usefulLifeYears: z.number().int('Useful life must be an integer.').optional(),
   status: z.enum(['Active', 'Disposed']).default('Active'),
-  company_id: z.number().int('Company ID must be an integer.'),
-  location_id: z.number().int('Location ID must be an integer.').optional(),
+  company: z.number().int('Company ID must be an integer.'),
+  location: z.number().int('Location ID must be an integer.').optional(),
   created_by: z.number().int('Created by must be an integer.'),
 })
 
