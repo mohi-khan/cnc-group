@@ -21,7 +21,7 @@ import { getAllBankAccounts } from '@/api/bank-accounts-api'
 import { toast } from '@/hooks/use-toast'
 import { BankAccount } from '@/utils/type'
 
-export default function TrialBalanceHeading() {
+export default function TrialBalanceHeading({ generatePdf }) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [accounts, setAccounts] = useState<BankAccount[]>([])
@@ -55,6 +55,7 @@ export default function TrialBalanceHeading() {
       {/* Export Buttons */}
       <div className="flex items-center gap-2">
         <Button
+          onClick={generatePdf}
           variant="ghost"
           size="sm"
           className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-900 hover:bg-purple-200"

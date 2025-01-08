@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 
 interface AssetCategoryListProps {
   asset: CreateAssetData[] // Asset data type
-  // Function to handle adding category
+  onAddCategory: () => void
 }
 
 export const AssetList: React.FC<AssetCategoryListProps> = ({ asset }) => {
@@ -22,7 +22,7 @@ export const AssetList: React.FC<AssetCategoryListProps> = ({ asset }) => {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Asset List</h1>
-        <Button>Add Asset Category</Button>
+        <Button>Add Asset List</Button>
       </div>
 
       {/* Table Section */}
