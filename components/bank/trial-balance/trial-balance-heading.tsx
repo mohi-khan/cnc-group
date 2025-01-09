@@ -21,7 +21,15 @@ import { getAllBankAccounts } from '@/api/bank-accounts-api'
 import { toast } from '@/hooks/use-toast'
 import { BankAccount } from '@/utils/type'
 
-export default function TrialBalanceHeading({ generatePdf }) {
+interface TrialBalanceHeadingProps {
+  generatePdf: () => void
+  generateExcel: () => void
+}
+
+export default function TrialBalanceHeading({
+  generatePdf,
+  generateExcel,
+}: TrialBalanceHeadingProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [accounts, setAccounts] = useState<BankAccount[]>([])
@@ -64,6 +72,7 @@ export default function TrialBalanceHeading({ generatePdf }) {
           <span className="font-medium">PDF</span>
         </Button>
         <Button
+          onClick={generateExcel}
           variant="ghost"
           size="sm"
           className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
@@ -158,7 +167,7 @@ export default function TrialBalanceHeading({ generatePdf }) {
                       selected={startDate}
                       onSelect={(date) => {
                         setStartDate(date)
-                        setIsDropdownOpen(false) // Close the popover when a date is selected
+                        setIsDropdownOpen(false)
                       }}
                       className="rounded-md border"
                     />
@@ -189,7 +198,7 @@ export default function TrialBalanceHeading({ generatePdf }) {
                       selected={endDate}
                       onSelect={(date) => {
                         setEndDate(date)
-                        setIsDropdownOpen(false) // Close the popover when a date is selected
+                        setIsDropdownOpen(false)
                       }}
                       className="rounded-md border"
                     />
