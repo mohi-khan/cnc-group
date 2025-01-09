@@ -89,6 +89,14 @@ const currencyItems = [
 ]
 
 const parentIds = [101, 102, 103, 202, 203, 301, 302, 401, 402, 502]
+const cashTags = [
+  'Advance Payments received from customers',
+  'Cash received from operating activities',
+  'Advance payments made to suppliers',
+  'Cash paid for operating activities',
+  'Cash flows from investing & extraordinary activities',
+  'Cash flows from financing activities',
+]
 
 const codeGroups: CodeGroup[] = [
   {
@@ -185,6 +193,9 @@ export default function ChartOfAccountsTable() {
       isGroup: false,
       notes: '',
       code: '',
+      isCash: true,
+      isBank: false,
+      cashTag: '',
       createdBy: 60,
     },
   })
@@ -301,6 +312,7 @@ export default function ChartOfAccountsTable() {
 
     if (activeAccountOnly) {
       filtered = filtered.filter((account) => account.isReconcilable)
+      filtered = filtered.filter((account) => account.isCash)
     }
 
     setFilteredAccounts(filtered)
@@ -560,6 +572,33 @@ export default function ChartOfAccountsTable() {
                   />
                   <FormField
                     control={form.control}
+                    name="cashTag"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Cash Tag</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Account Cash Tag" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {cashTags.map((type) => (
+                              <SelectItem key={type} value={type.toLowerCase()}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="parentAccountId"
                     render={({ field }) => (
                       <FormItem>
@@ -696,6 +735,46 @@ export default function ChartOfAccountsTable() {
                           <FormLabel>Is Active</FormLabel>
                           <FormDescription>
                             Uncheck to deactivate this account
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isCash"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Is Cash</FormLabel>
+                          <FormDescription>
+                            Uncheck to deactivate this cash
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isBank"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Is Cash</FormLabel>
+                          <FormDescription>
+                            Uncheck to deactivate this bank
                           </FormDescription>
                         </div>
                       </FormItem>
