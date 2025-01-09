@@ -152,7 +152,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive().optional(),
+  accountId: z.number().int().positive(),
   name: z.string().max(255),
   code: z.string().max(64),
   accountType: z.string().max(64),
@@ -164,6 +164,9 @@ export const chartOfAccountSchema = z.object({
   budgetTracking: z.boolean().default(false),
   isActive: z.boolean().default(true),
   isGroup: z.boolean().default(false),
+  isCash: z.boolean().default(true),
+  isBank: z.boolean().default(false),
+  cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
   notes: z.string(),
 })
@@ -424,6 +427,15 @@ export const createAssetSchema = z.object({
 })
 
 export type CreateAssetData = z.infer<typeof createAssetSchema>
+export interface AssetType extends CreateAssetData {
+  name: string
+  purchaseDate: string
+  purchaseValue: string
+  currentValue: string
+  salvageValue: string
+  depreciationMethod: 'Straight Line' | 'Diminishing Balance'
+  usefulLifeYears: number
+}
 
 //asset-category
 export const createAssetCategorySchema = z.object({
