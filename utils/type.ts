@@ -479,3 +479,17 @@ export interface TrialBalanceData {
   closingBalance: number
   children: TrialBalanceData[] // Nested structure for sub-items
 }
+
+//general ledger
+export interface GeneralLedgerType {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: number
+  notes: string
+  partner: string
+  coscenter: string
+  department: string
+}
