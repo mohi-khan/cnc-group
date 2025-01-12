@@ -461,7 +461,6 @@ export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
 
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
-  category_name: string
   created_time: string
   updated_by?: number
   updated_time?: string
