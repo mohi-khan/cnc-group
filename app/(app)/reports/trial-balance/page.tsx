@@ -1,4 +1,4 @@
-import TrialBalance from '@/components/bank/trial-balance/trial-balance'
+import TrialBalance from '@/components/report/trial-balance/trial-balance'
 import React from 'react'
 
 const TrialBalancePage = () => {
