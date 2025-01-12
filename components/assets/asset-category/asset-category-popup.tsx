@@ -89,6 +89,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   }
 
   const onSubmit = async (data: AssetCategoryFormData) => {
+    console.log('Form submitted:', data)
     setIsSubmitting(true)
     try {
       await createAssetCategory(data)
@@ -103,6 +104,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   }
 
   useEffect(() => {
+    // console.log(form);
     fetchChartOfAccounts()
   }, [])
 
