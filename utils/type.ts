@@ -61,7 +61,7 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
 }
 
 export type ResPartner = z.infer<typeof resPartnerSchema> & {
-  id?: number
+  id: number
   companyId?: number
   createdAt?: string
   updatedAt?: string
@@ -487,6 +487,19 @@ export interface TrialBalanceData {
 
 //general ledger
 export interface GeneralLedgerType {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: number
+  notes: string
+  partner: string
+  coscenter: string
+  department: string
+}
+
+export interface PartnerLedgerType {
   voucherid: number
   voucherno: string
   accountname: string

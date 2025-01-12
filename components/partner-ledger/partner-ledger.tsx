@@ -1,19 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import GeneralLedgerFind from './general-ledger-find'
-import GeneralLedgerList from './general-ledger-list'
-import { GeneralLedgerType } from '@/utils/type'
-import { getGeneralLedgerByDate } from '@/api/general-ledger-api'
+import { PartnerLedgerType } from '@/utils/type'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
 import { usePDF } from 'react-to-pdf'
+import PartneredgerFind from './partner-ledger-find'
+import PartnerLedgerList from './partner-ledger-list'
+import { getPartnerLedgerByDate } from '@/api/partner-ledger-api'
 
-export default function GeneralLedger() {
-  const { toPDF, targetRef } = usePDF({ filename: 'general_ledger.pdf' })
-  const [transactions, setTransactions] = useState<GeneralLedgerType[]>([])
+export default function PartnerLedger() {
+  const { toPDF, targetRef } = usePDF({ filename: 'partner_ledger.pdf' })
+  const [transactions, setTransactions] = useState<PartnerLedgerType[]>([])
 
-  const flattenData = (data: GeneralLedgerType[]) => {
+  const flattenData = (data: PartnerLedgerType[]) => {
     return data.map((item) => ({
       VoucherID: item.voucherid,
       VoucherNo: item.voucherno,
@@ -27,10 +27,10 @@ export default function GeneralLedger() {
     }))
   }
 
-  const exportToExcel = (data: GeneralLedgerType[], fileName: string) => {
+  const exportToExcel = (data: PartnerLedgerType[], fileName: string) => {
     const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'General Ledger')
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Partner Ledger')
     const excelBuffer = XLSX.write(workbook, {
       bookType: 'xlsx',
       type: 'array',
@@ -46,17 +46,17 @@ export default function GeneralLedger() {
   }
 
   const generateExcel = () => {
-    exportToExcel(transactions, 'general_ledger')
+    exportToExcel(transactions, 'partner_ledger')
   }
 
   const handleSearch = async (
-    accountcode: number,
+    partnercode: number,
     fromdate: string,
     todate: string
   ) => {
     try {
-      const response = await getGeneralLedgerByDate({
-        accountcode,
+      const response = await getPartnerLedgerByDate({
+        partnercode,
         fromdate,
         todate,
       })
@@ -73,12 +73,12 @@ export default function GeneralLedger() {
 
   return (
     <div className="space-y-4 container mx-auto mt-20">
-      <GeneralLedgerFind
+      <PartneredgerFind
         onSearch={handleSearch}
         generatePdf={generatePdf}
         generateExcel={generateExcel}
       />
-      <GeneralLedgerList transactions={transactions} targetRef={targetRef} />
+      <PartnerLedgerList transactions={transactions} targetRef={targetRef} />
     </div>
   )
 }
