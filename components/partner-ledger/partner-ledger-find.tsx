@@ -10,37 +10,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ChartOfAccount, GeneralLedgerType } from '@/utils/type'
-import { getAllCoa } from '@/api/general-ledger-api'
+import {  ResPartner } from '@/utils/type'
 import { FileText } from 'lucide-react'
+import { getAllPartners } from '@/api/partner-ledger-api'
 
-interface GeneralLedgerFindProps {
-  onSearch: (accountcode: number, fromdate: string, todate: string) => void
+interface PartnerLedgerFindProps {
+  onSearch: (partnercode: number, fromdate: string, todate: string) => void
   generatePdf: () => void
   generateExcel: () => void
 }
 
-export default function GeneralLedgerFind({
+export default function PartneredgerFind({
   onSearch,
   generatePdf,
   generateExcel,
-}: GeneralLedgerFindProps) {
+}: PartnerLedgerFindProps) {
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
-  const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [partners, setPartners] = useState<ResPartner[]>([])
 
   async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllCoa()
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
-      console.error('Error getting chart of accounts:', fetchedAccounts.error)
+    const fetchedPartners = await getAllPartners()
+    if (fetchedPartners.error || !fetchedPartners.data) {
+      console.error('Error getting chart of accounts:', fetchedPartners.error)
       toast({
         title: 'Error',
         description:
-          fetchedAccounts.error?.message || 'Failed to get chart of accounts',
+          fetchedPartners.error?.message || 'Failed to get chart of accounts',
       })
     } else {
-      setAccounts(fetchedAccounts.data)
+        setPartners(fetchedPartners.data)
     }
   }
 
@@ -105,21 +105,21 @@ export default function GeneralLedgerFind({
           onValueChange={setSelectedAccountCode}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select account" />
+            <SelectValue placeholder="Select partner" />
           </SelectTrigger>
           <SelectContent>
-            {accounts.length > 0 ? (
-              accounts.map((account) => (
+            {partners.length > 0 ? (
+              partners.map((partner) => (
                 <SelectItem
-                  key={account.accountId}
-                  value={account.accountId.toString()}
+                  key={partner.id}
+                  value={partner.id?.toString()}
                 >
-                  {account.name}
+                  {partner.name}
                 </SelectItem>
               ))
             ) : (
               <SelectItem value="default" disabled>
-                No accounts available
+                No partners available
               </SelectItem>
             )}
           </SelectContent>

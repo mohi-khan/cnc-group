@@ -6,7 +6,7 @@ interface GeneralLedgerListProps {
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-export default function GeneralLedgerList({ transactions, targetRef }: GeneralLedgerListProps) {
+export default function PartnerLedgerList({ transactions, targetRef }: GeneralLedgerListProps) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500">
