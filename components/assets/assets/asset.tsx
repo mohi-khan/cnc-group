@@ -2,15 +2,22 @@
 import React, { useEffect, useState } from 'react'
 import { AssetList } from '@/components/assets/assets/asset-list'
 import { getAssets } from '@/api/assets.api'
-import { CreateAssetData } from '@/utils/type'
+import { AssetCategoryType, AssetType, CreateAssetData } from '@/utils/type'
 import { AssetPopUp } from './asset-popup'
+import { getAllAssetCategories } from '@/api/asset-category-api'
 
 const Asset = () => {
   const [asset, setAsset] = useState<CreateAssetData[]>([])
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
+    []
+  )
   useEffect(() => {
     fetchAssets()
+    fetchAssetCategories()
   }, [])
+
+  // Fetch all assets
   const fetchAssets = async () => {
     try {
       const assetdata = await getAssets()
@@ -20,6 +27,20 @@ const Asset = () => {
         setAsset([])
       }
       console.log('Show The Assets All Data :', assetdata.data)
+    } catch (error) {
+      console.error('Failed to fetch asset categories:', error)
+    }
+  }
+
+  const fetchAssetCategories = async () => {
+    try {
+      const categories = await getAllAssetCategories()
+      const categoryNames = categories.data ?? []
+      setAssetCategories(categoryNames)
+      console.log(
+        'fetchAssetCategories category names asset tsx file:',
+        categoryNames
+      )
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
     }
@@ -40,6 +61,7 @@ const Asset = () => {
         isOpen={isPopupOpen}
         onOpenChange={setIsPopupOpen}
         onCategoryAdded={handleCategoryAdded}
+        categories={assetCategories}
       />
     </div>
   )

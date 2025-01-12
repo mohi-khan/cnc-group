@@ -3,7 +3,7 @@ import { AssetType, CreateAssetData } from '@/utils/type'
 
 //get all assets api from database
 export async function getAssets() {
-  return fetchApi<CreateAssetData[]>({
+  return fetchApi<AssetType[]>({
     url: 'api/asset/get-all-asset',
     method: 'GET',
     headers: {
@@ -13,7 +13,7 @@ export async function getAssets() {
 }
 
 export async function createAsset(data: CreateAssetData) {
-  return fetchApi<AssetType[]>({
+  return fetchApi<CreateAssetData[]>({
     url: 'api/asset/create-asset',
     method: 'POST',
     body: data,
