@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { usePDF } from 'react-to-pdf'
 import TrialBalanceHeading from './trial-balance-heading'
 import TrialBalanceTable from './trial-balance-table'
@@ -13,6 +13,9 @@ export default function TrialBalance() {
   const [trialBalanceData, setTrialBalanceData] = useState<TrialBalanceData[]>(
     []
   )
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [companyId, setCompanyId] = useState<string>('')
 
   const generatePdf = () => {
     toPDF()
@@ -58,15 +61,29 @@ export default function TrialBalance() {
     exportToExcel(trialBalanceData, 'trial_balance')
   }
 
+  const handleFilterChange = (
+    newStartDate: Date | undefined,
+    newEndDate: Date | undefined,
+    newCompanyId: string
+  ) => {
+    setStartDate(newStartDate)
+    setEndDate(newEndDate)
+    setCompanyId(newCompanyId)
+  }
+
   return (
     <div>
       <TrialBalanceHeading
         generatePdf={generatePdf}
         generateExcel={generateExcel}
+        onFilterChange={handleFilterChange}
       />
       <TrialBalanceTable
         targetRef={targetRef}
         setTrialBalanceData={setTrialBalanceData}
+        startDate={startDate}
+        endDate={endDate}
+        companyId={companyId}
       />
     </div>
   )

@@ -17,50 +17,58 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { getAllBankAccounts } from '@/api/bank-accounts-api'
-import { toast } from '@/hooks/use-toast'
-import { BankAccount } from '@/utils/type'
+import { getAllCompany } from '@/api/company-api'
+import { Company, User } from '@/utils/type'
 
 interface TrialBalanceHeadingProps {
   generatePdf: () => void
   generateExcel: () => void
+  onFilterChange: (
+    startDate: Date | undefined,
+    endDate: Date | undefined,
+    companyId: string
+  ) => void
 }
 
 export default function TrialBalanceHeading({
   generatePdf,
   generateExcel,
+  onFilterChange,
 }: TrialBalanceHeadingProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
-
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+  const [companies, setCompanies] = useState<Company[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
 
-  async function fetchBankAccounts() {
-    const fetchedAccounts = await getAllBankAccounts()
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
-      console.error('Error getting bank account:', fetchedAccounts.error)
-      toast({
-        title: 'Error',
-        description:
-          fetchedAccounts.error?.message || 'Failed to get bank accounts',
-      })
-    } else {
-      setAccounts(fetchedAccounts.data)
-      if (fetchedAccounts.data.length > 0) {
-        setSelectedAccountId(fetchedAccounts.data[0].id.toString())
-      }
+  async function fetchCompanies() {
+    const response = await getAllCompany()
+    const data: Company[] = response.data || []
+
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData: User = JSON.parse(userStr)
+      setUser(userData)
+
+      const userCompanyIds = userData.userCompanies.map((uc) => uc.companyId)
+      const filteredCompanies = data.filter((company) =>
+        userCompanyIds.includes(company.companyId)
+      )
+      setCompanies(filteredCompanies)
     }
   }
 
   useEffect(() => {
-    fetchBankAccounts()
+    fetchCompanies()
   }, [])
+
+  useEffect(() => {
+    onFilterChange(startDate, endDate, selectedCompanyId)
+  }, [startDate, endDate, selectedCompanyId, onFilterChange])
 
   return (
     <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
-      {/* Export Buttons */}
       <div className="flex items-center gap-2">
         <Button
           onClick={generatePdf}
@@ -123,9 +131,7 @@ export default function TrialBalanceHeading({
         </Button>
       </div>
 
-      {/* Date and Company Selection */}
       <div className="flex items-center gap-4 flex-1 justify-center">
-        {/* Date Select Box */}
         <Popover
           open={isDropdownOpen}
           onOpenChange={(open) => setIsDropdownOpen(open)}
@@ -144,7 +150,6 @@ export default function TrialBalanceHeading({
 
           <PopoverContent className="w-auto p-4" align="start">
             <div className="flex flex-col gap-4">
-              {/* Start Date Field */}
               <div className="flex items-center gap-2">
                 <span className="font-medium">Start Date:</span>
                 <Popover>
@@ -175,7 +180,6 @@ export default function TrialBalanceHeading({
                 </Popover>
               </div>
 
-              {/* End Date Field */}
               <div className="flex items-center gap-2">
                 <span className="font-medium">End Date:</span>
                 <Popover>
@@ -209,26 +213,26 @@ export default function TrialBalanceHeading({
           </PopoverContent>
         </Popover>
 
-        {/* Company Selection */}
         <Select
-          value={selectedAccountId}
-          onValueChange={(value) => setSelectedAccountId(value)}
+          value={selectedCompanyId}
+          onValueChange={(value) => setSelectedCompanyId(value)}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select a bank account" />
+            <SelectValue placeholder="Select a company" />
           </SelectTrigger>
           <SelectContent>
-            {accounts.map((account) => (
-              <SelectItem key={account.id} value={account.id.toString()}>
-                {account.accountName}-{account.accountNumber}-{account.bankName}
-                -{account.branchName}
+            {companies.map((company) => (
+              <SelectItem
+                key={company.companyId}
+                value={company.companyId.toString()}
+              >
+                {company.companyName}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Empty div for flex spacing */}
       <div className="w-[100px]" />
     </div>
   )

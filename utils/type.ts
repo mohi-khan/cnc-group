@@ -435,6 +435,10 @@ export interface AssetType extends CreateAssetData {
   salvageValue: string
   depreciationMethod: 'Straight Line' | 'Diminishing Balance'
   usefulLifeYears: number
+  category_id: number
+  company_id: number
+  location_id: number
+  created_by: number
 }
 
 //asset-category
@@ -457,6 +461,7 @@ export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
 
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
+  category_name: string
   created_time: string
   updated_by?: number
   updated_time?: string
