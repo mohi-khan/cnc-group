@@ -3,9 +3,10 @@ import { GeneralLedgerType } from '@/utils/type'
 
 interface GeneralLedgerListProps {
   transactions: GeneralLedgerType[]
+  targetRef: React.RefObject<HTMLDivElement>
 }
 
-export default function GeneralLedgerList({ transactions }: GeneralLedgerListProps) {
+export default function GeneralLedgerList({ transactions, targetRef }: GeneralLedgerListProps) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500">
@@ -15,7 +16,7 @@ export default function GeneralLedgerList({ transactions }: GeneralLedgerListPro
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" ref={targetRef}>
       <table className="min-w-full bg-white border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
