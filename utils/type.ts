@@ -510,3 +510,10 @@ export interface PartnerLedgerType {
   coscenter: string
   department: string
 }
+
+//cash flow statement type
+export interface CashflowStatement {
+  debit: number
+  credit: number
+  cashflowTag: string
+}

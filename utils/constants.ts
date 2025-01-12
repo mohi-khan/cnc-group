@@ -148,12 +148,22 @@ export const MENU_ITEMS: MenuItem[] = [
         ],
       },
       {
+        name: 'Statement Reports',
+        items: [
+          {
+            name: 'Cash Flow Statement',
+            source: '/reports/cash-flow-statement',
+          },
+        ],
+      },
+      {
         name: 'Ledger Reports',
         items: [
           { name: 'Bank Ledger', source: '/reports/bank-ledger' },
           { name: 'Customer Ledger', source: '/reports/customer-ledger' },
         ],
       },
+
       {
         name: 'Other Reports',
         items: [
