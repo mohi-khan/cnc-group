@@ -94,7 +94,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 border-b">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
             <Image
@@ -242,6 +242,15 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="py-4 text-center">
+      <p className='font-semibold pb-1'>Quick Menu</p>
+      <div className='flex gap-6 items-center justify-center text-sm'>
+        <Link href={'/'}>Cash Voucher</Link>
+        <Link href={'/'}>Bank Voucher</Link>
+        <Link href={'/'}>Journal Voucher</Link>
+        <Link href={'/'}>Contra Voucher</Link>
+      </div>
       </div>
     </nav>
   )
