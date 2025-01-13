@@ -1,4 +1,4 @@
-import GeneralLedger from '@/components/general-ledger/general-ledger';
+import GeneralLedger from '@/components/reports/general-ledger/general-ledger';
 import React from 'react';
 
 const GeneralLedgerPage = () => {
