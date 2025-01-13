@@ -21,6 +21,12 @@ import {
 import { ChartOfAccount } from '@/utils/type'
 import { getAllCoa } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Plus } from 'lucide-react'
 
 interface LevelType {
   id: number
@@ -30,10 +36,14 @@ interface LevelType {
   chartOfAccount: number
 }
 
+// Define operators
+const OPERATORS = [
+  { symbol: '+', label: 'Add' },
+  { symbol: '-', label: 'Subtract' },
+]
+
 export default function Level() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
-  const [suggestions, setSuggestions] = useState<string[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const useLevelRows = () => {
     const [rows, setRows] = React.useState<LevelType[]>([
@@ -105,53 +115,25 @@ export default function Level() {
     )
   }
 
-  const handleCalculatedColumnChange = (id: number, value: string) => {
-    updateRow(id, 'calculatedColumn', value)
-    
-    // Get the last word being typed
-    const words = value.split(' ')
-    const lastWord = words[words.length - 1]
-
-    if (lastWord) {
-      // Get previous titles for suggestions
-      const previousTitles = rows
-        .filter(row => row.id < id && row.revenue)
-        .map(row => row.revenue)
-      
-      // Filter suggestions based on the last word
-      const matchingSuggestions = previousTitles.filter(title =>
-        title.toLowerCase().includes(lastWord.toLowerCase())
-      )
-
-      setSuggestions(matchingSuggestions)
-      setShowSuggestions(matchingSuggestions.length > 0)
-    } else {
-      setSuggestions([])
-      setShowSuggestions(false)
-    }
+  // Get variables from previous levels
+  const getPreviousVariables = (currentId: number) => {
+    return rows
+      .filter(row => row.id < currentId && row.revenue)
+      .map(row => ({
+        name: row.revenue,
+        id: row.id
+      }))
   }
 
-  const handleSuggestionClick = (id: number, suggestion: string) => {
-    const currentValue = rows.find(row => row.id === id)?.calculatedColumn || ''
-    const words = currentValue.split(' ')
-    // Replace the last word with the selected suggestion
-    words[words.length - 1] = suggestion
-    const newValue = words.join(' ') + ' '
-    updateRow(id, 'calculatedColumn', newValue)
-    setShowSuggestions(false)
+  const handleInsertVariable = (rowId: number, variable: string) => {
+    const currentValue = rows.find(row => row.id === rowId)?.calculatedColumn || ''
+    updateRow(rowId, 'calculatedColumn', `${currentValue}${variable} `)
   }
 
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest('.suggestions-container')) {
-        setShowSuggestions(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  const handleInsertOperator = (rowId: number, operator: string) => {
+    const currentValue = rows.find(row => row.id === rowId)?.calculatedColumn || ''
+    updateRow(rowId, 'calculatedColumn', `${currentValue}${operator} `)
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -194,27 +176,63 @@ export default function Level() {
               </TableCell>
               <TableCell>
                 {row.columnType === 'calculatedColumn' && (
-                  <div className="suggestions-container relative">
+                  <div className="flex gap-2">
                     <Input
                       value={row.calculatedColumn}
-                      onChange={(e) => handleCalculatedColumnChange(row.id, e.target.value)}
-                      placeholder="Enter calculated column"
+                      placeholder="Use Insert button to add variables and operators"
+                      readOnly
                     />
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
-                        <div className="py-1">
-                          {suggestions.map((suggestion, index) => (
-                            <div
-                              key={index}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                              onClick={() => handleSuggestionClick(row.id, suggestion)}
-                            >
-                              {suggestion}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Insert
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <div className="space-y-4">
+                          {/* Variables Section */}
+                          <div>
+                            <h4 className="mb-2 font-medium">Variables</h4>
+                            <div className="grid gap-2">
+                              {getPreviousVariables(row.id).map((variable) => (
+                                <Button
+                                  key={variable.id}
+                                  variant="outline"
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => handleInsertVariable(row.id, variable.name)}
+                                >
+                                  {variable.name}
+                                </Button>
+                              ))}
+                              {getPreviousVariables(row.id).length === 0 && (
+                                <p className="text-sm text-muted-foreground">
+                                  No variables available from previous levels
+                                </p>
+                              )}
                             </div>
-                          ))}
+                          </div>
+                          
+                          {/* Operators Section */}
+                          <div>
+                            <h4 className="mb-2 font-medium">Operators</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              {OPERATORS.map((op) => (
+                                <Button
+                                  key={op.symbol}
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleInsertOperator(row.id, op.symbol)}
+                                >
+                                  {op.symbol}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
                 {row.columnType === 'chartOfAccount' && (
