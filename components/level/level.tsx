@@ -1,15 +1,15 @@
 'use client'
 
-import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -17,45 +17,93 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
+import { ChartOfAccount } from '@/utils/type'
+import { getAllCoa } from '@/api/level-api'
+import { toast } from '@/hooks/use-toast'
 
 interface LavelRow {
   id: number
   revenue: string
+  columnType: string
   calculatedColumn: string
-  isGroup: string
-}
-
-const useLevelRows = () => {
-  const [rows, setRows] = React.useState<LavelRow[]>([
-    { id: 1, revenue: '', calculatedColumn: '', isGroup: '' }
-  ])
-
-  const addRow = () => {
-    const newRow: LavelRow = {
-      id: rows.length + 1,
-      revenue: '',
-      calculatedColumn: '',
-      isGroup: ''
-    }
-    setRows([...rows, newRow])
-  }
-
-  const updateRow = (id: number, field: keyof LavelRow, value: string) => {
-    setRows(rows.map(row => 
-      row.id === id ? { ...row, [field]: value } : row
-    ))
-  }
-
-  return { rows, addRow, updateRow }
+  chartOfAccount: number
 }
 
 export default function Level() {
+  
+  const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+
+  const useLevelRows = () => {
+    const [rows, setRows] = React.useState<LavelRow[]>([
+      { id: 1, revenue: '', columnType: '', calculatedColumn: '', chartOfAccount: 0 },
+    ])
+  
+    const addRow = () => {
+      const newRow: LavelRow = {
+        id: rows.length + 1,
+        revenue: '',
+        columnType: '',
+        calculatedColumn: '',
+        chartOfAccount: 0,
+      }
+      setRows([...rows, newRow])
+    }
+  
+    const updateRow = (id: number, field: keyof LavelRow, value: string | number) => {
+      setRows(
+        rows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+      )
+    }
+  
+    return { rows, addRow, updateRow }
+  }
   const { rows, addRow, updateRow } = useLevelRows()
 
   const handleSave = () => {
     console.log('Saving data:', rows)
     // Implement your save logic here
+  }
+
+  async function fetchChartOfAccounts() {
+    const fetchedAccounts = await getAllCoa()
+    if (fetchedAccounts.error || !fetchedAccounts.data) {
+      console.error('Error getting chart of accounts:', fetchedAccounts.error)
+      toast({
+        title: 'Error',
+        description:
+          fetchedAccounts.error?.message || 'Failed to get chart of accounts',
+      })
+    } else {
+      setAccounts(fetchedAccounts.data)
+      console.log(fetchedAccounts.data)
+    }
+  }
+
+  useEffect(() => {
+    fetchChartOfAccounts()
+  }, [])
+
+  const handleChartOfAccountSelect = (id: number, value: string) => {
+    const accountId = parseInt(value, 10)
+    updateRow(id, 'chartOfAccount', accountId)
+  }
+
+  const getAccountNameById = (accountId: number) => {
+    const account = accounts.find(acc => acc.accountId === accountId)
+    return account ? account.name : ''
+  }
+
+  const getAvailableAccounts = (currentRowId: number) => {
+    const selectedAccounts = rows
+      .filter(row => row.id !== currentRowId && row.chartOfAccount !== 0)
+      .map(row => row.chartOfAccount)
+
+    return accounts.filter(
+      (account) => account.isGroup && 
+        (!selectedAccounts.includes(account.accountId) || 
+         rows.find(row => row.id === currentRowId)?.chartOfAccount === account.accountId)
+    )
   }
 
   return (
@@ -68,9 +116,9 @@ export default function Level() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Revenue</TableHead>
-            <TableHead>Calculated Column/Chart of Account</TableHead>
-            <TableHead>Is Group</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Column Type</TableHead>
+            <TableHead>Value</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -85,32 +133,50 @@ export default function Level() {
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.calculatedColumn}
-                  onValueChange={(value) => updateRow(row.id, 'calculatedColumn', value)}
+                  value={row.columnType}
+                  onValueChange={(value) => updateRow(row.id, 'columnType', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select column" />
+                    <SelectValue placeholder="Select column type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="column1">Column 1</SelectItem>
-                    <SelectItem value="column2">Column 2</SelectItem>
-                    <SelectItem value="column3">Column 3</SelectItem>
+                    <SelectItem value="calculatedColumn">Calculated Column</SelectItem>
+                    <SelectItem value="chartOfAccount">Chart of Account</SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>
               <TableCell>
-                <Select
-                  value={row.isGroup}
-                  onValueChange={(value) => updateRow(row.id, 'isGroup', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                  </SelectContent>
-                </Select>
+                {row.columnType === 'calculatedColumn' && (
+                  <Input
+                    value={row.calculatedColumn}
+                    onChange={(e) => updateRow(row.id, 'calculatedColumn', e.target.value)}
+                    placeholder="Enter calculated column"
+                  />
+                )}
+                {row.columnType === 'chartOfAccount' && (
+                  <Select
+                    value={row.chartOfAccount !== 0 ? row.chartOfAccount.toString() : ''}
+                    onValueChange={(value) => handleChartOfAccountSelect(row.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a chart of account">
+                        {row.chartOfAccount !== 0 ? getAccountNameById(row.chartOfAccount) : "Select a chart of account"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableAccounts(row.id).map((account) => (
+                        <SelectItem key={account.accountId} value={account.accountId.toString()}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!row.columnType && (
+                  <span className="text-red-500">
+                    Please select an option from Calculated Column or Chart of Accounts
+                  </span>
+                )}
               </TableCell>
             </TableRow>
           ))}
