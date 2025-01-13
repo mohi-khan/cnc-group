@@ -22,7 +22,7 @@ import { ChartOfAccount } from '@/utils/type'
 import { getAllCoa } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 
-interface LavelRow {
+interface LevelType {
   id: number
   revenue: string
   columnType: string
@@ -31,16 +31,17 @@ interface LavelRow {
 }
 
 export default function Level() {
-  
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const useLevelRows = () => {
-    const [rows, setRows] = React.useState<LavelRow[]>([
+    const [rows, setRows] = React.useState<LevelType[]>([
       { id: 1, revenue: '', columnType: '', calculatedColumn: '', chartOfAccount: 0 },
     ])
   
     const addRow = () => {
-      const newRow: LavelRow = {
+      const newRow: LevelType = {
         id: rows.length + 1,
         revenue: '',
         columnType: '',
@@ -50,7 +51,7 @@ export default function Level() {
       setRows([...rows, newRow])
     }
   
-    const updateRow = (id: number, field: keyof LavelRow, value: string | number) => {
+    const updateRow = (id: number, field: keyof LevelType, value: string | number) => {
       setRows(
         rows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
       )
@@ -62,7 +63,6 @@ export default function Level() {
 
   const handleSave = () => {
     console.log('Saving data:', rows)
-    // Implement your save logic here
   }
 
   async function fetchChartOfAccounts() {
@@ -76,7 +76,6 @@ export default function Level() {
       })
     } else {
       setAccounts(fetchedAccounts.data)
-      console.log(fetchedAccounts.data)
     }
   }
 
@@ -105,6 +104,54 @@ export default function Level() {
          rows.find(row => row.id === currentRowId)?.chartOfAccount === account.accountId)
     )
   }
+
+  const handleCalculatedColumnChange = (id: number, value: string) => {
+    updateRow(id, 'calculatedColumn', value)
+    
+    // Get the last word being typed
+    const words = value.split(' ')
+    const lastWord = words[words.length - 1]
+
+    if (lastWord) {
+      // Get previous titles for suggestions
+      const previousTitles = rows
+        .filter(row => row.id < id && row.revenue)
+        .map(row => row.revenue)
+      
+      // Filter suggestions based on the last word
+      const matchingSuggestions = previousTitles.filter(title =>
+        title.toLowerCase().includes(lastWord.toLowerCase())
+      )
+
+      setSuggestions(matchingSuggestions)
+      setShowSuggestions(matchingSuggestions.length > 0)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
+  const handleSuggestionClick = (id: number, suggestion: string) => {
+    const currentValue = rows.find(row => row.id === id)?.calculatedColumn || ''
+    const words = currentValue.split(' ')
+    // Replace the last word with the selected suggestion
+    words[words.length - 1] = suggestion
+    const newValue = words.join(' ') + ' '
+    updateRow(id, 'calculatedColumn', newValue)
+    setShowSuggestions(false)
+  }
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target as Element).closest('.suggestions-container')) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <div className="p-6 space-y-6">
@@ -147,11 +194,28 @@ export default function Level() {
               </TableCell>
               <TableCell>
                 {row.columnType === 'calculatedColumn' && (
-                  <Input
-                    value={row.calculatedColumn}
-                    onChange={(e) => updateRow(row.id, 'calculatedColumn', e.target.value)}
-                    placeholder="Enter calculated column"
-                  />
+                  <div className="suggestions-container relative">
+                    <Input
+                      value={row.calculatedColumn}
+                      onChange={(e) => handleCalculatedColumnChange(row.id, e.target.value)}
+                      placeholder="Enter calculated column"
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
+                        <div className="py-1">
+                          {suggestions.map((suggestion, index) => (
+                            <div
+                              key={index}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                              onClick={() => handleSuggestionClick(row.id, suggestion)}
+                            >
+                              {suggestion}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {row.columnType === 'chartOfAccount' && (
                   <Select
