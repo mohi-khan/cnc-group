@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AccountsHead, createAssetCategorySchema, User } from '@/utils/type'
+import { AccountsHead, CreateAssetCategoryData, createAssetCategorySchema, User } from '@/utils/type'
 import {
   createAssetCategory,
   getAllChartOfAccounts,
@@ -31,8 +31,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-
-type AssetCategoryFormData = z.infer<typeof createAssetCategorySchema>
 
 interface AssetCategoryPopupProps {
   isOpen: boolean
@@ -53,14 +51,14 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       const userStr = localStorage.getItem('currentUser')
       if (userStr) {
         const userData = JSON.parse(userStr)
-        setUserId(userData)
+        setUserId(userData.userId)
         console.log('Current user from localStorage:', userData)
       } else {
         console.log('No user data found in localStorage')
       }
     }, [])
 
-  const form = useForm<AssetCategoryFormData>({
+  const form = useForm<CreateAssetCategoryData>({
     resolver: zodResolver(createAssetCategorySchema),
     defaultValues: {
       category_name: '',
@@ -88,14 +86,14 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     }
   }
 
-  const onSubmit = async (data: AssetCategoryFormData) => {
+  const onSubmit = async (data: CreateAssetCategoryData) => {
     console.log('Form submitted:', data)
     setIsSubmitting(true)
     try {
       await createAssetCategory(data)
       onCategoryAdded()
-      onOpenChange(false) // Close the dialog after successful submission
-      form.reset() // Reset the form
+      onOpenChange(false)
+      form.reset()
     } catch (error) {
       console.error('Failed to create asset category:', error)
     } finally {

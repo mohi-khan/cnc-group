@@ -12,7 +12,7 @@ export async function getAllAssetCategories() {
 }
 
 export async function createAssetCategory(data: CreateAssetCategoryData) {
-  return fetchApi<AssetCategoryType[]>({
+  return fetchApi<CreateAssetCategoryData[]>({
     url: 'api/asset-category/create-asset-category',
     method: 'POST',
     body: data,
