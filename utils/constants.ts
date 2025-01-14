@@ -113,7 +113,6 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',
           },
-          { name: 'Bank Ledger', source: '/bank/bank-ledger' },
           { name: 'Check Print', source: '/bank/check-print' },
           { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
@@ -161,6 +160,8 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: 'Bank Ledger', source: '/reports/bank-ledger' },
           { name: 'Customer Ledger', source: '/reports/customer-ledger' },
+          { name: 'General Ledger', source: '/reports/general-ledger' },
+          { name: 'Partner Ledger', source: '/reports/partner-ledger' },
         ],
       },
 

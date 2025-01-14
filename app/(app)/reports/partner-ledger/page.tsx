@@ -1,4 +1,4 @@
-import PartnerLedger from '@/components/partner-ledger/partner-ledger'
+import PartnerLedger from '@/components/reports/partner-ledger/partner-ledger'
 import React from 'react'
 
 const page = () => {
