@@ -1,18 +1,18 @@
 'use client'
-
-import React, { useState } from 'react'
-import CashFlowStatementHeading from './cash-flow-statement-heading'
-import CashFlowStatementTableData from './cash-flow-statement-tabledata'
+import React, { useState, useEffect } from 'react'
+import { CashflowStatement } from '@/utils/type'
+import { getCashFowStatement } from '@/api/cash-flow-statement-api'
 import { usePDF } from 'react-to-pdf'
-import { CashflowStatement, TrialBalanceData } from '@/utils/type'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import CashFlowStatementHeading from './cash-flow-statement-heading'
+import CashFlowStatementTableData from './cash-flow-statement-tabledata'
 
 const CashFlowStatement = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'cash_flow_statement.pdf' })
-  const [cashFlowStatement, CashFlowStatement] = useState<CashflowStatement[]>(
-    []
-  )
+  const [cashFlowStatements, setCashFlowStatements] = useState<
+    CashflowStatement[]
+  >([])
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
@@ -36,19 +36,15 @@ const CashFlowStatement = () => {
   }
 
   const flattenData = (data: CashflowStatement[]): any[] => {
-    let result: any[] = []
-    data.forEach((item) => {
-      result.push({
-        debit: item.credit,
-        credit: item.credit,
-        cashflowTag: item.cashflowTag,
-      })
-    })
-    return result
+    return data.map((item) => ({
+      debit: item.credit,
+      credit: item.credit,
+      cashflowTag: item.cashflowTag,
+    }))
   }
 
   const generateExcel = () => {
-    exportToExcel(cashFlowStatement, 'cash-flow-statement')
+    exportToExcel(cashFlowStatements, 'cash-flow-statement')
   }
 
   const handleFilterChange = (
@@ -60,6 +56,22 @@ const CashFlowStatement = () => {
     setEndDate(newEndDate)
     setCompanyId(newCompanyId)
   }
+
+  useEffect(() => {
+    if (startDate && endDate && companyId) {
+      const fetchData = async () => {
+        const response = await getCashFowStatement({
+          fromdate: startDate.toISOString().split('T')[0],
+          enddate: endDate.toISOString().split('T')[0],
+          companyid: companyId,
+        })
+        setCashFlowStatements(response.data || [])
+        console.log('this is from getcash flow data : ', response.data || [])
+      }
+      fetchData()
+    }
+  }, [startDate, endDate, companyId])
+
   return (
     <div>
       <CashFlowStatementHeading
@@ -69,10 +81,7 @@ const CashFlowStatement = () => {
       />
       <CashFlowStatementTableData
         targetRef={targetRef}
-        setTrialBalanceData={CashFlowStatement}
-        startDate={startDate || new Date()}
-        endDate={endDate || new Date()}
-        companyId={companyId}
+        cashFlowStatements={cashFlowStatements}
       />
     </div>
   )

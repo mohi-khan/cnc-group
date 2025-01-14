@@ -1,11 +1,3 @@
-// import React from 'react'
-
-// const CashFlowStatementHeading = () => {
-//   return <div>i am CashFlowStatementHeading Components</div>
-// }
-
-// export default CashFlowStatementHeading
-
 'use client'
 
 import { useEffect, useState } from 'react'
