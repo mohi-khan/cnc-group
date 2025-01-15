@@ -20,7 +20,7 @@ import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
 import { Company, User } from '@/utils/type'
 
-interface TrialBalanceHeadingProps {
+interface CashFlowStatementHeadingProps {
   generatePdf: () => void
   generateExcel: () => void
   onFilterChange: (
@@ -34,7 +34,7 @@ export default function TrialBalanceHeading({
   generatePdf,
   generateExcel,
   onFilterChange,
-}: TrialBalanceHeadingProps) {
+}: CashFlowStatementHeadingProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
