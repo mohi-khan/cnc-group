@@ -519,11 +519,24 @@ export interface CashflowStatement {
   cashflowTag: string
 }
 
-export const CostCenterSummary = z.object({
+// cost center summmary backend zod schema
+export const CostCenterSummarySchema = z.object({
   fromDate: z.string(),
   endDate: z.string(),
   costCenterIds: z.string().transform((val) => val.split(',').map(Number)),
-  companyId:z.string(),
-});
+  companyId: z.string(),
+})
 
-export type CostCenterSummaryType = z.infer<typeof CostCenterSummary>
+export type CostCenterSummarySchemaType = z.infer<
+  typeof CostCenterSummarySchema
+>
+
+// cost center summary get data type
+export interface CostCenterSummaryType {
+  costCenterId: number
+  costCenterName: string
+  accountId: number
+  accountName: string
+  totalDebit: number
+  totalCredit: number
+}
