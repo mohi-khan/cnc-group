@@ -518,3 +518,12 @@ export interface CashflowStatement {
   credit: number
   cashflowTag: string
 }
+
+export const CostCenterSummary = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  costCenterIds: z.string().transform((val) => val.split(',').map(Number)),
+  companyId:z.string(),
+});
+
+export type CostCenterSummaryType = z.infer<typeof CostCenterSummary>

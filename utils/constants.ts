@@ -153,6 +153,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Cash Flow Statement',
             source: '/reports/cash-flow-statement',
           },
+          {
+            name: 'Cost Center Summary',
+            source: '/reports/cost-center-summary',
+          },
         ],
       },
       {
