@@ -1,5 +1,5 @@
+'use client'
 import React from 'react'
-
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -70,7 +70,6 @@ const CostCenterSummaryHeading = ({
   }, [startDate, endDate, selectedCompanyId, onFilterChange])
   return (
     <div>
-      <h1>i am come from CostCenterSummaryHeading</h1>
       <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
         <div className="flex items-center gap-2">
           <Button
