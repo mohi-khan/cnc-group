@@ -540,3 +540,13 @@ export interface CostCenterSummaryType {
   totalDebit: number
   totalCredit: number
 }
+
+//level
+export interface LevelType {
+  title: string;
+  type?: 'Calculated Field' | 'COA Group';
+  COA_ID?: number | null;
+  position: number;
+  formula?: string;
+  negative: boolean;
+}

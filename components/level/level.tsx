@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ChartOfAccount } from '@/utils/type'
+import { ChartOfAccount, LevelType } from '@/utils/type'
 import { getAllCoa } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -28,15 +28,6 @@ import {
 } from "@/components/ui/popover"
 import { Plus, SkipBackIcon as Backspace } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
-
-interface LevelType {
-  title: string;
-  type?: 'Calculated Field' | 'COA Group';
-  COA_ID?: number | null;
-  position: number;
-  formula?: string;
-  negative: boolean;
-}
 
 // Define operators
 const OPERATORS = [
