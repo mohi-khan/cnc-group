@@ -8,19 +8,12 @@ export async function getAllCoa() {
   })
 }
 
-export async function getAllLevel() {
-  return fetchApi<LevelType[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
-
 export async function createLevel(
-  data: LevelType
+  data: LevelType[]
 ) {
   console.log("Under APi:");
   console.log(data);
-  return fetchApi<LevelType>({
+  return fetchApi<LevelType[]>({
     url: 'api/coa-pl-map/create-coa-pl-map',
     method: 'POST',
     body: data,

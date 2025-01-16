@@ -1,4 +1,4 @@
-import Level from '@/components/level/level'
+import Level from '@/components/settings/level-entry/levelEntry'
 import React from 'react'
 
 const LevelPage = () => {

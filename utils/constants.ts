@@ -222,6 +222,7 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Internal Orders', source: '/settings/internal-orders' },
           { name: 'Bank Accounts', source: '/settings/bank-accounts' },
           { name: 'Cash Accounts', source: '/settings/cash-accounts' },
+          { name: 'Level Entry', source: '/settings/level-entry' },
         ],
       },
       {
