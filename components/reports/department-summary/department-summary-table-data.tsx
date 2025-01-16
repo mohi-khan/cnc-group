@@ -7,7 +7,7 @@ interface Props {
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
+const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
   // Function to get the debit or credit value for a specific cost center and account name
   const getDebitCreditDifference = (
     costCenterName: string,
@@ -82,4 +82,4 @@ const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
   )
 }
 
-export default CostCenterSummaryTableData
+export default DepartmentSummaryTableData

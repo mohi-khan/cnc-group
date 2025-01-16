@@ -1,8 +1,7 @@
 'use client'
-import CostCenterSummaryHeading from './cost-center-summary-heading'
-import CostCenterSummaryTableData from './cost-center-summary-table-data'
+
 import React, { useState, useEffect } from 'react'
-import { CostCenter, CostCenterSummaryType } from '@/utils/type'
+import { CostCenter, CostCenterSummaryType, Department } from '@/utils/type'
 
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
@@ -11,16 +10,19 @@ import {
   getAllCostCenters,
   getCostCenterSummary,
 } from '@/api/cost-center-summary-api'
+import DeparmentSummaryHeading from './department-summary-heading'
+import DepartmentSummaryTableData from './department-summary-table-data'
+import { getAllDepartments } from '@/api/department-summary-api'
 
-const CostCenterSummary = () => {
-  const { toPDF, targetRef } = usePDF({ filename: 'cost_center_summary.pdf' })
+const DepartmentSummary = () => {
+  const { toPDF, targetRef } = usePDF({ filename: 'department_summary.pdf' })
   const [costCenterSummary, setCostCenterSummary] = useState<
     CostCenterSummaryType[]
   >([])
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
-  const [costCenterData, setCostCenterData] = useState<CostCenter[]>([])
+  const [departmentSummary, setDepartmentSummary] = useState<Department[]>([])
 
   const generatePdf = () => {
     toPDF()
@@ -64,9 +66,9 @@ const CostCenterSummary = () => {
   }
 
   async function fetchAllCostCenter() {
-    const respons = await getAllCostCenters()
-    setCostCenterData(respons.data || [])
-    console.log('This is all cost center data: ', respons.data || [])
+    const respons = await getAllDepartments()
+    setDepartmentSummary(respons.data || [])
+    console.log('This is all department summary  data: ', respons.data || [])
   }
 
   useEffect(() => {
@@ -81,7 +83,7 @@ const CostCenterSummary = () => {
         })
         if (response.data) {
           console.log('this is non-filter data: ', response.data)
-          const formattedData = response.data.map((item) => ({
+          const formattedData = response.data.map((item: any) => ({
             costCenterId: item.costCenterId,
             costCenterName: item.costCenterName,
             accountId: item.accountId,
@@ -103,12 +105,12 @@ const CostCenterSummary = () => {
 
   return (
     <div>
-      <CostCenterSummaryHeading
+      <DeparmentSummaryHeading
         generatePdf={generatePdf}
         generateExcel={generateExcel}
         onFilterChange={handleFilterChange}
       />
-      <CostCenterSummaryTableData
+      <DepartmentSummaryTableData
         targetRef={targetRef}
         data={costCenterSummary}
       />
@@ -116,4 +118,4 @@ const CostCenterSummary = () => {
   )
 }
 
-export default CostCenterSummary
+export default DepartmentSummary
