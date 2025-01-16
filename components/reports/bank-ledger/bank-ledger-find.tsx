@@ -34,9 +34,6 @@ export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
       })
     } else {
       setAccounts(fetchedAccounts.data)
-      if (fetchedAccounts.data.length > 0) {
-        setSelectedAccountId(fetchedAccounts.data[0].id.toString())
-      }
     }
   }
 
@@ -100,17 +97,23 @@ export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
         onValueChange={(value) => setSelectedAccountId(value)}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select a bank account" />
+          <SelectValue placeholder="Select bank account" />
         </SelectTrigger>
         <SelectContent>
-          {accounts.map((account) => (
-            <SelectItem
-              key={account.id}
-              value={account.id.toString()}
-            >
-              {account.accountName}-{account.accountNumber}-{account.bankName}-{account.branchName}
+          {accounts.length > 0 ? (
+            accounts.map((account) => (
+              <SelectItem
+                key={account.id}
+                value={account.id.toString()}
+              >
+                {account.accountName}-{account.accountNumber}-{account.bankName}-{account.branchName}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="default" disabled>
+              No bank accounts available
             </SelectItem>
-          ))}
+          )}
         </SelectContent>
       </Select>
       <Button onClick={handleSearch}>Show</Button>

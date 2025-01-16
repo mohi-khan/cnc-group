@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { TrialBalanceData } from '@/utils/type'
@@ -9,19 +9,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 export default function TrialBalanceTable({
   targetRef,
   setTrialBalanceData,
+  startDate,
+  endDate,
+  companyId,
 }: {
   targetRef: React.RefObject<HTMLDivElement>
   setTrialBalanceData: React.Dispatch<React.SetStateAction<TrialBalanceData[]>>
+  startDate: Date | undefined
+  endDate: Date | undefined
+  companyId: string
 }) {
-  const [trialBalanceData, setTrialBalanceDataLocal] = useState<
+  const [trialBalanceDataLocal, setTrialBalanceDataLocal] = useState<
     TrialBalanceData[]
   >([])
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
 
-  // Fetch data from API
   async function fetchTrialBalanceTableData() {
+    if (!startDate || !endDate || !companyId) {
+      console.error('Missing required filter parameters')
+      return
+    }
+
     try {
-      const response = await getTrialBalance()
+      const response = await getTrialBalance({
+        fromdate: startDate.toISOString().split('T')[0],
+        enddate: endDate.toISOString().split('T')[0],
+        companyid: companyId,
+      })
       if (response.data) {
         setTrialBalanceDataLocal(response.data)
         setTrialBalanceData(response.data)
@@ -37,11 +51,12 @@ export default function TrialBalanceTable({
     }
   }
 
-  React.useEffect(() => {
-    fetchTrialBalanceTableData()
-  }, [])
+  useEffect(() => {
+    if (startDate && endDate && companyId) {
+      fetchTrialBalanceTableData()
+    }
+  }, [startDate, endDate, companyId])
 
-  // Toggle the expansion of a row
   const toggleRowExpansion = (id: number) => {
     const newExpandedRows = new Set(expandedRows)
     if (newExpandedRows.has(id)) {
@@ -52,11 +67,9 @@ export default function TrialBalanceTable({
     setExpandedRows(newExpandedRows)
   }
 
-  // Recursive function to render rows, including children if expanded
   const renderRows = (data: TrialBalanceData[], level = 0) => {
     return data.map((item) => (
       <React.Fragment key={item.id}>
-        {/* Parent Row with Arrow */}
         <div
           onClick={() => toggleRowExpansion(item.id)}
           className={`grid grid-cols-12 gap-4 cursor-pointer p-2 border-b hover:bg-gray-100 ${
@@ -118,7 +131,6 @@ export default function TrialBalanceTable({
           </div>
         </div>
 
-        {/* Children Row (Only if expanded) */}
         {expandedRows.has(item.id) &&
           item.children &&
           item.children.length > 0 && (
@@ -182,8 +194,8 @@ export default function TrialBalanceTable({
             </Card>
           </div>
           <div>
-            {trialBalanceData.length > 0 ? (
-              renderRows(trialBalanceData)
+            {trialBalanceDataLocal.length > 0 ? (
+              renderRows(trialBalanceDataLocal)
             ) : (
               <div className="text-center p-4">Loading...</div>
             )}

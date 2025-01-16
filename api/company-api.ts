@@ -2,6 +2,7 @@ import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
 export const companySchema = z.object({
+  companyId: z.number(),
   companyName: z.string().min(1, 'Company name is required'),
   address: z.string().min(1, 'Address is required'),
   city: z.string(),

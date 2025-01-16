@@ -61,7 +61,7 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
 }
 
 export type ResPartner = z.infer<typeof resPartnerSchema> & {
-  id?: number
+  id: number
   companyId?: number
   createdAt?: string
   updatedAt?: string
@@ -435,6 +435,10 @@ export interface AssetType extends CreateAssetData {
   salvageValue: string
   depreciationMethod: 'Straight Line' | 'Diminishing Balance'
   usefulLifeYears: number
+  category_id: number
+  company_id: number
+  location_id: number
+  created_by: number
 }
 
 //asset-category
@@ -446,7 +450,7 @@ export const createAssetCategorySchema = z.object({
   depreciation_rate: z
     .string()
     .regex(/^\d+(\.\d+)?$/, { message: 'Invalid decimal format' }),
-  account_code: z.number().int('Account code must be an integer.').optional(),
+  account_code: z.number().int('Account code must be an integer.'),
   depreciation_account_code: z
     .number()
     .int('Depreciation account code must be an integer.'),
@@ -457,9 +461,10 @@ export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
 
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
+  category_name: string
   created_time: string
-  updated_by?: number
-  updated_time?: string
+  updated_by: number
+  updated_time: string
 }
 
 // Trial Balance type
@@ -478,4 +483,60 @@ export interface TrialBalanceData {
   closingCredit: number
   closingBalance: number
   children: TrialBalanceData[] // Nested structure for sub-items
+}
+
+//general ledger
+export interface GeneralLedgerType {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: number
+  notes: string
+  partner: string
+  coscenter: string
+  department: string
+}
+
+export interface PartnerLedgerType {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: number
+  notes: string
+  partner: string
+  coscenter: string
+  department: string
+}
+
+//cash flow statement type
+export interface CashflowStatement {
+  debit: number
+  credit: number
+  cashflowTag: string
+}
+
+// cost center summmary backend zod schema
+export const CostCenterSummarySchema = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  costCenterIds: z.string().transform((val) => val.split(',').map(Number)),
+  companyId: z.string(),
+})
+
+export type CostCenterSummarySchemaType = z.infer<
+  typeof CostCenterSummarySchema
+>
+
+// cost center summary get data type
+export interface CostCenterSummaryType {
+  costCenterId: number
+  costCenterName: string
+  accountId: number
+  accountName: string
+  totalDebit: number
+  totalCredit: number
 }
