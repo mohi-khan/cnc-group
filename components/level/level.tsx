@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ChartOfAccount } from '@/utils/type'
+import { ChartOfAccount, LevelType } from '@/utils/type'
 import { getAllCoa } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -26,15 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Plus } from 'lucide-react'
-
-interface LevelType {
-  id: number
-  revenue: string
-  columnType: string
-  calculatedColumn: string
-  chartOfAccount: number
-}
+import { Plus, SkipBackIcon as Backspace } from 'lucide-react'
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Define operators
 const OPERATORS = [
@@ -44,29 +37,31 @@ const OPERATORS = [
 
 export default function Level() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [displayFormula, setDisplayFormula] = useState<string>('')
 
   const useLevelRows = () => {
     const [rows, setRows] = React.useState<LevelType[]>([
-      { id: 1, revenue: '', columnType: '', calculatedColumn: '', chartOfAccount: 0 },
+      { title: '', type: undefined, COA_ID: null, position: 1, formula: '', negative: false },
     ])
-  
+
     const addRow = () => {
       const newRow: LevelType = {
-        id: rows.length + 1,
-        revenue: '',
-        columnType: '',
-        calculatedColumn: '',
-        chartOfAccount: 0,
+        title: '',
+        type: undefined,
+        COA_ID: null,
+        position: rows.length + 1,
+        formula: '',
+        negative: false,
       }
       setRows([...rows, newRow])
     }
-  
-    const updateRow = (id: number, field: keyof LevelType, value: string | number) => {
+
+    const updateRow = (position: number, field: keyof LevelType, value: string | number | boolean | null) => {
       setRows(
-        rows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+        rows.map((row) => (row.position === position ? { ...row, [field]: value } : row))
       )
     }
-  
+
     return { rows, addRow, updateRow }
   }
   const { rows, addRow, updateRow } = useLevelRows()
@@ -93,9 +88,9 @@ export default function Level() {
     fetchChartOfAccounts()
   }, [])
 
-  const handleChartOfAccountSelect = (id: number, value: string) => {
+  const handleChartOfAccountSelect = (position: number, value: string) => {
     const accountId = parseInt(value, 10)
-    updateRow(id, 'chartOfAccount', accountId)
+    updateRow(position, 'COA_ID', accountId)
   }
 
   const getAccountNameById = (accountId: number) => {
@@ -103,36 +98,51 @@ export default function Level() {
     return account ? account.name : ''
   }
 
-  const getAvailableAccounts = (currentRowId: number) => {
+  const getAvailableAccounts = (currentPosition: number) => {
     const selectedAccounts = rows
-      .filter(row => row.id !== currentRowId && row.chartOfAccount !== 0)
-      .map(row => row.chartOfAccount)
+      .filter(row => row.position !== currentPosition && row.COA_ID !== null)
+      .map(row => row.COA_ID)
 
     return accounts.filter(
       (account) => account.isGroup && 
         (!selectedAccounts.includes(account.accountId) || 
-         rows.find(row => row.id === currentRowId)?.chartOfAccount === account.accountId)
+         rows.find(row => row.position === currentPosition)?.COA_ID === account.accountId)
     )
   }
 
-  // Get variables from previous levels
-  const getPreviousVariables = (currentId: number) => {
+  const getPreviousVariables = (currentPosition: number) => {
     return rows
-      .filter(row => row.id < currentId && row.revenue)
+      .filter(row => row.position < currentPosition)
       .map(row => ({
-        name: row.revenue,
-        id: row.id
+        name: row.title || `Level ${row.position}`,
+        id: row.position,
+        position: row.position,
+        displayValue: row.title || `Level ${row.position}`
       }))
   }
 
-  const handleInsertVariable = (rowId: number, variable: string) => {
-    const currentValue = rows.find(row => row.id === rowId)?.calculatedColumn || ''
-    updateRow(rowId, 'calculatedColumn', `${currentValue}${variable} `)
+  const handleInsertVariable = (position: number, variablePosition: number, displayValue: string) => {
+    const currentValue = rows.find(row => row.position === position)?.formula || ''
+    const currentDisplayValue = displayFormula || ''
+    
+    // Update the actual formula with position numbers (for database)
+    updateRow(position, 'formula', `${currentValue}${variablePosition}`)
+    
+    // Update the display formula with titles
+    setDisplayFormula(`${currentDisplayValue}${displayValue}`)
   }
 
-  const handleInsertOperator = (rowId: number, operator: string) => {
-    const currentValue = rows.find(row => row.id === rowId)?.calculatedColumn || ''
-    updateRow(rowId, 'calculatedColumn', `${currentValue}${operator} `)
+  const handleInsertOperator = (position: number, operator: string) => {
+    const currentValue = rows.find(row => row.position === position)?.formula || ''
+    updateRow(position, 'formula', `${currentValue}${operator}`)
+    setDisplayFormula(`${displayFormula}${operator}`)
+  }
+
+  const handleBackspace = (position: number) => {
+    const currentValue = rows.find(row => row.position === position)?.formula || ''
+    const newValue = currentValue.slice(0, -1)
+    updateRow(position, 'formula', newValue)
+    setDisplayFormula(displayFormula.slice(0, -1))
   }
 
   return (
@@ -145,41 +155,57 @@ export default function Level() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Position</TableHead>
+            <TableHead>Negative</TableHead>
             <TableHead>Title</TableHead>
-            <TableHead>Column Type</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Value</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.position}>
+              <TableCell>{row.position}</TableCell>
+              <TableCell>
+                <Checkbox
+                  checked={row.negative}
+                  onCheckedChange={(checked) => updateRow(row.position, 'negative', checked === true)}
+                />
+              </TableCell>
               <TableCell>
                 <Input
-                  value={row.revenue}
-                  onChange={(e) => updateRow(row.id, 'revenue', e.target.value)}
-                  placeholder="Enter revenue"
+                  value={row.title}
+                  onChange={(e) => updateRow(row.position, 'title', e.target.value)}
+                  placeholder="Enter title"
+                  maxLength={45}
                 />
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.columnType}
-                  onValueChange={(value) => updateRow(row.id, 'columnType', value)}
+                  value={row.type}
+                  onValueChange={(value) => {
+                    updateRow(row.position, 'type', value as 'Calculated Field' | 'COA Group')
+                    if (value === 'Calculated Field') {
+                      setDisplayFormula('')
+                    }
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select column type" />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="calculatedColumn">Calculated Column</SelectItem>
-                    <SelectItem value="chartOfAccount">Chart of Account</SelectItem>
+                    <SelectItem value="Calculated Field">Calculated Field</SelectItem>
+                    <SelectItem value="COA Group">COA Group</SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>
               <TableCell>
-                {row.columnType === 'calculatedColumn' && (
+                {row.type === 'Calculated Field' && (
                   <div className="flex gap-2">
                     <Input
-                      value={row.calculatedColumn}
+                      value={displayFormula}
                       placeholder="Use Insert button to add variables and operators"
+                      maxLength={45}
                       readOnly
                     />
                     <Popover>
@@ -191,22 +217,21 @@ export default function Level() {
                       </PopoverTrigger>
                       <PopoverContent className="w-80">
                         <div className="space-y-4">
-                          {/* Variables Section */}
                           <div>
                             <h4 className="mb-2 font-medium">Variables</h4>
                             <div className="grid gap-2">
-                              {getPreviousVariables(row.id).map((variable) => (
+                              {getPreviousVariables(row.position).map((variable) => (
                                 <Button
                                   key={variable.id}
                                   variant="outline"
                                   size="sm"
                                   className="justify-start"
-                                  onClick={() => handleInsertVariable(row.id, variable.name)}
+                                  onClick={() => handleInsertVariable(row.position, variable.position, variable.displayValue)}
                                 >
                                   {variable.name}
                                 </Button>
                               ))}
-                              {getPreviousVariables(row.id).length === 0 && (
+                              {getPreviousVariables(row.position).length === 0 && (
                                 <p className="text-sm text-muted-foreground">
                                   No variables available from previous levels
                                 </p>
@@ -214,7 +239,6 @@ export default function Level() {
                             </div>
                           </div>
                           
-                          {/* Operators Section */}
                           <div>
                             <h4 className="mb-2 font-medium">Operators</h4>
                             <div className="grid grid-cols-3 gap-2">
@@ -223,11 +247,18 @@ export default function Level() {
                                   key={op.symbol}
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleInsertOperator(row.id, op.symbol)}
+                                  onClick={() => handleInsertOperator(row.position, op.symbol)}
                                 >
                                   {op.symbol}
                                 </Button>
                               ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleBackspace(row.position)}
+                              >
+                                <Backspace className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -235,18 +266,18 @@ export default function Level() {
                     </Popover>
                   </div>
                 )}
-                {row.columnType === 'chartOfAccount' && (
+                {row.type === 'COA Group' && (
                   <Select
-                    value={row.chartOfAccount !== 0 ? row.chartOfAccount.toString() : ''}
-                    onValueChange={(value) => handleChartOfAccountSelect(row.id, value)}
+                    value={row.COA_ID?.toString() || ''}
+                    onValueChange={(value) => handleChartOfAccountSelect(row.position, value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a chart of account">
-                        {row.chartOfAccount !== 0 ? getAccountNameById(row.chartOfAccount) : "Select a chart of account"}
+                        {row.COA_ID ? getAccountNameById(row.COA_ID) : "Select a chart of account"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {getAvailableAccounts(row.id).map((account) => (
+                      {getAvailableAccounts(row.position).map((account) => (
                         <SelectItem key={account.accountId} value={account.accountId.toString()}>
                           {account.name}
                         </SelectItem>
@@ -254,9 +285,9 @@ export default function Level() {
                     </SelectContent>
                   </Select>
                 )}
-                {!row.columnType && (
+                {!row.type && (
                   <span className="text-red-500">
-                    Please select an option from Calculated Column or Chart of Accounts
+                    Please select a type: Calculated Field or COA Group
                   </span>
                 )}
               </TableCell>
