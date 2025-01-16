@@ -563,3 +563,13 @@ export type DepartmentSummaryType = z.infer<typeof DepartmentSummarySchema>
 export type DepartmentSummaryfilterType = z.infer<
   typeof DepartmentSummaryfilterSchema
 >
+
+//level
+export interface LevelType {
+  title: string
+  type?: 'Calculated Field' | 'COA Group'
+  COA_ID?: number | null
+  position: number
+  formula?: string
+  negative: boolean
+}
