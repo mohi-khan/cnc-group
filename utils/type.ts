@@ -540,3 +540,26 @@ export interface CostCenterSummaryType {
   totalDebit: number
   totalCredit: number
 }
+
+//department summary zod
+export const DepartmentSummarySchema = z.object({
+  departmentId: z.number(),
+  departmentName: z.string(),
+  accountId: z.number(),
+  accountName: z.string(),
+  totalDebit: z.number(),
+  totalCredit: z.number(),
+})
+
+export const DepartmentSummaryfilterSchema = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  departmentIds: z.string().transform((val) => val.split(',').map(Number)),
+  companyId: z.string(),
+})
+
+//deaprtment summary type
+export type DepartmentSummaryType = z.infer<typeof DepartmentSummarySchema>
+export type DepartmentSummaryfilterType = z.infer<
+  typeof DepartmentSummaryfilterSchema
+>

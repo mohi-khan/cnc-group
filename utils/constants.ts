@@ -157,6 +157,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Cost Center Summary',
             source: '/reports/cost-center-summary',
           },
+          {
+            name: 'Department Summary',
+            source: '/reports/department-summary',
+          },
         ],
       },
       {
