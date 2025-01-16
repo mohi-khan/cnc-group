@@ -46,6 +46,7 @@ const OPERATORS = [
 
 export default function Level() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [displayFormula, setDisplayFormula] = useState<string>('')
 
   const useLevelRows = () => {
     const [rows, setRows] = React.useState<LevelType[]>([
@@ -124,23 +125,33 @@ export default function Level() {
       .map(row => ({
         name: row.title || `Level ${row.position}`,
         id: row.position,
-        position: row.position
+        position: row.position,
+        displayValue: row.title || `Level ${row.position}`
       }))
   }
 
-  const handleInsertVariable = (position: number, variablePosition: number) => {
+  const handleInsertVariable = (position: number, variablePosition: number, displayValue: string) => {
     const currentValue = rows.find(row => row.position === position)?.formula || ''
+    const currentDisplayValue = displayFormula || ''
+    
+    // Update the actual formula with position numbers (for database)
     updateRow(position, 'formula', `${currentValue}${variablePosition}`)
+    
+    // Update the display formula with titles
+    setDisplayFormula(`${currentDisplayValue}${displayValue}`)
   }
 
   const handleInsertOperator = (position: number, operator: string) => {
     const currentValue = rows.find(row => row.position === position)?.formula || ''
     updateRow(position, 'formula', `${currentValue}${operator}`)
+    setDisplayFormula(`${displayFormula}${operator}`)
   }
 
   const handleBackspace = (position: number) => {
     const currentValue = rows.find(row => row.position === position)?.formula || ''
-    updateRow(position, 'formula', currentValue.slice(0, -1))
+    const newValue = currentValue.slice(0, -1)
+    updateRow(position, 'formula', newValue)
+    setDisplayFormula(displayFormula.slice(0, -1))
   }
 
   return (
@@ -181,7 +192,12 @@ export default function Level() {
               <TableCell>
                 <Select
                   value={row.type}
-                  onValueChange={(value) => updateRow(row.position, 'type', value as 'Calculated Field' | 'COA Group')}
+                  onValueChange={(value) => {
+                    updateRow(row.position, 'type', value as 'Calculated Field' | 'COA Group')
+                    if (value === 'Calculated Field') {
+                      setDisplayFormula('')
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -196,10 +212,10 @@ export default function Level() {
                 {row.type === 'Calculated Field' && (
                   <div className="flex gap-2">
                     <Input
-                      value={row.formula || ''}
-                      onChange={(e) => updateRow(row.position, 'formula', e.target.value)}
+                      value={displayFormula}
                       placeholder="Use Insert button to add variables and operators"
                       maxLength={45}
+                      readOnly
                     />
                     <Popover>
                       <PopoverTrigger asChild>
@@ -219,7 +235,7 @@ export default function Level() {
                                   variant="outline"
                                   size="sm"
                                   className="justify-start"
-                                  onClick={() => handleInsertVariable(row.position, variable.position)}
+                                  onClick={() => handleInsertVariable(row.position, variable.position, variable.displayValue)}
                                 >
                                   {variable.name}
                                 </Button>
