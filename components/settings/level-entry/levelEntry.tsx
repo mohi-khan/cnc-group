@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ChartOfAccount, LevelType } from '@/utils/type'
-import { getAllCoa } from '@/api/level-api'
+import { createLevel, getAllCoa } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
   Popover,
@@ -35,7 +35,7 @@ const OPERATORS = [
   { symbol: '-', label: 'Subtract' },
 ]
 
-export default function Level() {
+export default function LevelEntry() {
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
   const [displayFormula, setDisplayFormula] = useState<string>('')
 
@@ -66,8 +66,22 @@ export default function Level() {
   }
   const { rows, addRow, updateRow } = useLevelRows()
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log('Saving data:', rows)
+    const response = await createLevel(rows)
+    if (response.error || !response.data) {
+      console.error('Error creating level', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Error creating level',
+      })
+    } else {
+      console.log('level is created successfully', response.data)
+      toast({
+        title: 'Success',
+        description: 'level is created successfully',
+      })
+    }
   }
 
   async function fetchChartOfAccounts() {
