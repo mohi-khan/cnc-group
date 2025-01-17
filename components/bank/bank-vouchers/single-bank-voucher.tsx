@@ -75,12 +75,10 @@ export default function SingleBankVoucher() {
     if (data && data[0]) {
       voucherId = data[0].voucherid
     }
-    if (!voucherId || !data) return
-
-    if (!voucherId) {
+    if (!voucherId || !data || !createdId) {
       toast({
         title: 'Error',
-        description: 'Invalid voucher number',
+        description: 'Invalid voucher number or user ID',
         variant: 'destructive',
       })
       return
