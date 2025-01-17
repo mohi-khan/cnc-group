@@ -89,11 +89,11 @@ export default function Navbar() {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/bank/bank-voucher' && ![1, 2].includes(user?.roleId)) {
+    if (source === '/bank/bank-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/cash/cash-voucher' && ![1, 2].includes(user?.roleId)) {
+    if (source === '/cash/cash-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
       router.push('/unauthorized-access')
       return false
     }
