@@ -19,3 +19,10 @@ export async function createLevel(
     body: data,
   })
 }
+
+export async function getAllLevel() {
+  return fetchApi<LevelType[]>({
+    url: 'api/coa-pl-map/get-all-coa-pl-map',
+    method: 'GET',
+  })
+}
