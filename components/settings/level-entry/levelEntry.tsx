@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ChartOfAccount, LevelType } from '@/utils/type'
-import { createLevel, getAllCoa, getAllLevel } from '@/api/level-api'
+import { createLevel, editLevel, getAllCoa, getAllLevel } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
   Popover,
@@ -257,20 +257,18 @@ export default function LevelEntry() {
 
   const handleUpdate = async () => {
     console.log('Updating levels:', levels);
-    // Implement the API call to update levels here
-    // For example:
-    // const response = await updateLevels(levels);
-    // if (response.error) {
-    //   toast({
-    //     title: 'Error',
-    //     description: response.error.message || 'Failed to update levels',
-    //   });
-    // } else {
-    //   toast({
-    //     title: 'Success',
-    //     description: 'Levels updated successfully',
-    //   });
-    // }
+    const response = await editLevel(levels);
+    if (response.error) {
+      toast({
+        title: 'Error',
+        description: response.error.message || 'Failed to update levels',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Levels updated successfully',
+      });
+    }
   };
 
   return (
@@ -531,7 +529,7 @@ export default function LevelEntry() {
                     {level.type === 'Calculated Field' && (
                       <div className="flex gap-2">
                         <Input
-                          value={convertFormulaToDisplay(levelFormulas[level.position] || level.formula, levels)}
+                          value={convertFormulaToDisplay(levelFormulas[level.position] || level.formula || '', levels)}
                           placeholder="Use Insert button to add variables and operators"
                           maxLength={45}
                           readOnly
