@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CostCenter, CostCenterSummaryType, Department } from '@/utils/type'
+import { CostCenter, CostCenterSummaryType, Department, DepartmentSummaryType } from '@/utils/type'
 
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
@@ -12,23 +12,23 @@ import {
 } from '@/api/cost-center-summary-api'
 import DeparmentSummaryHeading from './department-summary-heading'
 import DepartmentSummaryTableData from './department-summary-table-data'
-import { getAllDepartments } from '@/api/department-summary-api'
+import { getAllDepartments, getDepartmentSummary } from '@/api/department-summary-api'
 
 const DepartmentSummary = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'department_summary.pdf' })
-  const [costCenterSummary, setCostCenterSummary] = useState<
-    CostCenterSummaryType[]
+  const [departmentSummary, setDepartmentSummary] = useState<
+  DepartmentSummaryType[]
   >([])
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
-  const [departmentSummary, setDepartmentSummary] = useState<Department[]>([])
+  const [department, setDepartment] = useState<Department[]>([])
 
   const generatePdf = () => {
     toPDF()
   }
 
-  const exportToExcel = (data: CostCenterSummaryType[], fileName: string) => {
+  const exportToExcel = (data: DepartmentSummaryType[], fileName: string) => {
     const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Trial Balance')
@@ -42,9 +42,9 @@ const DepartmentSummary = () => {
     saveAs(blob, `${fileName}.xlsx`)
   }
 
-  const flattenData = (data: CostCenterSummaryType[]): any[] => {
+  const flattenData = (data: DepartmentSummaryType[]): any[] => {
     return data?.map((item) => ({
-      costCenterName: item.costCenterName,
+      departnmentName: item.departmentName,
       accountName: item.accountName,
       totalDebit: item.totalDebit,
       totalCredit: item.totalCredit,
@@ -52,7 +52,7 @@ const DepartmentSummary = () => {
   }
 
   const generateExcel = () => {
-    exportToExcel(costCenterSummary, 'cost-center-summary')
+    exportToExcel(departmentSummary, 'department-summary')
   }
 
   const handleFilterChange = (
@@ -67,34 +67,34 @@ const DepartmentSummary = () => {
 
   async function fetchAllCostCenter() {
     const respons = await getAllDepartments()
-    setDepartmentSummary(respons.data || [])
+    setDepartment(respons.data || [])
     console.log('This is all department summary  data: ', respons.data || [])
   }
 
   useEffect(() => {
     if (startDate && endDate && companyId) {
       const fetchData = async () => {
-        const response = await getCostCenterSummary({
+        const response = await getDepartmentSummary({
           fromdate: startDate.toISOString().split('T')[0],
           enddate: endDate.toISOString().split('T')[0],
-          costCenterIds: '1,2,3,4,5,6,7,8,9,10',
+          departmentId: '1,2,3,4,5,6,7,8,9,10',
           // costCenterIds: costCenterIds.join(','),
           companyid: companyId,
         })
         if (response.data) {
           console.log('this is non-filter data: ', response.data)
           const formattedData = response.data.map((item: any) => ({
-            costCenterId: item.costCenterId,
-            costCenterName: item.costCenterName,
+            departmentId: item.departmentId,
+            departmentName: item.departmentName,
             accountId: item.accountId,
             accountName: item.accountName,
             totalDebit: item.totalDebit,
             totalCredit: item.totalCredit,
           }))
-          setCostCenterSummary(formattedData)
+          setDepartmentSummary(formattedData)
           console.log('this is from cost center summary data : ', response.data)
         } else {
-          setCostCenterSummary([])
+          setDepartmentSummary([])
           console.log('No data received from getCostCenterSummary')
         }
       }
@@ -112,7 +112,7 @@ const DepartmentSummary = () => {
       />
       <DepartmentSummaryTableData
         targetRef={targetRef}
-        data={costCenterSummary}
+        data={departmentSummary}
       />
     </div>
   )
