@@ -1,20 +1,20 @@
 import { fetchApi } from '@/utils/http'
-import { Department, DepartmentSummaryfilterType } from '@/utils/type'
+import { Department, DepartmentSummaryType } from '@/utils/type'
 
 export async function getDepartmentSummary({
   fromdate,
   enddate,
-  departmentIds,
+  departmentId,
   companyid,
 }: {
   fromdate: string
   enddate: string
-  departmentIds: string
+  departmentId: string
   companyid: string
 }) {
-  return fetchApi<DepartmentSummaryfilterType[]>({
-    // url: `api/ledgerreport/departmentsummery?fromDate=${fromdate}&endDate=${enddate}&departmentIds=${departmentIds}&companyId=${companyid}`,
-    url: 'api/ledgerreport/departmentsummery?fromDate=2024-01-01&endDate=2025-12-31&departmentIds=1,2,3&companyId=75',
+  return fetchApi<DepartmentSummaryType[]>({
+    url: `api/ledgerreport/departmentsummery?fromDate=${fromdate}&endDate=${enddate}&departmentIds=${departmentId}&companyId=${companyid}`,
+    // url: 'api/ledgerreport/departmentsummery?fromDate=2024-01-01&endDate=2025-12-31&departmentIds=1,2,3&companyId=75',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
