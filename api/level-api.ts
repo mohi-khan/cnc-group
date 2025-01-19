@@ -26,3 +26,15 @@ export async function getAllLevel() {
     method: 'GET',
   })
 }
+
+export async function editLevel(
+  data: LevelType[]
+) {
+  console.log("Under APi:");
+  console.log(data);
+  return fetchApi<LevelType[]>({
+    url: 'api/coa-pl-map/edit-coa-pl-map',
+    method: 'PATCH',
+    body: data,
+  })
+}
