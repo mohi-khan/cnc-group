@@ -551,6 +551,7 @@ export const DepartmentSummarySchema = z.object({
   totalCredit: z.number(),
 })
 
+//filter by department summary
 export const DepartmentSummaryfilterSchema = z.object({
   fromDate: z.string(),
   endDate: z.string(),
@@ -563,6 +564,23 @@ export type DepartmentSummaryType = z.infer<typeof DepartmentSummarySchema>
 export type DepartmentSummaryfilterType = z.infer<
   typeof DepartmentSummaryfilterSchema
 >
+
+//Profit and Loss filter zod
+export const ProfitAndLossFilterSchema = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  companyId: z.string(),
+})
+
+export const ProfitAndLossSchema = z.object({
+  title: z.string(),
+  value: z.number(),
+  position: z.number(),
+  negative: z.boolean().nullable(), // Allows `null` or `boolean` values
+})
+
+export type ProfitAndLossFilterType = z.infer<typeof ProfitAndLossFilterSchema>
+export type ProfitAndLossType = z.infer<typeof ProfitAndLossSchema>
 
 //level
 export interface LevelType {

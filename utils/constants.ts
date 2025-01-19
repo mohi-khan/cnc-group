@@ -161,6 +161,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Department Summary',
             source: '/reports/department-summary',
           },
+          {
+            name: 'Profit and Loss',
+            source: '/reports/profit-and-loss',
+          },
         ],
       },
       {
