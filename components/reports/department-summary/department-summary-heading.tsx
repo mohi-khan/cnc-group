@@ -17,8 +17,8 @@ import {
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
-import { Company, CostCenter, Department, User } from '@/utils/type'
-import { getAllCostCenters } from '@/api/cost-center-summary-api'
+import { Company, Department, User } from '@/utils/type'
+
 import { getAllDepartments } from '@/api/department-summary-api'
 
 interface CostCenterSummaryHeadingProps {
@@ -270,16 +270,16 @@ const DeparmentSummaryHeading = ({
             </SelectContent>
           </Select>
 
-          {/* selected cost center start here */}
+          {/* selected Department start here */}
           <Select
             value={selectedCostCenterIds.join(',')}
             onValueChange={(value) => handleCostCenterSelect(value)}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select cost centers">
+              <SelectValue placeholder="Select Department">
                 {selectedCostCenterIds.length > 0
                   ? `${selectedCostCenterIds.length} selected`
-                  : 'Select cost centers'}
+                  : 'Select Department'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -307,7 +307,7 @@ const DeparmentSummaryHeading = ({
               ))}
             </SelectContent>
           </Select>
-          {/* selected cost center End here */}
+          {/* selected Department End here */}
         </div>
 
         <div className="w-[100px]" />
