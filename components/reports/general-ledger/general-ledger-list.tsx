@@ -1,17 +1,19 @@
 import React from 'react'
 import { GeneralLedgerType } from '@/utils/type'
+import Link from 'next/link'
 
 interface GeneralLedgerListProps {
   transactions: GeneralLedgerType[]
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-export default function GeneralLedgerList({ transactions, targetRef }: GeneralLedgerListProps) {
+export default function GeneralLedgerList({
+  transactions,
+  targetRef,
+}: GeneralLedgerListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        No available data
-      </div>
+      <div className="text-center py-10 text-gray-500">No available data</div>
     )
   }
 
@@ -35,7 +37,13 @@ export default function GeneralLedgerList({ transactions, targetRef }: GeneralLe
           {transactions.map((transaction, index) => (
             <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
               <td className="py-2 px-4 border-b">{transaction.voucherid}</td>
-              <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
+              <td className="py-2 px-4 border-b">
+                <Link
+                  href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
+                >
+                  {transaction.voucherno}
+                </Link>
+              </td>
               <td className="py-2 px-4 border-b">{transaction.accountname}</td>
               <td className="py-2 px-4 border-b">{transaction.debit}</td>
               <td className="py-2 px-4 border-b">{transaction.credit}</td>
@@ -50,4 +58,3 @@ export default function GeneralLedgerList({ transactions, targetRef }: GeneralLe
     </div>
   )
 }
-
