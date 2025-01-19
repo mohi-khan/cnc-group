@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { format } from 'date-fns'
+import { format, startOfMonth, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
 import { Company, User } from '@/utils/type'
@@ -35,8 +35,10 @@ export default function ProfitAndLossHeading({
   generateExcel,
   onFilterChange,
 }: CashFlowStatementHeadingProps) {
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
+  const [startDate, setStartDate] = useState<Date>(
+    startOfMonth(subMonths(new Date(), 1)) // Previous month's first day
+  )
+  const [endDate, setEndDate] = useState<Date>(new Date()) // Today's date
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [companies, setCompanies] = useState<Company[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -171,7 +173,7 @@ export default function ProfitAndLossHeading({
                       mode="single"
                       selected={startDate}
                       onSelect={(date) => {
-                        setStartDate(date)
+                        if (date) setStartDate(date)
                         setIsDropdownOpen(false)
                       }}
                       className="rounded-md border"
@@ -201,7 +203,7 @@ export default function ProfitAndLossHeading({
                       mode="single"
                       selected={endDate}
                       onSelect={(date) => {
-                        setEndDate(date)
+                        if (date) setEndDate(date)
                         setIsDropdownOpen(false)
                       }}
                       className="rounded-md border"
