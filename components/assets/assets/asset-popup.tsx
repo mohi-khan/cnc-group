@@ -1,6 +1,6 @@
 'use client'
 
-import { z } from 'zod'
+import type { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 
 import {
-  AssetCategoryType,
+  type AssetCategoryType,
   AssetType,
   CreateAssetCategoryData,
   createAssetSchema,
@@ -117,19 +117,19 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 <FormItem>
                   <FormLabel>Category Name</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(value)}
-                    value={String(field.value)}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value ? field.value.toString() : undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select depreciation method" />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {categories.map((category) => (
                         <SelectItem
-                          key={category.category_id} // Assuming 'id' is the correct property
-                          value={category.category_id.toString()} // Convert bigint to string
+                          key={category.category_id}
+                          value={category.category_id.toString()}
                         >
                           {category.category_name}
                         </SelectItem>
