@@ -591,3 +591,18 @@ export interface LevelType {
   formula?: string
   negative: boolean
 }
+
+// IouRecord schema zod
+export const IouRecordGetSchema = z.object({
+  iouId: z.number(),
+  amount: z.number().positive(),
+  adjustedAmount: z.number().default(0),
+  employeeId: z.number().int().positive(),
+  dateIssued: z.coerce.date(),
+  dueDate: z.coerce.date(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  notes: z.string().optional(),
+  createdBy: z.number().int().positive(),
+})
+
+export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>

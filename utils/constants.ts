@@ -33,6 +33,10 @@ export const MENU_ITEMS: MenuItem[] = [
     name: 'Cash',
     subItemGroups: [
       {
+        name: 'Suspense ',
+        items: [{ name: 'Loan', source: '/cash/sespense/loan' }],
+      },
+      {
         name: 'Cash Management',
         items: [
           { name: 'Cash Voucher', source: '/cash/cash-voucher' },
