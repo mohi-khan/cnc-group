@@ -1,28 +1,339 @@
-// import React from 'react'
+// 'use client'
 
-// const LoanPopUp = () => {
-//   return <div>LoanPopUp</div>
+// import React, { useEffect, useState } from 'react'
+// import { useForm } from 'react-hook-form'
+// import { zodResolver } from '@hookform/resolvers/zod'
+// import { CalendarIcon } from 'lucide-react'
+// import { format } from 'date-fns'
+
+// import { cn } from '@/lib/utils'
+// import { Button } from '@/components/ui/button'
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+// } from '@/components/ui/dialog'
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from '@/components/ui/form'
+// import { Input } from '@/components/ui/input'
+// import { Textarea } from '@/components/ui/textarea'
+// import { Calendar } from '@/components/ui/calendar'
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from '@/components/ui/popover'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select'
+// import { toast } from '@/hooks/use-toast'
+
+// import {
+//   type Employee,
+//   IouRecordCreateSchema,
+//   type IouRecordCreateType,
+// } from '@/utils/type'
+// import { createIou, getEmployee } from '@/api/loan-api'
+
+// interface LoanPopUpProps {
+//   isOpen: boolean
+//   onOpenChange: (open: boolean) => void
+//   onCategoryAdded: () => void
+//   employees: { id: number; employeeName: string }[]
 // }
 
-// export default LoanPopUp
+// export default function LoanPopUp({
+//   isOpen,
+//   onOpenChange,
+//   onCategoryAdded,
+// }: LoanPopUpProps) {
+//   const [isSubmitting, setIsSubmitting] = useState(false)
+//   const [employeeData, setEmployeeData] = useState<Employee[]>([])
+//   const [userId, setUserId] = useState(undefined)
+//   const currentDate = new Date()
+
+//   React.useEffect(() => {
+//     const userStr = localStorage.getItem('currentUser')
+//     if (userStr) {
+//       const userData = JSON.parse(userStr)
+//       setUserId(userData.userId)
+//       console.log('Current user from localStorage:', userData)
+//     } else {
+//       console.log('No user data found in localStorage')
+//     }
+//   }, [])
+
+//   const form = useForm<IouRecordCreateType>({
+//     resolver: zodResolver(IouRecordCreateSchema),
+//     defaultValues: {
+//       amount: 0,
+//       adjustedAmount: 0,
+//       employeeId: 1,
+//       dateIssued: new Date(),
+//       dueDate: new Date(),
+//       status: 'active',
+//       notes: '',
+//       createdBy: userId,
+//     },
+//   })
+
+//   useEffect(() => {
+//     fetchEmployeeData()
+//   }, [])
+//   // Fetch all Employee Data
+//   const fetchEmployeeData = async () => {
+//     try {
+//       const employees = await getEmployee()
+//       if (employees.data) {
+//         setEmployeeData(employees.data)
+//       } else {
+//         setEmployeeData([])
+//       }
+//       console.log('Show The Employee Data :', employees.data)
+//     } catch (error) {
+//       console.error('Failed to fetch Employee Data :', error)
+//     }
+//   }
+
+//   const onSubmit = async (data: IouRecordCreateType) => {
+//     setIsSubmitting(true)
+//     try {
+//       await createIou(data)
+//       toast({
+//         title: 'Success',
+//         description: 'IOU has been created successfully',
+//       })
+//       onCategoryAdded()
+//       onOpenChange(false)
+//       form.reset()
+//     } catch (error) {
+//       console.error('Failed to create IOU:', error)
+//       toast({
+//         title: 'Error',
+//         description: 'Failed to create IOU. Please try again.',
+//         variant: 'destructive',
+//       })
+//     } finally {
+//       setIsSubmitting(false)
+//     }
+//   }
+
+//   return (
+//     <Dialog open={isOpen} onOpenChange={onOpenChange}>
+//       <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto flex flex-col  ">
+//         <DialogHeader>
+//           <DialogTitle>Add New IOU</DialogTitle>
+//         </DialogHeader>
+//         <Form {...form}>
+//           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+//             <FormField
+//               control={form.control}
+//               name="amount"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Amount</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       {...field}
+//                       type="number"
+//                       step="0.01"
+//                       placeholder="Enter amount"
+//                       onChange={(e) =>
+//                         field.onChange(Number.parseFloat(e.target.value) || 0)
+//                       }
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="adjustedAmount"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Adjusted Amount</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       {...field}
+//                       type="number"
+//                       step="0.01"
+//                       placeholder="Enter adjusted amount"
+//                       onChange={(e) =>
+//                         field.onChange(Number.parseFloat(e.target.value) || 0)
+//                       }
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="employeeId"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Employee</FormLabel>
+//                   <Select
+//                     onValueChange={(value) => field.onChange(Number(value))}
+//                     value={field.value?.toString()}
+//                   >
+//                     <FormControl>
+//                       <SelectTrigger>
+//                         <SelectValue placeholder="Select an employee" />
+//                       </SelectTrigger>
+//                     </FormControl>
+//                     <SelectContent>
+//                       {employeeData.map((employee) => (
+//                         <SelectItem
+//                           key={employee.id}
+//                           value={employee.id.toString()}
+//                         >
+//                           {employee.employeeName}
+//                         </SelectItem>
+//                       ))}
+//                     </SelectContent>
+//                   </Select>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="dateIssued"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Date Issued</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       {...field}
+//                       type="date"
+//                       placeholder="YYYY-MM-DD"
+//                       value={
+//                         field.value ? format(field.value, 'yyyy-MM-dd') : ''
+//                       }
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="dueDate"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Due Date</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       {...field}
+//                       type="date"
+//                       placeholder="YYYY-MM-DD"
+//                       value={
+//                         field.value ? format(field.value, 'yyyy-MM-dd') : ''
+//                       }
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="status"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Status</FormLabel>
+//                   <Select onValueChange={field.onChange} value={field.value}>
+//                     <FormControl>
+//                       <SelectTrigger>
+//                         <SelectValue placeholder="Select status" />
+//                       </SelectTrigger>
+//                     </FormControl>
+//                     <SelectContent>
+//                       <SelectItem value="active">Active</SelectItem>
+//                       <SelectItem value="inactive">inactive</SelectItem>
+//                     </SelectContent>
+//                   </Select>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="notes"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Notes</FormLabel>
+//                   <FormControl>
+//                     <Textarea {...field} placeholder="Enter notes" />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <div className="flex justify-end space-x-4">
+//               <Button
+//                 type="button"
+//                 variant="outline"
+//                 onClick={() => onOpenChange(false)}
+//               >
+//                 Cancel
+//               </Button>
+//               <Button type="submit" disabled={isSubmitting}>
+//                 {isSubmitting ? 'Submitting...' : 'Submit'}
+//               </Button>
+//             </div>
+//           </form>
+//         </Form>
+//       </DialogContent>
+//     </Dialog>
+//   )
+// }
+
 'use client'
 
-import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { CalendarIcon, ChevronsUpDown } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -37,124 +348,277 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { toast } from '@/hooks/use-toast'
 
-interface ExpenseFormData {
-  amount: string
-  note: string
-  employeeName: string
-  dueDate: Date | undefined
+import {
+  type Employee,
+  IouRecordCreateSchema,
+  type IouRecordCreateType,
+} from '@/utils/type'
+import { createIou, getEmployee } from '@/api/loan-api'
+
+interface LoanPopUpProps {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onCategoryAdded: () => void
+  employees: { id: number; employeeName: string }[]
 }
 
-const employees = [
-  { id: '1', name: 'John Doe' },
-  { id: '2', name: 'Jane Smith' },
-  { id: '3', name: 'Bob Johnson' },
-  { id: '4', name: 'Alice Williams' },
-  { id: '5', name: 'Charlie Brown' },
-]
+export default function LoanPopUp({
+  isOpen,
+  onOpenChange,
+  onCategoryAdded,
+}: LoanPopUpProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [employeeData, setEmployeeData] = useState<Employee[]>([])
+  const [userId, setUserId] = useState<number | undefined>(undefined)
+  const currentDate = new Date()
 
-export default function ExpenseForm() {
-  const [date, setDate] = useState<Date>()
-  const {
-    control,
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ExpenseFormData>()
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log('Current user from localStorage:', userData)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
-  const onSubmit = (data: ExpenseFormData) => {
-    console.log(data)
-    // Here you would typically send the data to your backend
+  const form = useForm<IouRecordCreateType>({
+    resolver: zodResolver(IouRecordCreateSchema),
+    defaultValues: {
+      amount: 0,
+      adjustedAmount: 0,
+      employeeId: 1,
+      dateIssued: new Date(),
+      dueDate: new Date(),
+      status: 'active',
+      notes: '',
+      createdBy: 70,
+    },
+  })
+
+  useEffect(() => {
+    fetchEmployeeData()
+  }, [])
+
+  // Fetch all Employee Data
+  const fetchEmployeeData = async () => {
+    try {
+      const employees = await getEmployee()
+      if (employees.data) {
+        setEmployeeData(employees.data)
+      } else {
+        setEmployeeData([])
+      }
+      console.log('Show The Employee Data :', employees.data)
+    } catch (error) {
+      console.error('Failed to fetch Employee Data :', error)
+    }
+  }
+
+  const onSubmit = async (data: IouRecordCreateType) => {
+    setIsSubmitting(true)
+    try {
+      await createIou(data)
+      toast({
+        title: 'Success',
+        description: 'IOU has been created successfully',
+      })
+      onCategoryAdded()
+      onOpenChange(false)
+      form.reset()
+    } catch (error) {
+      console.error('Failed to create IOU:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to create IOU. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Expense Form</CardTitle>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="Enter amount"
-              {...register('amount', { required: 'Amount is required' })}
-            />
-            {errors.amount && (
-              <p className="text-sm text-red-500">{errors.amount.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="note">Note</Label>
-            <Textarea
-              id="note"
-              placeholder="Enter note"
-              {...register('note')}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="employeeName">Employee Name</Label>
-            <Controller
-              name="employeeName"
-              control={control}
-              rules={{ required: 'Employee name is required' }}
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Add New IOU</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={(e) => form.handleSubmit(onSubmit)(e)}
+            className="space-y-4"
+          >
+            <FormField
+              name="amount"
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an employee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.name}>
-                        {employee.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter amount"
+                      onChange={(e) =>
+                        field.onChange(Number.parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {errors.employeeName && (
-              <p className="text-sm text-red-500">
-                {errors.employeeName.message}
-              </p>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label>Due Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={'outline'}
-                  className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !date && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP') : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full">
-            Submit Expense
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+            <FormField
+              control={form.control}
+              name="adjustedAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adjusted Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter adjusted amount"
+                      onChange={(e) =>
+                        field.onChange(Number.parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="employeeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employee</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an employee" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {employeeData.map((employee) => (
+                        <SelectItem
+                          key={employee.id}
+                          value={employee.id.toString()}
+                        >
+                          {employee.employeeName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dateIssued"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date Issued</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="date"
+                      placeholder="YYYY-MM-DD"
+                      value={
+                        field.value ? format(field.value, 'yyyy-MM-dd') : ''
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="date"
+                      placeholder="YYYY-MM-DD"
+                      value={
+                        field.value ? format(field.value, 'yyyy-MM-dd') : ''
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Enter notes" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 }
