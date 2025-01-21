@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { CreateAssetData } from "@/utils/type"
+import type { CreateAssetData, GetAssetData } from "@/utils/type"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/pagination"
 
 interface AssetListProps {
-  asset: CreateAssetData[]
+  asset: GetAssetData[]
   onAddCategory: () => void
 }
 
