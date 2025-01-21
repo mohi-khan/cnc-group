@@ -86,8 +86,8 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/assets/assets',
           },
           {
-            name: 'Create Asset Group',
-            source: '/assets/create-asset-group',
+            name: 'Create Asset Category',
+            source: '/assets/asset-category',
           },
           {
             name: 'Configure Depreciation',
