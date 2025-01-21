@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { AssetList } from '@/components/assets/assets/asset-list'
 import { getAssets } from '@/api/assets.api'
-import { AssetCategoryType, AssetType, CreateAssetData } from '@/utils/type'
+import { AssetCategoryType, CreateAssetData } from '@/utils/type'
 import { AssetPopUp } from './asset-popup'
 import { getAllAssetCategories } from '@/api/asset-category-api'
 
@@ -54,6 +54,7 @@ const Asset = () => {
     fetchAssets()
     setIsPopupOpen(false)
   }
+
   return (
     <div className="container mx-auto p-4">
       <AssetList asset={asset} onAddCategory={handleAddCategory} />
