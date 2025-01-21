@@ -610,9 +610,24 @@ export interface LevelType {
   negative: boolean
 }
 
-// IouRecord schema zod
+// IouRecord loan schema zod
 export const IouRecordGetSchema = z.object({
   iouId: z.number(),
+  amount: z.number().positive(),
+  adjustedAmount: z.number().default(0),
+  employeeId: z.number().int().positive(),
+  dateIssued: z.coerce.date(),
+  dueDate: z.date(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  notes: z.string().optional(),
+  createdBy: z.number().int().positive(),
+})
+
+export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>
+
+// IouRecord loan create  schema zod
+
+export const IouRecordCreateSchema = z.object({
   amount: z.number().positive(),
   adjustedAmount: z.number().default(0),
   employeeId: z.number().int().positive(),
@@ -623,4 +638,18 @@ export const IouRecordGetSchema = z.object({
   createdBy: z.number().int().positive(),
 })
 
-export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>
+export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
+
+//employee master employee zod schema
+export const EmployeeSchema = z.object({
+  id: z.number(),
+  employeeId: z.string(),
+  employeeName: z.string(),
+  employeeContact: z.string().nullable(),
+  email: z.string().email(),
+  department: z.string(),
+  status: z.enum(['active', 'inactive']),
+})
+
+// employee master employeee TypeScript type
+export type Employee = z.infer<typeof EmployeeSchema>
