@@ -12,13 +12,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -26,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
+import { Check, Printer, RotateCcw, Trash, ChevronsUpDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -50,29 +42,31 @@ import {
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
-  AccountsHead,
+  type AccountsHead,
   ChartOfAccount,
   Company,
-  CompanyFromLocalstorage,
-  CostCenter,
+  type CompanyFromLocalstorage,
+  type CostCenter,
   DetailRow,
-  FormData,
-  JournalEntryWithDetails,
+  type FormData,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
-  JournalQuery,
-  JournalResult,
+  type JournalQuery,
+  type JournalResult,
   Location,
-  LocationFromLocalstorage,
-  ResPartner,
-  User,
-  Voucher,
+  type LocationFromLocalstorage,
+  type ResPartner,
+  type User,
+  type Voucher,
   VoucherTypes,
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import type { z } from 'zod'
+import { cn } from '@/lib/utils'
+import { Combobox } from '@/components/ui/combobox'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -103,26 +97,42 @@ export default function CashVoucher() {
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     AccountsHead[]
   >([])
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true)
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true)
+  const [isLoadingPartners, setIsLoadingPartners] = useState(true)
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
+  const [isLoadingCostCenters, setIsLoadingCostCenters] = useState(true)
+  const [openComboboxes, setOpenComboboxes] = React.useState<{
+    [key: string]: boolean
+  }>({})
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      setUser(userData)
-      console.log('User companies', userData.userCompanies)
-      setCompanies(userData.userCompanies)
-      setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', companies)
-      console.log('Current user from localStorage:', locations)
-      if (!userData.voucherTypes.includes('Cash Voucher')) {
-        console.log('User does not have access to Cash Voucher')
+    setIsLoadingCompanies(true)
+    setIsLoadingLocations(true)
+    try {
+      if (userStr) {
+        const userData = JSON.parse(userStr)
+        setUser(userData)
+        setCompanies(userData.userCompanies || [])
+        setLocations(userData.userLocations || [])
+        if (!userData.voucherTypes.includes('Cash Voucher')) {
+          router.push('/unauthorized-access')
+        }
+      } else {
         router.push('/unauthorized-access')
       }
-    } else {
-      console.log('No user data found in localStorage')
-      router.push('/unauthorized-access')
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load user data',
+      })
+    } finally {
+      setIsLoadingCompanies(false)
+      setIsLoadingLocations(false)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
   // For Getting All The Vouchers
 
@@ -134,23 +144,29 @@ export default function CashVoucher() {
   }
 
   async function getallVoucher(company: number[], location: number[]) {
-    console.log(new Date().toISOString().split('T')[0])
-    const voucherQuery: JournalQuery = {
-      date: new Date().toISOString().split('T')[0],
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.CashVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
+    try {
+      console.log(new Date().toISOString().split('T')[0])
+      const voucherQuery: JournalQuery = {
+        date: new Date().toISOString().split('T')[0],
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.CashVoucher,
+      }
+      const response = await getAllVoucher(voucherQuery)
+      if (!response.data) {
+        throw new Error('No data received from server')
+      }
+      setVoucherGrid(response.data as JournalResult[])
+      console.log('Voucher data:', response.data)
+    } catch (error) {
+      console.error('Error getting Voucher Data:', error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
+        description:
+          error instanceof Error ? error.message : 'Failed to get Voucher Data',
       })
-    } else {
-      setVoucherGrid(response.data)
-      console.log(response.data)
+      // Initialize with empty array instead of undefined
+      setVoucherGrid([])
     }
   }
   React.useEffect(() => {
@@ -196,52 +212,63 @@ export default function CashVoucher() {
   //chart of accounts
 
   async function fetchChartOfAccounts() {
-    const response = await getAllChartOfAccounts()
-    //   console.log('Fetched Chart Of accounts:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting ChartOf bank account:', response.error)
+    setIsLoadingAccounts(true)
+    try {
+      const response = await getAllChartOfAccounts()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setChartOfAccounts(response.data)
+    } catch (error) {
+      console.error('Error getting chart of accounts:', error)
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Failed to get ChartOf bank accounts',
+        description: 'Failed to load chart of accounts',
       })
-    } else {
-      setChartOfAccounts(response.data)
-      console.log('data', response.data)
+      setChartOfAccounts([])
+    } finally {
+      setIsLoadingAccounts(false)
     }
   }
   //res partner
   async function fetchgetAllCostCenters() {
-    const response = await getAllCostCenters()
-    // console.log('Fetched cost center data:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting  cost center:', response.error)
+    setIsLoadingCostCenters(true)
+    try {
+      const response = await getAllCostCenters()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setCostCenters(response.data)
+    } catch (error) {
+      console.error('Error getting cost centers:', error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get  cost center',
+        description: 'Failed to load cost centers',
       })
-    } else {
-      setCostCenters(response.data)
-      console.log('data', response.data)
+      setCostCenters([])
+    } finally {
+      setIsLoadingCostCenters(false)
     }
   }
 
   //res partner
   async function fetchgetResPartner() {
-    const response = await getAllResPartners()
-    //console.log('Fetched Res partner data:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting  Res partner:', response.error)
+    setIsLoadingPartners(true)
+    try {
+      const response = await getAllResPartners()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setPartners(response.data)
+    } catch (error) {
+      console.error('Error getting partners:', error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get  Res partner',
+        description: 'Failed to load partners',
       })
-    } else {
-      setPartners(response.data)
-      console.log('data', response.data)
+      setPartners([])
+    } finally {
+      setIsLoadingPartners(false)
     }
   }
 
@@ -402,34 +429,21 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select company" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {companies.map((company, index) => (
-                          <SelectItem
-                            key={
-                              company?.company.companyId ||
-                              `default-company-${index}`
-                            }
-                            value={
-                              company?.company.companyId?.toString() ||
-                              `company-${index}`
-                            }
-                          >
-                            {company?.company.companyName || 'Unnamed Company'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={companies.map((company) => ({
+                          value: company.company.companyId.toString(),
+                          label:
+                            company.company.companyName || 'Unnamed Company',
+                        }))}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select company"
+                        loading={isLoadingCompanies}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -440,34 +454,21 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {locations.map((location, index) => (
-                          <SelectItem
-                            key={
-                              location?.location.locationId ||
-                              `default-location-${index}`
-                            }
-                            value={
-                              location?.location.locationId?.toString() ||
-                              `location-${index}`
-                            }
-                          >
-                            {location?.location.address || 'Unnamed Location'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={locations.map((location) => ({
+                          value: location.location.locationId.toString(),
+                          label:
+                            location.location.address || 'Unnamed Location',
+                        }))}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select location"
+                        loading={isLoadingLocations}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -478,23 +479,20 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">USD</SelectItem>
-                        <SelectItem value="2">EUR</SelectItem>
-                        <SelectItem value="3">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={[
+                          { value: '1', label: 'USD' },
+                          { value: '2', label: 'EUR' },
+                          { value: '3', label: 'GBP' },
+                        ]}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select currency"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -536,19 +534,15 @@ export default function CashVoucher() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell>
-                        <div>
-                          <Select onValueChange={setFormType}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Payment">Payment</SelectItem>
-                              <SelectItem value="Receipt">Receipt</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Combobox
+                          options={[
+                            { value: 'Payment', label: 'Payment' },
+                            { value: 'Receipt', label: 'Receipt' },
+                          ]}
+                          value={formType}
+                          onValueChange={setFormType}
+                          placeholder="Select type"
+                        />
                       </TableCell>
 
                       <TableCell>
@@ -557,36 +551,22 @@ export default function CashVoucher() {
                           name={`journalDetails.${index}.accountId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select account" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {filteredChartOfAccounts.map(
-                                    (account, index) => (
-                                      <SelectItem
-                                        key={
-                                          account.accountId ||
-                                          `default-chart-${index}`
-                                        }
-                                        value={
-                                          account.accountId.toString() ||
-                                          `chart-${index}`
-                                        }
-                                      >
-                                        {account.name || 'Unnamed Account'}
-                                      </SelectItem>
-                                    )
+                              <FormControl>
+                                <Combobox
+                                  options={filteredChartOfAccounts.map(
+                                    (account) => ({
+                                      value: account.accountId.toString(),
+                                      label: account.name || 'Unnamed Account',
+                                    })
                                   )}
-                                </SelectContent>
-                              </Select>
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select account"
+                                  loading={isLoadingAccounts}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -598,35 +578,22 @@ export default function CashVoucher() {
                           name={`journalDetails.${index}.costCenterId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select cost center" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {costCenters.map((center, index) => (
-                                    <SelectItem
-                                      key={
-                                        center?.costCenterId ||
-                                        `default-cost-${index}`
-                                      }
-                                      value={
-                                        center?.costCenterId?.toString() ||
-                                        `cost-${index}`
-                                      }
-                                    >
-                                      {center?.costCenterName ||
-                                        'Unnamed Cost Center'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={costCenters.map((center) => ({
+                                    value: center.costCenterId.toString(),
+                                    label:
+                                      center.costCenterName ||
+                                      'Unnamed Cost Center',
+                                  }))}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select cost center"
+                                  loading={isLoadingCostCenters}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -638,26 +605,19 @@ export default function CashVoucher() {
                           name={`journalDetails.${index}.departmentId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select department" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="1">
-                                    Department 1
-                                  </SelectItem>
-                                  <SelectItem value="2">
-                                    Department 2
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={[
+                                    { value: '1', label: 'Department 1' },
+                                    { value: '2', label: 'Department 2' },
+                                  ]}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select department"
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -669,34 +629,20 @@ export default function CashVoucher() {
                           name={`journalDetails.${index}.resPartnerId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select partner" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {partners.map((partner, index) => (
-                                    <SelectItem
-                                      key={
-                                        partner?.id ||
-                                        `default-partner-${index}`
-                                      }
-                                      value={
-                                        partner?.id?.toString() ||
-                                        `partner-${index}`
-                                      }
-                                    >
-                                      {partner?.name || 'Unnamed Partner'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={partners.map((partner) => ({
+                                    value: partner.id.toString(),
+                                    label: partner.name || 'Unnamed Partner',
+                                  }))}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select partner"
+                                  loading={isLoadingPartners}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -726,7 +672,9 @@ export default function CashVoucher() {
                                   placeholder="Enter amount"
                                   {...field}
                                   onChange={(e) =>
-                                    field.onChange(parseFloat(e.target.value))
+                                    field.onChange(
+                                      Number.parseFloat(e.target.value)
+                                    )
                                   }
                                 />
                               </FormControl>
