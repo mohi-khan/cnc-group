@@ -35,19 +35,21 @@ import {
   IouRecordCreateSchema,
   type IouRecordCreateType,
 } from '@/utils/type'
-import { createIou, getEmployee } from '@/api/loan-api'
+import { createIou, getEmployee } from '@/api/iou-api'
 
 interface LoanPopUpProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onCategoryAdded: () => void
   employees: { id: number; employeeName: string }[]
+  fetchLoanData: () => Promise<void> // Type for the fetchLoanData function
 }
 
-export default function LoanPopUp({
+export default function IouPopUp({
   isOpen,
   onOpenChange,
   onCategoryAdded,
+  fetchLoanData,
 }: LoanPopUpProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
@@ -114,6 +116,7 @@ export default function LoanPopUp({
         description: 'IOU has been created successfully',
       })
       onCategoryAdded()
+      fetchLoanData()
       onOpenChange(false)
       form.reset()
     } catch (error) {
