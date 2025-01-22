@@ -27,59 +27,27 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import type { Employee, IouRecordGetType } from '@/utils/type'
-import { getEmployee, getLoanData } from '@/api/loan-api'
+import { getEmployee, getLoanData } from '@/api/iou-api'
 import { Loader2 } from 'lucide-react'
 import Loader from '@/utils/loader'
 
 interface LoanListProps {
   onAddCategory: () => void
+  loanAllData: IouRecordGetType[]
+  isLoading: boolean
+  employeeData: Employee[]
 }
 
-const LoanList: React.FC<LoanListProps> = ({ onAddCategory }) => {
-  const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
-  const [employeeData, setEmployeeData] = useState<Employee[]>([])
+const IouList: React.FC<LoanListProps> = ({
+  onAddCategory,
+  loanAllData,
+  isLoading,
+  employeeData,
+}) => {
   const [sortBy, setSortBy] = useState<string>('date-desc')
   const [currentPage, setCurrentPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
+
   const itemsPerPage = 5
-
-  useEffect(() => {
-    fetchLoanData()
-    fetchEmployeeData()
-  }, [])
-
-  // Fetch all Loan Data
-  const fetchLoanData = async () => {
-    setIsLoading(true)
-    try {
-      const loansdata = await getLoanData()
-      if (loansdata.data) {
-        setLoanData(loansdata.data)
-      } else {
-        setLoanData([])
-      }
-      console.log('Show The Loan  All Data :', loansdata.data)
-    } catch (error) {
-      console.error('Failed to fetch Loan Data :', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Fetch all Employee Data
-  const fetchEmployeeData = async () => {
-    try {
-      const employees = await getEmployee()
-      if (employees.data) {
-        setEmployeeData(employees.data)
-      } else {
-        setEmployeeData([])
-      }
-      console.log('Show The Employee Data :', employees.data)
-    } catch (error) {
-      console.error('Failed to fetch Employee Data :', error)
-    }
-  }
 
   // Find employee name by matching employeeId
   const getEmployeeName = (employeeId: number) => {
@@ -88,7 +56,7 @@ const LoanList: React.FC<LoanListProps> = ({ onAddCategory }) => {
   }
 
   const sortedLoanData = useMemo(() => {
-    const sorted = [...loanData]
+    const sorted = [...loanAllData]
     switch (sortBy) {
       case 'amount-asc':
         sorted.sort((a, b) => a.amount - b.amount)
@@ -110,14 +78,14 @@ const LoanList: React.FC<LoanListProps> = ({ onAddCategory }) => {
         break
     }
     return sorted
-  }, [loanData, sortBy])
+  }, [loanAllData, sortBy])
 
   const paginatedLoanData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return sortedLoanData.slice(startIndex, startIndex + itemsPerPage)
   }, [sortedLoanData, currentPage])
 
-  const totalPages = Math.ceil(loanData.length / itemsPerPage)
+  const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
 
   return (
     <div className="p-4">
@@ -253,4 +221,4 @@ const LoanList: React.FC<LoanListProps> = ({ onAddCategory }) => {
   )
 }
 
-export default LoanList
+export default IouList
