@@ -214,7 +214,7 @@ export default function CostCenterManagement() {
             description: 'Cost center created successfully',
           })
           // Add the new cost center to the local state
-          setCostCenters((prevCostCenters) => [...prevCostCenters, response.data])
+          setCostCenters((prevCostCenters) => response.data ? [...prevCostCenters, response.data] : prevCostCenters)
         }
       }
 

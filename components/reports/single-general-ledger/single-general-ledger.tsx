@@ -6,11 +6,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { useReactToPrint } from 'react-to-print'
+import {
+  getSingleVoucher,
+  reverseJournalVoucher,
+  editJournalDetail,
+} from '@/api/journal-voucher-api'
 import { VoucherById } from '@/utils/type'
-import { getSingleVoucher, reverseBankVoucher } from '@/api/bank-vouchers-api'
+import { useReactToPrint } from 'react-to-print'
 
-export default function SingleBankVoucher() {
+export default function SingleGenralLedger() {
   const voucherid: number = parseInt(useParams().voucherid as string, 10);
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
@@ -20,24 +24,39 @@ export default function SingleBankVoucher() {
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
   const [userId, setUserId] = React.useState<number>()
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const contentRef = useRef<HTMLDivElement>(null)
+
   const reactToPrintFn = useReactToPrint({ contentRef })
 
   useEffect(() => {
     async function fetchVoucher() {
-      const response = await getSingleVoucher(voucherid)
-      if (response.error || !response.data) {
+      if (!voucherid) return
+      console.log('Initial fetch for voucher:', voucherid);
+      try {
+        const response = await getSingleVoucher(voucherid)
+        console.log('Initial fetch response:', response);
+        if (response.error || !response.data) {
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get Voucher Data',
+          })
+        } else {
+          console.log('Setting initial data:', response.data);
+          setData(response.data)
+        }
+      } catch (error) {
         toast({
           title: 'Error',
           description:
-            response.error?.message || 'Failed to get Bank Voucher Data',
+            'An unexpected error occurred while fetching the voucher.',
         })
-      } else {
-        setData(response.data)
-        console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
       }
     }
+  
     fetchVoucher()
   }, [voucherid])
 
@@ -46,39 +65,86 @@ export default function SingleBankVoucher() {
     setEditingReferenceText(currentText)
   }
 
-  const handleReferenceSave = () => {
-    if (data && editingReferenceIndex !== null) {
-      const updatedData = [...data]
-      updatedData[editingReferenceIndex] = {
-        ...updatedData[editingReferenceIndex],
-        notes: editingReferenceText,
-      }
-      setData(updatedData)
-      setEditingReferenceIndex(null)
+  const handleReferenceSave = async () => {
+    if (editingReferenceIndex === null || !data) {
+      return;
     }
-  }
+  
+    const journalDetail = data[editingReferenceIndex];
+    console.log('Before update - Current data:', data);
+    
+    setIsUpdating(true);
+    setError(null);
+  
+    try {
+      const response = await editJournalDetail({
+        id: journalDetail.id,
+        notes: editingReferenceText
+      });
+  
+      console.log('API Response:', response);
+  
+      if (response.error) {
+        throw new Error(response.error?.message || 'Failed to update notes');
+      }
+  
+      // Reset editing state
+      setEditingReferenceIndex(null);
+      setEditingReferenceText('');
+  
+      // Refetch the data to ensure we have the latest from the database
+      if (voucherid) {
+        console.log('Refetching data for voucher:', voucherid);
+        const refreshResponse = await getSingleVoucher(voucherid);
+        console.log('Refresh response:', refreshResponse);
+        
+        if (refreshResponse.error || !refreshResponse.data) {
+          throw new Error(refreshResponse.error?.message || 'Failed to refresh data');
+        }
+        console.log('Setting new data:', refreshResponse.data);
+        setData(refreshResponse.data);
+      }
+  
+      toast({
+        title: 'Success',
+        description: 'Notes updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update notes');
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update notes',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   React.useEffect(() => {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUserId(userData?.userId)
-        console.log('Current userId from localStorage:', userData.userId)
-      } else {
-        console.log('No user data found in localStorage')
-      }
-    }, [])
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   const handleReverseVoucher = async () => {
-    const createdId = userId // Replace with actual user ID
+    const createdId = userId
     let voucherId
     if (data && data[0]) {
       voucherId = data[0].voucherid
     }
-    if (!voucherId || !data || !createdId) {
+    if (!voucherId || !data) return
+
+    if (!voucherId) {
       toast({
         title: 'Error',
-        description: 'Invalid voucher number or user ID',
+        description: 'Invalid voucher number',
         variant: 'destructive',
       })
       return
@@ -86,7 +152,7 @@ export default function SingleBankVoucher() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseBankVoucher(voucherId, createdId)
+      const response = await reverseJournalVoucher(voucherId, createdId)
 
       if (!response.data || response.error) {
         toast({
@@ -160,9 +226,9 @@ export default function SingleBankVoucher() {
           </div>
         </div>
 
-        {/* Bank Items Table */}
+        {/* Journal Items Table */}
         <div className="mb-6">
-          <h3 className="font-medium mb-4">Bank Items</h3>
+          <h3 className="font-medium mb-4">Journal Items</h3>
           <div className="border rounded-lg">
             <div className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 bg-muted text-sm font-medium">
               <div>Accounts</div>
@@ -176,7 +242,7 @@ export default function SingleBankVoucher() {
             </div>
             {data.map((item, index) => (
               <div
-                key={item.voucherid}
+                key={item.id}
                 className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 border-t items-center text-sm"
               >
                 <div>{item.accountsname}</div>
@@ -203,8 +269,9 @@ export default function SingleBankVoucher() {
                       variant="outline"
                       size="sm"
                       onClick={handleReferenceSave}
+                      disabled={isUpdating}
                     >
-                      <Check className="w-4 h-4" />
+                      {isUpdating ? 'Saving...' : <Check className="w-4 h-4" />}
                     </Button>
                   ) : (
                     <Button
@@ -226,7 +293,9 @@ export default function SingleBankVoucher() {
             </div>
           </div>
         </div>
+        {error && <div className="text-red-500 mt-2">{error}</div>}
       </CardContent>
     </Card>
   )
 }
+

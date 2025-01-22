@@ -1,16 +1,16 @@
-import React from 'react'
-import { GeneralLedgerType } from '@/utils/type'
+import type React from 'react'
+import type { GeneralLedgerType } from '@/utils/type'
 import Link from 'next/link'
 
-interface GeneralLedgerListProps {
+interface SingleTrialBalanceListProps {
   transactions: GeneralLedgerType[]
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-export default function GeneralLedgerList({
+export default function SingleTrialBalanceList({
   transactions,
   targetRef,
-}: GeneralLedgerListProps) {
+}: SingleTrialBalanceListProps) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500">No available data</div>

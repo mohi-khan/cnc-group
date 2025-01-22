@@ -17,8 +17,9 @@ import {
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
-import { Company, CostCenter, User } from '@/utils/type'
-import { getAllCostCenters } from '@/api/cost-center-summary-api'
+import { Company, Department, User } from '@/utils/type'
+
+import { getAllDepartments } from '@/api/department-summary-api'
 
 interface CostCenterSummaryHeadingProps {
   generatePdf: () => void
@@ -31,7 +32,7 @@ interface CostCenterSummaryHeadingProps {
   ) => void
 }
 
-const CostCenterSummaryHeading = ({
+const DeparmentSummaryHeading = ({
   generatePdf,
   generateExcel,
   onFilterChange,
@@ -45,7 +46,7 @@ const CostCenterSummaryHeading = ({
   const [companies, setCompanies] = useState<Company[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [costCenterData, setCostCenterData] = useState<CostCenter[]>([])
+  const [departmentSummary, setDepartmentSummary] = useState<Department[]>([])
 
   // Fetch company data
   async function fetchCompanies() {
@@ -65,11 +66,11 @@ const CostCenterSummaryHeading = ({
     }
   }
 
-  // Fetch all cost center data
+  // Fetch all department  data
   async function fetchAllCostCenter() {
-    const respons = await getAllCostCenters()
-    setCostCenterData(respons.data || [])
-    console.log('This is all cost center data: ', respons.data || [])
+    const respons = await getAllDepartments()
+    setDepartmentSummary(respons.data || [])
+    console.log('This is all department   data: ', respons.data || [])
   }
 
   useEffect(() => {
@@ -269,44 +270,44 @@ const CostCenterSummaryHeading = ({
             </SelectContent>
           </Select>
 
-          {/* selected cost center start here */}
+          {/* selected Department start here */}
           <Select
             value={selectedCostCenterIds.join(',')}
             onValueChange={(value) => handleCostCenterSelect(value)}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select cost centers">
+              <SelectValue placeholder="Select Department">
                 {selectedCostCenterIds.length > 0
                   ? `${selectedCostCenterIds.length} selected`
-                  : 'Select cost centers'}
+                  : 'Select Department'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {costCenterData?.map((costCenter) => (
+              {departmentSummary?.map((department) => (
                 <SelectItem
-                  key={costCenter.costCenterId}
-                  value={costCenter.costCenterId.toString()}
+                  key={department.departmentID}
+                  value={department.departmentID.toString()}
                 >
                   <div className="flex items-center">
                     <input
                       type="checkbox"
                       checked={selectedCostCenterIds.includes(
-                        costCenter.costCenterId.toString()
+                        department.departmentID.toString()
                       )}
                       onChange={() =>
                         handleCostCenterSelect(
-                          costCenter.costCenterId.toString()
+                          department.departmentID.toString()
                         )
                       }
                       className="mr-2"
                     />
-                    {costCenter.costCenterName}
+                    {department.departmentName}
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {/* selected cost center End here */}
+          {/* selected Department End here */}
         </div>
 
         <div className="w-[100px]" />
@@ -315,4 +316,4 @@ const CostCenterSummaryHeading = ({
   )
 }
 
-export default CostCenterSummaryHeading
+export default DeparmentSummaryHeading

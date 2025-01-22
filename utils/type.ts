@@ -400,6 +400,37 @@ export type DetailNote = z.infer<typeof DetailNoteSchema>
 
 //asset
 export const createAssetSchema = z.object({
+  asset_name: z
+    .string()
+    .min(2, 'Asset name must be at least 2 characters.')
+    .max(255, 'Asset name must not exceed 255 characters.'),
+  category_id: z.number().int('Category ID must be an integer.'),
+  purchase_date: z.coerce.date(),
+  purchase_value: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for purchase value.'),
+  current_value: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for current value.')
+    .optional(),
+  salvage_value: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for salvage value.')
+    .optional(),
+  depreciation_method: z.enum(['Straight Line', 'Diminishing Balance']),
+  useful_life_years: z
+    .number()
+    .int('Useful life must be an integer.')
+    .optional(),
+  status: z.enum(['Active', 'Disposed']).default('Active'),
+  company_id: z.number().int('Company ID must be an integer.'),
+  location_id: z.number().int('Location ID must be an integer.').optional(),
+  created_by: z.number().int('Created by must be an integer.'),
+})
+
+export type CreateAssetData = z.infer<typeof createAssetSchema>
+
+export const getAssetSchema = z.object({
   id: z.bigint(), // For bigint
   name: z
     .string()
@@ -426,20 +457,7 @@ export const createAssetSchema = z.object({
   created_by: z.number().int('Created by must be an integer.'),
 })
 
-export type CreateAssetData = z.infer<typeof createAssetSchema>
-export interface AssetType extends CreateAssetData {
-  name: string
-  purchaseDate: string
-  purchaseValue: string
-  currentValue: string
-  salvageValue: string
-  depreciationMethod: 'Straight Line' | 'Diminishing Balance'
-  usefulLifeYears: number
-  category_id: number
-  company_id: number
-  location_id: number
-  created_by: number
-}
+export type GetAssetData = z.infer<typeof getAssetSchema>
 
 //asset-category
 export const createAssetCategorySchema = z.object({
@@ -540,3 +558,98 @@ export interface CostCenterSummaryType {
   totalDebit: number
   totalCredit: number
 }
+
+//department summary zod
+export const DepartmentSummarySchema = z.object({
+  departmentId: z.number(),
+  departmentName: z.string(),
+  accountId: z.number(),
+  accountName: z.string(),
+  totalDebit: z.number(),
+  totalCredit: z.number(),
+})
+
+//filter by department summary
+export const DepartmentSummaryfilterSchema = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  departmentIds: z.string().transform((val) => val.split(',').map(Number)),
+  companyId: z.string(),
+})
+
+//deaprtment summary type
+export type DepartmentSummaryType = z.infer<typeof DepartmentSummarySchema>
+export type DepartmentSummaryfilterType = z.infer<
+  typeof DepartmentSummaryfilterSchema
+>
+
+//Profit and Loss filter zod
+export const ProfitAndLossFilterSchema = z.object({
+  fromDate: z.string(),
+  endDate: z.string(),
+  companyId: z.string(),
+})
+
+export const ProfitAndLossSchema = z.object({
+  title: z.string(),
+  value: z.number(),
+  position: z.number(),
+  negative: z.boolean().nullable(), // Allows `null` or `boolean` values
+})
+
+export type ProfitAndLossFilterType = z.infer<typeof ProfitAndLossFilterSchema>
+export type ProfitAndLossType = z.infer<typeof ProfitAndLossSchema>
+
+//level
+export interface LevelType {
+  title: string
+  type?: 'Calculated Field' | 'COA Group'
+  COA_ID?: number | null
+  position: number
+  formula?: string
+  negative: boolean
+}
+
+// IouRecord loan schema zod
+export const IouRecordGetSchema = z.object({
+  iouId: z.number(),
+  amount: z.number().positive(),
+  adjustedAmount: z.number().default(0),
+  employeeId: z.number().int().positive(),
+  dateIssued: z.coerce.date(),
+  dueDate: z.date(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  notes: z.string().optional(),
+  createdBy: z.number().int().positive(),
+})
+
+export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>
+
+// IouRecord loan create  schema zod
+
+export const IouRecordCreateSchema = z.object({
+  amount: z.number().positive(),
+  adjustedAmount: z.number().default(0),
+  employeeId: z.number().int().positive(),
+  dateIssued: z.coerce.date(),
+  dueDate: z.coerce.date(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  notes: z.string().optional(),
+  createdBy: z.number().int().positive(),
+})
+
+export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
+
+//employee master employee zod schema
+export const EmployeeSchema = z.object({
+  id: z.number(),
+  employeeId: z.string(),
+  employeeName: z.string(),
+  employeeContact: z.string().nullable(),
+  email: z.string().email(),
+  department: z.string(),
+  status: z.enum(['active', 'inactive']),
+})
+
+// employee master employeee TypeScript type
+export type Employee = z.infer<typeof EmployeeSchema>

@@ -1,5 +1,9 @@
 import { fetchApi } from '@/utils/http'
-import { CostCenterSummarySchemaType } from '@/utils/type'
+import {
+  CostCenter,
+  CostCenterSummarySchemaType,
+  CostCenterSummaryType,
+} from '@/utils/type'
 
 export async function getCostCenterSummary({
   fromdate,
@@ -12,12 +16,20 @@ export async function getCostCenterSummary({
   costCenterIds: string
   companyid: string
 }) {
-  return fetchApi<CostCenterSummarySchemaType[]>({
+  return fetchApi<CostCenterSummaryType[]>({
     url: `api/ledgerreport/costcetersummery?fromDate=${fromdate}&endDate=${enddate}&costCenterIds=${costCenterIds}&companyId=${companyid}`,
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
+  })
+}
+
+//get all cost center api
+export async function getAllCostCenters() {
+  return fetchApi<CostCenter[]>({
+    url: 'api/cost-centers/get-all-cost-centers',
+    method: 'GET',
   })
 }
 

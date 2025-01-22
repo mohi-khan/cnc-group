@@ -5,6 +5,7 @@ import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { TrialBalanceData } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
 
 export default function TrialBalanceTable({
   targetRef,
@@ -100,7 +101,11 @@ export default function TrialBalanceTable({
                   : 'text-purple-500'
             }`}
           >
-            {item.name}
+            <Link
+              href={`/reports/trial-balance/single-trial-balance/${item.id}?startDate=${startDate ? encodeURIComponent(startDate.toISOString().split('T')[0]) : ''}&endDate=${endDate ? encodeURIComponent(endDate.toISOString().split('T')[0]) : ''}`}
+            >
+              {item.name}
+            </Link>
           </div>
           <div className="col-span-1 text-center">
             {item.initialDebit.toFixed(2)}

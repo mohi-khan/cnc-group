@@ -33,6 +33,10 @@ export const MENU_ITEMS: MenuItem[] = [
     name: 'Cash',
     subItemGroups: [
       {
+        name: 'Suspense ',
+        items: [{ name: 'Loan', source: '/cash/sespense/loan' }],
+      },
+      {
         name: 'Cash Management',
         items: [
           { name: 'Cash Voucher', source: '/cash/cash-voucher' },
@@ -82,8 +86,8 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/assets/assets',
           },
           {
-            name: 'Create Asset Group',
-            source: '/assets/create-asset-group',
+            name: 'Create Asset Category',
+            source: '/assets/asset-category',
           },
           {
             name: 'Configure Depreciation',
@@ -157,6 +161,14 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Cost Center Summary',
             source: '/reports/cost-center-summary',
           },
+          {
+            name: 'Department Summary',
+            source: '/reports/department-summary',
+          },
+          {
+            name: 'Profit and Loss',
+            source: '/reports/profit-and-loss',
+          },
         ],
       },
       {
@@ -218,6 +230,7 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Internal Orders', source: '/settings/internal-orders' },
           { name: 'Bank Accounts', source: '/settings/bank-accounts' },
           { name: 'Cash Accounts', source: '/settings/cash-accounts' },
+          { name: 'Level Entry', source: '/settings/level-entry' },
         ],
       },
       {

@@ -199,7 +199,7 @@ export default function BankVoucher() {
         description: response.error?.message || 'Failed to get Voucher Data',
       })
     } else {
-      setVoucherGrid(response.data)
+      setVoucherGrid(response.data as JournalResult[])
     }
   }
 
@@ -435,7 +435,7 @@ export default function BankVoucher() {
               <DialogTitle>Add New Voucher</DialogTitle>
               <DialogDescription>
                 Enter the details for the bank voucher here. Click save when
-                you're done.
+                you&apos;re done.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>

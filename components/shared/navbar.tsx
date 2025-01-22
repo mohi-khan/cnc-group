@@ -7,6 +7,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Company, User } from '@/utils/type'
 import { MENU_ITEMS } from '@/utils/constants'
+import { DollarSign, Building, BookOpen, Repeat } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -77,15 +85,19 @@ export default function Navbar() {
   // Middleware to check route access
   const checkRouteAccess = (source: string) => {
     // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
-    if (source.includes('/settings/') && user?.roleId !== 2) {
+    if (source.includes('/settings/') && user?.roleId !== 2 ) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/bank/bank-voucher' && ![1, 2].includes(user?.roleId)) {
+    if (source.includes('/reports/') && (!user?.roleId || ![1, 2, 5].includes(user.roleId))) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/cash/cash-voucher' && ![1, 2].includes(user?.roleId)) {
+    if (source === '/bank/bank-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
+      router.push('/unauthorized-access')
+      return false
+    }
+    if (source === '/cash/cash-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
       router.push('/unauthorized-access')
       return false
     }
@@ -243,14 +255,66 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-      <div className="py-4 text-center">
-      <p className='font-semibold pb-1'>Quick Menu</p>
-      <div className='flex gap-6 items-center justify-center text-sm'>
-        <Link href={'/'}>Cash Voucher</Link>
-        <Link href={'/'}>Bank Voucher</Link>
-        <Link href={'/'}>Journal Voucher</Link>
-        <Link href={'/'}>Contra Voucher</Link>
+      <div className="py-1 text-center">
+      <TooltipProvider>
+      <div className='flex gap-6 items-center justify-center'>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link href={'/'}>
+              <Button variant="ghost" size="icon">
+                <DollarSign className="h-5 w-5" />
+                <span className="sr-only">Cash Voucher</span>
+              </Button>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Cash Voucher</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link href={'/'}>
+              <Button variant="ghost" size="icon">
+                <Building className="h-5 w-5" />
+                <span className="sr-only">Bank Voucher</span>
+              </Button>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Bank Voucher</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link href={'/'}>
+              <Button variant="ghost" size="icon">
+                <BookOpen className="h-5 w-5" />
+                <span className="sr-only">Journal Voucher</span>
+              </Button>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Journal Voucher</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link href={'/'}>
+              <Button variant="ghost" size="icon">
+                <Repeat className="h-5 w-5" />
+                <span className="sr-only">Contra Voucher</span>
+              </Button>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Contra Voucher</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
+    </TooltipProvider>
       </div>
     </nav>
   )

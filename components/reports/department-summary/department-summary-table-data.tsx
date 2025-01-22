@@ -1,21 +1,21 @@
 'use client'
 import React from 'react'
-import { CostCenterSummaryType } from '@/utils/type'
+import { CostCenterSummaryType, DepartmentSummaryType } from '@/utils/type'
 
 interface Props {
-  data: CostCenterSummaryType[]
+  data: DepartmentSummaryType[]
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
+const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
   // Function to get the debit or credit value for a specific cost center and account name
   const getDebitCreditDifference = (
-    costCenterName: string,
+    departmentName: string,
     accountName: string
   ) => {
     const matchedData = data.filter(
       (item) =>
-        item.costCenterName === costCenterName &&
+        item.departmentName === departmentName &&
         item.accountName === accountName
     )
     if (matchedData.length > 0) {
@@ -29,7 +29,7 @@ const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
 
   // Dynamically extract unique costCenterNames and accountNames from the data
   const costCenterNames = Array.from(
-    new Set(data.map((item) => item.costCenterName))
+    new Set(data.map((item) => item.departmentName))
   )
   const accountNames = Array.from(new Set(data.map((item) => item.accountName)))
 
@@ -82,4 +82,4 @@ const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
   )
 }
 
-export default CostCenterSummaryTableData
+export default DepartmentSummaryTableData

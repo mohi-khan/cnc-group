@@ -17,7 +17,7 @@ const AssetCategory = () => {
   const fetchAssetCategories = async () => {
     try {
       const categories = await getAllAssetCategories()
-      setAssetCategories(categories.data)
+      setAssetCategories(categories.data ?? [])
       console.log("🚀 ~ fetchAssetCategories ~ categories:", categories)
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
