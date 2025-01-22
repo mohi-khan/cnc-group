@@ -160,12 +160,7 @@ export default function CashVoucher() {
       console.log('Voucher data:', response.data)
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to get Voucher Data',
-      })
-      // Initialize with empty array instead of undefined
+      // Initialize with empty array instead of showing an error toast
       setVoucherGrid([])
     }
   }
@@ -733,65 +728,74 @@ export default function CashVoucher() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vouchergrid.map((voucher) => (
-                    <TableRow key={voucher.voucherid}>
-                      <Link
-                        href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
-                      >
-                        <TableCell>{voucher.voucherno}</TableCell>
-                      </Link>
-                      <TableCell>{voucher.companyname}</TableCell>
-                      <TableCell>{voucher.currency}</TableCell>
-                      <TableCell>{voucher.location}</TableCell>
-                      <TableCell className="">
-                        {voucher.date.toString() || 'N/A'}
-                      </TableCell>
-                      <TableCell>{voucher.notes}</TableCell>
-                      <TableCell>{voucher.debit}</TableCell>
-                      <TableCell>{voucher.totalamount}</TableCell>
-                      <TableCell className="">
-                        {voucher.state === 0 ? 'Draft' : 'Post'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="icon">
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-white">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Are you sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will reverse the voucher status to Draft.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleReverse(voucher.voucherno)
-                                  }
-                                >
-                                  Reverse
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handlePost(voucher.voucherno)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {vouchergrid.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-4">
+                        No cash voucher is available
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    vouchergrid.map((voucher) => (
+                      <TableRow key={voucher.voucherid}>
+                        <Link
+                          href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
+                        >
+                          <TableCell>{voucher.voucherno}</TableCell>
+                        </Link>
+                        <TableCell>{voucher.companyname}</TableCell>
+                        <TableCell>{voucher.currency}</TableCell>
+                        <TableCell>{voucher.location}</TableCell>
+                        <TableCell className="">
+                          {voucher.date.toString() || 'N/A'}
+                        </TableCell>
+                        <TableCell>{voucher.notes}</TableCell>
+                        <TableCell>{voucher.debit}</TableCell>
+                        <TableCell>{voucher.totalamount}</TableCell>
+                        <TableCell className="">
+                          {voucher.state === 0 ? 'Draft' : 'Post'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-white">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will reverse the voucher status to
+                                    Draft.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleReverse(voucher.voucherno)
+                                    }
+                                  >
+                                    Reverse
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handlePost(voucher.voucherno)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

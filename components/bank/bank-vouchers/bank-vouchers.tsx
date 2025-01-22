@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
-import * as z from 'zod'
+import type * as z from 'zod'
 import { Plus, Trash, Printer, RotateCcw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,18 +54,18 @@ import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 import {
   ChartOfAccount,
-  BankAccount,
+  type BankAccount,
   Company,
-  CompanyFromLocalstorage,
-  CostCenter,
-  JournalEntryWithDetails,
+  type CompanyFromLocalstorage,
+  type CostCenter,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   LocationData,
-  LocationFromLocalstorage,
-  ResPartner,
-  JournalResult,
-  AccountsHead,
-  JournalQuery,
+  type LocationFromLocalstorage,
+  type ResPartner,
+  type JournalResult,
+  type AccountsHead,
+  type JournalQuery,
   VoucherTypes,
 } from '@/utils/type'
 import {
@@ -192,13 +192,16 @@ export default function BankVoucher() {
       voucherType: VoucherTypes.BankVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
+    if (response.error) {
+      // Only show error toast if it's not a 404 error
+      if (response.error.status !== 404) {
+        console.error('Error getting Voucher Data:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to get Voucher Data',
+        })
+      }
+    } else if (response.data) {
       setVoucherGrid(response.data as JournalResult[])
     }
   }
@@ -454,7 +457,7 @@ export default function BankVoucher() {
                         <FormLabel>Company Name</FormLabel>
                         <Select
                           onValueChange={(value) =>
-                            field.onChange(parseInt(value, 10))
+                            field.onChange(Number.parseInt(value, 10))
                           }
                           value={field.value?.toString()}
                         >
@@ -493,7 +496,7 @@ export default function BankVoucher() {
                         <FormLabel>Location</FormLabel>
                         <Select
                           onValueChange={(value) =>
-                            field.onChange(parseInt(value, 10))
+                            field.onChange(Number.parseInt(value, 10))
                           }
                           value={field.value?.toString()}
                         >
@@ -532,7 +535,7 @@ export default function BankVoucher() {
                         <FormLabel>Currency</FormLabel>
                         <Select
                           onValueChange={(value) =>
-                            field.onChange(parseInt(value, 10))
+                            field.onChange(Number.parseInt(value, 10))
                           }
                           value={field.value?.toString()}
                         >
@@ -647,7 +650,7 @@ export default function BankVoucher() {
                             placeholder="Enter amount"
                             {...field}
                             onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value))
+                              field.onChange(Number.parseFloat(e.target.value))
                             }
                           />
                         </FormControl>
@@ -680,7 +683,7 @@ export default function BankVoucher() {
                                 <FormItem>
                                   <Select
                                     onValueChange={(value) =>
-                                      field.onChange(parseInt(value, 10))
+                                      field.onChange(Number.parseInt(value, 10))
                                     }
                                     value={field.value?.toString()}
                                   >
@@ -720,7 +723,7 @@ export default function BankVoucher() {
                                 <FormItem>
                                   <Select
                                     onValueChange={(value) =>
-                                      field.onChange(parseInt(value, 10))
+                                      field.onChange(Number.parseInt(value, 10))
                                     }
                                     value={field.value?.toString()}
                                   >
@@ -759,7 +762,7 @@ export default function BankVoucher() {
                                 <FormItem>
                                   <Select
                                     onValueChange={(value) =>
-                                      field.onChange(parseInt(value, 10))
+                                      field.onChange(Number.parseInt(value, 10))
                                     }
                                     value={field.value?.toString()}
                                   >
@@ -789,7 +792,7 @@ export default function BankVoucher() {
                                 <FormItem>
                                   <Select
                                     onValueChange={(value) =>
-                                      field.onChange(parseInt(value, 10))
+                                      field.onChange(Number.parseInt(value, 10))
                                     }
                                     value={field.value?.toString()}
                                   >
@@ -848,7 +851,7 @@ export default function BankVoucher() {
                                       {...field}
                                       onChange={(e) =>
                                         field.onChange(
-                                          parseFloat(e.target.value)
+                                          Number.parseFloat(e.target.value)
                                         )
                                       }
                                     />
@@ -944,62 +947,74 @@ export default function BankVoucher() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchergrid.map((voucher) => (
-            <TableRow key={voucher.voucherid} className="border-b">
-              <TableCell className="">
-                <Link href={`/bank/bank-vouchers/single-bank-voucher/${voucher.voucherid}`}>{voucher.voucherno}</Link>
-              </TableCell>
-              <TableCell className="">{voucher.notes}</TableCell>
-              <TableCell className="">{voucher.companyname}</TableCell>
-              <TableCell className="">{voucher.location}</TableCell>
-              <TableCell className="">{voucher.currency}</TableCell>
-              <TableCell className="">{voucher.bankaccount}</TableCell>
-              <TableCell className="">
-                {voucher.date.toString() || 'N/A'}
-              </TableCell>
-              <TableCell className="">{voucher.totalamount}</TableCell>
-              <TableCell className="">
-                {voucher.state === 0 ? 'Draft' : 'Post'}
-              </TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will reverse the voucher status to Draft.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleReverse(voucher.voucherno)}
-                        >
-                          Reverse
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePost(voucher.voucherno)}
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  {/* <Button variant="outline" size="icon">
-                    <Printer className="h-4 w-4" />
-                  </Button> */}
-                </div>
+          {vouchergrid.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center py-4">
+                No bank voucher is available
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            vouchergrid.map((voucher) => (
+              <TableRow key={voucher.voucherid} className="border-b">
+                <TableCell className="">
+                  <Link
+                    href={`/bank/bank-vouchers/single-bank-voucher/${voucher.voucherid}`}
+                  >
+                    {voucher.voucherno}
+                  </Link>
+                </TableCell>
+                <TableCell className="">{voucher.notes}</TableCell>
+                <TableCell className="">{voucher.companyname}</TableCell>
+                <TableCell className="">{voucher.location}</TableCell>
+                <TableCell className="">{voucher.currency}</TableCell>
+                <TableCell className="">{voucher.bankaccount}</TableCell>
+                <TableCell className="">
+                  {voucher.date.toString() || 'N/A'}
+                </TableCell>
+                <TableCell className="">{voucher.totalamount}</TableCell>
+                <TableCell className="">
+                  {voucher.state === 0 ? 'Draft' : 'Post'}
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="icon">
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reverse the voucher status to Draft.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleReverse(voucher.voucherno)}
+                          >
+                            Reverse
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handlePost(voucher.voucherno)}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    {/* <Button variant="outline" size="icon">
+                      <Printer className="h-4 w-4" />
+                    </Button> */}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

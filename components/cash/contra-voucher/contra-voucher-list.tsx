@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -9,61 +9,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
 import {
-  CompanyFromLocalstorage,
-  JournalQuery,
-  JournalResult,
-  LocationFromLocalstorage,
-  User,
+  type CompanyFromLocalstorage,
+  type JournalQuery,
+  type JournalResult,
+  type LocationFromLocalstorage,
+  type User,
   VoucherTypes,
 } from '@/utils/type'
-import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 
-interface Voucher {
-  id: number
-  voucherNo: string
-  voucherDate: string
-  notes: string
-  companyNameLocation: string
-  amount: number
-}
-
-// This would typically come from a database or API
-const initialVouchers: Voucher[] = [
-  {
-    id: 1,
-    voucherNo: 'V001',
-    voucherDate: '2023-05-15',
-    notes: 'Monthly expense report',
-    companyNameLocation: 'Acme Corp, New York',
-    amount: 1500.0,
-  },
-  {
-    id: 2,
-    voucherNo: 'V002',
-    voucherDate: '2023-05-16',
-    notes: 'Office supplies',
-    companyNameLocation: 'Globex Inc, Los Angeles',
-    amount: 250.75,
-  },
-]
+const initialVouchers: JournalResult[] = []
 
 export default function ContraVoucherTable() {
-  const [vouchers, setVouchers] = useState<Voucher[]>(initialVouchers)
-  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
-    []
-  )
-  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>(
-    []
-  )
-  const [user, setUser] = React.useState<User | null>(null)
-  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [vouchers, setVouchers] = useState<JournalResult[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+  const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+  const [user, setUser] = useState<User | null>(null)
+  const [vouchergrid, setVoucherGrid] = useState<JournalResult[]>([])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
@@ -89,36 +56,35 @@ export default function ContraVoucherTable() {
       voucherType: VoucherTypes.ContraVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
+    if (response.data) {
       console.log('voucher', response.data)
       setVoucherGrid(response.data)
+      setVouchers(response.data)
+    } else {
+      console.log('No voucher data available')
+      setVoucherGrid([])
+      setVouchers([])
     }
   }
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = (voucherData: Omit<Voucher, 'id'>) => {
-    // Here you would typically send the data to your backend
+  const handleSubmit = (voucherData: Partial<JournalResult>) => {
     console.log('Submitting voucher:', voucherData)
-
+    // Here you would typically send the data to your backend
     // For now, we'll just add it to the local state
-    const newVoucher: Voucher = {
+    const newVoucher: JournalResult = {
       ...voucherData,
-      id: vouchers.length + 1,
-      amount: parseFloat(voucherData.amount),
-    }
-    setVouchers([...vouchers, newVoucher])
+      id: vouchergrid.length + 1,
+      totalamount: Number(voucherData.totalamount),
+    } as JournalResult
+    setVoucherGrid([...vouchergrid, newVoucher])
   }
 
   return (
@@ -127,7 +93,7 @@ export default function ContraVoucherTable() {
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
         <ContraVoucherPopup onSubmit={handleSubmit} />
       </div>
-      <Table>
+      <Table className='border'>
         <TableHeader>
           <TableRow>
             <TableHead>Voucher No.</TableHead>
@@ -138,23 +104,31 @@ export default function ContraVoucherTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchergrid.map((voucher) => (
-            <TableRow key={voucher.id}>
-              <TableCell className="font-medium">
-                <Link
-                  href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
-                >
-                  {voucher.voucherno}
-                </Link>
-              </TableCell>
-              <TableCell>{voucher.date}</TableCell>
-              <TableCell>{voucher.notes}</TableCell>
-              <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
-              <TableCell className="text-right">
-                ${voucher.totalamount.toFixed(2)}
+          {vouchers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-4">
+                No contra vouchers are available
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            vouchers.map((voucher) => (
+              <TableRow key={voucher.id}>
+                <TableCell className="font-medium">
+                  <Link
+                    href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
+                  >
+                    {voucher.voucherno}
+                  </Link>
+                </TableCell>
+                <TableCell>{voucher.date}</TableCell>
+                <TableCell>{voucher.notes}</TableCell>
+                <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
+                <TableCell className="text-right">
+                  ${voucher.totalamount.toFixed(2)}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
