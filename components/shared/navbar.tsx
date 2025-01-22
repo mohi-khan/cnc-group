@@ -119,6 +119,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center justify-between">
             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
+              <Link href={'/dashboard'}>Dashboard</Link>
               {MENU_ITEMS.map((menuItem, index) => (
                 <div
                   key={index}
@@ -260,7 +261,7 @@ export default function Navbar() {
       <div className='flex gap-6 items-center justify-center'>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={'/'}>
+            <Link href={'/cash/cash-voucher'}>
               <Button variant="ghost" size="icon">
                 <DollarSign className="h-5 w-5" />
                 <span className="sr-only">Cash Voucher</span>
@@ -274,7 +275,7 @@ export default function Navbar() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={'/'}>
+            <Link href={'/bank/bank-vouchers'}>
               <Button variant="ghost" size="icon">
                 <Building className="h-5 w-5" />
                 <span className="sr-only">Bank Voucher</span>
@@ -288,7 +289,7 @@ export default function Navbar() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={'/'}>
+            <Link href={'/accounting/journal-voucher'}>
               <Button variant="ghost" size="icon">
                 <BookOpen className="h-5 w-5" />
                 <span className="sr-only">Journal Voucher</span>
@@ -302,7 +303,7 @@ export default function Navbar() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={'/'}>
+            <Link href={'/cash/contra-vouchers'}>
               <Button variant="ghost" size="icon">
                 <Repeat className="h-5 w-5" />
                 <span className="sr-only">Contra Voucher</span>
