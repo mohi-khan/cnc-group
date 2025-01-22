@@ -45,7 +45,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
-  const [userId, setUserId] = useState(undefined)
+  const [userId, setUserId] = useState<number>(0)
 
   React.useEffect(() => {
       const userStr = localStorage.getItem('currentUser')
@@ -68,6 +68,13 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       created_by: userId,
     },
   })
+
+  useEffect(() => {
+    if (userId !== null) {
+      // Update the form's default values when userId is available
+      form.setValue('created_by', userId)
+    }
+  }, [userId, form])
 
   async function fetchChartOfAccounts() {
     const response = await getAllChartOfAccounts()
