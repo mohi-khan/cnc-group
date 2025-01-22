@@ -54,7 +54,6 @@ export default function IouPopUp({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
   const [userId, setUserId] = useState<number | null>(null) // set to null initially
-  const currentDate = new Date()
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')

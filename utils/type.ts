@@ -626,7 +626,6 @@ export const IouRecordGetSchema = z.object({
 export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>
 
 // IouRecord loan create  schema zod
-
 export const IouRecordCreateSchema = z.object({
   amount: z.number().positive(),
   adjustedAmount: z.number().default(0),
@@ -639,6 +638,17 @@ export const IouRecordCreateSchema = z.object({
 })
 
 export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
+
+//IouAdjustmentCreateSchema
+export const IouAdjustmentCreateSchema = z.object({
+  iouId: z.number().int().positive(),
+  amountAdjusted: z.number().default(0),
+  adjustmentDate: z.coerce.date(),
+  adjustmentType: z.string().max(50),
+  notes: z.string().optional(),
+})
+
+export type IouAdjustmentCreateType = z.infer<typeof IouAdjustmentCreateSchema>
 
 //employee master employee zod schema
 export const EmployeeSchema = z.object({

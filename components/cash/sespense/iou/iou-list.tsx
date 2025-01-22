@@ -26,10 +26,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import type { Employee, IouRecordGetType } from '@/utils/type'
+import type {
+  Employee,
+  IouRecordCreateType,
+  IouRecordGetType,
+} from '@/utils/type'
 import { getEmployee, getLoanData } from '@/api/iou-api'
 import { Loader2 } from 'lucide-react'
 import Loader from '@/utils/loader'
+import IouAdjPopUp from './iou-adj-popup'
+import { number } from 'zod'
 
 interface LoanListProps {
   onAddCategory: () => void
@@ -46,6 +52,7 @@ const IouList: React.FC<LoanListProps> = ({
 }) => {
   const [sortBy, setSortBy] = useState<string>('date-desc')
   const [currentPage, setCurrentPage] = useState(1)
+  const [isPopUpVisible, setIsPopUpVisible] = useState(false)
 
   const itemsPerPage = 5
 
@@ -86,6 +93,15 @@ const IouList: React.FC<LoanListProps> = ({
   }, [sortedLoanData, currentPage])
 
   const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
+
+  const handleButtonClick = (loan: IouRecordGetType) => {
+    alert(`Adding Adj Amount for IOU ID: ${loan.iouId}`)
+    setIsPopUpVisible(true) // Show the popup
+  }
+
+  const handleClosePopUp = () => {
+    setIsPopUpVisible(false) // Hide the popup
+  }
 
   return (
     <div className="p-4">
@@ -161,7 +177,7 @@ const IouList: React.FC<LoanListProps> = ({
                   </TableCell>
 
                   <TableCell>{loan.notes}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <Button
                       variant="outline"
                       onClick={() =>
@@ -170,6 +186,24 @@ const IouList: React.FC<LoanListProps> = ({
                     >
                       Add IOU Adj
                     </Button>
+                    <IouAdjPopUp
+                      loaniouId={loan.iouId}
+                    />
+                  </TableCell> */}
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleButtonClick(loan)}
+                    >
+                      Add IOU Adj
+                    </Button>
+                    {isPopUpVisible && (
+                      <IouAdjPopUp
+                        iouId={loan.iouId}
+                        isOpen={isPopUpVisible}
+                        onOpenChange={setIsPopUpVisible}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
