@@ -169,7 +169,18 @@ export default function CashVoucher() {
       if (!response.data) {
         throw new Error('No data received from server')
       }
-      setVoucherGrid(response.data)
+      setVoucherGrid(response.data as {
+        voucherid: number
+        voucherno: string
+        date: string
+        journaltype: string
+        state: number
+        companyname: string
+        location: string
+        currency: string
+        totalamount: number
+        notes: string
+      }[])
       console.log('Voucher data:', response.data)
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
@@ -573,7 +584,6 @@ export default function CashVoucher() {
                           placeholder="Select type"
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
@@ -600,7 +610,6 @@ export default function CashVoucher() {
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
@@ -627,7 +636,6 @@ export default function CashVoucher() {
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
@@ -651,7 +659,6 @@ export default function CashVoucher() {
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
@@ -793,8 +800,7 @@ export default function CashVoucher() {
                         <TableCell>{voucher.currency}</TableCell>
                         <TableCell>{voucher.location}</TableCell>
                         <TableCell>{voucher.date}</TableCell>
-                        <TableCell>{voucher.notes}</TableCell>{' '}
-                        {/* Display the 'notes' field from the database */}
+                        <TableCell>{voucher.notes}</TableCell>
                         <TableCell>{voucher.totalamount}</TableCell>
                         <TableCell>
                           {voucher.state === 0 ? 'Draft' : 'Post'}
