@@ -107,6 +107,16 @@ export default function IouPopUp({
   }
 
   const onSubmit = async (data: IouRecordCreateType) => {
+    if (data.adjustedAmount >= data.amount) {
+      toast({
+        title: 'Validation Error',
+        description:
+          'Adjusted Amount must be less than the Amount and cannot be equal or higher.',
+        variant: 'destructive',
+      })
+      return // Prevent form submission
+    }
+
     setIsSubmitting(true)
     try {
       await createIou(data)
@@ -174,9 +184,22 @@ export default function IouPopUp({
                       type="number"
                       step="0.01"
                       placeholder="Enter adjusted amount"
-                      onChange={(e) =>
-                        field.onChange(Number.parseFloat(e.target.value) || 0)
-                      }
+                      onChange={(e) => {
+                        const adjustedValue =
+                          Number.parseFloat(e.target.value) || 0
+                        field.onChange(adjustedValue)
+
+                        // Custom validation for adjustedAmount
+                        if (adjustedValue >= form.getValues('amount')) {
+                          form.setError('adjustedAmount', {
+                            type: 'manual',
+                            message:
+                              'Adjusted amount must be less than the amount.',
+                          })
+                        } else {
+                          form.clearErrors('adjustedAmount')
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

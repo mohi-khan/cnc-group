@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Table,
   TableBody,
@@ -28,14 +28,12 @@ import {
 } from '@/components/ui/pagination'
 import type {
   Employee,
-  IouRecordCreateType,
   IouRecordGetType,
 } from '@/utils/type'
-import { getEmployee, getLoanData } from '@/api/iou-api'
-import { Loader2 } from 'lucide-react'
+
 import Loader from '@/utils/loader'
 import IouAdjPopUp from './iou-adj-popup'
-import { number } from 'zod'
+
 
 interface LoanListProps {
   onAddCategory: () => void
@@ -43,65 +41,64 @@ interface LoanListProps {
   isLoading: boolean
   employeeData: Employee[]
 }
-
 const IouList: React.FC<LoanListProps> = ({
   onAddCategory,
   loanAllData,
   isLoading,
   employeeData,
 }) => {
-  const [sortBy, setSortBy] = useState<string>('date-desc')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [isPopUpVisible, setIsPopUpVisible] = useState(false)
+  const [sortBy, setSortBy] = useState<string>('date-desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [popupIouId, setPopupIouId] = useState<number | null>(null); // State to track which IOU ID the popup is for
 
-  const itemsPerPage = 5
+  const itemsPerPage = 10;
 
   // Find employee name by matching employeeId
   const getEmployeeName = (employeeId: number) => {
-    const employee = employeeData.find((emp) => emp.id === employeeId)
-    return employee ? employee.employeeName : 'Unknown Employee'
-  }
+    const employee = employeeData.find((emp) => emp.id === employeeId);
+    return employee ? employee.employeeName : 'Unknown Employee';
+  };
 
   const sortedLoanData = useMemo(() => {
-    const sorted = [...loanAllData]
+    const sorted = [...loanAllData];
     switch (sortBy) {
       case 'amount-asc':
-        sorted.sort((a, b) => a.amount - b.amount)
-        break
+        sorted.sort((a, b) => a.amount - b.amount);
+        break;
       case 'amount-desc':
-        sorted.sort((a, b) => b.amount - a.amount)
-        break
+        sorted.sort((a, b) => b.amount - a.amount);
+        break;
       case 'date-asc':
         sorted.sort(
           (a, b) =>
             new Date(a.dateIssued).getTime() - new Date(b.dateIssued).getTime()
-        )
-        break
+        );
+        break;
       case 'date-desc':
         sorted.sort(
           (a, b) =>
             new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime()
-        )
-        break
+        );
+        break;
     }
-    return sorted
-  }, [loanAllData, sortBy])
+    return sorted;
+  }, [loanAllData, sortBy]);
 
   const paginatedLoanData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return sortedLoanData.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedLoanData, currentPage])
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedLoanData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedLoanData, currentPage]);
 
-  const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
+  const totalPages = Math.ceil(loanAllData.length / itemsPerPage);
 
   const handleButtonClick = (loan: IouRecordGetType) => {
-    alert(`Adding Adj Amount for IOU ID: ${loan.iouId}`)
-    setIsPopUpVisible(true) // Show the popup
-  }
+    console.log(`Adding Adj Amount for IOU ID: ${loan.iouId}`);
+    setPopupIouId(loan.iouId); // Set the ID of the current loan
+  };
 
-  const handleClosePopUp = () => {
-    setIsPopUpVisible(false) // Hide the popup
-  }
+  const closePopup = () => {
+    setPopupIouId(null); // Close the popup by clearing the ID
+  };
 
   return (
     <div className="p-4">
@@ -124,7 +121,7 @@ const IouList: React.FC<LoanListProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={onAddCategory}>Add IOU List</Button>
+        <Button onClick={onAddCategory}>Add IOU</Button>
       </div>
 
       {isLoading ? (
@@ -132,25 +129,25 @@ const IouList: React.FC<LoanListProps> = ({
       ) : (
         <>
           {/* Table Section */}
-          <Table>
-            <TableHeader>
+          <Table className="border shadow-md">
+            <TableHeader className="bg-slate-200 shadow-md">
               <TableRow>
-                <TableHead>Amount</TableHead>
-                <TableHead>Adj.Amount</TableHead>
                 <TableHead>Employee Name</TableHead>
+                <TableHead>Amount</TableHead>
                 <TableHead>Issued Date</TableHead>
                 <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Adj.Amount</TableHead>
                 <TableHead>Notes</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedLoanData.map((loan) => (
                 <TableRow key={loan.iouId}>
-                  <TableCell>{loan.amount}</TableCell>
-                  <TableCell>{loan.adjustedAmount}</TableCell>
                   <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
+                  <TableCell>{loan.amount}</TableCell>
+
                   <TableCell>
                     {isNaN(new Date(loan.dateIssued).getTime())
                       ? 'Invalid Date'
@@ -161,54 +158,44 @@ const IouList: React.FC<LoanListProps> = ({
                       ? 'Invalid Date'
                       : new Date(loan.dueDate).toLocaleDateString()}
                   </TableCell>
-                  {/* <TableCell>{loan.status}</TableCell> */}
+                  <TableCell>{loan.adjustedAmount}</TableCell>
+
+                  <TableCell>{loan.notes}</TableCell>
                   <TableCell>
                     <span
                       className={
                         loan.status === 'inactive'
                           ? 'text-red-500 capitalize'
                           : loan.status === 'active'
-                            ? 'text-green-500 capitalize'
-                            : 'text-gray-800'
+                          ? 'text-green-500 capitalize'
+                          : 'text-gray-800'
                       }
                     >
                       {loan.status}
                     </span>
                   </TableCell>
 
-                  <TableCell>{loan.notes}</TableCell>
-                  {/* <TableCell>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        alert(`Adding Adj Amount for IOU ID: ${loan.iouId}`)
-                      }
-                    >
-                      Add IOU Adj
-                    </Button>
-                    <IouAdjPopUp
-                      loaniouId={loan.iouId}
-                    />
-                  </TableCell> */}
                   <TableCell>
                     <Button
                       variant="outline"
                       onClick={() => handleButtonClick(loan)}
                     >
-                      Add IOU Adj
+                      Adjustment
                     </Button>
-                    {isPopUpVisible && (
-                      <IouAdjPopUp
-                        iouId={loan.iouId}
-                        isOpen={isPopUpVisible}
-                        onOpenChange={setIsPopUpVisible}
-                      />
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {/* Render the popup only for the selected IOU */}
+          {popupIouId && (
+            <IouAdjPopUp
+              iouId={popupIouId} // Pass only the selected IOU ID
+              isOpen={!!popupIouId}
+              onOpenChange={closePopup} // Close handler
+            />
+          )}
 
           {/* Pagination */}
           <div className="mt-4">
@@ -252,7 +239,7 @@ const IouList: React.FC<LoanListProps> = ({
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default IouList
+export default IouList;
