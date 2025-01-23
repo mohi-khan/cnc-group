@@ -330,7 +330,7 @@ export default function CashVoucher() {
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit' + values)
+    console.log('Before Any edit', values)
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
@@ -348,17 +348,18 @@ export default function CashVoucher() {
       journalEntry: {
         ...values.journalEntry,
         state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
-        notes: values.journalEntry.notes, // Ensure notes is always a string
+        notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Cash Voucher',
         amountTotal: totalAmount,
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
+        notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
     }
-    console.log('After Adding created by' + updatedValues)
+    console.log('After Adding created by', updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithCash = {
       ...updatedValues,
@@ -388,7 +389,6 @@ export default function CashVoucher() {
     )
     const response = await createJournalEntryWithDetails(updateValueswithCash) // Calling API to Enter at Generate
     if (response.error || !response.data) {
-      // console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
         description: response.error?.message || 'Error creating Journal',
@@ -679,11 +679,17 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name={`journalDetails.${index}.notes`} // 'notes' corresponds to the database column name
+                          name="journalEntry.notes"
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Input {...field} placeholder="Enter remarks" />
+                                <Input
+                                  {...field}
+                                  placeholder="Enter general remarks"
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value)
+                                  }
+                                />
                               </FormControl>
                             </FormItem>
                           )}
