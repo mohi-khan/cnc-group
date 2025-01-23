@@ -1,10 +1,16 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type React from 'react'
+import { useState, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Pagination,
   PaginationContent,
@@ -12,37 +18,45 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import type { AssetCategoryType } from "@/utils/type"
+} from '@/components/ui/pagination'
+import { ArrowUpDown } from 'lucide-react'
+import type { AssetCategoryType } from '@/utils/type'
 
 interface AssetCategoryListProps {
   categories: AssetCategoryType[]
   onAddCategory: () => void
 }
 
-export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({ categories, onAddCategory }) => {
-  const [sortBy, setSortBy] = useState<string>("name-asc")
+type SortColumn =
+  | 'category_name'
+  | 'depreciation_rate'
+  | 'account_code'
+  | 'depreciation_account_code'
+type SortDirection = 'asc' | 'desc'
+
+export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({
+  categories,
+  onAddCategory,
+}) => {
+  const [sortColumn, setSortColumn] = useState<SortColumn>('category_name')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
   const sortedCategories = useMemo(() => {
     const sorted = [...categories]
-    switch (sortBy) {
-      case "name-asc":
-        sorted.sort((a, b) => a.category_name.localeCompare(b.category_name))
-        break
-      case "name-desc":
-        sorted.sort((a, b) => b.category_name.localeCompare(a.category_name))
-        break
-      case "rate-asc":
-        sorted.sort((a, b) => Number(a.depreciation_rate) - Number(b.depreciation_rate))
-        break
-      case "rate-desc":
-        sorted.sort((a, b) => Number(b.depreciation_rate) - Number(a.depreciation_rate))
-        break
-    }
+    sorted.sort((a, b) => {
+      if (sortColumn === 'depreciation_rate') {
+        return sortDirection === 'asc'
+          ? Number(a[sortColumn]) - Number(b[sortColumn])
+          : Number(b[sortColumn]) - Number(a[sortColumn])
+      }
+      return sortDirection === 'asc'
+        ? String(a[sortColumn]).localeCompare(String(b[sortColumn]))
+        : String(b[sortColumn]).localeCompare(String(a[sortColumn]))
+    })
     return sorted
-  }, [categories, sortBy])
+  }, [categories, sortColumn, sortDirection])
 
   const paginatedCategories = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -51,32 +65,54 @@ export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({ categories
 
   const totalPages = Math.ceil(categories.length / itemsPerPage)
 
+  const handleSort = (column: SortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortableTableHead: React.FC<{
+    column: SortColumn
+    children: React.ReactNode
+  }> = ({ column, children }) => {
+    const isActive = column === sortColumn
+    return (
+      <TableHead
+        onClick={() => handleSort(column)}
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-1">
+          <span>{children}</span>
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </TableHead>
+    )
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Asset Categories</h1>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-              <SelectItem value="rate-asc">Depreciation Rate (Low to High)</SelectItem>
-              <SelectItem value="rate-desc">Depreciation Rate (High to Low)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <h1 className="text-2xl font-bold">Asset Categories</h1>
         <Button onClick={onAddCategory}>Add Asset Category</Button>
       </div>
-      <Table>
-        <TableHeader>
+      <Table className="border shadow-md">
+        <TableHeader className="bg-slate-200">
           <TableRow>
-            <TableHead>Category Name</TableHead>
-            <TableHead>Depreciation Rate</TableHead>
-            <TableHead>Account Code</TableHead>
-            <TableHead>Depreciation Account Code</TableHead>
+            <SortableTableHead column="category_name">
+              Category Name
+            </SortableTableHead>
+            <SortableTableHead column="depreciation_rate">
+              Depreciation Rate
+            </SortableTableHead>
+            <SortableTableHead column="account_code">
+              Account Code
+            </SortableTableHead>
+            <SortableTableHead column="depreciation_account_code">
+              Depreciation Account Code
+            </SortableTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -96,20 +132,31 @@ export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({ categories
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                }
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, index) => (
               <PaginationItem key={index}>
-                <PaginationLink onClick={() => setCurrentPage(index + 1)} isActive={currentPage === index + 1}>
+                <PaginationLink
+                  onClick={() => setCurrentPage(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
                   {index + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : ''
+                }
               />
             </PaginationItem>
           </PaginationContent>
@@ -118,4 +165,3 @@ export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({ categories
     </div>
   )
 }
-

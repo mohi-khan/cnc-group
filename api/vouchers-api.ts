@@ -35,7 +35,7 @@ export async function getAllVoucher(data: JournalQuery) {
   }).toString()
   console.log(queryParams)
   return fetchApi({
-    url: `api/journal/getJournalDetails/?${queryParams}`,
+    url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
   })
 }
