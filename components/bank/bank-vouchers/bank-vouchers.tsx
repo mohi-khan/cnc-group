@@ -91,6 +91,19 @@ interface User {
   // Add other user properties as needed
 }
 
+type JournalResult = {
+  voucherid: number
+  voucherno: string
+  date: string
+  journaltype: string
+  state: number
+  companyname: string
+  location: string
+  currency: string
+  totalamount: number
+  notes: string
+}
+
 export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
   const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
@@ -185,15 +198,15 @@ export default function BankVoucher() {
   }
 
   async function getallVoucher(company: number[], location: number[]) {
+    const currentDate = new Date().toISOString().split('T')[0]
     const voucherQuery: JournalQuery = {
-      date: '2024-12-18',
+      date: currentDate,
       companyId: company,
       locationId: location,
       voucherType: VoucherTypes.BankVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
     if (response.error) {
-      // Only show error toast if it's not a 404 error
       if (response.error.status !== 404) {
         console.error('Error getting Voucher Data:', response.error)
         toast({
@@ -201,8 +214,11 @@ export default function BankVoucher() {
           description: response.error?.message || 'Failed to get Voucher Data',
         })
       }
+      setVoucherGrid([])
     } else if (response.data) {
-      setVoucherGrid(response.data as JournalResult[])
+      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+    } else {
+      setVoucherGrid([])
     }
   }
 
@@ -361,9 +377,10 @@ export default function BankVoucher() {
       })
     }
     const totalItemsAmount = values.journalDetails.reduce(
-      (sum, item) => sum + item.credit,
+      (sum, item) => sum + (formType === 'Credit' ? item.debit : item.credit),
       0
     )
+    console.log('total validation', totalItemsAmount, values.journalEntry.amountTotal)
     if (totalItemsAmount !== values.journalEntry.amountTotal) {
       toast({
         title: 'Error',
@@ -947,13 +964,7 @@ export default function BankVoucher() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchergrid.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center py-4">
-                No bank voucher is available
-              </TableCell>
-            </TableRow>
-          ) : (
+          {Array.isArray(vouchergrid) && vouchergrid.length > 0 ? (
             vouchergrid.map((voucher) => (
               <TableRow key={voucher.voucherid} className="border-b">
                 <TableCell className="">
@@ -967,13 +978,11 @@ export default function BankVoucher() {
                 <TableCell className="">{voucher.companyname}</TableCell>
                 <TableCell className="">{voucher.location}</TableCell>
                 <TableCell className="">{voucher.currency}</TableCell>
-                <TableCell className="">{voucher.bankaccount}</TableCell>
-                <TableCell className="">
-                  {voucher.date.toString() || 'N/A'}
-                </TableCell>
+                <TableCell className="">{voucher.journaltype}</TableCell>
+                <TableCell className="">{voucher.date}</TableCell>
                 <TableCell className="">{voucher.totalamount}</TableCell>
                 <TableCell className="">
-                  {voucher.state === 0 ? 'Draft' : 'Post'}
+                  {voucher.state === 0 ? 'Draft' : 'Posted'}
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
@@ -1007,13 +1016,16 @@ export default function BankVoucher() {
                     >
                       <Check className="h-4 w-4" />
                     </Button>
-                    {/* <Button variant="outline" size="icon">
-                      <Printer className="h-4 w-4" />
-                    </Button> */}
                   </div>
                 </TableCell>
               </TableRow>
             ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center py-4">
+                No bank voucher is available
+              </TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>
