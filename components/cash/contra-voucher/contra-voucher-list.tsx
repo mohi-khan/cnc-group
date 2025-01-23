@@ -107,7 +107,7 @@ export default function ContraVoucherTable() {
           {vouchers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-4">
-                No contra vouchers are available
+                No contra voucher is available
               </TableCell>
             </TableRow>
           ) : (

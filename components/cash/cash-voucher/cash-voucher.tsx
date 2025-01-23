@@ -67,6 +67,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import { cn } from '@/lib/utils'
 import { Combobox } from '@/components/ui/combobox'
+import Loader from '@/utils/loader'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -87,7 +88,20 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [vouchergrid, setVoucherGrid] = React.useState<
+    {
+      voucherid: number
+      voucherno: string
+      date: string
+      journaltype: string
+      state: number
+      companyname: string
+      location: string
+      currency: string
+      totalamount: number
+      notes: string
+    }[]
+  >([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -145,7 +159,6 @@ export default function CashVoucher() {
 
   async function getallVoucher(company: number[], location: number[]) {
     try {
-      console.log(new Date().toISOString().split('T')[0])
       const voucherQuery: JournalQuery = {
         date: new Date().toISOString().split('T')[0],
         companyId: company,
@@ -156,18 +169,35 @@ export default function CashVoucher() {
       if (!response.data) {
         throw new Error('No data received from server')
       }
-      setVoucherGrid(response.data as JournalResult[])
+      setVoucherGrid(response.data)
       console.log('Voucher data:', response.data)
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
-      // Initialize with empty array instead of showing an error toast
       setVoucherGrid([])
+      throw error
     }
   }
   React.useEffect(() => {
-    const mycompanies = getCompanyIds(companies)
-    const mylocations = getLocationIds(locations)
-    getallVoucher(mycompanies, mylocations)
+    const fetchVoucherData = async () => {
+      setIsLoading(true)
+      try {
+        const mycompanies = getCompanyIds(companies)
+        const mylocations = getLocationIds(locations)
+        await getallVoucher(mycompanies, mylocations)
+      } catch (error) {
+        console.error('Error fetching voucher data:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load voucher data. Please try again.',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (companies.length > 0 && locations.length > 0) {
+      fetchVoucherData()
+    }
   }, [companies, locations])
   React.useEffect(() => {
     const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
@@ -317,7 +347,8 @@ export default function CashVoucher() {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        status: status === 'Draft' ? 0 : 1,
+        state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
+        notes: values.journalEntry.notes, // Ensure notes is always a string
         journalType: 'Cash Voucher',
         amountTotal: totalAmount,
         createdBy: user?.userId || 0,
@@ -345,7 +376,7 @@ export default function CashVoucher() {
           taxId: null,
           resPartnerId: null,
           bankaccountid: null,
-          notes: updatedValues.journalEntry.notes,
+          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
           createdBy: user?.userId || 0,
         },
       ],
@@ -357,12 +388,15 @@ export default function CashVoucher() {
     )
     const response = await createJournalEntryWithDetails(updateValueswithCash) // Calling API to Enter at Generate
     if (response.error || !response.data) {
-      console.error('Error creating Journal', response.error)
+      // console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
+      const mycompanies = getCompanyIds(companies)
+      const mylocations = getLocationIds(locations)
+      getallVoucher(mycompanies, mylocations)
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
@@ -394,26 +428,26 @@ export default function CashVoucher() {
     setVoucherList(voucherList.filter((v) => v.voucherNo !== voucherNo))
   }
 
-  const handleReverse = (voucherNo: string) => {
+  const handleReverse = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherNo ? { ...v, status: 'Draft' } : v
+        v.voucherNo === voucherno ? { ...v, status: 'Draft' } : v
       )
     )
   }
 
-  const handlePost = (voucherNo: string) => {
+  const handlePost = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherNo ? { ...v, status: 'Posted' } : v
+        v.voucherNo === voucherno ? { ...v, status: 'Posted' } : v
       )
     )
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto">
-      <div className="w-full my-10 p-6">
-        <h1 className="text-xl font-semibold mb-6">Cash Voucher</h1>
+    <div className="w-full mx-auto">
+      <div className="w-full mb-10 p-8">
+        <h1 className="text-2xl font-bold mb-6">Cash Vouchers</h1>
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
@@ -645,7 +679,7 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name={`journalDetails.${index}.notes`}
+                          name={`journalDetails.${index}.notes`} // 'notes' corresponds to the database column name
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
@@ -721,14 +755,19 @@ export default function CashVoucher() {
                     <TableHead>Location</TableHead>
                     <TableHead>Date </TableHead>
                     <TableHead>Remarks</TableHead>
-                    <TableHead>debit</TableHead>
                     <TableHead>Total Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vouchergrid.length === 0 ? (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-4">
+                        <Loader />
+                      </TableCell>
+                    </TableRow>
+                  ) : vouchergrid.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={10} className="text-center py-4">
                         No cash voucher is available
@@ -737,21 +776,21 @@ export default function CashVoucher() {
                   ) : (
                     vouchergrid.map((voucher) => (
                       <TableRow key={voucher.voucherid}>
-                        <Link
-                          href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
-                        >
-                          <TableCell>{voucher.voucherno}</TableCell>
-                        </Link>
+                        <TableCell>
+                          <Link
+                            href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
+                          >
+                            {voucher.voucherno}
+                          </Link>
+                        </TableCell>
                         <TableCell>{voucher.companyname}</TableCell>
                         <TableCell>{voucher.currency}</TableCell>
                         <TableCell>{voucher.location}</TableCell>
-                        <TableCell className="">
-                          {voucher.date.toString() || 'N/A'}
-                        </TableCell>
-                        <TableCell>{voucher.notes}</TableCell>
-                        <TableCell>{voucher.debit}</TableCell>
+                        <TableCell>{voucher.date}</TableCell>
+                        <TableCell>{voucher.notes}</TableCell>{' '}
+                        {/* Display the 'notes' field from the database */}
                         <TableCell>{voucher.totalamount}</TableCell>
-                        <TableCell className="">
+                        <TableCell>
                           {voucher.state === 0 ? 'Draft' : 'Post'}
                         </TableCell>
                         <TableCell>

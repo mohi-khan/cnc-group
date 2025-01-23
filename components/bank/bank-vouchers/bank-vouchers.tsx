@@ -422,7 +422,7 @@ export default function BankVoucher() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Bank Vouchers</h1>
+        <h1 className="text-2xl font-bold">Bank Vouchers</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
