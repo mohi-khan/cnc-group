@@ -169,18 +169,7 @@ export default function CashVoucher() {
       if (!response.data) {
         throw new Error('No data received from server')
       }
-      setVoucherGrid(response.data as {
-        voucherid: number
-        voucherno: string
-        date: string
-        journaltype: string
-        state: number
-        companyname: string
-        location: string
-        currency: string
-        totalamount: number
-        notes: string
-      }[])
+      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
       console.log('Voucher data:', response.data)
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
