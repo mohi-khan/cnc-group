@@ -485,9 +485,9 @@ export default function ChartOfAccountsTable() {
 
   // return function for chart of accounts
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col ">
       <div className="p-2">
-        <div className="sticky top-16 bg-white flex items-center justify-between gap-4 border-b-2 mt-1 shadow-md p-2 z-20">
+        <div className="sticky top-28 bg-white flex items-center justify-between gap-4 border-b-2  shadow-md p-2 z-20">
           <h2 className="text-xl font-semibold">Chart of Accounts</h2>
           <div className="flex items-center gap-2 flex-grow justify-center max-w-2xl">
             <div className="relative flex items-center border rounded-md pr-2 flex-grow">
@@ -933,7 +933,7 @@ export default function ChartOfAccountsTable() {
             )}
 
             {/* Table header and data */}
-            <div className="border rounded-md overflow-hidden">
+            <div className=" border rounded-md overflow-hidden">
               <div className="overflow-auto max-h-[calc(100vh-200px)]">
                 <Table>
                   <TableHeader className="sticky top-0 bg-[#e0e0e0] z-10">
