@@ -23,13 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import {
   Table,
   TableBody,
@@ -82,14 +76,12 @@ import {
   getAllVoucher,
 } from '@/api/vouchers-api'
 import Link from 'next/link'
-import { Combobox } from '@/components/ui/combobox'
 
 interface User {
   userId: number
   username: string
   roleId: number
   roleName: string
-  // Add other user properties as needed
 }
 
 type JournalResult = {
@@ -124,14 +116,14 @@ export default function BankVoucher() {
     AccountsHead[]
   >([])
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [partners, setPartners] = React.useState<ResPartner[]>([]) // Updated type
+  const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [formType, setFormType] = React.useState('Credit')
   const [status, setStatus] = React.useState<'Draft' | 'Posted'>('Draft')
   const [selectedBankAccount, setSelectedBankAccount] = React.useState<{
     id: number
     glCode: number
   } | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false) // Added loading state
+  const [isLoading, setIsLoading] = React.useState(false)
   const router = useRouter()
 
   React.useEffect(() => {
@@ -143,7 +135,6 @@ export default function BankVoucher() {
       setLocations(userData.userLocations)
       console.log('Current user from localStorage:', userData)
 
-      // Check if 'Bank Voucher' is in the voucherTypes array
       if (!userData.voucherTypes.includes('Bank Voucher')) {
         console.log('User does not have access to Bank Voucher')
         router.push('/unauthorized-access')
@@ -189,14 +180,12 @@ export default function BankVoucher() {
     name: 'journalDetails',
   })
 
-  // For Getting All The Vouchers
-
-  function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
+  const getCompanyIds = React.useCallback((data: CompanyFromLocalstorage[]): number[] => {
     return data.map((company) => company.company.companyId)
-  }
-  function getLocationIds(data: LocationFromLocalstorage[]): number[] {
+  }, [])
+  const getLocationIds = React.useCallback((data: LocationFromLocalstorage[]): number[] => {
     return data.map((location) => location.location.locationId)
-  }
+  }, [])
 
   async function getallVoucher(company: number[], location: number[]) {
     try {
@@ -240,7 +229,7 @@ export default function BankVoucher() {
     if (companies.length > 0 && locations.length > 0) {
       fetchVoucherData()
     }
-  }, [companies, locations])
+  }, [companies, locations, getCompanyIds, getLocationIds]) // Added getCompanyIds and getLocationIds to dependencies
 
   async function fetchBankAccounts() {
     const response = await getAllBankAccounts()
@@ -302,15 +291,13 @@ export default function BankVoucher() {
   }
 
   React.useEffect(() => {
-    // fetchCompanies()
-    // fetchAllLocations()
     fetchBankAccounts()
     fetchChartOfAccounts()
     console.log('within use Effect')
     fetchCostCenters()
     fetchResPartners()
   }, [])
-  //Run When Type is Changed
+
   React.useEffect(() => {
     console.log(formType)
     const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
@@ -334,34 +321,31 @@ export default function BankVoucher() {
       console.log('Current userId from localStorage:', userData.userId)
       setUser(userData)
     }
-    // To update the missing fields on the list
     const totalAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
       0
     )
-    // To Update the total Amount
     const updatedValues = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
-        notes: values.journalEntry.notes || '', // Ensure notes is always a string
+        state: status === 'Draft' ? 0 : 1,
+        notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
         amountTotal: totalAmount,
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        notes: detail.notes || '', // Ensure notes is always a string for each detail
+        notes: detail.notes || '',
         createdBy: user?.userId || 0,
       })),
     }
     console.log('After Adding created by', updatedValues)
-    /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithBank = {
       ...updatedValues,
       journalDetails: [
-        ...updatedValues.journalDetails, // Spread existing journalDetails
+        ...updatedValues.journalDetails,
         {
           accountId: selectedBankAccount?.glCode || 0,
           costCenterId: null,
@@ -374,7 +358,7 @@ export default function BankVoucher() {
           taxId: null,
           resPartnerId: null,
           bankaccountid: selectedBankAccount?.id,
-          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
+          notes: updatedValues.journalEntry.notes || '',
           createdBy: user?.userId || 0,
         },
       ],
@@ -384,7 +368,7 @@ export default function BankVoucher() {
       'Submitted values:',
       JSON.stringify(updateValueswithBank, null, 2)
     )
-    const response = await createJournalEntryWithDetails(updateValueswithBank) // Calling API to Enter at Generate
+    const response = await createJournalEntryWithDetails(updateValueswithBank)
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -458,35 +442,22 @@ export default function BankVoucher() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Company Name</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number.parseInt(value, 10))
-                          }
-                          value={field.value?.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select company" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {companies.map((company, index) => (
-                              <SelectItem
-                                key={
-                                  company?.company.companyId ||
-                                  `default-company-${index}`
-                                }
-                                value={
-                                  company?.company.companyId?.toString() ||
-                                  `company-${index}`
-                                }
-                              >
-                                {company?.company.companyName ||
-                                  'Unnamed Company'}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Combobox
+                            options={companies.map((company) => ({
+                              value: company.company.companyId.toString(),
+                              label:
+                                company.company.companyName ||
+                                'Unnamed Company',
+                            }))}
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) =>
+                              field.onChange(Number.parseInt(value, 10))
+                            }
+                            placeholder="Select company"
+                            popoverContentClassName="z-[100]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -497,35 +468,21 @@ export default function BankVoucher() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Location</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number.parseInt(value, 10))
-                          }
-                          value={field.value?.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select location" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {locations.map((location, index) => (
-                              <SelectItem
-                                key={
-                                  location?.location.locationId ||
-                                  `default-location-${index}`
-                                }
-                                value={
-                                  location?.location.locationId?.toString() ||
-                                  `location-${index}`
-                                }
-                              >
-                                {location?.location.address ||
-                                  'Unnamed Location'}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Combobox
+                            options={locations.map((location) => ({
+                              value: location.location.locationId.toString(),
+                              label:
+                                location.location.address || 'Unnamed Location',
+                            }))}
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) =>
+                              field.onChange(Number.parseInt(value, 10))
+                            }
+                            placeholder="Select location"
+                            popoverContentClassName="z-[50]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -536,44 +493,46 @@ export default function BankVoucher() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number.parseInt(value, 10))
-                          }
-                          value={field.value?.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select currency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="1">USD</SelectItem>
-                            <SelectItem value="2">EUR</SelectItem>
-                            <SelectItem value="3">GBP</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Combobox
+                            options={[
+                              { value: '1', label: 'USD' },
+                              { value: '2', label: 'EUR' },
+                              { value: '3', label: 'GBP' },
+                            ]}
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) =>
+                              field.onChange(Number.parseInt(value, 10))
+                            }
+                            placeholder="Select currency"
+                            popoverContentClassName="z-[60]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <div>
+                  <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select onValueChange={setFormType}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Credit">Credit</SelectItem>
-                        <SelectItem value="Debit">Debit</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
+                    <Combobox
+                      options={[
+                        { value: 'Credit', label: 'Credit' },
+                        { value: 'Debit', label: 'Debit' },
+                      ]}
+                      value={formType}
+                      onValueChange={setFormType}
+                      placeholder="Select type"
+                      popoverContentClassName="z-[60]"
+                    />
+                  </FormItem>
+                  <FormItem>
                     <FormLabel>Bank Account</FormLabel>
-                    <Select
+                    <Combobox
+                      options={bankAccounts.map((account) => ({
+                        value: account.id.toString(),
+                        label: account.accountName || 'Unnamed Account',
+                      }))}
+                      value={selectedBankAccount?.id.toString() || ''}
                       onValueChange={(value) => {
                         const selectedAccount = bankAccounts.find(
                           (account) => account.id.toString() === value
@@ -583,29 +542,13 @@ export default function BankVoucher() {
                             id: selectedAccount.id,
                             glCode: selectedAccount.glAccountId || 0,
                           })
-                          // field.onChange(value); // Update the form field
                         }
                       }}
-                      ///value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select bank account" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {bankAccounts.map((account, index) => (
-                          <SelectItem
-                            key={account?.id || `default-bank-${index}`}
-                            value={account?.id?.toString() || `bank-${index}`}
-                          >
-                            {account?.accountName || 'Unnamed Account'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select bank account"
+                      popoverContentClassName="z-[60]"
+                    />
                     <FormMessage />
-                  </div>
+                  </FormItem>
                   <FormField
                     control={form.control}
                     name="journalEntry.notes"
@@ -640,7 +583,6 @@ export default function BankVoucher() {
                       </FormItem>
                     )}
                   />
-                  {/* this is journal entry amount  */}
                   <FormField
                     control={form.control}
                     name="journalEntry.amountTotal"
@@ -684,36 +626,25 @@ export default function BankVoucher() {
                               name={`journalDetails.${index}.accountId`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <Select
-                                    onValueChange={(value) =>
-                                      field.onChange(Number.parseInt(value, 10))
-                                    }
-                                    value={field.value?.toString()}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select account" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {filteredChartOfAccounts.map(
-                                        (account, index) => (
-                                          <SelectItem
-                                            key={
-                                              account.accountId ||
-                                              `default-chart-${index}`
-                                            }
-                                            value={
-                                              account.accountId.toString() ||
-                                              `chart-${index}`
-                                            }
-                                          >
-                                            {account.name || 'Unnamed Account'}
-                                          </SelectItem>
-                                        )
+                                  <FormControl>
+                                    <Combobox
+                                      options={filteredChartOfAccounts.map(
+                                        (account) => ({
+                                          value: account.accountId.toString(),
+                                          label:
+                                            account.name || 'Unnamed Account',
+                                        })
                                       )}
-                                    </SelectContent>
-                                  </Select>
+                                      value={field.value?.toString() || ''}
+                                      onValueChange={(value) =>
+                                        field.onChange(
+                                          Number.parseInt(value, 10)
+                                        )
+                                      }
+                                      placeholder="Select account"
+                                      popoverContentClassName="z-[60]"
+                                    />
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
@@ -724,35 +655,24 @@ export default function BankVoucher() {
                               name={`journalDetails.${index}.costCenterId`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <Select
-                                    onValueChange={(value) =>
-                                      field.onChange(Number.parseInt(value, 10))
-                                    }
-                                    value={field.value?.toString()}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select cost center" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {costCenters.map((center, index) => (
-                                        <SelectItem
-                                          key={
-                                            center?.costCenterId ||
-                                            `default-cost-${index}`
-                                          }
-                                          value={
-                                            center?.costCenterId?.toString() ||
-                                            `cost-${index}`
-                                          }
-                                        >
-                                          {center?.costCenterName ||
-                                            'Unnamed Cost Center'}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <Combobox
+                                      options={costCenters.map((center) => ({
+                                        value: center.costCenterId.toString(),
+                                        label:
+                                          center.costCenterName ||
+                                          'Unnamed Cost Center',
+                                      }))}
+                                      value={field.value?.toString() || ''}
+                                      onValueChange={(value) =>
+                                        field.onChange(
+                                          Number.parseInt(value, 10)
+                                        )
+                                      }
+                                      placeholder="Select cost center"
+                                      popoverContentClassName="z-[60]"
+                                    />
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
@@ -763,26 +683,22 @@ export default function BankVoucher() {
                               name={`journalDetails.${index}.departmentId`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <Select
-                                    onValueChange={(value) =>
-                                      field.onChange(Number.parseInt(value, 10))
-                                    }
-                                    value={field.value?.toString()}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="1">
-                                        Department 1
-                                      </SelectItem>
-                                      <SelectItem value="2">
-                                        Department 2
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <Combobox
+                                      options={[
+                                        { value: '1', label: 'Department 1' },
+                                        { value: '2', label: 'Department 2' },
+                                      ]}
+                                      value={field.value?.toString() || ''}
+                                      onValueChange={(value) =>
+                                        field.onChange(
+                                          Number.parseInt(value, 10)
+                                        )
+                                      }
+                                      placeholder="Select department"
+                                      popoverContentClassName="z-[60]"
+                                    />
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
@@ -793,34 +709,23 @@ export default function BankVoucher() {
                               name={`journalDetails.${index}.resPartnerId`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <Select
-                                    onValueChange={(value) =>
-                                      field.onChange(Number.parseInt(value, 10))
-                                    }
-                                    value={field.value?.toString()}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select partner" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {partners.map((partner, index) => (
-                                        <SelectItem
-                                          key={
-                                            partner?.id ||
-                                            `default-partner-${index}`
-                                          }
-                                          value={
-                                            partner?.id?.toString() ||
-                                            `partner-${index}`
-                                          }
-                                        >
-                                          {partner?.name || 'Unnamed Partner'}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <Combobox
+                                      options={partners.map((partner) => ({
+                                        value: partner.id.toString(),
+                                        label:
+                                          partner.name || 'Unnamed Partner',
+                                      }))}
+                                      value={field.value?.toString() || ''}
+                                      onValueChange={(value) =>
+                                        field.onChange(
+                                          Number.parseInt(value, 10)
+                                        )
+                                      }
+                                      placeholder="Select partner"
+                                      popoverContentClassName="z-[60]"
+                                    />
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
