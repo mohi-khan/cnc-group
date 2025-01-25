@@ -1,11 +1,22 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import * as React from 'react'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface ComboboxProps {
   options: { value: string; label: string }[]
@@ -16,6 +27,7 @@ interface ComboboxProps {
   emptyText?: string
   className?: string
   loading?: boolean
+  popoverContentClassName?: string // New prop for additional PopoverContent styling
 }
 
 export function Combobox({
@@ -24,16 +36,19 @@ export function Combobox({
   onValueChange,
   placeholder,
   searchPlaceholder,
-  emptyText = "No items found.",
+  emptyText = 'No items found.',
   className,
   loading = false,
+  popoverContentClassName, // New prop
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   const filteredOptions = React.useMemo(() => {
     if (!searchQuery) return options
-    return options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   }, [options, searchQuery])
 
   return (
@@ -43,16 +58,22 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between z-50", className)}
+          className={cn('w-full justify-between', className)}
         >
-          {value ? options.find((item) => item.value === value)?.label : placeholder}
+          {value
+            ? options.find((item) => item.value === value)?.label
+            : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className={cn(`w-full p-0 ${popoverContentClassName}`)}>
+        {' '}
+        {/* Added popoverContentClassName */}
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={searchPlaceholder || `Search ${placeholder.toLowerCase()}...`}
+            placeholder={
+              searchPlaceholder || `Search ${placeholder.toLowerCase()}...`
+            }
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
@@ -69,12 +90,17 @@ export function Combobox({
                     key={item.value}
                     value={item.value}
                     onSelect={(currentValue) => {
-                      onValueChange(currentValue === value ? "" : currentValue)
+                      onValueChange(currentValue === value ? '' : currentValue)
                       setOpen(false)
-                      setSearchQuery("")
+                      setSearchQuery('')
                     }}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", value === item.value ? "opacity-100" : "opacity-0")} />
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        value === item.value ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
                     {item.label}
                   </CommandItem>
                 ))
@@ -86,4 +112,3 @@ export function Combobox({
     </Popover>
   )
 }
-
