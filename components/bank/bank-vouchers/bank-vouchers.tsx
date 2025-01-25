@@ -82,6 +82,7 @@ import {
   getAllVoucher,
 } from '@/api/vouchers-api'
 import Link from 'next/link'
+import { Combobox } from '@/components/ui/combobox'
 
 interface User {
   userId: number
@@ -108,7 +109,6 @@ export default function BankVoucher() {
   const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
   const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [amountMismatch, setAmountMismatch] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
@@ -131,6 +131,7 @@ export default function BankVoucher() {
     id: number
     glCode: number
   } | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false) // Added loading state
   const router = useRouter()
 
   React.useEffect(() => {
@@ -198,34 +199,47 @@ export default function BankVoucher() {
   }
 
   async function getallVoucher(company: number[], location: number[]) {
-    const currentDate = new Date().toISOString().split('T')[0]
-    const voucherQuery: JournalQuery = {
-      date: currentDate,
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.BankVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery)
-    if (response.error) {
-      if (response.error.status !== 404) {
-        console.error('Error getting Voucher Data:', response.error)
-        toast({
-          title: 'Error',
-          description: response.error?.message || 'Failed to get Voucher Data',
-        })
+    try {
+      const voucherQuery: JournalQuery = {
+        date: new Date().toISOString().split('T')[0],
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.BankVoucher,
       }
-      setVoucherGrid([])
-    } else if (response.data) {
+      const response = await getAllVoucher(voucherQuery)
+      if (!response.data) {
+        throw new Error('No data received from server')
+      }
       setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-    } else {
+      console.log('Voucher data:', response.data)
+    } catch (error) {
+      console.error('Error getting Voucher Data:', error)
       setVoucherGrid([])
+      throw error
     }
   }
 
   React.useEffect(() => {
-    const mycompanies = getCompanyIds(companies)
-    const mylocations = getLocationIds(locations)
-    getallVoucher(mycompanies, mylocations)
+    const fetchVoucherData = async () => {
+      setIsLoading(true)
+      try {
+        const mycompanies = getCompanyIds(companies)
+        const mylocations = getLocationIds(locations)
+        await getallVoucher(mycompanies, mylocations)
+      } catch (error) {
+        console.error('Error fetching voucher data:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load voucher data. Please try again.',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (companies.length > 0 && locations.length > 0) {
+      fetchVoucherData()
+    }
   }, [companies, locations])
 
   async function fetchBankAccounts() {
@@ -313,7 +327,7 @@ export default function BankVoucher() {
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit' + values)
+    console.log('Before Any edit', values)
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
@@ -321,20 +335,28 @@ export default function BankVoucher() {
       setUser(userData)
     }
     // To update the missing fields on the list
+    const totalAmount = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.debit || detail.credit || 0),
+      0
+    )
+    // To Update the total Amount
     const updatedValues = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        status: status === 'Draft' ? 0 : 1,
+        state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
+        notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Bank Voucher',
+        amountTotal: totalAmount,
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
+        notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
     }
-    console.log('After Adding created by' + updatedValues)
+    console.log('After Adding created by', updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithBank = {
       ...updatedValues,
@@ -352,7 +374,7 @@ export default function BankVoucher() {
           taxId: null,
           resPartnerId: null,
           bankaccountid: selectedBankAccount?.id,
-          notes: updatedValues.journalEntry.notes,
+          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
           createdBy: user?.userId || 0,
         },
       ],
@@ -364,36 +386,20 @@ export default function BankVoucher() {
     )
     const response = await createJournalEntryWithDetails(updateValueswithBank) // Calling API to Enter at Generate
     if (response.error || !response.data) {
-      console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
+      const mycompanies = getCompanyIds(companies)
+      const mylocations = getLocationIds(locations)
+      getallVoucher(mycompanies, mylocations)
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
       })
     }
-    const totalItemsAmount = values.journalDetails.reduce(
-      (sum, item) => sum + (formType === 'Credit' ? item.debit : item.credit),
-      0
-    )
-    console.log('total validation', totalItemsAmount, values.journalEntry.amountTotal)
-    if (totalItemsAmount !== values.journalEntry.amountTotal) {
-      toast({
-        title: 'Error',
-        description:
-          'The sum of journal voucher amounts does not match the journal entry amount',
-      })
-      return
-    }
-    //   setVouchers(vouchers);
-
-    /* setVouchers([...vouchers, { ...values, journalEntry.date: Date.now().toString(), status }])
-    setIsDialogOpen(false)*/
-    form.reset()
   }
 
   function handleDelete(id: string) {
@@ -416,28 +422,8 @@ export default function BankVoucher() {
     )
   }
 
-  React.useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (name?.startsWith('items')) {
-        if (!value.journalDetails) {
-          return
-        } else {
-          const totalItemsAmount =
-            value.journalDetails?.reduce(
-              (sum, item) => sum + (item?.credit || 0),
-              0
-            ) || 0
-          setAmountMismatch(
-            totalItemsAmount !== value.journalEntry?.amountTotal
-          )
-        }
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [form.watch])
-
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Bank Vouchers</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -915,12 +901,6 @@ export default function BankVoucher() {
                     Add Another
                   </Button>
                 </div>
-                {amountMismatch && (
-                  <p className="text-red-500">
-                    The sum of journal voucher amounts does not match the
-                    journal entry amount.
-                  </p>
-                )}
                 <div className="flex justify-end space-x-2">
                   <Button
                     type="button"
