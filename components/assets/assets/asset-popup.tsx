@@ -1,16 +1,41 @@
-"use client"
+'use client'
 
-import type { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { type AssetCategoryType, type CreateAssetData, createAssetSchema } from "@/utils/type"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
-import { createAsset } from "@/api/assets.api"
+import type { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
+  type AssetCategoryType,
+  type CreateAssetData,
+  createAssetSchema,
+  LocationData,
+} from '@/utils/type'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import React, { useEffect, useState } from 'react'
+import { createAsset } from '@/api/assets.api'
+import { CompanyType, getAllCompany } from '@/api/company-api'
+import { getAllLocations } from '@/api/bank-vouchers-api'
 
 interface AssetPopupProps {
   isOpen: boolean
@@ -19,26 +44,55 @@ interface AssetPopupProps {
   categories: AssetCategoryType[]
 }
 
-export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, onCategoryAdded, categories }) => {
+export const AssetPopUp: React.FC<AssetPopupProps> = ({
+  isOpen,
+  onOpenChange,
+  onCategoryAdded,
+  categories,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [getCompany, setGetCompany] = useState<CompanyType[]>([])
+  const [getLoaction, setGetLocation] = useState<LocationData[]>([])
+  const [userId, setUserId] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   const form = useForm<CreateAssetData>({
     resolver: zodResolver(createAssetSchema),
     defaultValues: {
-      asset_name: "",
+      asset_name: '',
       category_id: 0,
       purchase_date: new Date(),
-      purchase_value: "0.00",
-      current_value: "0.00",
-      salvage_value: "0.00",
-      depreciation_method: "Straight Line",
+      purchase_value: '0.00',
+      current_value: '0.00',
+      salvage_value: '0.00',
+      depreciation_method: 'Straight Line',
       useful_life_years: 0,
-      status: "Active",
+      status: 'Active',
       company_id: 0,
       location_id: undefined,
-      created_by: 0,
+      created_by: userId ?? undefined,
     },
   })
+
+  // Optionally, useEffect to update form when `userId` changes
+  // React.useEffect(() => {
+  //   if (userId !== null) {
+  //     form.setValue('createdBy', userId)
+  //   }
+  // }, [userId, form])
 
   const onSubmit = async (data: CreateAssetData) => {
     setIsSubmitting(true)
@@ -50,7 +104,9 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
         company_id: Number(data.company_id),
         location_id: data.location_id ? Number(data.location_id) : undefined,
         created_by: Number(data.created_by),
-        useful_life_years: data.useful_life_years ? Number(data.useful_life_years) : undefined,
+        useful_life_years: data.useful_life_years
+          ? Number(data.useful_life_years)
+          : undefined,
         // Ensure decimal values are properly formatted
         purchase_value: data.purchase_value.toString(),
         current_value: data.current_value?.toString(),
@@ -62,12 +118,43 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
       onOpenChange(false)
       form.reset()
     } catch (error) {
-      console.error("Failed to create asset:", error)
+      console.error('Failed to create asset:', error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const fetchCompnay = async () => {
+    try {
+      const response = await getAllCompany()
+
+      setGetCompany(response.data)
+      console.log(
+        'fetchAssetCategories category names asset tsx file:',
+        response.data
+      )
+    } catch (error) {
+      console.error('Failed to fetch asset categories:', error)
+    }
+  }
+  const fetchLocation = async () => {
+    try {
+      const response = await getAllLocations()
+
+      setGetLocation(response.data)
+      console.log(
+        'fetchAssetCategories category names asset tsx file:',
+        response.data
+      )
+    } catch (error) {
+      console.error('Failed to fetch asset categories:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchCompnay()
+    fetchLocation()
+  }, [])
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
@@ -96,7 +183,10 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -104,7 +194,10 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                     </FormControl>
                     <SelectContent>
                       {categories.map((category) => (
-                        <SelectItem key={category.category_id} value={category.category_id.toString()}>
+                        <SelectItem
+                          key={category.category_id}
+                          value={category.category_id.toString()}
+                        >
                           {category.category_name}
                         </SelectItem>
                       ))}
@@ -124,7 +217,11 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                   <FormControl>
                     <Input
                       type="date"
-                      value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : ""}
+                      value={
+                        field.value instanceof Date
+                          ? field.value.toISOString().split('T')[0]
+                          : ''
+                      }
                       onChange={(e) => field.onChange(new Date(e.target.value))}
                     />
                   </FormControl>
@@ -140,7 +237,12 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                 <FormItem>
                   <FormLabel>Purchase Value</FormLabel>
                   <FormControl>
-                    <Input {...field} type="text" placeholder="0.00" pattern="^\d+(\.\d{1,2})?$" />
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="0.00"
+                      pattern="^\d+(\.\d{1,2})?$"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,7 +256,12 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                 <FormItem>
                   <FormLabel>Current Value</FormLabel>
                   <FormControl>
-                    <Input {...field} type="text" placeholder="0.00" pattern="^\d+(\.\d{1,2})?$" />
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="0.00"
+                      pattern="^\d+(\.\d{1,2})?$"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +275,12 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                 <FormItem>
                   <FormLabel>Salvage Value</FormLabel>
                   <FormControl>
-                    <Input {...field} type="text" placeholder="0.00" pattern="^\d+(\.\d{1,2})?$" />
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="0.00"
+                      pattern="^\d+(\.\d{1,2})?$"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,8 +298,12 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                       type="number"
                       min="0"
                       step="1"
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                      value={field.value ?? ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -208,8 +324,12 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Straight Line">Straight Line</SelectItem>
-                      <SelectItem value="Diminishing Balance">Diminishing Balance</SelectItem>
+                      <SelectItem value="Straight Line">
+                        Straight Line
+                      </SelectItem>
+                      <SelectItem value="Diminishing Balance">
+                        Diminishing Balance
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -222,16 +342,27 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
               name="company_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Company ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
+                  <FormLabel>Company</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getCompany?.map((company) => (
+                        <SelectItem
+                          key={company.companyId}
+                          value={company.companyId.toString()}
+                        >
+                          {company.companyName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -243,15 +374,26 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select loactions" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getLoaction?.map((location) => (
+                        <SelectItem
+                          key={location.locationId}
+                          value={location.locationId.toString()}
+                        >
+                          {location.branchName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -279,7 +421,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="created_by"
               render={({ field }) => (
@@ -291,20 +433,24 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
                       min="0"
                       step="1"
                       onChange={(e) => field.onChange(Number(e.target.value))}
-                      value={field.value || ""}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Asset"}
+                {isSubmitting ? 'Adding...' : 'Add Asset'}
               </Button>
             </div>
           </form>
@@ -313,4 +459,3 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({ isOpen, onOpenChange, on
     </Dialog>
   )
 }
-

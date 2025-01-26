@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react'
 import { AssetList } from '@/components/assets/assets/asset-list'
 import { getAssets } from '@/api/assets.api'
-import { AssetCategoryType, CreateAssetData } from '@/utils/type'
+import { AssetCategoryType, CreateAssetData, GetAssetData } from '@/utils/type'
 import { AssetPopUp } from './asset-popup'
 import { getAllAssetCategories } from '@/api/asset-category-api'
 
 const Asset = () => {
-  const [asset, setAsset] = useState<CreateAssetData[]>([])
+  const [asset, setAsset] = useState<GetAssetData[]>([])
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
     []
@@ -57,7 +57,11 @@ const Asset = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <AssetList asset={asset} onAddCategory={handleAddCategory} />
+      <AssetList
+        asset={asset}
+        onAddCategory={handleAddCategory}
+        categories={assetCategories}
+      />
       <AssetPopUp
         isOpen={isPopupOpen}
         onOpenChange={setIsPopupOpen}
