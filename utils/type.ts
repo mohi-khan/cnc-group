@@ -1,7 +1,6 @@
 import { isLastDayOfMonth } from 'date-fns'
 import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
-import { resPartnerSchema } from '@/api/res-partner-api'
 import { z } from 'zod'
 
 // export interface User {
@@ -60,12 +59,44 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
   updatedAt?: string
 }
 
+export const resPartnerSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().min(1, 'Name is required'),
+  companyName: z.string().optional().nullable(),
+  type: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
+  website: z.union([z.string().url(), z.string().length(0)]).optional(),
+  isCompany: z.boolean().optional(),
+  vat: z.string().optional(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  zip: z.string().optional(),
+  active: z.boolean().optional(),
+  creditLimit: z.number().nonnegative().optional(),
+  customerRank: z.number().nonnegative().optional(),
+  supplierRank: z.number().nonnegative().optional(),
+  comment: z.string().optional(),
+  createdBy: z.number().optional(),
+  updatedBy: z.number().optional(),
+})
+
 export type ResPartner = z.infer<typeof resPartnerSchema> & {
   id: number
   companyId?: number
   createdAt?: string
   updatedAt?: string
 }
+
+export type ResPartnerCreate = Omit<
+  ResPartner,
+  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
+export type ResPartnerUpdate = Omit<
+  ResPartner,
+  'id' | 'createdBy' | 'createdAt' | 'updatedAt'
+>
 
 export type Period = {
   periodId: number

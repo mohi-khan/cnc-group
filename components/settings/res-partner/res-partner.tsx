@@ -51,14 +51,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  resPartnerSchema,
   createResPartner,
   editResPartner,
   getAllResPartners,
   getAllCompanies,
 } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
-import type { ResPartner } from '@/utils/type'
+import { resPartnerSchema, type ResPartner } from '@/utils/type'
 import {
   Pagination,
   PaginationContent,
@@ -88,7 +87,7 @@ export default function ResPartners() {
     resolver: zodResolver(resPartnerSchema),
     defaultValues: {
       name: '',
-      companyId: undefined,
+      companyName: '',
       type: '',
       email: '',
       phone: '',
@@ -135,7 +134,7 @@ export default function ResPartners() {
     } else {
       form.reset({
         name: '',
-        companyId: undefined,
+        companyName: '',
         type: '',
         email: '',
         phone: '',
@@ -254,7 +253,7 @@ export default function ResPartners() {
 
   const sortedPartners = useMemo(() => {
     return [...partners].sort((a, b) => {
-      if (sortColumn === 'company') {
+      if (sortColumn === 'companyName') {
         const aCompany =
           companies.find((c) => c.companyId === a.companyId)?.companyName || ''
         const bCompany =
@@ -345,32 +344,17 @@ export default function ResPartners() {
                     />
                     <FormField
                       control={form.control}
-                      name="companyId"
+                      name="companyName"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Company</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select company" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem
-                                  key={company.companyId}
-                                  value={company.companyId.toString()}
-                                >
-                                  {company.companyName}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter company name"
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -438,7 +422,7 @@ export default function ResPartners() {
                           <FormLabel>Mobile</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter mobile number"
+                              placeholder="Enter mobile number (optional)"
                               {...field}
                             />
                           </FormControl>
@@ -453,7 +437,14 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Website</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter website" {...field} />
+                            <Input
+                              placeholder="Enter website (optional)"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                field.onChange(value === '' ? undefined : value)
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -653,8 +644,8 @@ export default function ResPartners() {
         </Dialog>
       </div>
       <div className="flex flex-col">
-        <Table className='border shadow-md'>
-          <TableHeader className='shadow-md bg-slate-200'>
+        <Table className="border shadow-md">
+          <TableHeader className="shadow-md bg-slate-200">
             <TableRow>
               {[
                 'Name',
@@ -687,12 +678,7 @@ export default function ResPartners() {
               paginatedPartners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell>{partner.name}</TableCell>
-                  <TableCell>
-                    {partner.companyId
-                      ? companies.find((c) => c.companyId === partner.companyId)
-                          ?.companyName || 'Unknown Company'
-                      : ''}
-                  </TableCell>
+                  <TableCell>{partner.companyName || ''}</TableCell>
                   <TableCell>{partner.email}</TableCell>
                   <TableCell>{partner.phone}</TableCell>
                   <TableCell>{partner.type}</TableCell>
