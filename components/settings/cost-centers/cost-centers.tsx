@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { PlusIcon } from 'lucide-react'
+import { PlusIcon, ArrowUpDown } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,15 @@ import {
   activateCostCenter,
 } from '../../../api/cost-centers-api'
 import { useToast } from '@/hooks/use-toast'
-import { CostCenter } from '@/utils/type'
+import type { CostCenter } from '@/utils/type'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 export default function CostCenterManagement() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -51,6 +59,11 @@ export default function CostCenterManagement() {
   } | null>(null)
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+  const [sortColumn, setSortColumn] =
+    useState<keyof CostCenter>('costCenterName')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -103,7 +116,6 @@ export default function CostCenterManagement() {
           description: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
         })
 
-        // Update the local state immediately
         setCostCenters((prevCostCenters) =>
           prevCostCenters.map((center) =>
             center.costCenterId === id
@@ -142,14 +154,14 @@ export default function CostCenterManagement() {
     }
   }, [])
 
-  const CostCenterForm = ({ isEdit = false }) => {
+  const CostCenterForm: React.FC<{ isEdit: boolean }> = ({ isEdit }) => {
     const [currencyCode, setCurrencyCode] = useState<
       'BDT' | 'USD' | 'EUR' | 'GBP'
-    >(isEdit && selectedCostCenter?.currencyCode || 'BDT')
+    >((isEdit && selectedCostCenter?.currencyCode) || 'BDT')
 
     useEffect(() => {
-      if (isEdit && selectedCostCenter) {
-        setCurrencyCode(selectedCostCenter.currencyCode)
+      if (isEdit) {
+        setCurrencyCode(selectedCostCenter?.currencyCode || 'BDT')
       } else {
         setCurrencyCode('BDT')
       }
@@ -166,9 +178,9 @@ export default function CostCenterManagement() {
         costCenterName: formData.get('name') as string,
         costCenterDescription: formData.get('description') as string,
         currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
-        budget: Number(formData.get('budget')),
+        budget: formData.get('budget')?.toString() || '0',
         isActive: formData.get('isActive') === 'on',
-        actual: parseFloat(formData.get('actual') as string),
+        actual: formData.get('actual')?.toString() || '0',
         createdBy: userId,
         updatedBy: userId,
       }
@@ -189,7 +201,6 @@ export default function CostCenterManagement() {
             title: 'Success',
             description: 'Cost center edited successfully',
           })
-          // Update the local state immediately
           setCostCenters((prevCostCenters) =>
             prevCostCenters.map((center) =>
               center.costCenterId === newCostCenter.costCenterId
@@ -213,8 +224,11 @@ export default function CostCenterManagement() {
             title: 'Success',
             description: 'Cost center created successfully',
           })
-          // Add the new cost center to the local state
-          setCostCenters((prevCostCenters) => response.data ? [...prevCostCenters, response.data] : prevCostCenters)
+          setCostCenters((prevCostCenters) =>
+            response.data
+              ? [...prevCostCenters, response.data]
+              : prevCostCenters
+          )
         }
       }
 
@@ -278,42 +292,42 @@ export default function CostCenterManagement() {
             </SelectContent>
           </Select>
         </div>
-        {!isEdit && (
-          <>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="budget" className="text-right">
-                Budget
-              </Label>
-              <Input
-                id="budget"
-                name="budget"
-                type="number"
-                defaultValue=""
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="actual" className="text-right">
-                Actual
-              </Label>
-              <Input
-                id="actual"
-                name="actual"
-                type="number"
-                defaultValue={isEdit ? selectedCostCenter?.actual : ''}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isActive" className="text-right">
-                Active
-              </Label>
-              <Switch id="isActive" name="isActive" defaultChecked={true} />
-            </div>
-          </>
-        )}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="budget" className="text-right">
+            Budget
+          </Label>
+          <Input
+            id="budget"
+            name="budget"
+            type="string"
+            defaultValue={isEdit ? selectedCostCenter?.budget : 0}
+            className="col-span-3"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="actual" className="text-right">
+            Actual
+          </Label>
+          <Input
+            id="actual"
+            name="actual"
+            type="string"
+            defaultValue={isEdit ? selectedCostCenter?.actual : 0}
+            className="col-span-3"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="isActive" className="text-right">
+            Active
+          </Label>
+          <Switch
+            id="isActive"
+            name="isActive"
+            defaultChecked={isEdit ? selectedCostCenter?.isActive : true}
+          />
+        </div>
         <div className="flex justify-end space-x-2">
           <Button
             variant="outline"
@@ -330,6 +344,32 @@ export default function CostCenterManagement() {
       </form>
     )
   }
+
+  const handleSort = (column: keyof CostCenter) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedCostCenters = useMemo(() => {
+    return [...costCenters].sort((a, b) => {
+      const aValue = a[sortColumn] ?? ''
+      const bValue = b[sortColumn] ?? ''
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [costCenters, sortColumn, sortDirection])
+
+  const paginatedCostCenters = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return sortedCostCenters.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedCostCenters, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(costCenters.length / itemsPerPage)
 
   React.useEffect(() => {
     if (feedback && feedback.type === 'success') {
@@ -362,27 +402,55 @@ export default function CostCenterManagement() {
         <div>Loading cost centers...</div>
       ) : (
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
+          <Table className="border shadow-md">
+            <TableHeader className="bg-slate-200">
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Currency Code</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Actual</TableHead>
+                <TableHead
+                  onClick={() => handleSort('costCenterName')}
+                  className="cursor-pointer"
+                >
+                  Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
+                  onClick={() => handleSort('costCenterDescription')}
+                  className="cursor-pointer"
+                >
+                  Description <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
+                  onClick={() => handleSort('currencyCode')}
+                  className="cursor-pointer"
+                >
+                  Currency Code <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
+                  onClick={() => handleSort('isActive')}
+                  className="cursor-pointer"
+                >
+                  Active <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
+                  onClick={() => handleSort('budget')}
+                  className="cursor-pointer"
+                >
+                  Budget <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
+                  onClick={() => handleSort('actual')}
+                  className="cursor-pointer"
+                >
+                  Actual <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {costCenters.map((center) => (
+              {paginatedCostCenters.map((center) => (
                 <TableRow key={center.costCenterId}>
                   <TableCell>{center.costCenterName}</TableCell>
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
-                  <TableCell>
-                    {center.isActive ? 'Yes' : 'No'}
-                  </TableCell>
+                  <TableCell>{center.isActive ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
                     {Number(center.budget).toLocaleString()}
                   </TableCell>
@@ -413,6 +481,44 @@ export default function CostCenterManagement() {
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(index + 1)}
+                      isActive={currentPage === index + 1}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? 'pointer-events-none opacity-50'
+                        : ''
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       )}
 
@@ -436,4 +542,3 @@ export default function CostCenterManagement() {
     </div>
   )
 }
-
