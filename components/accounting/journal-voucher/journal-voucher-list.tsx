@@ -105,7 +105,9 @@ export default function VoucherTable() {
             <TableHead>Voucher No.</TableHead>
             <TableHead>Voucher Date</TableHead>
             <TableHead>Notes</TableHead>
-            <TableHead>Company Name & Location</TableHead>
+            <TableHead>Company Name</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Currency</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
@@ -134,7 +136,9 @@ export default function VoucherTable() {
                 </TableCell>
                 <TableCell>{voucher.date}</TableCell>
                 <TableCell>{voucher.notes}</TableCell>
-                <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
+                <TableCell>{voucher.companyname}</TableCell>
+                <TableCell>{voucher.location}</TableCell>
+                <TableCell>{voucher.currency}</TableCell>
                 <TableCell className="text-right">
                   ${voucher.totalamount.toFixed(2)}
                 </TableCell>

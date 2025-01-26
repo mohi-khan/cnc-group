@@ -511,9 +511,9 @@ export default function CashVoucher() {
                     <FormControl>
                       <Combobox
                         options={[
-                          { value: '1', label: 'USD' },
-                          { value: '2', label: 'EUR' },
-                          { value: '3', label: 'GBP' },
+                          { value: '1', label: 'BDT' },
+                          { value: '2', label: 'USD' },
+                          { value: '3', label: 'EUR' },
                         ]}
                         value={field.value?.toString() || ''}
                         onValueChange={(value) =>

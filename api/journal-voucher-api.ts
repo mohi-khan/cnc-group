@@ -92,7 +92,7 @@ export async function getAllVoucher(data: JournalQuery) {
   }).toString()
   console.log(queryParams)
   return fetchApi<VoucherById[]>({
-    url: `api/journal/getJournalDetails/?${queryParams}`,
+    url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
   })
 }
