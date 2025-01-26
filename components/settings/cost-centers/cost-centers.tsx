@@ -396,7 +396,7 @@ export default function CostCenterManagement() {
       ) : (
         <div className="overflow-x-auto">
           <Table className="border shadow-md">
-            <TableHeader className="bg-slate-200">
+            <TableHeader className="shadow-md bg-slate-200">
               <TableRow>
                 <TableHead
                   onClick={() => handleSort('costCenterName')}
