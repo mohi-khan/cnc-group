@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
-import { PlusIcon } from 'lucide-react'
+import { PlusIcon, ArrowUpDown } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,24 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+
+type SortColumn =
+  | 'departmentName'
+  | 'budget'
+  | 'currencyCode'
+  | 'isActive'
+  | 'startDate'
+  | 'endDate'
+  | 'actual'
+type SortDirection = 'asc' | 'desc'
 
 export default function DepartmentManagement() {
   const [departments, setDepartments] = useState<Department[]>([])
@@ -57,6 +75,10 @@ export default function DepartmentManagement() {
   } | null>(null)
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
+  const [sortColumn, setSortColumn] = useState<SortColumn>('departmentName')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const form = useForm<z.infer<typeof departmentSchema>>({
     resolver: zodResolver(departmentSchema),
@@ -148,8 +170,59 @@ export default function DepartmentManagement() {
     setIsLoading(false)
   }
 
-  // console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  const sortedDepartments = useMemo(() => {
+    const sorted = [...departments]
+    sorted.sort((a, b) => {
+      if (sortColumn === 'budget' || sortColumn === 'actual') {
+        return sortDirection === 'asc'
+          ? Number(a[sortColumn]) - Number(b[sortColumn])
+          : Number(b[sortColumn]) - Number(a[sortColumn])
+      }
+      if (sortColumn === 'startDate' || sortColumn === 'endDate') {
+        const dateA = a[sortColumn] ? new Date(a[sortColumn]).getTime() : 0
+        const dateB = b[sortColumn] ? new Date(b[sortColumn]).getTime() : 0
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA
+      }
+      return sortDirection === 'asc'
+        ? String(a[sortColumn]).localeCompare(String(b[sortColumn]))
+        : String(b[sortColumn]).localeCompare(String(a[sortColumn]))
+    })
+    return sorted
+  }, [departments, sortColumn, sortDirection])
+
+  const paginatedDepartments = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return sortedDepartments.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedDepartments, currentPage])
+
+  const totalPages = Math.ceil(departments.length / itemsPerPage)
+
+  const handleSort = (column: SortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortableTableHead: React.FC<{
+    column: SortColumn
+    children: React.ReactNode
+  }> = ({ column, children }) => {
+    const isActive = column === sortColumn
+    return (
+      <TableHead
+        onClick={() => handleSort(column)}
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-1">
+          <span>{children}</span>
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </TableHead>
+    )
+  }
 
   return (
     <div className="container mx-auto py-10">
@@ -176,20 +249,26 @@ export default function DepartmentManagement() {
         <div>Loading departments...</div>
       ) : (
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
+          <Table className="border shadow-md">
+            <TableHeader className="bg-slate-200">
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Currency Code</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Actual</TableHead>
+                <SortableTableHead column="departmentName">
+                  Name
+                </SortableTableHead>
+                <SortableTableHead column="budget">Budget</SortableTableHead>
+                <SortableTableHead column="currencyCode">
+                  Currency Code
+                </SortableTableHead>
+                <SortableTableHead column="isActive">Active</SortableTableHead>
+                <SortableTableHead column="startDate">
+                  Start Date
+                </SortableTableHead>
+                <SortableTableHead column="endDate">End Date</SortableTableHead>
+                <SortableTableHead column="actual">Actual</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {departments.map((department, index) => (
+              {paginatedDepartments.map((department, index) => (
                 <TableRow key={index}>
                   <TableCell>{department.departmentName}</TableCell>
                   <TableCell>{department.budget}</TableCell>
@@ -220,6 +299,44 @@ export default function DepartmentManagement() {
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(index + 1)}
+                      isActive={currentPage === index + 1}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? 'pointer-events-none opacity-50'
+                        : ''
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       )}
 
