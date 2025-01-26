@@ -172,74 +172,68 @@ export default function CostCenterManagement() {
       setIsLoading(true)
       setFeedback(null)
 
-      const formData = new FormData(formRef.current!)
-      const newCostCenter = {
-        costCenterId: 0,
-        costCenterName: formData.get('name') as string,
-        costCenterDescription: formData.get('description') as string,
-        currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
-        budget: formData.get('budget')?.toString() || '0',
-        isActive: formData.get('isActive') === 'on',
-        actual: formData.get('actual')?.toString() || '0',
-        createdBy: userId,
-        updatedBy: userId,
-      }
+      try {
+        const formData = new FormData(formRef.current!)
+        const newCostCenter = {
+          costCenterId: 0,
+          costCenterName: formData.get('name') as string,
+          costCenterDescription: formData.get('description') as string,
+          currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+          budget: formData.get('budget')?.toString() || '0',
+          isActive: formData.get('isActive') === 'on',
+          actual: formData.get('actual')?.toString() || '0',
+          createdBy: userId,
+          updatedBy: userId,
+        }
 
-      if (isEdit && selectedCostCenter) {
-        newCostCenter.costCenterId = selectedCostCenter.costCenterId
-        const response = await updateCostCenter(newCostCenter)
-        if (response.error || !response.data) {
-          console.error('Error updating cost center:', response.error)
-          toast({
-            title: 'Error',
-            description:
-              response.error?.message || 'Failed to edit cost center',
-          })
-        } else {
-          console.log('Cost center edited successfully')
+        if (isEdit && selectedCostCenter) {
+          newCostCenter.costCenterId = selectedCostCenter.costCenterId
+          const response = await updateCostCenter(newCostCenter)
+          if (response.error || !response.data) {
+            throw new Error(
+              response.error?.message || 'Failed to edit cost center'
+            )
+          }
+
           toast({
             title: 'Success',
             description: 'Cost center edited successfully',
           })
-          setCostCenters((prevCostCenters) =>
-            prevCostCenters.map((center) =>
-              center.costCenterId === newCostCenter.costCenterId
-                ? { ...center, ...newCostCenter }
-                : center
-            )
-          )
-        }
-      } else {
-        const response = await createCostCenter(newCostCenter)
-        if (response.error || !response.data) {
-          console.error('Error creating cost center:', response.error)
-          toast({
-            title: 'Error',
-            description:
-              response.error?.message || 'Failed to create cost center',
-          })
         } else {
-          console.log('Cost center created successfully')
+          const response = await createCostCenter(newCostCenter)
+          if (response.error || !response.data) {
+            throw new Error(
+              response.error?.message || 'Failed to create cost center'
+            )
+          }
+
           toast({
             title: 'Success',
             description: 'Cost center created successfully',
           })
-          setCostCenters((prevCostCenters) =>
-            response.data
-              ? [...prevCostCenters, response.data]
-              : prevCostCenters
-          )
         }
-      }
 
-      setIsAddDialogOpen(false)
-      setIsEditDialogOpen(false)
-      setSelectedCostCenter(null)
-      setFeedback({
-        type: 'success',
-        message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
-      })
-      setIsLoading(false)
+        // Close dialogs first
+        setIsAddDialogOpen(false)
+        setIsEditDialogOpen(false)
+        setSelectedCostCenter(null)
+
+        // Then update feedback state
+        setFeedback({
+          type: 'success',
+          message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
+        })
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred',
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     return (
@@ -371,9 +365,20 @@ export default function CostCenterManagement() {
 
   const totalPages = Math.ceil(costCenters.length / itemsPerPage)
 
+  // Remove this useEffect
+  // React.useEffect(() => {
+  //   if (feedback && feedback.type === 'success') {
+  //     fetchCostCenters()
+  //   }
+  // }, [feedback])
+
+  // Replace with this implementation
   React.useEffect(() => {
-    if (feedback && feedback.type === 'success') {
-      fetchCostCenters()
+    if (feedback?.type === 'success') {
+      const timer = setTimeout(() => {
+        fetchCostCenters()
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [feedback])
 
@@ -483,7 +488,7 @@ export default function CostCenterManagement() {
                   />
                 </PaginationItem>
                 {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
+                  <PaginationItem key={`page-${index}`}>
                     <PaginationLink
                       onClick={() => setCurrentPage(index + 1)}
                       isActive={currentPage === index + 1}
