@@ -1,7 +1,6 @@
 import { MenuItem } from './type'
 
 export const MENU_ITEMS: MenuItem[] = [
-  { name: 'Dashboard', subItemGroups: [] },
   {
     name: 'Accounting',
     subItemGroups: [
@@ -34,7 +33,7 @@ export const MENU_ITEMS: MenuItem[] = [
     subItemGroups: [
       {
         name: 'Suspense ',
-        items: [{ name: 'Loan', source: '/cash/sespense/loan' }],
+        items: [{ name: 'Iou', source: '/cash/sespense/iou' }],
       },
       {
         name: 'Cash Management',

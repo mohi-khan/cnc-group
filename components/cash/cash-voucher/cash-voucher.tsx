@@ -12,13 +12,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -26,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Check, Printer, RotateCcw, Trash } from 'lucide-react'
+import { Check, Printer, RotateCcw, Trash, ChevronsUpDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -50,29 +42,32 @@ import {
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
-  AccountsHead,
+  type AccountsHead,
   ChartOfAccount,
   Company,
-  CompanyFromLocalstorage,
-  CostCenter,
+  type CompanyFromLocalstorage,
+  type CostCenter,
   DetailRow,
-  FormData,
-  JournalEntryWithDetails,
+  type FormData,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
-  JournalQuery,
-  JournalResult,
+  type JournalQuery,
+  type JournalResult,
   Location,
-  LocationFromLocalstorage,
-  ResPartner,
-  User,
-  Voucher,
+  type LocationFromLocalstorage,
+  type ResPartner,
+  type User,
+  type Voucher,
   VoucherTypes,
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import type { z } from 'zod'
+import { cn } from '@/lib/utils'
+import { Combobox } from '@/components/ui/combobox'
+import Loader from '@/utils/loader'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -93,7 +88,20 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [vouchergrid, setVoucherGrid] = React.useState<
+    {
+      voucherid: number
+      voucherno: string
+      date: string
+      journaltype: string
+      state: number
+      companyname: string
+      location: string
+      currency: string
+      totalamount: number
+      notes: string
+    }[]
+  >([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -103,26 +111,42 @@ export default function CashVoucher() {
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     AccountsHead[]
   >([])
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true)
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true)
+  const [isLoadingPartners, setIsLoadingPartners] = useState(true)
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
+  const [isLoadingCostCenters, setIsLoadingCostCenters] = useState(true)
+  const [openComboboxes, setOpenComboboxes] = React.useState<{
+    [key: string]: boolean
+  }>({})
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      setUser(userData)
-      console.log('User companies', userData.userCompanies)
-      setCompanies(userData.userCompanies)
-      setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', companies)
-      console.log('Current user from localStorage:', locations)
-      if (!userData.voucherTypes.includes('Cash Voucher')) {
-        console.log('User does not have access to Cash Voucher')
+    setIsLoadingCompanies(true)
+    setIsLoadingLocations(true)
+    try {
+      if (userStr) {
+        const userData = JSON.parse(userStr)
+        setUser(userData)
+        setCompanies(userData.userCompanies || [])
+        setLocations(userData.userLocations || [])
+        if (!userData.voucherTypes.includes('Cash Voucher')) {
+          router.push('/unauthorized-access')
+        }
+      } else {
         router.push('/unauthorized-access')
       }
-    } else {
-      console.log('No user data found in localStorage')
-      router.push('/unauthorized-access')
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load user data',
+      })
+    } finally {
+      setIsLoadingCompanies(false)
+      setIsLoadingLocations(false)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
   // For Getting All The Vouchers
 
@@ -134,29 +158,46 @@ export default function CashVoucher() {
   }
 
   async function getallVoucher(company: number[], location: number[]) {
-    console.log(new Date().toISOString().split('T')[0])
-    const voucherQuery: JournalQuery = {
-      date: new Date().toISOString().split('T')[0],
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.CashVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
-      setVoucherGrid(response.data)
-      console.log(response.data)
+    try {
+      const voucherQuery: JournalQuery = {
+        date: new Date().toISOString().split('T')[0],
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.CashVoucher,
+      }
+      const response = await getAllVoucher(voucherQuery)
+      if (!response.data) {
+        throw new Error('No data received from server')
+      }
+      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+      console.log('Voucher data:', response.data)
+    } catch (error) {
+      console.error('Error getting Voucher Data:', error)
+      setVoucherGrid([])
+      throw error
     }
   }
   React.useEffect(() => {
-    const mycompanies = getCompanyIds(companies)
-    const mylocations = getLocationIds(locations)
-    getallVoucher(mycompanies, mylocations)
+    const fetchVoucherData = async () => {
+      setIsLoading(true)
+      try {
+        const mycompanies = getCompanyIds(companies)
+        const mylocations = getLocationIds(locations)
+        await getallVoucher(mycompanies, mylocations)
+      } catch (error) {
+        console.error('Error fetching voucher data:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load voucher data. Please try again.',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (companies.length > 0 && locations.length > 0) {
+      fetchVoucherData()
+    }
   }, [companies, locations])
   React.useEffect(() => {
     const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
@@ -196,52 +237,63 @@ export default function CashVoucher() {
   //chart of accounts
 
   async function fetchChartOfAccounts() {
-    const response = await getAllChartOfAccounts()
-    //   console.log('Fetched Chart Of accounts:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting ChartOf bank account:', response.error)
+    setIsLoadingAccounts(true)
+    try {
+      const response = await getAllChartOfAccounts()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setChartOfAccounts(response.data)
+    } catch (error) {
+      console.error('Error getting chart of accounts:', error)
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Failed to get ChartOf bank accounts',
+        description: 'Failed to load chart of accounts',
       })
-    } else {
-      setChartOfAccounts(response.data)
-      console.log('data', response.data)
+      setChartOfAccounts([])
+    } finally {
+      setIsLoadingAccounts(false)
     }
   }
   //res partner
   async function fetchgetAllCostCenters() {
-    const response = await getAllCostCenters()
-    // console.log('Fetched cost center data:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting  cost center:', response.error)
+    setIsLoadingCostCenters(true)
+    try {
+      const response = await getAllCostCenters()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setCostCenters(response.data)
+    } catch (error) {
+      console.error('Error getting cost centers:', error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get  cost center',
+        description: 'Failed to load cost centers',
       })
-    } else {
-      setCostCenters(response.data)
-      console.log('data', response.data)
+      setCostCenters([])
+    } finally {
+      setIsLoadingCostCenters(false)
     }
   }
 
   //res partner
   async function fetchgetResPartner() {
-    const response = await getAllResPartners()
-    //console.log('Fetched Res partner data:', response.data)
-
-    if (response.error || !response.data) {
-      console.error('Error getting  Res partner:', response.error)
+    setIsLoadingPartners(true)
+    try {
+      const response = await getAllResPartners()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setPartners(response.data)
+    } catch (error) {
+      console.error('Error getting partners:', error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get  Res partner',
+        description: 'Failed to load partners',
       })
-    } else {
-      setPartners(response.data)
-      console.log('data', response.data)
+      setPartners([])
+    } finally {
+      setIsLoadingPartners(false)
     }
   }
 
@@ -278,7 +330,7 @@ export default function CashVoucher() {
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit' + values)
+    console.log('Before Any edit', values)
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
@@ -295,17 +347,19 @@ export default function CashVoucher() {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        status: status === 'Draft' ? 0 : 1,
+        state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
+        notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Cash Voucher',
         amountTotal: totalAmount,
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
+        notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
     }
-    console.log('After Adding created by' + updatedValues)
+    console.log('After Adding created by', updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithCash = {
       ...updatedValues,
@@ -323,7 +377,7 @@ export default function CashVoucher() {
           taxId: null,
           resPartnerId: null,
           bankaccountid: null,
-          notes: updatedValues.journalEntry.notes,
+          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
           createdBy: user?.userId || 0,
         },
       ],
@@ -335,12 +389,14 @@ export default function CashVoucher() {
     )
     const response = await createJournalEntryWithDetails(updateValueswithCash) // Calling API to Enter at Generate
     if (response.error || !response.data) {
-      console.error('Error creating Journal', response.error)
       toast({
         title: 'Error',
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
+      const mycompanies = getCompanyIds(companies)
+      const mylocations = getLocationIds(locations)
+      getallVoucher(mycompanies, mylocations)
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
@@ -372,26 +428,26 @@ export default function CashVoucher() {
     setVoucherList(voucherList.filter((v) => v.voucherNo !== voucherNo))
   }
 
-  const handleReverse = (voucherNo: string) => {
+  const handleReverse = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherNo ? { ...v, status: 'Draft' } : v
+        v.voucherNo === voucherno ? { ...v, status: 'Draft' } : v
       )
     )
   }
 
-  const handlePost = (voucherNo: string) => {
+  const handlePost = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherNo ? { ...v, status: 'Posted' } : v
+        v.voucherNo === voucherno ? { ...v, status: 'Posted' } : v
       )
     )
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto">
-      <div className="w-full my-10 p-6">
-        <h1 className="text-xl font-semibold mb-6">Cash Voucher</h1>
+    <div className="w-full mx-auto">
+      <div className="w-full mb-10 p-8">
+        <h1 className="text-2xl font-bold mb-6">Cash Vouchers</h1>
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
@@ -402,34 +458,21 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select company" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {companies.map((company, index) => (
-                          <SelectItem
-                            key={
-                              company?.company.companyId ||
-                              `default-company-${index}`
-                            }
-                            value={
-                              company?.company.companyId?.toString() ||
-                              `company-${index}`
-                            }
-                          >
-                            {company?.company.companyName || 'Unnamed Company'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={companies.map((company) => ({
+                          value: company.company.companyId.toString(),
+                          label:
+                            company.company.companyName || 'Unnamed Company',
+                        }))}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select company"
+                        loading={isLoadingCompanies}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -440,34 +483,21 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {locations.map((location, index) => (
-                          <SelectItem
-                            key={
-                              location?.location.locationId ||
-                              `default-location-${index}`
-                            }
-                            value={
-                              location?.location.locationId?.toString() ||
-                              `location-${index}`
-                            }
-                          >
-                            {location?.location.address || 'Unnamed Location'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={locations.map((location) => ({
+                          value: location.location.locationId.toString(),
+                          label:
+                            location.location.address || 'Unnamed Location',
+                        }))}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select location"
+                        loading={isLoadingLocations}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -478,23 +508,20 @@ export default function CashVoucher() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">USD</SelectItem>
-                        <SelectItem value="2">EUR</SelectItem>
-                        <SelectItem value="3">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={[
+                          { value: '1', label: 'USD' },
+                          { value: '2', label: 'EUR' },
+                          { value: '3', label: 'GBP' },
+                        ]}
+                        value={field.value?.toString() || ''}
+                        onValueChange={(value) =>
+                          field.onChange(Number.parseInt(value, 10))
+                        }
+                        placeholder="Select currency"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -536,167 +563,111 @@ export default function CashVoucher() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell>
-                        <div>
-                          <Select onValueChange={setFormType}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Payment">Payment</SelectItem>
-                              <SelectItem value="Receipt">Receipt</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Combobox
+                          options={[
+                            { value: 'Payment', label: 'Payment' },
+                            { value: 'Receipt', label: 'Receipt' },
+                          ]}
+                          value={formType}
+                          onValueChange={setFormType}
+                          placeholder="Select type"
+                        />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
                           name={`journalDetails.${index}.accountId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select account" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {filteredChartOfAccounts.map(
-                                    (account, index) => (
-                                      <SelectItem
-                                        key={
-                                          account.accountId ||
-                                          `default-chart-${index}`
-                                        }
-                                        value={
-                                          account.accountId.toString() ||
-                                          `chart-${index}`
-                                        }
-                                      >
-                                        {account.name || 'Unnamed Account'}
-                                      </SelectItem>
-                                    )
+                              <FormControl>
+                                <Combobox
+                                  options={filteredChartOfAccounts.map(
+                                    (account) => ({
+                                      value: account.accountId.toString(),
+                                      label: account.name || 'Unnamed Account',
+                                    })
                                   )}
-                                </SelectContent>
-                              </Select>
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select account"
+                                  loading={isLoadingAccounts}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
                           name={`journalDetails.${index}.costCenterId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select cost center" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {costCenters.map((center, index) => (
-                                    <SelectItem
-                                      key={
-                                        center?.costCenterId ||
-                                        `default-cost-${index}`
-                                      }
-                                      value={
-                                        center?.costCenterId?.toString() ||
-                                        `cost-${index}`
-                                      }
-                                    >
-                                      {center?.costCenterName ||
-                                        'Unnamed Cost Center'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={costCenters.map((center) => ({
+                                    value: center.costCenterId.toString(),
+                                    label:
+                                      center.costCenterName ||
+                                      'Unnamed Cost Center',
+                                  }))}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select cost center"
+                                  loading={isLoadingCostCenters}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
                           name={`journalDetails.${index}.departmentId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select department" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="1">
-                                    Department 1
-                                  </SelectItem>
-                                  <SelectItem value="2">
-                                    Department 2
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={[
+                                    { value: '1', label: 'Department 1' },
+                                    { value: '2', label: 'Department 2' },
+                                  ]}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select department"
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
                       </TableCell>
-
                       <TableCell>
                         <FormField
                           control={form.control}
                           name={`journalDetails.${index}.resPartnerId`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                onValueChange={(value) =>
-                                  field.onChange(parseInt(value, 10))
-                                }
-                                value={field.value?.toString()}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select partner" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {partners.map((partner, index) => (
-                                    <SelectItem
-                                      key={
-                                        partner?.id ||
-                                        `default-partner-${index}`
-                                      }
-                                      value={
-                                        partner?.id?.toString() ||
-                                        `partner-${index}`
-                                      }
-                                    >
-                                      {partner?.name || 'Unnamed Partner'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormControl>
+                                <Combobox
+                                  options={partners.map((partner) => ({
+                                    value: partner.id.toString(),
+                                    label: partner.name || 'Unnamed Partner',
+                                  }))}
+                                  value={field.value?.toString() || ''}
+                                  onValueChange={(value) =>
+                                    field.onChange(Number.parseInt(value, 10))
+                                  }
+                                  placeholder="Select partner"
+                                  loading={isLoadingPartners}
+                                />
+                              </FormControl>
                             </FormItem>
                           )}
                         />
@@ -704,11 +675,17 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name={`journalDetails.${index}.notes`}
+                          name="journalEntry.notes"
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Input {...field} placeholder="Enter remarks" />
+                                <Input
+                                  {...field}
+                                  placeholder="Enter general remarks"
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value)
+                                  }
+                                />
                               </FormControl>
                             </FormItem>
                           )}
@@ -726,7 +703,9 @@ export default function CashVoucher() {
                                   placeholder="Enter amount"
                                   {...field}
                                   onChange={(e) =>
-                                    field.onChange(parseFloat(e.target.value))
+                                    field.onChange(
+                                      Number.parseFloat(e.target.value)
+                                    )
                                   }
                                 />
                               </FormControl>
@@ -778,72 +757,85 @@ export default function CashVoucher() {
                     <TableHead>Location</TableHead>
                     <TableHead>Date </TableHead>
                     <TableHead>Remarks</TableHead>
-                    <TableHead>debit</TableHead>
                     <TableHead>Total Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vouchergrid.map((voucher) => (
-                    <TableRow key={voucher.voucherid}>
-                      <Link
-                        href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
-                      >
-                        <TableCell>{voucher.voucherno}</TableCell>
-                      </Link>
-                      <TableCell>{voucher.companyname}</TableCell>
-                      <TableCell>{voucher.currency}</TableCell>
-                      <TableCell>{voucher.location}</TableCell>
-                      <TableCell className="">
-                        {voucher.date.toString() || 'N/A'}
-                      </TableCell>
-                      <TableCell>{voucher.notes}</TableCell>
-                      <TableCell>{voucher.debit}</TableCell>
-                      <TableCell>{voucher.totalamount}</TableCell>
-                      <TableCell className="">
-                        {voucher.state === 0 ? 'Draft' : 'Post'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="icon">
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-white">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Are you sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will reverse the voucher status to Draft.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleReverse(voucher.voucherno)
-                                  }
-                                >
-                                  Reverse
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handlePost(voucher.voucherno)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-4">
+                        <Loader />
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : vouchergrid.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-4">
+                        No cash voucher is available
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    vouchergrid.map((voucher) => (
+                      <TableRow key={voucher.voucherid}>
+                        <TableCell>
+                          <Link
+                            href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
+                          >
+                            {voucher.voucherno}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{voucher.companyname}</TableCell>
+                        <TableCell>{voucher.currency}</TableCell>
+                        <TableCell>{voucher.location}</TableCell>
+                        <TableCell>{voucher.date}</TableCell>
+                        <TableCell>{voucher.notes}</TableCell>
+                        <TableCell>{voucher.totalamount}</TableCell>
+                        <TableCell>
+                          {voucher.state === 0 ? 'Draft' : 'Post'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-white">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will reverse the voucher status to
+                                    Draft.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleReverse(voucher.voucherno)
+                                    }
+                                  >
+                                    Reverse
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handlePost(voucher.voucherno)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

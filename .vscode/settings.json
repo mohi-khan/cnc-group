@@ -1,6 +1,6 @@
 {
   "editor.wordWrap": "on",
-  "files.autoSave": "off",
+  "files.autoSave": "afterDelay",
   "editor.cursorSmoothCaretAnimation": "explicit",
   "editor.cursorBlinking": "expand",
   "editor.minimap.autohide": false,

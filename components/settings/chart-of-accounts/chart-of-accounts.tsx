@@ -60,18 +60,21 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { CodeGroup, ParentCode, ChartOfAccount } from '@/utils/type'
 import {
-  ChartOfAccounts,
+  CodeGroup,
+  ChartOfAccount,
+  chartOfAccountSchema,
+} from '@/utils/type'
+import {
   createChartOfAccounts,
   getAllCoa,
   getParentCodes,
   updateChartOfAccounts,
 } from '@/api/chart-of-accounts-api'
 import { toast } from '@/hooks/use-toast'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expenses']
-// const currencyItems = ['BDT', 'USD', 'EUR']
+const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
 const currencyItems = [
   {
@@ -84,11 +87,11 @@ const currencyItems = [
   },
   {
     currencyId: 3,
-    currency: 'USD',
+    currency: 'EUR',
   },
 ]
 
-const parentIds = [101, 102, 103, 202, 203, 301, 302, 401, 402, 502]
+
 const cashTags = [
   'Advance Payments received from customers',
   'Cash received from operating activities',
@@ -178,9 +181,10 @@ export default function ChartOfAccountsTable() {
   const [isEditAccountOpen, setIsEditAccountOpen] = React.useState(false)
   const [editingAccount, setEditingAccount] =
     React.useState<ChartOfAccount | null>(null)
-  const [parentCodes, setParentCodes] = React.useState<ParentCode[]>([])
-
-  const form = useForm({
+  const [parentCodes, setParentCodes] = React.useState<ChartOfAccount[]>([])
+  
+  const form = useForm<ChartOfAccount>({
+    resolver: zodResolver(chartOfAccountSchema),
     defaultValues: {
       name: '',
       accountType: '',
@@ -193,26 +197,29 @@ export default function ChartOfAccountsTable() {
       isGroup: false,
       notes: '',
       code: '',
-      isCash: true,
+      isCash: false,
       isBank: false,
       cashTag: '',
-      createdBy: 60,
+      createdBy: 70,
     },
   })
 
   // code generate
-  const generateAccountCode = async (parentAccountId: number) => {
-    // Convert parentAccountId to string for code comparison
-    const parentCode = parentAccountId.toString()
+  const generateAccountCode = React.useCallback(
+    async (parentAccountId: number): Promise<string> => {
+      // Convert parentAccountId to string for code comparison
+      const parentCode = parentAccountId.toString()
 
-    const childCount = filteredAccounts.filter(
-      (account) =>
-        account.code.startsWith(parentCode) && account.code !== parentCode
-    ).length
+      const childCount = filteredAccounts.filter(
+        (account) =>
+          account.code.startsWith(parentCode) && account.code !== parentCode
+      ).length
 
-    const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`
-    return newCode
-  }
+      const newCode = `${parentCode}${(childCount + 1).toString().padStart(2, '0')}`
+      return newCode
+    },
+    [filteredAccounts]
+  )
 
   //Add accounts
 
@@ -237,6 +244,10 @@ export default function ChartOfAccountsTable() {
         title: 'Success',
         description: 'Chart Of account created successfully',
       })
+      fetchCoaAccounts()
+      setIsAddAccountOpen(false)
+      
+
     }
   }
 
@@ -249,7 +260,7 @@ export default function ChartOfAccountsTable() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [form])
+  }, [form, generateAccountCode])
 
   async function fetchParentCodes() {
     const fetchedParentCodes = await getParentCodes()
@@ -300,7 +311,6 @@ export default function ChartOfAccountsTable() {
     let filtered = accounts.filter(
       (account) =>
         (account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           account.accountType
             .toLowerCase()
@@ -475,9 +485,9 @@ export default function ChartOfAccountsTable() {
 
   // return function for chart of accounts
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col ">
       <div className="p-2">
-        <div className="sticky top-16 bg-white flex items-center justify-between gap-4 border-b-2 mt-1 shadow-md p-2 z-20">
+        <div className="sticky top-28 bg-white flex items-center justify-between gap-4 border-b-2  shadow-md p-2 z-20">
           <h2 className="text-xl font-semibold">Chart of Accounts</h2>
           <div className="flex items-center gap-2 flex-grow justify-center max-w-2xl">
             <div className="relative flex items-center border rounded-md pr-2 flex-grow">
@@ -518,10 +528,10 @@ export default function ChartOfAccountsTable() {
             <DialogTrigger asChild>
               <Button variant="default" size="lg" className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Account
+                ADD
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Account</DialogTitle>
               </DialogHeader>
@@ -551,7 +561,7 @@ export default function ChartOfAccountsTable() {
                         <FormLabel>Account Type</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          defaultValue={field.value ?? undefined}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -570,6 +580,7 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="cashTag"
@@ -578,7 +589,7 @@ export default function ChartOfAccountsTable() {
                         <FormLabel>Account Cash Tag</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          defaultValue={field.value ?? undefined}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -597,12 +608,13 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="parentAccountId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parent Account ID</FormLabel>
+                        <FormLabel>Parent Account Name</FormLabel>
                         <Select
                           onValueChange={(value) =>
                             field.onChange(Number(value))
@@ -615,13 +627,14 @@ export default function ChartOfAccountsTable() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {parentIds.map((id) => (
-                              <SelectItem key={id} value={id.toString()}>
-                                {id}
+                            {parentCodes.map((id) => (
+                              <SelectItem key={id.code} value={id.code}>
+                                {id.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+
                         <FormMessage />
                       </FormItem>
                     )}
@@ -920,7 +933,7 @@ export default function ChartOfAccountsTable() {
             )}
 
             {/* Table header and data */}
-            <div className="border rounded-md overflow-hidden">
+            <div className=" border rounded-md overflow-hidden">
               <div className="overflow-auto max-h-[calc(100vh-200px)]">
                 <Table>
                   <TableHeader className="sticky top-0 bg-[#e0e0e0] z-10">

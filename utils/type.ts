@@ -152,13 +152,13 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
-  name: z.string().max(255),
-  code: z.string().max(64),
-  accountType: z.string().max(64),
-  parentAccountId: z.number().int().positive(),
+  accountId: z.number().int().positive().optional(),
+  name: z.string().max(255).min(1, "Account type is required"),
+  code: z.string().min(1, "Code is required").max(64, "Maximum 64 characters allowed"),
+  accountType: z.string().min(1, "Account type is required").max(64, "Maximum 64 characters allowed"),
+  parentAccountId: z.number().int().positive("Parent account ID is required"),
   parentName: z.string().optional(),
-  currencyId: z.number().int().positive(),
+  currencyId: z.number().int().positive("Currency is required"),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
   budgetTracking: z.boolean().default(false),
@@ -166,9 +166,9 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string().nullable(),
+  cashTag: z.string().min(1, "Cash tag is required").nullable(),
   createdBy: z.number().int().positive(),
-  notes: z.string(),
+  notes: z.string().min(3, 'Note is required, minimum 3 characters'),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
@@ -626,7 +626,6 @@ export const IouRecordGetSchema = z.object({
 export type IouRecordGetType = z.infer<typeof IouRecordGetSchema>
 
 // IouRecord loan create  schema zod
-
 export const IouRecordCreateSchema = z.object({
   amount: z.number().positive(),
   adjustedAmount: z.number().default(0),
@@ -639,6 +638,17 @@ export const IouRecordCreateSchema = z.object({
 })
 
 export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
+
+//IouAdjustmentCreateSchema
+export const IouAdjustmentCreateSchema = z.object({
+  iouId: z.number().int().positive(),
+  amountAdjusted: z.number().default(0),
+  adjustmentDate: z.coerce.date(),
+  adjustmentType: z.string().max(50),
+  notes: z.string().optional(),
+})
+
+export type IouAdjustmentCreateType = z.infer<typeof IouAdjustmentCreateSchema>
 
 //employee master employee zod schema
 export const EmployeeSchema = z.object({

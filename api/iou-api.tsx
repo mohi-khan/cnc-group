@@ -1,5 +1,10 @@
 import { fetchApi } from '@/utils/http'
-import { Employee, IouRecordCreateType, IouRecordGetType } from '@/utils/type'
+import {
+  Employee,
+  IouAdjustmentCreateType,
+  IouRecordCreateType,
+  IouRecordGetType,
+} from '@/utils/type'
 
 //Create IOU Data Push in DB
 
@@ -30,6 +35,18 @@ export async function getEmployee() {
   return fetchApi<Employee[]>({
     url: 'api/employee/getEmployees',
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//Create IOU Data Push in DB
+export async function createAdjustment(data: IouAdjustmentCreateType) {
+  return fetchApi<IouAdjustmentCreateType[]>({
+    url: 'api/iou/createIouAdj',
+    method: 'POST',
+    body: data,
     headers: {
       'Content-Type': 'application/json',
     },

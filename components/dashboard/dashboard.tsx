@@ -26,13 +26,13 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1>Welcome to dashboard page</h1>
+      {/* <h1>Welcome to dashboard page</h1>
       {user && (
         <div>
           <p>Logged in as: {user.username}</p>
           <p>Role: {user.roleName}</p>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
