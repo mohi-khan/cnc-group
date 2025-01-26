@@ -386,18 +386,6 @@ export default function CostCenterManagement() {
         </Button>
       </div>
 
-      {feedback && (
-        <Alert
-          variant={feedback.type === 'success' ? 'default' : 'destructive'}
-          className="mb-6"
-        >
-          <AlertTitle>
-            {feedback.type === 'success' ? 'Success' : 'Error'}
-          </AlertTitle>
-          <AlertDescription>{feedback.message}</AlertDescription>
-        </Alert>
-      )}
-
       {isLoading ? (
         <div>Loading cost centers...</div>
       ) : (
