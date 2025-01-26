@@ -1,18 +1,18 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Button } from '@/components/ui/button'
+import { PlusIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -20,19 +20,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { createDepartment, getAllDepartments } from '@/api/department-api';
-import { Department, departmentsArraySchema, departmentSchema } from '@/utils/type';
+} from '@/components/ui/select'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import { createDepartment, getAllDepartments } from '@/api/department-api'
+import {
+  type Department,
+  departmentsArraySchema,
+  departmentSchema,
+} from '@/utils/type'
 import {
   Form,
   FormControl,
@@ -41,23 +45,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@/components/ui/form'
 
 export default function DepartmentManagement() {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
-  const [userId, setUserId] = React.useState<number | undefined>();
-  const { toast } = useToast();
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+  const [userId, setUserId] = React.useState<number | undefined>()
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof departmentSchema>>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
-      departmentName: "",
+      departmentName: '',
       budget: 0,
       currencyCode: 1,
       isActive: true,
@@ -65,83 +69,87 @@ export default function DepartmentManagement() {
       startDate: null,
       endDate: null,
     },
-  });
+  })
 
   useEffect(() => {
-    fetchDepartments();
-  }, []);
+    fetchDepartments()
+  }, [])
 
   const fetchDepartments = async () => {
-    setIsLoading(true);
-    const data = await getAllDepartments();
+    setIsLoading(true)
+    const data = await getAllDepartments()
     if (data.error || !data.data) {
-      console.error('Error getting departments:', data.error);
+      console.error('Error getting departments:', data.error)
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get departments',
-      });
+      })
     } else {
-      setDepartments(data.data);
+      setDepartments(data.data)
     }
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser');
+    const userStr = localStorage.getItem('currentUser')
     if (userStr) {
-      const userData = JSON.parse(userStr);
-      setUserId(userData?.userId);
-      console.log('Current userId from localStorage:', userData.userId);
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('Current userId from localStorage:', userData.userId)
     } else {
-      console.log('No user data found in localStorage');
+      console.log('No user data found in localStorage')
     }
-  }, []);
+  }, [])
 
   const onSubmit = async (values: z.infer<typeof departmentSchema>) => {
-    setIsLoading(true);
-    setFeedback(null);
+    setIsLoading(true)
+    setFeedback(null)
 
     const newDepartment = {
       ...values,
       createdBy: userId,
       startDate: values.startDate ? new Date(values.startDate) : null,
       endDate: values.endDate ? new Date(values.endDate) : null,
-    };
+    }
 
     try {
-      const departmentSchema = departmentsArraySchema.element;
-      departmentSchema.parse(newDepartment);
+      const departmentSchema = departmentsArraySchema.element
+      departmentSchema.parse(newDepartment)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors);
+        console.error('Validation error:', error.errors)
         toast({
           title: 'Error',
           description: 'Invalid form data. Please check your inputs.',
-        });
-        setIsLoading(false);
-        return;
+        })
+        setIsLoading(false)
+        return
       }
     }
 
-    const response = await createDepartment(newDepartment);
+    const response = await createDepartment(newDepartment)
     if (response.error || !response.data) {
-      console.error('Error creating department:', response.error);
+      console.error('Error creating department:', response.error)
       toast({
         title: 'Error',
         description: response.error?.message || 'Failed to create department',
-      });
+      })
     } else {
-      console.log('Department created successfully');
+      console.log('Department created successfully')
       toast({
         title: 'Success',
         description: 'Department created successfully',
-      });
-      await fetchDepartments();
+      })
+      form.reset()
+      await fetchDepartments()
     }
 
-    setIsAddDialogOpen(false);
-    setIsLoading(false);
-  };
+    setIsAddDialogOpen(false)
+    setIsLoading(false)
+  }
+
+  // console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   return (
     <div className="container mx-auto py-10">
@@ -185,7 +193,13 @@ export default function DepartmentManagement() {
                 <TableRow key={index}>
                   <TableCell>{department.departmentName}</TableCell>
                   <TableCell>{department.budget}</TableCell>
-                  <TableCell>{department.currencyCode}</TableCell>
+                  <TableCell>
+                    {department.currencyCode === 1
+                      ? 'BDT'
+                      : department.currencyCode === 2
+                        ? 'USD'
+                        : 'EUR'}
+                  </TableCell>
                   <TableCell>{department.isActive ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
                     {department.startDate instanceof Date
@@ -210,7 +224,7 @@ export default function DepartmentManagement() {
       )}
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[525px] h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Department</DialogTitle>
           </DialogHeader>
@@ -236,7 +250,13 @@ export default function DepartmentManagement() {
                   <FormItem>
                     <FormLabel>Budget</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(Number.parseFloat(e.target.value))
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -248,7 +268,10 @@ export default function DepartmentManagement() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency Code</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString()}>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      value={field.value?.toString()}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select currency code" />
@@ -258,7 +281,6 @@ export default function DepartmentManagement() {
                         <SelectItem value="1">BDT</SelectItem>
                         <SelectItem value="2">USD</SelectItem>
                         <SelectItem value="3">EUR</SelectItem>
-                        <SelectItem value="4">GBP</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -277,10 +299,7 @@ export default function DepartmentManagement() {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -292,11 +311,19 @@ export default function DepartmentManagement() {
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field} 
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      <Input
+                        type="date"
+                        {...field}
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -310,11 +337,19 @@ export default function DepartmentManagement() {
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field} 
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      <Input
+                        type="date"
+                        {...field}
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -328,14 +363,23 @@ export default function DepartmentManagement() {
                   <FormItem>
                     <FormLabel>Actual</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(Number.parseFloat(e.target.value))
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
@@ -347,6 +391,5 @@ export default function DepartmentManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
-

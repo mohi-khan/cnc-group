@@ -318,7 +318,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentID: z.number(),
+  // departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   currencyCode: z.number().optional(),
