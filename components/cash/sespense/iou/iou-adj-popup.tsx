@@ -42,7 +42,11 @@ interface IouAdjPopUpProps {
   iouId: number
 }
 
-const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({ isOpen, onOpenChange,iouId }) => {
+const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
+  isOpen,
+  onOpenChange,
+  iouId,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<IouAdjustmentCreateType>({
@@ -55,13 +59,6 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({ isOpen, onOpenChange,iouId })
       notes: '',
     },
   })
-
-
-
-  // Persist iouId manually in case it changes in the parent component
-  // React.useEffect(() => {
-  //   form.setValue('iouId', iouId) // Update the form value directly
-  // }, [iouId, form])
 
   console.log('this iouID:', iouId)
   const onSubmit = async (data: IouAdjustmentCreateType) => {
@@ -88,233 +85,120 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({ isOpen, onOpenChange,iouId })
   }
 
   return (
-    // <Dialog open={isOpen} onOpenChange={onOpenChange}>
-    //   <DialogContent  className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto flex flex-col">
-    //     <DialogHeader>
-    //       <DialogTitle>Add Adjustment Record</DialogTitle>
-    //     </DialogHeader>
-    //     <Form {...form}>
-    //       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-    //         {/* Adjusted Amount Field */}
-    //         <FormField
-    //           name="amountAdjusted"
-    //           control={form.control}
-    //           render={({ field }) => (
-    //             <FormItem>
-    //               <FormLabel>Adjusted Amount</FormLabel>
-    //               <FormControl>
-    //                 <Input
-    //                   {...field}
-    //                   type="number"
-    //                   step="0.01"
-    //                   placeholder="Enter adjusted amount"
-    //                   onChange={(e) =>
-    //                     field.onChange(Number.parseFloat(e.target.value) || 0)
-    //                   }
-    //                 />
-    //               </FormControl>
-    //               <FormMessage />
-    //             </FormItem>
-    //           )}
-    //         />
-
-    //         {/* Adjustment Type Field */}
-
-    //         <FormField
-    //           name="adjustmentType"
-    //           control={form.control}
-    //           render={({ field }) => (
-    //             <FormItem>
-    //               <FormLabel>Adjustment Type</FormLabel>
-    //               <FormControl>
-    //                 <Select
-    //                   onValueChange={field.onChange} // Ensures the selected value updates the form state
-    //                   value={field.value} // Syncs the selected value with the form
-    //                 >
-    //                   <SelectTrigger>
-    //                     <SelectValue placeholder="Select adjustment type" />
-    //                   </SelectTrigger>
-    //                   <SelectContent>
-    //                     <SelectItem value="Refund">Refund</SelectItem>
-    //                     <SelectItem value="Adjustment">Adjustment</SelectItem>
-    //                   </SelectContent>
-    //                 </Select>
-    //               </FormControl>
-    //               <FormMessage />
-    //             </FormItem>
-    //           )}
-    //         />
-
-    //         {/* Adjustment Date Field */}
-    //         <FormField
-    //           name="adjustmentDate"
-    //           control={form.control}
-    //           render={({ field }) => (
-    //             <FormItem>
-    //               <FormLabel>Adjustment Date</FormLabel>
-    //               <FormControl>
-    //                 <Input
-    //                   {...field}
-    //                   type="date"
-    //                   value={format(field.value, 'yyyy-MM-dd')}
-    //                   onChange={(e) => field.onChange(new Date(e.target.value))}
-    //                 />
-    //               </FormControl>
-    //               <FormMessage />
-    //             </FormItem>
-    //           )}
-    //         />
-
-    //         {/* Notes Field */}
-    //         <FormField
-    //           name="notes"
-    //           control={form.control}
-    //           render={({ field }) => (
-    //             <FormItem>
-    //               <FormLabel>Notes</FormLabel>
-    //               <FormControl>
-    //                 <Textarea
-    //                   {...field}
-    //                   placeholder="Enter notes for adjustment"
-    //                 />
-    //               </FormControl>
-    //               <FormMessage />
-    //             </FormItem>
-    //           )}
-    //         />
-
-    //         <div className="flex justify-end space-x-4">
-    //           <Button
-    //             type="button"
-    //             variant="outline"
-    //             onClick={() => onOpenChange(false)}
-    //           >
-    //             Cancel
-    //           </Button>
-    //           <Button type="submit" disabled={isSubmitting}>
-    //             {isSubmitting ? 'Submitting...' : 'Submit'}
-    //           </Button>
-    //         </div>
-    //       </form>
-    //     </Form>
-    //   </DialogContent>
-    // </Dialog>
-
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-  <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto flex flex-col">
-    <DialogHeader>
-      <DialogTitle>Add Adjustment Record</DialogTitle>
-      {/* Adding DialogDescription for accessibility */}
-      <DialogDescription>
-        Please fill out the form below to add a new adjustment record.
-      </DialogDescription>
-    </DialogHeader>
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Adjusted Amount Field */}
-        <FormField
-          name="amountAdjusted"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Adjusted Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  step="0.01"
-                  placeholder="Enter adjusted amount"
-                  onChange={(e) =>
-                    field.onChange(Number.parseFloat(e.target.value) || 0)
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Add Adjustment Record</DialogTitle>
+          {/* Adding DialogDescription for accessibility */}
+          <DialogDescription>
+            Please fill out the form below to add a new adjustment record.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Adjusted Amount Field */}
+            <FormField
+              name="amountAdjusted"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adjusted Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter adjusted amount"
+                      onChange={(e) =>
+                        field.onChange(Number.parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Adjustment Type Field */}
-        <FormField
-          name="adjustmentType"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Adjustment Type</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange} // Ensures the selected value updates the form state
-                  value={field.value} // Syncs the selected value with the form
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select adjustment type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Refund">Refund</SelectItem>
-                    <SelectItem value="Adjustment">Adjustment</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Adjustment Type Field */}
+            <FormField
+              name="adjustmentType"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adjustment Type</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange} // Ensures the selected value updates the form state
+                      value={field.value} // Syncs the selected value with the form
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select adjustment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Refund">Refund</SelectItem>
+                        <SelectItem value="Adjustment">Adjustment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Adjustment Date Field */}
-        <FormField
-          name="adjustmentDate"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Adjustment Date</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="date"
-                  value={format(field.value, 'yyyy-MM-dd')}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Adjustment Date Field */}
+            <FormField
+              name="adjustmentDate"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adjustment Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="date"
+                      value={format(field.value, 'yyyy-MM-dd')}
+                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Notes Field */}
-        <FormField
-          name="notes"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="Enter notes for adjustment"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Notes Field */}
+            <FormField
+              name="notes"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter notes for adjustment"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  </DialogContent>
-</Dialog>
-
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
