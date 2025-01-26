@@ -36,6 +36,7 @@ import Link from 'next/link'
 import {
   createJournalEntryWithDetails,
   getAllChartOfAccounts,
+  getAllDepartments,
   getAllResPartners,
   getAllVoucher,
   getAllVoucherById,
@@ -47,6 +48,7 @@ import {
   Company,
   type CompanyFromLocalstorage,
   type CostCenter,
+  Department,
   DetailRow,
   type FormData,
   type JournalEntryWithDetails,
@@ -106,6 +108,7 @@ export default function CashVoucher() {
     []
   )
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
+  const [departments, setDepartments] = React.useState<Department[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [formType, setFormType] = React.useState('Payment')
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
@@ -232,6 +235,7 @@ export default function CashVoucher() {
     fetchChartOfAccounts()
     fetchgetAllCostCenters()
     fetchgetResPartner()
+    fetchDepartments()
   }, [])
 
   //chart of accounts
@@ -255,6 +259,27 @@ export default function CashVoucher() {
       setIsLoadingAccounts(false)
     }
   }
+
+  async function fetchDepartments() {
+    setIsLoadingAccounts(true)
+    try {
+      const response = await getAllDepartments()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setDepartments(response.data)
+    } catch (error) {
+      console.error('Error getting chart of accounts:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load chart of accounts',
+      })
+      setDepartments([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
   //res partner
   async function fetchgetAllCostCenters() {
     setIsLoadingCostCenters(true)
@@ -633,10 +658,10 @@ export default function CashVoucher() {
                             <FormItem>
                               <FormControl>
                                 <Combobox
-                                  options={[
-                                    { value: '1', label: 'Department 1' },
-                                    { value: '2', label: 'Department 2' },
-                                  ]}
+                                  options={departments.map((partner) => ({
+                                    value: partner.departmentID.toString(),
+                                    label: partner.departmentName || 'Unnamed Department',
+                                  }))}
                                   value={field.value?.toString() || ''}
                                   onValueChange={(value) =>
                                     field.onChange(Number.parseInt(value, 10))
