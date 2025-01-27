@@ -496,6 +496,18 @@ export const departmentSchema = z.object({
 export type Department = z.infer<typeof departmentSchema>
 export const departmentsArraySchema = z.array(departmentSchema)
 
+export const getDepartmentSchema = z.object({
+  departmentID: z.number(),
+  departmentName: z.string().min(1, 'Department name is required'),
+  budget: z.number().optional(),
+  currencyCode: z.number().optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
+  actual: z.number().optional(),
+})
+export type GetDepartment = z.infer<typeof getDepartmentSchema>
+
 //cost center
 const costCenterSchema = z.object({
   costCenterId: z.number().min(1, 'Cost center id is required'),
