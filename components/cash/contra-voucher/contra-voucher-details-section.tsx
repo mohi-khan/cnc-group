@@ -28,17 +28,17 @@ import {
   getAllBankAccounts,
 } from '@/api/contra-voucher-api'
 
-interface JournalVoucherDetailsSectionProps {
+interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
-  onAddEntry: () => void
+  // onAddEntry: () => void
   onRemoveEntry: (index: number) => void
 }
 
 export function ContraVoucherDetailsSection({
   form,
-  onAddEntry,
+  // onAddEntry,
   onRemoveEntry,
-}: JournalVoucherDetailsSectionProps) {
+}: ContraVoucherDetailsSectionProps) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
   const [disabledStates, setDisabledStates] = useState<
@@ -178,11 +178,25 @@ export function ContraVoucherDetailsSection({
     }))
   }
 
+  const handleDebitChange = (index: number, value: number) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].debit = value
+    updatedEntries[index].credit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
+  const handleCreditChange = (index: number, value: number) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].credit = value
+    updatedEntries[index].debit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
   const calculateTotals = () => {
     return entries.reduce(
       (totals, entry) => {
-        totals.debit += Number(entry.debit) || 0
-        totals.credit += Number(entry.credit) || 0
+        totals.debit += entry.debit
+        totals.credit += entry.credit
         return totals
       },
       { debit: 0, credit: 0 }
@@ -190,7 +204,7 @@ export function ContraVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const isBalanced = Math.abs(totals.debit - totals.credit) < 0.01
+  const isBalanced = totals.debit === totals.credit
 
   const handleRemoveEntry = (index: number) => {
     if (entries.length > 2) {
@@ -289,16 +303,11 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <FormControl>
                   <Input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => {
-                      const sanitizedValue = handleNumberInput(e.target.value)
-                      field.onChange(
-                        sanitizedValue ? Number(sanitizedValue) : 0
-                      )
-                    }}
+                    onChange={(e) =>
+                      handleDebitChange(index, Number(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -313,16 +322,11 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <FormControl>
                   <Input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => {
-                      const sanitizedValue = handleNumberInput(e.target.value)
-                      field.onChange(
-                        sanitizedValue ? Number(sanitizedValue) : 0
-                      )
-                    }}
+                    onChange={(e) =>
+                      handleCreditChange(index, Number(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />

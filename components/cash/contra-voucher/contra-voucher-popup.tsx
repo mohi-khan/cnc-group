@@ -25,7 +25,7 @@ import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 
-export function ContraVoucherPopup() {
+export function ContraVoucherPopup({}) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -38,9 +38,9 @@ export function ContraVoucherPopup() {
         state: 0,
         companyId: 0,
         locationId: 0,
-        currencyId: 1,
+        currencyId: 0,
         amountTotal: 0,
-        createdBy: 70,
+        createdBy: 71,
       },
       journalDetails: [
         {
@@ -84,8 +84,8 @@ export function ContraVoucherPopup() {
         description: 'Voucher created successfully',
       })
 
-      setIsOpen(false)
       form.reset()
+      setIsOpen(false)
     } catch (error) {
       console.error('Error creating voucher:', error)
       toast({
@@ -97,19 +97,6 @@ export function ContraVoucherPopup() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const addEntry = () => {
-    const currentEntries = form.getValues('journalDetails')
-    form.setValue('journalDetails', [
-      ...currentEntries,
-      {
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        createdBy: 0,
-      },
-    ])
   }
 
   const removeEntry = (index: number) => {
@@ -126,7 +113,7 @@ export function ContraVoucherPopup() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Voucher
+          <Plus className="mr-2 h-4 w-4" /> ADD
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
@@ -142,7 +129,6 @@ export function ContraVoucherPopup() {
 
             <ContraVoucherDetailsSection
               form={form}
-              onAddEntry={addEntry}
               onRemoveEntry={removeEntry}
             />
 

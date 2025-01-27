@@ -15,19 +15,20 @@ import {
   type JournalResult,
   type LocationFromLocalstorage,
   type User,
+  VoucherById,
   VoucherTypes,
 } from '@/utils/type'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
-
-const initialVouchers: JournalResult[] = []
+import Loader from '@/utils/loader'
 
 export default function ContraVoucherTable() {
-  const [vouchers, setVouchers] = useState<JournalResult[]>(initialVouchers)
+  const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -48,6 +49,7 @@ export default function ContraVoucherTable() {
   }, [])
 
   async function fetchAllVoucher(company: number[], location: number[]) {
+    setIsLoading(true)
     const voucherQuery: JournalQuery = {
       date: new Date().toISOString().split('T')[0],
       companyId: company,
@@ -56,7 +58,11 @@ export default function ContraVoucherTable() {
     }
     const response = await getAllVoucher(voucherQuery)
     if (response.data && Array.isArray(response.data)) {
-      console.log('voucher', response.data)
+      console.log(
+        'contra voucher data line no 57 and i am from contra voucher list:',
+        response.data
+      )
+
       setVouchers(response.data)
     } else {
       console.log('No voucher data available')
@@ -72,29 +78,16 @@ export default function ContraVoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = (voucherData: Partial<JournalResult>) => {
-    console.log('Submitting voucher:', voucherData)
-    // Here you would typically send the data to your backend
-    // For now, we'll just add it to the local state
-    const newVoucher: JournalResult = {
-      ...voucherData,
-      voucherid: vouchers.length + 1,
-      totalamount: Number(voucherData.totalamount) || 0,
-      state: 0,
-      journaltype: 'Contra Voucher',
-    } as JournalResult
-    setVouchers([...vouchers, newVoucher])
-  }
-
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
-        <ContraVoucherPopup onSubmit={handleSubmit} />
+        <ContraVoucherPopup />
       </div>
-      <Table className="border">
+
+      <Table className="border shadow-md">
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-slate-200 shadow-md">
             <TableHead>Voucher No.</TableHead>
             <TableHead>Voucher Date</TableHead>
             <TableHead>Notes</TableHead>
@@ -108,7 +101,7 @@ export default function ContraVoucherTable() {
         <TableBody>
           {vouchers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-4">
+              <TableCell colSpan={10} className="text-center py-4">
                 No contra voucher is available
               </TableCell>
             </TableRow>
@@ -127,7 +120,7 @@ export default function ContraVoucherTable() {
                 <TableCell>{voucher.companyname}</TableCell>
                 <TableCell>{voucher.location}</TableCell>
                 <TableCell>{voucher.currency}</TableCell>
-                <TableCell>{voucher.state === 1 ? 'Post': 'Draft'}</TableCell>
+                <TableCell>{voucher.state === 1 ? 'Post' : 'Draft'}</TableCell>
                 <TableCell className="text-right">
                   {voucher.totalamount.toFixed(2)}
                 </TableCell>

@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, Upload } from 'lucide-react'
 import { JournalEntryWithDetails } from '@/utils/type'
 
-interface JournalVoucherSubmitProps {
+interface ContraVoucherSubmitProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onSubmit: () => void
   isSubmitting: boolean
@@ -21,7 +21,7 @@ export function ContraVoucherSubmit({
   form,
   onSubmit,
   isSubmitting,
-}: JournalVoucherSubmitProps) {
+}: ContraVoucherSubmitProps) {
   return (
     <div className="space-y-4">
       <FormField
