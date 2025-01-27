@@ -10,12 +10,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import {
   type CompanyFromLocalstorage,
   type JournalQuery,
   type JournalResult,
   type LocationFromLocalstorage,
   type User,
-  VoucherById,
   VoucherTypes,
 } from '@/utils/type'
 import { getAllVoucher } from '@/api/journal-voucher-api'
@@ -23,12 +30,15 @@ import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 import Loader from '@/utils/loader'
 
+const ITEMS_PER_PAGE = 8
+
 export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -68,6 +78,7 @@ export default function ContraVoucherTable() {
       console.log('No voucher data available')
       setVouchers([])
     }
+    setIsLoading(false)
   }
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
@@ -77,6 +88,11 @@ export default function ContraVoucherTable() {
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
+
+  const totalPages = Math.ceil(vouchers.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentVouchers = vouchers.slice(startIndex, endIndex)
 
   return (
     <div className="container mx-auto py-10">
@@ -99,14 +115,20 @@ export default function ContraVoucherTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vouchers.length === 0 ? (
+          {isLoading ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center py-4">
+              <TableCell colSpan={8} className="text-center py-4">
+                <Loader />
+              </TableCell>
+            </TableRow>
+          ) : currentVouchers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-4">
                 No contra voucher is available
               </TableCell>
             </TableRow>
           ) : (
-            vouchers.map((voucher) => (
+            currentVouchers.map((voucher) => (
               <TableRow key={voucher.voucherid}>
                 <TableCell className="font-medium">
                   <Link
@@ -129,6 +151,43 @@ export default function ContraVoucherTable() {
           )}
         </TableBody>
       </Table>
+
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className={
+                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                }
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  onClick={() => setCurrentPage(i + 1)}
+                  isActive={currentPage === i + 1}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : ''
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   )
 }
