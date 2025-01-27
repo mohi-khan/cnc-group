@@ -61,8 +61,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import {
-  CodeGroup,
-  ChartOfAccount,
+  type CodeGroup,
+  type ChartOfAccount,
   chartOfAccountSchema,
 } from '@/utils/type'
 import {
@@ -73,6 +73,14 @@ import {
 } from '@/api/chart-of-accounts-api'
 import { toast } from '@/hooks/use-toast'
 import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
@@ -90,7 +98,6 @@ const currencyItems = [
     currency: 'EUR',
   },
 ]
-
 
 const cashTags = [
   'Advance Payments received from customers',
@@ -182,7 +189,25 @@ export default function ChartOfAccountsTable() {
   const [editingAccount, setEditingAccount] =
     React.useState<ChartOfAccount | null>(null)
   const [parentCodes, setParentCodes] = React.useState<ChartOfAccount[]>([])
-  
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const itemsPerPage = 10
+  const [userId, setUserId] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
+  // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({
     resolver: zodResolver(chartOfAccountSchema),
     defaultValues: {
@@ -200,9 +225,16 @@ export default function ChartOfAccountsTable() {
       isCash: false,
       isBank: false,
       cashTag: '',
-      createdBy: 70,
+      createdBy: userId ?? undefined, // `undefined` to avoid passing `null`
     },
   })
+
+  // Optionally, useEffect to update form when `userId` changes
+  React.useEffect(() => {
+    if (userId !== null) {
+      form.setValue('createdBy', userId)
+    }
+  }, [userId, form])
 
   // code generate
   const generateAccountCode = React.useCallback(
@@ -228,7 +260,7 @@ export default function ChartOfAccountsTable() {
       // Ensure parentAccountId is a number
       const parentAccountId =
         typeof data.parentAccountId === 'string'
-          ? parseInt(data.parentAccountId, 10)
+          ? Number.parseInt(data.parentAccountId, 10)
           : data.parentAccountId
 
       data.code = await generateAccountCode(parentAccountId)
@@ -246,8 +278,6 @@ export default function ChartOfAccountsTable() {
       })
       fetchCoaAccounts()
       setIsAddAccountOpen(false)
-      
-
     }
   }
 
@@ -482,6 +512,9 @@ export default function ChartOfAccountsTable() {
       setEditingAccount(null)
     }
   }
+
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   // return function for chart of accounts
   return (
@@ -949,65 +982,106 @@ export default function ChartOfAccountsTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAccounts.map((account) => (
-                      <TableRow key={account.code}>
-                        <TableCell>{account.code}</TableCell>
-                        <TableCell>{account.name}</TableCell>
-                        <TableCell>{account.parentName}</TableCell>
-                        <TableCell>{account.accountType}</TableCell>
-                        <TableCell className="text-center">
-                          <Switch
-                            checked={account.isReconcilable}
-                            onChange={(checked: any) =>
-                              handleSwitchChange(account.code, checked)
-                            }
-                            id={`switch-${account.code}`}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditAccount(account)}
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant={
-                                account.isActive ? 'destructive' : 'outline'
+                    {filteredAccounts
+                      .slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage
+                      )
+                      .map((account) => (
+                        <TableRow key={account.code}>
+                          <TableCell>{account.code}</TableCell>
+                          <TableCell>{account.name}</TableCell>
+                          <TableCell>{account.parentName}</TableCell>
+                          <TableCell>{account.accountType}</TableCell>
+                          <TableCell className="text-center">
+                            <Switch
+                              checked={account.isReconcilable}
+                              onChange={(checked: any) =>
+                                handleSwitchChange(account.code, checked)
                               }
-                              size="sm"
-                              onClick={() => handleDisableAccount(account.code)}
-                            >
-                              <Power className="h-4 w-4 mr-2" />
-                              {account.isActive ? 'Disable' : 'Enable'}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              id={`switch-${account.code}`}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditAccount(account)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant={
+                                  account.isActive ? 'destructive' : 'outline'
+                                }
+                                size="sm"
+                                onClick={() =>
+                                  handleDisableAccount(account.code)
+                                }
+                              >
+                                <Power className="h-4 w-4 mr-2" />
+                                {account.isActive ? 'Disable' : 'Enable'}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
+                <div className="flex justify-center mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(1, prev - 1))
+                          }
+                          className={currentPage === 1 ? 'disabled-class' : ''}
+                        />
+                      </PaginationItem>
+                      {[
+                        ...Array(
+                          Math.ceil(filteredAccounts.length / itemsPerPage)
+                        ),
+                      ].map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(i + 1)}
+                            isActive={currentPage === i + 1}
+                          >
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(
+                                Math.ceil(
+                                  filteredAccounts.length / itemsPerPage
+                                ),
+                                prev + 1
+                              )
+                            )
+                          }
+                          className={
+                            currentPage ===
+                            Math.ceil(filteredAccounts.length / itemsPerPage)
+                              ? 'disabled-class'
+                              : ''
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
               </div>
             </div>
 
             {/* Edit Form */}
-
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                1-{filteredAccounts.length} / {accounts.length}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" disabled>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" disabled>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1026,7 +1100,7 @@ export default function ChartOfAccountsTable() {
                 handleSaveEdit(editingAccount)
               }}
             >
-              <div className="space-y-2">
+              <div className="spacey-2">
                 <Label htmlFor="edit-notes">Notes</Label>
                 <Input
                   id="edit-notes"
