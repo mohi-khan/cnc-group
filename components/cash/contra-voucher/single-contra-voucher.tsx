@@ -87,7 +87,7 @@ export default function SingleContraVoucher() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(voucherId, createdId)
+      const response = await reverseJournalVoucher(voucherid, createdId)
 
       if (!response.data || response.error) {
         toast({

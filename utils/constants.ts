@@ -277,6 +277,6 @@ export const CURRENCY_ITEMS = [
   },
   {
     currencyId: 3,
-    currency: 'USD',
+    currency: 'EUR',
   },
 ]

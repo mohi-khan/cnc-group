@@ -19,7 +19,6 @@ import {
   CompanyFromLocalstorage,
   JournalEntryWithDetails,
   JournalQuery,
-  JournalResult,
   LocationFromLocalstorage,
   User,
   VoucherTypes,

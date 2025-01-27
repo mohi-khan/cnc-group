@@ -7,6 +7,7 @@ import {
   JournalEntryWithDetails,
   JournalNotes,
   JournalQuery,
+  JournalResult,
   LocationData,
   VoucherById,
 } from '@/utils/type'
@@ -90,7 +91,7 @@ export async function getAllVoucher(data: JournalQuery) {
     voucherType: data.voucherType,
   }).toString()
   console.log(queryParams)
-  return fetchApi<VoucherById[]>({
+  return fetchApi<JournalResult[]>({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
   })
