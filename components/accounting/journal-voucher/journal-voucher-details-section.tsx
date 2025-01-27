@@ -1,4 +1,4 @@
-import { UseFormReturn } from 'react-hook-form'
+import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   FormControl,
@@ -15,18 +15,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Trash2 } from 'lucide-react'
-import {
-  ChartOfAccount,
+import type {
   CostCenter,
   JournalEntryWithDetails,
-  Department
+  AccountsHead,
+  GetDepartment,
 } from '@/utils/type'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { toast } from '@/hooks/use-toast'
 import {
   getAllChartOfAccounts,
   getAllCostCenters,
-  getAllDepartments
+  getAllDepartments,
 } from '@/api/journal-voucher-api'
 
 interface JournalVoucherDetailsSectionProps {
@@ -37,12 +37,14 @@ interface JournalVoucherDetailsSectionProps {
 
 export function JournalVoucherDetailsSection({
   form,
-  onAddEntry,
   onRemoveEntry,
 }: JournalVoucherDetailsSectionProps) {
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<ChartOfAccount[]>([])
-  const [departments, setDepartments] = React.useState<Department[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
+    []
+  )
+  const [departments, setDepartments] = React.useState<GetDepartment[]>([])
+  const newRowRef = useRef<HTMLButtonElement>(null)
   const entries = form.watch('journalDetails')
 
   async function fetchChartOfAccounts() {
@@ -51,7 +53,8 @@ export function JournalVoucherDetailsSection({
       console.error('Error getting Chart Of accounts:', response.error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get Chart Of accounts',
+        description:
+          response.error?.message || 'Failed to get Chart Of accounts',
       })
     } else {
       setChartOfAccounts(response.data)
@@ -94,8 +97,28 @@ export function JournalVoucherDetailsSection({
     // Initialize with two rows
     if (entries.length === 0) {
       form.setValue('journalDetails', [
-        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null },
-        { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null }
+        {
+          accountId: 0,
+          costCenterId: 0,
+          departmentId: 0,
+          debit: 0,
+          credit: 0,
+          notes: '',
+          createdBy: 60,
+          analyticTags: null,
+          taxId: null,
+        },
+        {
+          accountId: 0,
+          costCenterId: 0,
+          departmentId: 0,
+          debit: 0,
+          credit: 0,
+          notes: '',
+          createdBy: 60,
+          analyticTags: null,
+          taxId: null,
+        },
       ])
     }
   }, [])
@@ -103,8 +126,22 @@ export function JournalVoucherDetailsSection({
   const addEntry = () => {
     form.setValue('journalDetails', [
       ...entries,
-      { accountId: 0, costCenterId: 0, departmentId: 0, debit: 0, credit: 0, notes: "", createdBy: 60, analyticTags: null, taxId: null }
+      {
+        accountId: 0,
+        costCenterId: 0,
+        departmentId: 0,
+        debit: 0,
+        credit: 0,
+        notes: '',
+        createdBy: 60,
+        analyticTags: null,
+        taxId: null,
+      },
     ])
+    // Focus on the first input of the new row after a short delay
+    setTimeout(() => {
+      newRowRef.current?.focus()
+    }, 0)
   }
 
   const handleDebitChange = (index: number, value: number) => {
@@ -162,19 +199,23 @@ export function JournalVoucherDetailsSection({
                   value={field.value?.toString()}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger
+                      ref={index === entries.length - 1 ? newRowRef : null}
+                    >
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {chartOfAccounts.map((account) => (
-                      <SelectItem 
-                        key={account.accountId} 
-                        value={account.accountId.toString()}
-                      >
-                        {account.name}
-                      </SelectItem>
-                    ))}
+                    {chartOfAccounts
+                      ?.filter((coa) => !coa.isGroup)
+                      .map((coa) => (
+                        <SelectItem
+                          key={coa.accountId}
+                          value={coa.accountId.toString()}
+                        >
+                          {coa.name} ({coa.code})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -200,8 +241,8 @@ export function JournalVoucherDetailsSection({
                   </FormControl>
                   <SelectContent>
                     {costCenters.map((center) => (
-                      <SelectItem 
-                        key={center.costCenterId} 
+                      <SelectItem
+                        key={center.costCenterId}
                         value={center?.costCenterId?.toString()}
                       >
                         {center.costCenterName}
@@ -255,7 +296,9 @@ export function JournalVoucherDetailsSection({
                   <Input
                     type="number"
                     {...field}
-                    onChange={(e) => handleDebitChange(index, Number(e.target.value))}
+                    onChange={(e) =>
+                      handleDebitChange(index, Number(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -272,7 +315,9 @@ export function JournalVoucherDetailsSection({
                   <Input
                     type="number"
                     {...field}
-                    onChange={(e) => handleCreditChange(index, Number(e.target.value))}
+                    onChange={(e) =>
+                      handleCreditChange(index, Number(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />

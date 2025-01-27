@@ -1,11 +1,10 @@
 import { fetchApi } from '@/utils/http'
 import {
-  ChartOfAccount,
+  AccountsHead,
   Company,
   CostCenter,
-  Department,
+  GetDepartment,
   JournalEntryWithDetails,
-  JournalEntryWithDetailsSchema,
   JournalNotes,
   JournalQuery,
   LocationData,
@@ -27,7 +26,7 @@ export async function getAllLocations() {
 }
 
 export async function getAllChartOfAccounts() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
@@ -41,7 +40,7 @@ export async function getAllCostCenters() {
 }
 
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })

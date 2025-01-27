@@ -1,5 +1,4 @@
 import { isLastDayOfMonth } from 'date-fns'
-import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
 
@@ -52,11 +51,6 @@ export interface LocationFromLocalstorage {
     address: string
     companyId: number
   }
-}
-
-export type BankAccount = z.infer<typeof bankAccountSchema> & {
-  createdAt?: string
-  updatedAt?: string
 }
 
 export const resPartnerSchema = z.object({
@@ -114,6 +108,147 @@ export const updatePostingPeriodsSchema = z.object({
   postingIds: z.array(z.number().positive()).nonempty(),
   isOpen: z.boolean(),
 })
+
+//bank account type
+export const bankAccountSchema = z.object({
+  id: z.number(),
+  accountName: z
+    .string()
+    .min(2, 'Account name must be at least 2 characters.')
+    .max(100, 'Account name must not exceed 100 characters.'),
+  accountNumber: z
+    .string()
+    .min(5, 'Account number must be at least 5 characters.')
+    .max(50, 'Account number must not exceed 50 characters.'),
+  bankName: z
+    .string()
+    .min(2, 'Bank name must be at least 2 characters.')
+    .max(100, 'Bank name must not exceed 100 characters.'),
+  branchName: z
+    .string()
+    .max(100, 'Branch name must not exceed 100 characters.')
+    .optional(),
+  ifscCode: z
+    .string()
+    .max(20, 'IFSC code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  swiftCode: z
+    .string()
+    .max(20, 'SWIFT code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  openingBalance: z
+    .number()
+    .nonnegative('Opening balance must be a non-negative number.')
+    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  validityDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  assetDetails: z
+    .string()
+    .max(255, 'Asset details must not exceed 255 characters')
+    .optional()
+    .nullable(),
+  isActive: z.boolean(),
+  isReconcilable: z.boolean(),
+  glAccountId: z.number(),
+  bankCode: z
+    .string()
+    .max(50, 'Bank code must not exceed 50 characters')
+    .optional()
+    .nullable(),
+  integrationId: z
+    .string()
+    .max(36, 'Integration ID must not exceed 36 characters')
+    .optional()
+    .nullable(),
+  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  createdBy: z.number(),
+  updatedBy: z.number().optional(),
+})
+
+export type BankAccount = z.infer<typeof bankAccountSchema> & {
+  createdAt?: string
+  updatedAt?: string
+}
+
+export const createBankAccountSchema = z.object({
+  accountName: z
+    .string()
+    .min(2, 'Account name must be at least 2 characters.')
+    .max(100, 'Account name must not exceed 100 characters.'),
+  accountNumber: z
+    .string()
+    .min(5, 'Account number must be at least 5 characters.')
+    .max(50, 'Account number must not exceed 50 characters.'),
+  bankName: z
+    .string()
+    .min(2, 'Bank name must be at least 2 characters.')
+    .max(100, 'Bank name must not exceed 100 characters.'),
+  branchName: z
+    .string()
+    .max(100, 'Branch name must not exceed 100 characters.')
+    .optional(),
+  ifscCode: z
+    .string()
+    .max(20, 'IFSC code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  swiftCode: z
+    .string()
+    .max(20, 'SWIFT code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  openingBalance: z
+    .number()
+    .nonnegative('Opening balance must be a non-negative number.')
+    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  validityDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  assetDetails: z
+    .string()
+    .max(255, 'Asset details must not exceed 255 characters')
+    .optional()
+    .nullable(),
+  isActive: z.boolean(),
+  isReconcilable: z.boolean(),
+  glAccountId: z.number(),
+  bankCode: z
+    .string()
+    .max(50, 'Bank code must not exceed 50 characters')
+    .optional()
+    .nullable(),
+  integrationId: z
+    .string()
+    .max(36, 'Integration ID must not exceed 36 characters')
+    .optional()
+    .nullable(),
+  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  createdBy: z.number(),
+  updatedBy: z.number().optional(),
+})
+
+export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type BankAccountCreate = Omit<
+  BankAccount,
+  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
+export type BankAccountUpdate = Omit<
+  BankAccount,
+  'id' | 'createdBy' | 'createdAt' | 'updatedAt'
+>
 
 //financial year zod Validation
 
@@ -360,6 +495,18 @@ export const departmentSchema = z.object({
 })
 export type Department = z.infer<typeof departmentSchema>
 export const departmentsArraySchema = z.array(departmentSchema)
+
+export const getDepartmentSchema = z.object({
+  departmentID: z.number(),
+  departmentName: z.string().min(1, 'Department name is required'),
+  budget: z.number().optional(),
+  currencyCode: z.number().optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
+  actual: z.number().optional(),
+})
+export type GetDepartment = z.infer<typeof getDepartmentSchema>
 
 //cost center
 const costCenterSchema = z.object({

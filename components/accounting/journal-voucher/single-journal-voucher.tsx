@@ -11,11 +11,23 @@ import {
   reverseJournalVoucher,
   editJournalDetail,
 } from '@/api/journal-voucher-api'
-import { VoucherById } from '@/utils/type'
+import type { VoucherById } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function SingleJournalVoucher() {
-  const voucherid: number = parseInt(useParams().voucherid as string, 10);
+  const voucherid: number = Number.parseInt(useParams().voucherid as string, 10)
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
   const [editingReferenceIndex, setEditingReferenceIndex] = useState<
@@ -24,8 +36,9 @@ export default function SingleJournalVoucher() {
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
   const [userId, setUserId] = React.useState<number>()
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
 
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -34,10 +47,10 @@ export default function SingleJournalVoucher() {
   useEffect(() => {
     async function fetchVoucher() {
       if (!voucherid) return
-      console.log('Initial fetch for voucher:', voucherid);
+      console.log('Initial fetch for voucher:', voucherid)
       try {
         const response = await getSingleVoucher(voucherid)
-        console.log('Initial fetch response:', response);
+        console.log('Initial fetch response:', response)
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -45,7 +58,7 @@ export default function SingleJournalVoucher() {
               response.error?.message || 'Failed to get Voucher Data',
           })
         } else {
-          console.log('Setting initial data:', response.data);
+          console.log('Setting initial data:', response.data)
           setData(response.data)
         }
       } catch (error) {
@@ -56,7 +69,7 @@ export default function SingleJournalVoucher() {
         })
       }
     }
-  
+
     fetchVoucher()
   }, [voucherid])
 
@@ -67,60 +80,65 @@ export default function SingleJournalVoucher() {
 
   const handleReferenceSave = async () => {
     if (editingReferenceIndex === null || !data) {
-      return;
+      return
     }
-  
-    const journalDetail = data[editingReferenceIndex];
-    console.log('Before update - Current data:', data);
-    
-    setIsUpdating(true);
-    setError(null);
-  
+
+    const journalDetail = data[editingReferenceIndex]
+    console.log('Before update - Current data:', data)
+
+    setIsUpdating(true)
+    setError(null)
+
     try {
       const response = await editJournalDetail({
         id: journalDetail.id,
-        notes: editingReferenceText
-      });
-  
-      console.log('API Response:', response);
-  
+        notes: editingReferenceText,
+      })
+
+      console.log('API Response:', response)
+
       if (response.error) {
-        throw new Error(response.error?.message || 'Failed to update notes');
+        throw new Error(response.error?.message || 'Failed to update notes')
       }
-  
+
       // Reset editing state
-      setEditingReferenceIndex(null);
-      setEditingReferenceText('');
-  
+      setEditingReferenceIndex(null)
+      setEditingReferenceText('')
+
       // Refetch the data to ensure we have the latest from the database
       if (voucherid) {
-        console.log('Refetching data for voucher:', voucherid);
-        const refreshResponse = await getSingleVoucher(voucherid);
-        console.log('Refresh response:', refreshResponse);
-        
+        console.log('Refetching data for voucher:', voucherid)
+        const refreshResponse = await getSingleVoucher(voucherid)
+        console.log('Refresh response:', refreshResponse)
+
         if (refreshResponse.error || !refreshResponse.data) {
-          throw new Error(refreshResponse.error?.message || 'Failed to refresh data');
+          throw new Error(
+            refreshResponse.error?.message || 'Failed to refresh data'
+          )
         }
-        console.log('Setting new data:', refreshResponse.data);
-        setData(refreshResponse.data);
+        console.log('Setting new data:', refreshResponse.data)
+        setData(refreshResponse.data)
       }
-  
+
       toast({
         title: 'Success',
-        description: 'Notes updated successfully'
-      });
+        description: 'Notes updated successfully',
+      })
     } catch (error) {
-      console.error('Error updating notes:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update notes');
+      console.error('Error updating notes:', error)
+      setError(
+        error instanceof Error ? error.message : 'Failed to update notes'
+      )
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update notes',
-        variant: 'destructive'
-      });
+        description:
+          error instanceof Error ? error.message : 'Failed to update notes',
+        variant: 'destructive',
+      })
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false)
     }
-  };
+  }
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -133,7 +151,12 @@ export default function SingleJournalVoucher() {
     }
   }, [])
 
-  const handleReverseVoucher = async () => {
+  const handleReverseVoucher = () => {
+    setIsAlertDialogOpen(true)
+  }
+
+  const confirmReverseVoucher = async () => {
+    setIsAlertDialogOpen(false)
     const createdId = userId
     let voucherId
     if (data && data[0]) {
@@ -201,20 +224,46 @@ export default function SingleJournalVoucher() {
               <span>{data[0].date}</span>
             </div>
             <div className="grid grid-cols-[120px,1fr] gap-8">
-              <span className="font-medium whitespace-nowrap">Created By:</span>
+              <span className="font-medium whitespace-nowrap">
+                Created By:{' '}
+              </span>
               <span></span>
             </div>
           </div>
           <div className="flex justify-end gap-2 no-print">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReverseVoucher}
-              disabled={isReversingVoucher}
+            <AlertDialog
+              open={isAlertDialogOpen}
+              onOpenChange={setIsAlertDialogOpen}
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {isReversingVoucher ? 'Reversing...' : 'Reverse'}
-            </Button>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReverseVoucher}
+                  disabled={isReversingVoucher || data[0].isreversed}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  {isReversingVoucher ? 'Reversing...' : 'Reverse'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className='bg-white'>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you sure you want to reverse this voucher?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. Reversing the voucher will
+                    create a new voucher with opposite entries.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmReverseVoucher}>
+                    Reverse Voucher
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="outline"
               size="sm"
@@ -225,6 +274,16 @@ export default function SingleJournalVoucher() {
             </Button>
           </div>
         </div>
+
+        {/* Reversed Voucher Alert */}
+        {data[0].isreversed && (
+          <Alert className="mb-4">
+            <AlertTitle>Voucher Reversed</AlertTitle>
+            <AlertDescription>
+              This voucher has been reversed. No further actions can be taken.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Journal Items Table */}
         <div className="mb-6">
@@ -298,4 +357,3 @@ export default function SingleJournalVoucher() {
     </Card>
   )
 }
-
