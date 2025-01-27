@@ -3,12 +3,9 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { CalendarIcon, Plus, Edit } from 'lucide-react'
+import { Plus, Edit, ArrowUpDown } from 'lucide-react'
 import { format } from 'date-fns'
-
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
 import {
   Form,
   FormControl,
@@ -26,11 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -46,11 +38,18 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
+  TableHeader,
 } from '@/components/ui/table'
 import {
-  bankAccountSchema,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import {
   createBankAccount,
   editBankAccount,
   getAllBankAccounts,
@@ -58,11 +57,24 @@ import {
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
-import { AccountsHead, BankAccount, ChartOfAccount } from '@/utils/type'
+import {
+  createBankAccountSchema,
+  type AccountsHead,
+  type BankAccount,
+  type CreateBankAccount,
+} from '@/utils/type'
+
+type SortColumn =
+  | 'accountName'
+  | 'accountNumber'
+  | 'bankName'
+  | 'currencyId'
+  | 'accountType'
+  | 'openingBalance'
+  | 'isActive'
+type SortDirection = 'asc' | 'desc'
 
 export default function BankAccounts() {
-  // const { user } = useAuthContext()
-  // console.log('auth', user)
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingAccount, setEditingAccount] =
@@ -70,6 +82,10 @@ export default function BankAccounts() {
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
   const [glAccounts, setGlAccounts] = React.useState<AccountsHead[]>([])
+  const [sortColumn, setSortColumn] = React.useState<SortColumn>('accountName')
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const itemsPerPage = 10
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -83,7 +99,7 @@ export default function BankAccounts() {
   }, [])
 
   const form = useForm<BankAccount>({
-    resolver: zodResolver(bankAccountSchema),
+    resolver: zodResolver(createBankAccountSchema),
     defaultValues: {
       accountName: '',
       accountNumber: '',
@@ -94,28 +110,25 @@ export default function BankAccounts() {
       isActive: true,
       isReconcilable: true,
       createdBy: userId,
-      glAccountId: 0,
+      glAccountId: 0, // Initialize as a number
     },
   })
 
   React.useEffect(() => {
-    // console.log('Fetching bank accounts')
     fetchBankAccounts()
   }, [])
 
   React.useEffect(() => {
-    // console.log('Fetching gl accounts')
     fetchGlAccounts()
   }, [])
 
   React.useEffect(() => {
-    console.log('Resetting form', { editingAccount })
     if (editingAccount) {
       form.reset({
         ...editingAccount,
         openingBalance: Number(editingAccount.openingBalance),
         updatedBy: userId,
-        glAccountId: editingAccount.glAccountId || 0,
+        glAccountId: Number(editingAccount.glAccountId) || 0,
       })
     } else {
       form.reset({
@@ -160,11 +173,11 @@ export default function BankAccounts() {
           fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
       })
     } else {
-      setGlAccounts(fetchedGlAccounts.data) //need to add the correct type in api file
+      setGlAccounts(fetchedGlAccounts.data)
     }
   }
 
-  async function onSubmit(values: BankAccount) {
+  async function onSubmit(values: CreateBankAccount) {
     console.log('Form submitted:', values)
     if (editingAccount) {
       console.log('Editing account:', editingAccount.id)
@@ -184,6 +197,8 @@ export default function BankAccounts() {
           title: 'Success',
           description: 'Bank account updated successfully',
         })
+        form.reset()
+        fetchBankAccounts()
       }
     } else {
       console.log('Creating new account')
@@ -196,12 +211,12 @@ export default function BankAccounts() {
           title: 'Success',
           description: 'Bank account created successfully',
         })
+        form.reset()
+        fetchBankAccounts()
       }
     }
     setIsDialogOpen(false)
     setEditingAccount(null)
-    form.reset()
-    fetchBankAccounts()
   }
 
   function handleEdit(account: BankAccount) {
@@ -210,13 +225,46 @@ export default function BankAccounts() {
     console.log(account, 'account')
   }
 
-  console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  const sortedAccounts = React.useMemo(() => {
+    const sorted = [...accounts]
+    sorted.sort((a, b) => {
+      if (sortColumn === 'openingBalance') {
+        return sortDirection === 'asc'
+          ? Number(a[sortColumn]) - Number(b[sortColumn])
+          : Number(b[sortColumn]) - Number(a[sortColumn])
+      }
+      if (sortColumn === 'isActive') {
+        return sortDirection === 'asc'
+          ? Number(a.isActive) - Number(b.isActive)
+          : Number(b.isActive) - Number(a.isActive)
+      }
+      return sortDirection === 'asc'
+        ? String(a[sortColumn]).localeCompare(String(b[sortColumn]))
+        : String(b[sortColumn]).localeCompare(String(a[sortColumn]))
+    })
+    return sorted
+  }, [accounts, sortColumn, sortDirection])
+
+  const paginatedAccounts = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return sortedAccounts.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedAccounts, currentPage])
+
+  const totalPages = Math.ceil(accounts.length / itemsPerPage)
+
+  const handleSort = (column: SortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Bank Accounts</h1>
+        <h1 className="text-2xl font-bold">Bank Accounts</h1>
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
@@ -385,7 +433,9 @@ export default function BankAccounts() {
                               placeholder="0.00"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value))
+                                field.onChange(
+                                  Number.parseFloat(e.target.value)
+                                )
                               }
                             />
                           </FormControl>
@@ -398,47 +448,19 @@ export default function BankAccounts() {
                       name="validityDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Validity Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={'outline'}
-                                  className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(new Date(field.value), 'PPP')
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-auto p-0"
-                              align="start"
-                            >
-                              <Calendar
-                                mode="single"
-                                selected={
-                                  field.value
-                                    ? new Date(field.value)
-                                    : undefined
-                                }
-                                onSelect={(date) =>
-                                  field.onChange(date?.toISOString())
-                                }
-                                disabled={(date) =>
-                                  date < new Date('1900-01-01')
-                                }
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <FormLabel>Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={
+                                field.value
+                                  ? format(field.value, 'yyyy-MM-dd')
+                                  : ''
+                              }
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -496,8 +518,10 @@ export default function BankAccounts() {
                         <FormItem>
                           <FormLabel>GL Account</FormLabel>
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value?.toString()}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
+                            value={field.value?.toString() || ''}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -505,14 +529,16 @@ export default function BankAccounts() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {glAccounts?.map((glaccount) => (
-                                <SelectItem
-                                  key={glaccount.accountId}
-                                  value={glaccount.accountId.toString()}
-                                >
-                                  {glaccount.name} ({glaccount.code})
-                                </SelectItem>
-                              ))}
+                              {glAccounts
+                                ?.filter((glaccount) => !glaccount.isGroup)
+                                .map((glaccount) => (
+                                  <SelectItem
+                                    key={glaccount.accountId}
+                                    value={glaccount.accountId.toString()}
+                                  >
+                                    {glaccount.name} ({glaccount.code})
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -549,21 +575,77 @@ export default function BankAccounts() {
         </Dialog>
       </div>
       <div className="flex flex-col">
-        <Table>
-          <TableHeader>
+        <Table className="border shadow-md">
+          <TableHeader className="shadow-md bg-slate-200">
             <TableRow>
-              <TableHead>Account Name</TableHead>
-              <TableHead>Account Number</TableHead>
-              <TableHead>Bank Name</TableHead>
-              <TableHead>Currency</TableHead>
-              <TableHead>Account Type</TableHead>
-              <TableHead>Opening Balance</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead
+                onClick={() => handleSort('accountName')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Account Name</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('accountNumber')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Account Number</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('bankName')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Bank Name</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('currencyId')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Currency</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('accountType')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Account Type</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('openingBalance')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Opening Balance</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+              <TableHead
+                onClick={() => handleSort('isActive')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Status</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {accounts.map((account) => (
+            {paginatedAccounts.map((account) => (
               <TableRow key={account.id}>
                 <TableCell>{account.accountName}</TableCell>
                 <TableCell>{account.accountNumber}</TableCell>
@@ -588,6 +670,44 @@ export default function BankAccounts() {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                  }
+                />
+              </PaginationItem>
+              {[...Array(totalPages)].map((_, index) => (
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(index + 1)}
+                    isActive={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : ''
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </div>
   )
