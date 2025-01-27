@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,12 +21,16 @@ import {
   JournalEntryWithDetailsSchema,
   VoucherTypes,
 } from '@/utils/type'
-import { createJournalEntryWithDetails } from '@/api/journal-voucher-api'
-import { toast } from '@/hooks/use-toast'
 
-export function JournalVoucherPopup() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+interface JournalVoucherPopupProps {
+  handleSubmit: (data: JournalEntryWithDetails) => void;
+  isSubmitting: boolean;
+  onSubmit: (data: JournalEntryWithDetails) => void;
+}
+
+export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVoucherPopupProps) {
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -53,50 +56,6 @@ export function JournalVoucherPopup() {
     },
   })
 
-  const handleSubmit = async (data: JournalEntryWithDetails) => {
-    try {
-      setIsSubmitting(true)
-      console.log('Submitting voucher:', data)
-      
-      // Calculate total amount from details
-      const amountTotal = data.journalDetails.reduce(
-        (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
-        0
-      )
-      
-      // Update the total amount before submission
-      const submissionData = {
-        ...data,
-        journalEntry: {
-          ...data.journalEntry,
-          amountTotal,
-        },
-      }
-
-      const response = await createJournalEntryWithDetails(submissionData)
-      
-      if (response.error || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create voucher')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Voucher created successfully',
-      })
-      
-      setIsOpen(false)
-      form.reset()
-    } catch (error) {
-      console.error('Error creating voucher:', error)
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create voucher',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   const addEntry = () => {
     const currentEntries = form.getValues('journalDetails')

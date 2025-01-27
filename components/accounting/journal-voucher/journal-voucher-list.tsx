@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, use } from 'react'
 import {
   Table,
   TableBody,
@@ -12,23 +12,28 @@ import {
 import { JournalVoucherPopup } from './journal-voucher-popup'
 import {
   type CompanyFromLocalstorage,
+  JournalEntryWithDetails,
   type JournalQuery,
-  type JournalResult,
   type LocationFromLocalstorage,
   type User,
   VoucherTypes,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
-import { getAllVoucher } from '@/api/journal-voucher-api'
+import {
+  createJournalEntryWithDetails,
+  getAllVoucher,
+} from '@/api/journal-voucher-api'
 import Link from 'next/link'
 
 interface Voucher {
-  id: number
-  voucherNo: string
-  voucherDate: string
+  voucherid: number
+  voucherno: string
+  date: string
   notes: string
-  companyNameLocation: string
-  amount: number
+  companyname: string
+  location: string
+  currency: string
+  totalamount: number
 }
 
 export default function VoucherTable() {
@@ -36,8 +41,9 @@ export default function VoucherTable() {
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
-  const [vouchergrid, setVoucherGrid] = useState<JournalResult[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -68,10 +74,16 @@ export default function VoucherTable() {
     }
     const response = await getAllVoucher(voucherQuery)
     if (response.error) {
-      console.log('Error getting Voucher Data:', response.error)
+      console.error('Error getting Voucher Data:', response.error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch vouchers.',
+      })
+      setVouchers([]) // Reset to an empty array on error
     } else {
-      console.log('voucher', response.data)
-      setVoucherGrid(response.data || [])
+      console.log('API Response:', response.data)
+      // Ensure response.data is an array
+      setVouchers(Array.isArray(response.data) ? response.data : [])
     }
     setIsLoading(false)
   }
@@ -83,23 +95,63 @@ export default function VoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = (voucherData: Omit<Voucher, 'id'>) => {
-    console.log('Submitting voucher:', voucherData)
-    const newVoucher: Voucher = {
-      ...voucherData,
-      id: vouchers.length + 1,
-      amount: Number.parseFloat(voucherData.amount.toString()),
+  const handleSubmit = async (data: JournalEntryWithDetails) => {
+    setIsSubmitting(true)
+    console.log('Submitting voucher:', data)
+
+    // Calculate total amount from details
+    const amountTotal = data.journalDetails.reduce(
+      (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
+      0
+    )
+
+    // Update the total amount before submission
+    const submissionData = {
+      ...data,
+      journalEntry: {
+        ...data.journalEntry,
+        amountTotal,
+      },
     }
-    setVouchers([...vouchers, newVoucher])
+
+    const response = await createJournalEntryWithDetails(submissionData)
+
+    if (response.error || !response.data) {
+      // throw new Error(response.error?.message || 'Failed to create voucher')
+      toast({
+        title: 'error',
+        description: `${response.error?.message}`,
+        variant: 'destructive',
+        
+      })
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Voucher created successfully',
+      })
+    }
+
+    setIsOpen(false)
+    setIsSubmitting(false)
+    fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
+    // setIsSubmitting(false)
   }
+
+  useEffect(() => {
+    fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
+  }, [])
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Journal Vouchers</h1>
-        <JournalVoucherPopup onSubmit={handleSubmit} />
+        <JournalVoucherPopup
+          handleSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
+        />
       </div>
-      <Table className='border'>
+      <Table className="border">
         <TableHeader>
           <TableRow>
             <TableHead>Voucher No.</TableHead>
@@ -114,19 +166,19 @@ export default function VoucherTable() {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 Loading...
               </TableCell>
             </TableRow>
-          ) : vouchergrid.length === 0 ? (
+          ) : vouchers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 No journal voucher is available.
               </TableCell>
             </TableRow>
           ) : (
-            vouchergrid.map((voucher) => (
-              <TableRow key={voucher.id}>
+            vouchers.map((voucher) => (
+              <TableRow key={voucher.voucherid}>
                 <TableCell className="font-medium">
                   <Link
                     href={`/accounting/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
@@ -140,7 +192,7 @@ export default function VoucherTable() {
                 <TableCell>{voucher.location}</TableCell>
                 <TableCell>{voucher.currency}</TableCell>
                 <TableCell className="text-right">
-                  ${voucher.totalamount.toFixed(2)}
+                  {voucher.totalamount.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))
