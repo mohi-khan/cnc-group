@@ -295,22 +295,24 @@ export default function BankAccounts() {
               >
                 <div className="pr-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="accountName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Account Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter account name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {!editingAccount && (
+                      <FormField
+                        control={form.control}
+                        name="accountName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter account name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     <FormField
                       control={form.control}
                       name="accountNumber"
@@ -466,7 +468,7 @@ export default function BankAccounts() {
                       )}
                     />
                   </div>
-                  <div className="flex space-x-4 pt-5">
+                  <div className="flex space-x-4 py-5">
                     <FormField
                       control={form.control}
                       name="isActive"
@@ -510,42 +512,44 @@ export default function BankAccounts() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-4 py-5">
-                    <FormField
-                      control={form.control}
-                      name="glAccountId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>GL Account</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={field.value?.toString() || ''}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select GL Account" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {glAccounts
-                                ?.filter((glaccount) => !glaccount.isGroup)
-                                .map((glaccount) => (
-                                  <SelectItem
-                                    key={glaccount.accountId}
-                                    value={glaccount.accountId.toString()}
-                                  >
-                                    {glaccount.name} ({glaccount.code})
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {!editingAccount && (
+                    <div className="grid grid-cols-1 gap-4 pb-5">
+                      <FormField
+                        control={form.control}
+                        name="glAccountId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>GL Account</FormLabel>
+                            <Select
+                              onValueChange={(value) =>
+                                field.onChange(Number(value))
+                              }
+                              value={field.value?.toString() || ''}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select GL Account" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {glAccounts
+                                  ?.filter((glaccount) => !glaccount.isGroup)
+                                  .map((glaccount) => (
+                                    <SelectItem
+                                      key={glaccount.accountId}
+                                      value={glaccount.accountId.toString()}
+                                    >
+                                      {glaccount.name} ({glaccount.code})
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                   <FormField
                     control={form.control}
                     name="notes"
