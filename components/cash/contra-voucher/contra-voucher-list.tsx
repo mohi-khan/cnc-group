@@ -24,11 +24,10 @@ import { ContraVoucherPopup } from './contra-voucher-popup'
 const initialVouchers: JournalResult[] = []
 
 export default function ContraVoucherTable() {
-  const [vouchers, setVouchers] = useState<JournalResult[]>([])
+  const [vouchers, setVouchers] = useState<JournalResult[]>(initialVouchers)
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
-  const [vouchergrid, setVoucherGrid] = useState<JournalResult[]>([])
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -56,13 +55,11 @@ export default function ContraVoucherTable() {
       voucherType: VoucherTypes.ContraVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
-    if (response.data) {
+    if (response.data && Array.isArray(response.data)) {
       console.log('voucher', response.data)
-      setVoucherGrid(response.data)
       setVouchers(response.data)
     } else {
       console.log('No voucher data available')
-      setVoucherGrid([])
       setVouchers([])
     }
   }
@@ -81,10 +78,12 @@ export default function ContraVoucherTable() {
     // For now, we'll just add it to the local state
     const newVoucher: JournalResult = {
       ...voucherData,
-      id: vouchergrid.length + 1,
-      totalamount: Number(voucherData.totalamount),
+      voucherid: vouchers.length + 1,
+      totalamount: Number(voucherData.totalamount) || 0,
+      state: 0,
+      journaltype: 'Contra Voucher',
     } as JournalResult
-    setVoucherGrid([...vouchergrid, newVoucher])
+    setVouchers([...vouchers, newVoucher])
   }
 
   return (
@@ -93,26 +92,29 @@ export default function ContraVoucherTable() {
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
         <ContraVoucherPopup onSubmit={handleSubmit} />
       </div>
-      <Table className='border'>
+      <Table className="border">
         <TableHeader>
           <TableRow>
             <TableHead>Voucher No.</TableHead>
             <TableHead>Voucher Date</TableHead>
             <TableHead>Notes</TableHead>
-            <TableHead>Company Name & Location</TableHead>
+            <TableHead>Company Name</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Currency</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {vouchers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
+              <TableCell colSpan={6} className="text-center py-4">
                 No contra voucher is available
               </TableCell>
             </TableRow>
           ) : (
             vouchers.map((voucher) => (
-              <TableRow key={voucher.id}>
+              <TableRow key={voucher.voucherid}>
                 <TableCell className="font-medium">
                   <Link
                     href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
@@ -122,9 +124,12 @@ export default function ContraVoucherTable() {
                 </TableCell>
                 <TableCell>{voucher.date}</TableCell>
                 <TableCell>{voucher.notes}</TableCell>
-                <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
+                <TableCell>{voucher.companyname}</TableCell>
+                <TableCell>{voucher.location}</TableCell>
+                <TableCell>{voucher.currency}</TableCell>
+                <TableCell>{voucher.state === 1 ? 'Post': 'Draft'}</TableCell>
                 <TableCell className="text-right">
-                  ${voucher.totalamount.toFixed(2)}
+                  {voucher.totalamount.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))
