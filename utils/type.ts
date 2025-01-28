@@ -550,6 +550,7 @@ const VoucherSchemaById = z.object({
   id: z.number(),
   accountsname: z.string(),
   costcenter: z.string().nullable(),
+  createdby: z.number(),
   department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),

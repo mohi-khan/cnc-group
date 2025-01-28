@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, use } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
 import { JournalVoucherPopup } from './journal-voucher-popup'
 import {
   type CompanyFromLocalstorage,
-  JournalEntryWithDetails,
+  type JournalEntryWithDetails,
   type JournalQuery,
   type LocationFromLocalstorage,
   type User,
@@ -24,6 +24,9 @@ import {
   getAllVoucher,
 } from '@/api/journal-voucher-api'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import Loader from '@/utils/loader'
 
 interface Voucher {
   voucherid: number
@@ -33,6 +36,7 @@ interface Voucher {
   companyname: string
   location: string
   currency: string
+  state: number
   totalamount: number
 }
 
@@ -44,6 +48,39 @@ export default function VoucherTable() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+
+  const fetchAllVoucher = useCallback(
+    async (company: number[], location: number[]) => {
+      setIsLoading(true)
+      const voucherQuery: JournalQuery = {
+        date: new Date().toISOString().split('T')[0],
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.JournalVoucher,
+      }
+      try {
+        const response = await getAllVoucher(voucherQuery)
+        if (response.error) {
+          throw new Error(response.error)
+        }
+        console.log('API Response:', response.data)
+        setVouchers(Array.isArray(response.data) ? response.data : [])
+        setRetryCount(0) // Reset retry count on successful fetch
+      } catch (error) {
+        console.error('Error getting Voucher Data:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch vouchers. Retrying...',
+        })
+        setVouchers([])
+        setRetryCount((prevCount) => prevCount + 1)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -57,40 +94,27 @@ export default function VoucherTable() {
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
       console.log({ companyIds, locationIds })
+
       fetchAllVoucher(companyIds, locationIds)
     } else {
       console.log('No user data found in localStorage')
       setIsLoading(false)
     }
-  }, [])
+  }, [fetchAllVoucher])
 
-  async function fetchAllVoucher(company: number[], location: number[]) {
-    setIsLoading(true)
-    const voucherQuery: JournalQuery = {
-      date: new Date().toISOString().split('T')[0],
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.JournalVoucher,
+  useEffect(() => {
+    if (retryCount > 0 && retryCount <= 3) {
+      const timer = setTimeout(() => {
+        fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
+      }, 2000) // Retry after 2 seconds
+      return () => clearTimeout(timer)
     }
-    const response = await getAllVoucher(voucherQuery)
-    if (response.error) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch vouchers.',
-      })
-      setVouchers([]) // Reset to an empty array on error
-    } else {
-      console.log('API Response:', response.data)
-      // Ensure response.data is an array
-      setVouchers(Array.isArray(response.data) ? response.data : [])
-    }
-    setIsLoading(false)
-  }
+  }, [retryCount, companies, locations, fetchAllVoucher])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
@@ -104,25 +128,25 @@ export default function VoucherTable() {
       (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
       0
     )
+    console.log("🚀 ~ handleSubmit ~ amountTotal:", data.journalEntry.amountTotal)
 
     // Update the total amount before submission
     const submissionData = {
       ...data,
       journalEntry: {
         ...data.journalEntry,
-        amountTotal,
+        amountTotal: amountTotal,
       },
     }
+    console.log("🚀 ~ handleSubmit ~ submissionData:", submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
 
     if (response.error || !response.data) {
-      // throw new Error(response.error?.message || 'Failed to create voucher')
       toast({
         title: 'error',
         description: `${response.error?.message}`,
         variant: 'destructive',
-        
       })
     } else {
       toast({
@@ -134,12 +158,7 @@ export default function VoucherTable() {
     setIsOpen(false)
     setIsSubmitting(false)
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
-    // setIsSubmitting(false)
   }
-
-  useEffect(() => {
-    fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
-  }, [])
 
   return (
     <div className="container mx-auto py-10">
@@ -148,11 +167,10 @@ export default function VoucherTable() {
         <JournalVoucherPopup
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          onSubmit={handleSubmit}
         />
       </div>
-      <Table className="border">
-        <TableHeader>
+      <Table className="border shadow-md">
+        <TableHeader className='bg-slate-200 shadow-md'>
           <TableRow>
             <TableHead>Voucher No.</TableHead>
             <TableHead>Voucher Date</TableHead>
@@ -160,20 +178,34 @@ export default function VoucherTable() {
             <TableHead>Company Name</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Currency</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
-                Loading...
+              <TableCell colSpan={10} className="text-center py-4">
+                <Loader />
               </TableCell>
             </TableRow>
           ) : vouchers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={10} className="text-center py-4">
                 No journal voucher is available.
+                {retryCount <= 3 && (
+                  <Button
+                    onClick={() =>
+                      fetchAllVoucher(
+                        getCompanyIds(companies),
+                        getLocationIds(locations)
+                      )
+                    }
+                    className="ml-2"
+                  >
+                    Retry
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ) : (
@@ -191,6 +223,7 @@ export default function VoucherTable() {
                 <TableCell>{voucher.companyname}</TableCell>
                 <TableCell>{voucher.location}</TableCell>
                 <TableCell>{voucher.currency}</TableCell>
+                <TableCell>{`${voucher.state == 0 ? 'Draft' : 'Post'}`}</TableCell>
                 <TableCell className="text-right">
                   {voucher.totalamount.toFixed(2)}
                 </TableCell>
