@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/pagination'
 import {
   type CompanyFromLocalstorage,
+  JournalEntryWithDetails,
   type JournalQuery,
   type JournalResult,
   type LocationFromLocalstorage,
@@ -30,7 +31,7 @@ import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 import Loader from '@/utils/loader'
 
-const ITEMS_PER_PAGE = 8
+const ITEMS_PER_PAGE = 10
 
 export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
@@ -98,7 +99,8 @@ export default function ContraVoucherTable() {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
-        <ContraVoucherPopup />
+        <ContraVoucherPopup
+          fetchAllVoucher={fetchAllVoucher} />
       </div>
 
       <Table className="border shadow-md">

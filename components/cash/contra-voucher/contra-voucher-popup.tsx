@@ -25,7 +25,13 @@ import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 
-export function ContraVoucherPopup({}) {
+interface ChildComponentProps {
+  fetchAllVoucher: (company: number[], location: number[]) => void
+}
+
+export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
+  fetchAllVoucher,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -53,50 +59,111 @@ export function ContraVoucherPopup({}) {
     },
   })
 
+  // const handleSubmit = async (data: JournalEntryWithDetails) => {
+  //   try {
+  //     setIsSubmitting(true)
+  //     console.log('Submitting voucher:', data)
+
+  //     // Calculate total amount from details
+  //     const amountTotal = data.journalDetails.reduce(
+  //       (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
+  //       0
+  //     )
+
+  //     // Update the total amount before submission
+  //     const submissionData = {
+  //       ...data,
+  //       journalEntry: {
+  //         ...data.journalEntry,
+  //         amountTotal,
+  //       },
+  //     }
+
+  //     const response = await createJournalEntryWithDetails(submissionData)
+
+  //     if (response.error || !response.data) {
+  //       throw new Error(response.error?.message || 'Failed to create voucher')
+  //     }
+
+  //     toast({
+  //       title: 'Success',
+  //       description: 'Voucher created successfully',
+  //     })
+
+  //     form.reset()
+  //   } catch (error) {
+  //     console.error('Error creating voucher:', error)
+  //     toast({
+  //       title: 'Error',
+  //       description:
+  //         error instanceof Error ? error.message : 'Failed to create voucher',
+  //       variant: 'destructive',
+  //     })
+  //   } finally {
+  //     setIsSubmitting(false)
+  //     fetchAllVoucher(
+  //       [data.journalEntry.companyId],
+  //       [data.journalEntry.locationId]
+  //     )
+  //     setIsOpen(false)
+  //   }
+  // }
+
   const handleSubmit = async (data: JournalEntryWithDetails) => {
-    try {
-      setIsSubmitting(true)
-      console.log('Submitting voucher:', data)
+    setIsSubmitting(true)
+    console.log('Submitting voucher:', data)
 
-      // Calculate total amount from details
-      const amountTotal = data.journalDetails.reduce(
-        (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
-        0
-      )
+    // Calculate total amount from details
+    const amountTotal = data.journalDetails.reduce(
+      (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
+      0
+    )
 
-      // Update the total amount before submission
-      const submissionData = {
-        ...data,
-        journalEntry: {
-          ...data.journalEntry,
-          amountTotal,
-        },
-      }
-
-      const response = await createJournalEntryWithDetails(submissionData)
-
-      if (response.error || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create voucher')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Voucher created successfully',
-      })
-
-      form.reset()
-      setIsOpen(false)
-    } catch (error) {
-      console.error('Error creating voucher:', error)
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to create voucher',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsSubmitting(false)
+    // Update the total amount before submission
+    const submissionData = {
+      ...data,
+      journalEntry: {
+        ...data.journalEntry,
+        amountTotal,
+      },
     }
+
+    await createJournalEntryWithDetails(submissionData)
+      .then((response) => {
+        if (response.error || !response.data) {
+          console.error('Error creating voucher:', response.error)
+          toast({
+            title: 'Error',
+            description: response.error?.message || 'Failed to create voucher',
+            variant: 'destructive',
+          })
+          return
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Voucher created successfully',
+        })
+
+        form.reset()
+      })
+      .catch((error) => {
+        console.error('Error creating voucher:', error)
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error ? error.message : 'Failed to create voucher',
+          variant: 'destructive',
+        })
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+        fetchAllVoucher(
+          [data.journalEntry.companyId],
+          [data.journalEntry.locationId]
+        )
+        setIsOpen(false)
+      })
   }
 
   const removeEntry = (index: number) => {
