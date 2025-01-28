@@ -38,7 +38,7 @@ export function JournalVoucherPopup({
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false) //this is for controlling the popup
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),

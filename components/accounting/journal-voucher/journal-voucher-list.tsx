@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
 } from '@/api/journal-voucher-api'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowUpDown } from 'lucide-react'
 import Loader from '@/utils/loader'
 
 interface Voucher {
@@ -40,6 +40,9 @@ interface Voucher {
   totalamount: number
 }
 
+type SortColumn = keyof Voucher
+type SortDirection = 'asc' | 'desc'
+
 export default function VoucherTable() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
@@ -49,6 +52,16 @@ export default function VoucherTable() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const [sortColumn, setSortColumn] = useState<SortColumn>('voucherno')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+
+  const sortedVouchers = useMemo(() => {
+    return [...vouchers].sort((a, b) => {
+      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
+      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [vouchers, sortColumn, sortDirection])
 
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
@@ -124,21 +137,24 @@ export default function VoucherTable() {
     console.log('Submitting voucher:', data)
 
     // Calculate total amount from details
-    const amountTotal = data.journalDetails.reduce(
-      (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
-      0
+    // const amountTotal = data.journalDetails.reduce(
+    //   (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
+    //   0
+    // )
+    console.log(
+      '🚀 ~ handleSubmit ~ amountTotal:',
+      data.journalEntry.amountTotal
     )
-    console.log("🚀 ~ handleSubmit ~ amountTotal:", data.journalEntry.amountTotal)
 
     // Update the total amount before submission
     const submissionData = {
       ...data,
       journalEntry: {
         ...data.journalEntry,
-        amountTotal: amountTotal,
+        amountTotal: data.journalEntry.amountTotal,
       },
     }
-    console.log("🚀 ~ handleSubmit ~ submissionData:", submissionData)
+    console.log('🚀 ~ handleSubmit ~ submissionData:', submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
 
@@ -153,11 +169,21 @@ export default function VoucherTable() {
         title: 'Success',
         description: 'Voucher created successfully',
       })
+      setIsOpen(false)
     }
 
     setIsOpen(false)
     setIsSubmitting(false)
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
+  }
+
+  const handleSort = (column: SortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
   }
 
   return (
@@ -170,16 +196,29 @@ export default function VoucherTable() {
         />
       </div>
       <Table className="border shadow-md">
-        <TableHeader className='bg-slate-200 shadow-md'>
+        <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
           <TableRow>
-            <TableHead>Voucher No.</TableHead>
-            <TableHead>Voucher Date</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead>Company Name</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Currency</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            {[
+              { key: 'voucherno', label: 'Voucher No.' },
+              { key: 'date', label: 'Voucher Date' },
+              { key: 'notes', label: 'Notes' },
+              { key: 'companyname', label: 'Company Name' },
+              { key: 'location', label: 'Location' },
+              { key: 'currency', label: 'Currency' },
+              { key: 'state', label: 'Status' },
+              { key: 'totalamount', label: 'Amount' },
+            ].map(({ key, label }) => (
+              <TableHead
+                key={key}
+                className="cursor-pointer"
+                onClick={() => handleSort(key as SortColumn)}
+              >
+                <div className="flex items-center gap-1">
+                  {label}
+                  <ArrowUpDown className="h-4 w-4" />
+                </div>
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -189,7 +228,7 @@ export default function VoucherTable() {
                 <Loader />
               </TableCell>
             </TableRow>
-          ) : vouchers.length === 0 ? (
+          ) : sortedVouchers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={10} className="text-center py-4">
                 No journal voucher is available.
@@ -209,7 +248,7 @@ export default function VoucherTable() {
               </TableCell>
             </TableRow>
           ) : (
-            vouchers.map((voucher) => (
+            sortedVouchers.map((voucher) => (
               <TableRow key={voucher.voucherid}>
                 <TableCell className="font-medium">
                   <Link
