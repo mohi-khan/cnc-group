@@ -6,6 +6,7 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { TrialBalanceData } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import Loader from '@/utils/loader'
 
 export default function TrialBalanceTable({
   targetRef,
@@ -202,7 +203,9 @@ export default function TrialBalanceTable({
             {trialBalanceDataLocal.length > 0 ? (
               renderRows(trialBalanceDataLocal)
             ) : (
-              <div className="text-center p-4">Loading...</div>
+              <div className="text-center p-4">
+                <Loader />{' '}
+              </div>
             )}
           </div>
         </CardContent>

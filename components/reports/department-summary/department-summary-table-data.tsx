@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { CostCenterSummaryType, DepartmentSummaryType } from '@/utils/type'
+import Loader from '@/utils/loader'
 
 interface Props {
   data: DepartmentSummaryType[]
@@ -71,7 +72,7 @@ const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
             {data.length === 0 && (
               <tr>
                 <td className="border px-4 py-2 text-center" colSpan={4}>
-                  No data available
+                  <Loader />
                 </td>
               </tr>
             )}

@@ -482,7 +482,7 @@ export function ContraVoucherDetailsSection({
   useEffect(() => {
     fetchChartOfAccounts()
     fetchBankAccounts()
-  }, [fetchBankAccounts]) // Added fetchBankAccounts to dependencies
+  }, []) // Added fetchBankAccounts to dependencies
 
   const updateDisabledStates = (
     index: number,
