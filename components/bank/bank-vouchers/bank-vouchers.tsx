@@ -833,8 +833,8 @@ export default function BankVoucher() {
           </DialogContent>
         </Dialog>
       </div>
-      <Table className="border">
-        <TableHeader>
+      <Table className="border shadow md">
+        <TableHeader className='bg-slate-200 shadow-md'>
           <TableRow className="border-b">
             <TableHead>Voucher No.</TableHead>
             <TableHead>Check No.</TableHead>

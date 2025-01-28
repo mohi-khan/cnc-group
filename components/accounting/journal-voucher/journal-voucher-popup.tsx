@@ -25,7 +25,6 @@ import {
 interface JournalVoucherPopupProps {
   handleSubmit: (data: JournalEntryWithDetails) => void;
   isSubmitting: boolean;
-  onSubmit: (data: JournalEntryWithDetails) => void;
 }
 
 export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVoucherPopupProps) {

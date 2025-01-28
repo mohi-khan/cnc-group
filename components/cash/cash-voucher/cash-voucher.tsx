@@ -571,8 +571,8 @@ export default function CashVoucher() {
             </div>
 
             <div className="mb-6">
-              <Table className="border">
-                <TableHeader className="border">
+              <Table className="border shadow-md">
+                <TableHeader className="bg-slate-200 shadow-md">
                   <TableRow>
                     <TableHead>Type</TableHead>
                     <TableHead>Account Name</TableHead>
@@ -773,8 +773,8 @@ export default function CashVoucher() {
             </div>
             {/* List Section */}
             <div className="mb-6">
-              <Table className="border">
-                <TableHeader className="border">
+              <Table className="border shadow-md">
+                <TableHeader className="bg-slate-200 shadow-md">
                   <TableRow>
                     <TableHead>Voucher No</TableHead>
                     <TableHead>Company Name</TableHead>

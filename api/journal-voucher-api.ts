@@ -47,7 +47,7 @@ export async function getAllDepartments() {
   })
 }
 
-export async function getSingleVoucher(voucherid: number) {
+export async function getSingleVoucher(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,

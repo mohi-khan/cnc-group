@@ -60,33 +60,34 @@ export function JournalVoucherSubmit({
           <FormItem className="flex items-center gap-2">
             <FormControl>
               <Checkbox
-                checked={field.value === 1}
-                onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                checked={field.value === 0}
+                onCheckedChange={(checked) => field.onChange(checked ? 0 : 1)}
                 disabled={isSubmitting}
               />
             </FormControl>
-            <FormLabel className={isSubmitting ? 'opacity-50' : ''}>Draft</FormLabel>
+            <FormLabel className={isSubmitting ? 'opacity-50' : ''}>
+              Draft
+            </FormLabel>
           </FormItem>
         )}
       />
 
       <div className="flex justify-end gap-4">
-        <Button 
-          type="submit" 
-          onClick={onSubmit}
-          disabled={isSubmitting}
-        >
+        <Button type="submit" onClick={onSubmit} disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {form.getValues('journalEntry.state') === 1 ? 'Saving...' : 'Posting...'}
+              {form.getValues('journalEntry.state') === 0
+                ? 'Saving...'
+                : 'Posting...'}
             </>
+          ) : form.getValues('journalEntry.state') === 0 ? (
+            'Save as Draft'
           ) : (
-            form.getValues('journalEntry.state') === 1 ? 'Save as Draft' : 'Post'
+            'Post'
           )}
         </Button>
       </div>
     </div>
   )
 }
-

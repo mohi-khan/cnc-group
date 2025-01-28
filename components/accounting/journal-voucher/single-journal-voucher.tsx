@@ -49,7 +49,7 @@ export default function SingleJournalVoucher() {
       if (!voucherid) return
       console.log('Initial fetch for voucher:', voucherid)
       try {
-        const response = await getSingleVoucher(voucherid)
+        const response = await getSingleVoucher(voucherid.toString())
         console.log('Initial fetch response:', response)
         if (response.error || !response.data) {
           toast({
@@ -108,7 +108,7 @@ export default function SingleJournalVoucher() {
       // Refetch the data to ensure we have the latest from the database
       if (voucherid) {
         console.log('Refetching data for voucher:', voucherid)
-        const refreshResponse = await getSingleVoucher(voucherid)
+        const refreshResponse = await getSingleVoucher(voucherid.toString())
         console.log('Refresh response:', refreshResponse)
 
         if (refreshResponse.error || !refreshResponse.data) {
@@ -223,11 +223,9 @@ export default function SingleJournalVoucher() {
               </span>
               <span>{data[0].date}</span>
             </div>
-            <div className="grid grid-cols-[120px,1fr] gap-8">
-              <span className="font-medium whitespace-nowrap">
-                Created By:{' '}
-              </span>
-              <span></span>
+            <div className="flex gap-3">
+              <span className="font-medium whitespace-nowrap">Created By:</span>
+              <span>{data[0].createdby || 'N/A'}</span>
             </div>
           </div>
           <div className="flex justify-end gap-2 no-print">
@@ -246,7 +244,7 @@ export default function SingleJournalVoucher() {
                   {isReversingVoucher ? 'Reversing...' : 'Reverse'}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className='bg-white'>
+              <AlertDialogContent className="bg-white">
                 <AlertDialogHeader>
                   <AlertDialogTitle>
                     Are you sure you want to reverse this voucher?
@@ -317,7 +315,7 @@ export default function SingleJournalVoucher() {
                       className="border rounded px-2 py-1 w-full"
                     />
                   ) : (
-                    item.notes
+                    item.detail_notes
                   )}
                 </div>
                 <div>{item.debit.toLocaleString()}</div>
