@@ -135,7 +135,7 @@ export default function VoucherTable() {
       ...data,
       journalEntry: {
         ...data.journalEntry,
-        amountTotal: amountTotal,
+        amountTotal: data.journalEntry.amountTotal,
       },
     }
     console.log("🚀 ~ handleSubmit ~ submissionData:", submissionData)
