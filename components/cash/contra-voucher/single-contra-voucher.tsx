@@ -26,6 +26,7 @@ export default function SingleContraVoucher() {
 
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
+  const [userId, setUserId] = React.useState<number | null>(null)
 
   useEffect(() => {
     async function fetchVoucher() {
@@ -59,6 +60,20 @@ export default function SingleContraVoucher() {
     setEditingReferenceText(currentText)
   }
 
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
   const handleReferenceSave = () => {
     if (data && editingReferenceIndex !== null) {
       const updatedData = [...data]
@@ -72,7 +87,7 @@ export default function SingleContraVoucher() {
   }
 
   const handleReverseVoucher = async () => {
-    const createdId = 71 // Replace with actual user ID
+    const createdId = userId ?? 0 // Replace with actual user ID
     let voucherId = data?.[0].voucherno
     if (!voucherId || !data) return
 
