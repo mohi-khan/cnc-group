@@ -128,15 +128,17 @@ export default function VoucherTable() {
       (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
       0
     )
+    console.log("🚀 ~ handleSubmit ~ amountTotal:", data.journalEntry.amountTotal)
 
     // Update the total amount before submission
     const submissionData = {
       ...data,
       journalEntry: {
         ...data.journalEntry,
-        amountTotal,
+        amountTotal: amountTotal,
       },
     }
+    console.log("🚀 ~ handleSubmit ~ submissionData:", submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
 

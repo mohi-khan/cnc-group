@@ -100,8 +100,7 @@ export async function getAllVoucher(data: JournalQuery) {
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails
 ) {
-  console.log("Under APi:");
-  console.log(data);
+  console.log('journal', data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',

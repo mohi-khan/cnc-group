@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -11,25 +11,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Form } from '@/components/ui/form'
+import {
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+} from '@/components/ui/form'
 import { Plus } from 'lucide-react'
 import { JournalVoucherMasterSection } from './journal-voucher-master-section'
 import { JournalVoucherDetailsSection } from './journal-voucher-details-section'
 import { JournalVoucherSubmit } from './journal-voucher-submit'
 import {
-  JournalEntryWithDetails,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   VoucherTypes,
 } from '@/utils/type'
 
 interface JournalVoucherPopupProps {
-  handleSubmit: (data: JournalEntryWithDetails) => void;
-  isSubmitting: boolean;
+  handleSubmit: (data: JournalEntryWithDetails) => void
+  isSubmitting: boolean
 }
 
-export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVoucherPopupProps) {
-
-  const [isOpen, setIsOpen] = useState(false);
+export function JournalVoucherPopup({
+  handleSubmit,
+  isSubmitting,
+}: JournalVoucherPopupProps) {
+  const [isOpen, setIsOpen] = useState(false)
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -41,7 +50,7 @@ export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVouch
         companyId: 0,
         locationId: 0,
         currencyId: 1,
-        amountTotal: 0,
+        amountTotal: 55,
         createdBy: 60,
       },
       journalDetails: [
@@ -54,7 +63,6 @@ export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVouch
       ],
     },
   })
-
 
   const addEntry = () => {
     const currentEntries = form.getValues('journalDetails')
@@ -78,6 +86,13 @@ export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVouch
       )
     }
   }
+
+  useEffect(() => {
+    const totalDebit = form
+      .watch('journalDetails')
+      .reduce((sum, detail) => sum + (detail.debit || 0), 0)
+    form.setValue('journalEntry.amountTotal', totalDebit)
+  }, [form.watch('journalDetails'), form.setValue]) // Added form.setValue to dependencies
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -114,4 +129,3 @@ export function JournalVoucherPopup({ handleSubmit, isSubmitting }: JournalVouch
     </Dialog>
   )
 }
-

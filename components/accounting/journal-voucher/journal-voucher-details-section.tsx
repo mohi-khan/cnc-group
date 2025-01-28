@@ -136,6 +136,7 @@ export function JournalVoucherDetailsSection({
         createdBy: 60,
         analyticTags: null,
         taxId: null,
+        amountTotal: 0,
       },
     ])
     // Focus on the first input of the new row after a short delay
