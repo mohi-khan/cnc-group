@@ -72,7 +72,7 @@ export default function SingleContraVoucher() {
   }
 
   const handleReverseVoucher = async () => {
-    const createdId = 70 // Replace with actual user ID
+    const createdId = 71 // Replace with actual user ID
     let voucherId = data?.[0].voucherno
     if (!voucherId || !data) return
 
@@ -87,7 +87,7 @@ export default function SingleContraVoucher() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(voucherid, createdId)
+      const response = await reverseJournalVoucher(Number(voucherid), createdId)
 
       if (!response.data || response.error) {
         toast({
@@ -136,7 +136,9 @@ export default function SingleContraVoucher() {
               <span>{data[0].date}</span>
             </div>
             <div className="grid grid-cols-[120px,1fr] gap-8">
-              <span className="font-medium whitespace-nowrap">Created By:</span>
+              <span className="font-medium whitespace-nowrap">
+                Created By:{data[0].createdby}
+              </span>
               <span></span>
             </div>
           </div>
@@ -150,7 +152,11 @@ export default function SingleContraVoucher() {
               <RotateCcw className="w-4 h-4 mr-2" />
               {isReversingVoucher ? 'Reversing...' : 'Reverse'}
             </Button>
-            <Button variant="outline" size="sm" onClick={reactToPrintFn}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reactToPrintFn()}
+            >
               <Printer className="w-4 h-4 mr-2" />
               Print
             </Button>
