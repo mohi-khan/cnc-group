@@ -17,6 +17,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { Button } from '@/components/ui/button'
+import { ArrowUpDown } from 'lucide-react'
 import {
   type CompanyFromLocalstorage,
   JournalEntryWithDetails,
@@ -33,6 +35,9 @@ import Loader from '@/utils/loader'
 
 const ITEMS_PER_PAGE = 10
 
+type SortField = keyof JournalResult
+type SortDirection = 'asc' | 'desc'
+
 export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
@@ -40,6 +45,8 @@ export default function ContraVoucherTable() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortField, setSortField] = useState<SortField>('voucherno')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -90,30 +97,85 @@ export default function ContraVoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const totalPages = Math.ceil(vouchers.length / ITEMS_PER_PAGE)
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedVouchers = [...vouchers].sort((a, b) => {
+    if (a[sortField] == null || b[sortField] == null) return 0
+    if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
+    if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const totalPages = Math.ceil(sortedVouchers.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentVouchers = vouchers.slice(startIndex, endIndex)
+  const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
-        <ContraVoucherPopup
-          fetchAllVoucher={fetchAllVoucher} />
+        <ContraVoucherPopup fetchAllVoucher={fetchAllVoucher} />
       </div>
 
       <Table className="border shadow-md">
         <TableHeader>
-          <TableRow className="bg-slate-200 shadow-md">
-            <TableHead>Voucher No.</TableHead>
-            <TableHead>Voucher Date</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead>Company Name</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Currency</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+          <TableRow className="bg-slate-200 shadow-md sticky top-28">
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('voucherno')}>
+                Voucher No.
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('date')}>
+                Voucher Date
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('notes')}>
+                Notes
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('companyname')}>
+                Company Name
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('location')}>
+                Location
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('currency')}>
+                Currency
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={() => handleSort('state')}>
+                Status
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead className="text-right">
+              <Button variant="ghost" onClick={() => handleSort('totalamount')}>
+                Amount
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
