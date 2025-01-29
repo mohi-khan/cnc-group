@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { JournalVoucherPopup } from './journal-voucher-popup'
 import {
   type CompanyFromLocalstorage,
@@ -28,9 +28,6 @@ interface Voucher {
   totalamount: number
 }
 
-type SortColumn = keyof Voucher
-type SortDirection = 'asc' | 'desc'
-
 export default function VoucherTable() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
@@ -39,9 +36,6 @@ export default function VoucherTable() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
-  const [sortColumn, setSortColumn] = useState<SortColumn>('voucherno')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -56,14 +50,6 @@ export default function VoucherTable() {
 
   const linkGenerator = (voucherId: number) =>
     `/accounting/journal-voucher/single-journal-voucher/${voucherId}`
-
-  const sortedVouchers = useMemo(() => {
-    return [...vouchers].sort((a, b) => {
-      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
-      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [vouchers, sortColumn, sortDirection])
 
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
@@ -81,15 +67,14 @@ export default function VoucherTable() {
         }
         console.log('API Response:', response.data)
         setVouchers(Array.isArray(response.data) ? response.data : [])
-        setRetryCount(0) // Reset retry count on successful fetch
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
         toast({
           title: 'Error',
-          description: 'Failed to fetch vouchers. Retrying...',
+          description: 'Failed to fetch vouchers. Please try again.',
+          variant: 'destructive',
         })
         setVouchers([])
-        setRetryCount((prevCount) => prevCount + 1)
       } finally {
         setIsLoading(false)
       }
@@ -116,15 +101,6 @@ export default function VoucherTable() {
       setIsLoading(false)
     }
   }, [fetchAllVoucher])
-
-  useEffect(() => {
-    if (retryCount > 0 && retryCount <= 3) {
-      const timer = setTimeout(() => {
-        fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
-      }, 2000) // Retry after 2 seconds
-      return () => clearTimeout(timer)
-    }
-  }, [retryCount, companies, locations, fetchAllVoucher])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
@@ -162,7 +138,7 @@ export default function VoucherTable() {
 
     if (response.error || !response.data) {
       toast({
-        title: 'error',
+        title: 'Error',
         description: `${response.error?.message}`,
         variant: 'destructive',
       })
@@ -179,15 +155,6 @@ export default function VoucherTable() {
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
   }
 
-  const handleSort = (column: SortColumn) => {
-    if (column === sortColumn) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(column)
-      setSortDirection('asc')
-    }
-  }
-
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
@@ -198,11 +165,11 @@ export default function VoucherTable() {
         />
       </div>
       <VoucherList
-        vouchers={sortedVouchers}
+        vouchers={vouchers}
         columns={columns}
         isLoading={isLoading}
-        onSort={handleSort}
         linkGenerator={linkGenerator}
+        itemsPerPage={10}
       />
     </div>
   )
