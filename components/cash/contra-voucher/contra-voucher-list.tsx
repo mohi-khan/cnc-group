@@ -1,14 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Pagination,
   PaginationContent,
@@ -17,11 +9,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { Button } from '@/components/ui/button'
-import { ArrowUpDown } from 'lucide-react'
 import {
   type CompanyFromLocalstorage,
-  JournalEntryWithDetails,
   type JournalQuery,
   type JournalResult,
   type LocationFromLocalstorage,
@@ -29,9 +18,8 @@ import {
   VoucherTypes,
 } from '@/utils/type'
 import { getAllVoucher } from '@/api/journal-voucher-api'
-import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
-import Loader from '@/utils/loader'
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 const ITEMS_PER_PAGE = 10
 
@@ -106,17 +94,33 @@ export default function ContraVoucherTable() {
     }
   }
 
-  const sortedVouchers = [...vouchers].sort((a, b) => {
-    if (a[sortField] == null || b[sortField] == null) return 0
-    if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
-    if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
-    return 0
-  })
+  const sortedVouchers = useMemo(() => {
+    return [...vouchers].sort((a, b) => {
+      if (a[sortField] == null || b[sortField] == null) return 0
+      if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
+      if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [vouchers, sortField, sortDirection])
 
   const totalPages = Math.ceil(sortedVouchers.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
   const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
+
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'date' as const, label: 'Voucher Date' },
+    { key: 'notes' as const, label: 'Notes' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'state' as const, label: 'Status' },
+    { key: 'totalamount' as const, label: 'Amount' },
+  ]
+
+  const linkGenerator = (voucherId: number) =>
+    `/cash/contra-vouchers/single-contra-voucher/${voucherId}`
 
   return (
     <div className="container mx-auto py-10">
@@ -125,96 +129,13 @@ export default function ContraVoucherTable() {
         <ContraVoucherPopup fetchAllVoucher={fetchAllVoucher} />
       </div>
 
-      <Table className="border shadow-md">
-        <TableHeader>
-          <TableRow className="bg-slate-200 shadow-md sticky top-28">
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('voucherno')}>
-                Voucher No.
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('date')}>
-                Voucher Date
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('notes')}>
-                Notes
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('companyname')}>
-                Company Name
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('location')}>
-                Location
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('currency')}>
-                Currency
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button variant="ghost" onClick={() => handleSort('state')}>
-                Status
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-            <TableHead className="text-right">
-              <Button variant="ghost" onClick={() => handleSort('totalamount')}>
-                Amount
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-4">
-                <Loader />
-              </TableCell>
-            </TableRow>
-          ) : currentVouchers.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-4">
-                No contra voucher is available
-              </TableCell>
-            </TableRow>
-          ) : (
-            currentVouchers.map((voucher) => (
-              <TableRow key={voucher.voucherid}>
-                <TableCell className="font-medium">
-                  <Link
-                    href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
-                  >
-                    {voucher.voucherno}
-                  </Link>
-                </TableCell>
-                <TableCell>{voucher.date}</TableCell>
-                <TableCell>{voucher.notes}</TableCell>
-                <TableCell>{voucher.companyname}</TableCell>
-                <TableCell>{voucher.location}</TableCell>
-                <TableCell>{voucher.currency}</TableCell>
-                <TableCell>{voucher.state === 1 ? 'Post' : 'Draft'}</TableCell>
-                <TableCell className="text-right">
-                  {voucher.totalamount.toFixed(2)}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+      <VoucherList
+        vouchers={currentVouchers}
+        columns={columns}
+        isLoading={isLoading}
+        onSort={handleSort}
+        linkGenerator={linkGenerator}
+      />
 
       {totalPages > 1 && (
         <Pagination className="mt-4">

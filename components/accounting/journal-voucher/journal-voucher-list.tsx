@@ -1,21 +1,12 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { JournalVoucherPopup } from './journal-voucher-popup'
 import {
   type CompanyFromLocalstorage,
   type JournalEntryWithDetails,
   type JournalQuery,
   type LocationFromLocalstorage,
-  type User,
   VoucherTypes,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
@@ -23,10 +14,7 @@ import {
   createJournalEntryWithDetails,
   getAllVoucher,
 } from '@/api/journal-voucher-api'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Loader2, ArrowUpDown } from 'lucide-react'
-import Loader from '@/utils/loader'
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 interface Voucher {
   voucherid: number
@@ -54,6 +42,20 @@ export default function VoucherTable() {
   const [retryCount, setRetryCount] = useState(0)
   const [sortColumn, setSortColumn] = useState<SortColumn>('voucherno')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'date' as const, label: 'Voucher Date' },
+    { key: 'notes' as const, label: 'Notes' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'state' as const, label: 'Status' },
+    { key: 'totalamount' as const, label: 'Amount' },
+  ]
+
+  const linkGenerator = (voucherId: number) =>
+    `/accounting/journal-voucher/single-journal-voucher/${voucherId}`
 
   const sortedVouchers = useMemo(() => {
     return [...vouchers].sort((a, b) => {
@@ -136,17 +138,11 @@ export default function VoucherTable() {
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
 
-    // Calculate total amount from details
-    // const amountTotal = data.journalDetails.reduce(
-    //   (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
-    //   0
-    // )
     console.log(
       '🚀 ~ handleSubmit ~ amountTotal:',
       data.journalEntry.amountTotal
     )
 
-    // Update the total amount before submission
     const submissionData = {
       ...data,
       journalEntry: {
@@ -154,12 +150,12 @@ export default function VoucherTable() {
         amountTotal: data.journalEntry.amountTotal,
         createdBy: userId,
       },
-      journalDetails: data.journalDetails.map(detail => ({
+      journalDetails: data.journalDetails.map((detail) => ({
         ...detail,
         createdBy: userId,
       })),
-    };
-    
+    }
+
     console.log('🚀 ~ handleSubmit ~ submissionData:', submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
@@ -201,82 +197,13 @@ export default function VoucherTable() {
           isSubmitting={isSubmitting}
         />
       </div>
-      <Table className="border shadow-md">
-        <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
-          <TableRow>
-            {[
-              { key: 'voucherno', label: 'Voucher No.' },
-              { key: 'date', label: 'Voucher Date' },
-              { key: 'notes', label: 'Notes' },
-              { key: 'companyname', label: 'Company Name' },
-              { key: 'location', label: 'Location' },
-              { key: 'currency', label: 'Currency' },
-              { key: 'state', label: 'Status' },
-              { key: 'totalamount', label: 'Amount' },
-            ].map(({ key, label }) => (
-              <TableHead
-                key={key}
-                className="cursor-pointer"
-                onClick={() => handleSort(key as SortColumn)}
-              >
-                <div className="flex items-center gap-1">
-                  {label}
-                  <ArrowUpDown className="h-4 w-4" />
-                </div>
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center py-4">
-                <Loader />
-              </TableCell>
-            </TableRow>
-          ) : sortedVouchers.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center py-4">
-                No journal voucher is available.
-                {/* {retryCount <= 3 && (
-                  <Button
-                    onClick={() =>
-                      fetchAllVoucher(
-                        getCompanyIds(companies),
-                        getLocationIds(locations)
-                      )
-                    }
-                    className="ml-2"
-                  >
-                    Retry
-                  </Button>
-                )} */}
-              </TableCell>
-            </TableRow>
-          ) : (
-            sortedVouchers.map((voucher) => (
-              <TableRow key={voucher.voucherid}>
-                <TableCell className="font-medium">
-                  <Link
-                    href={`/accounting/journal-voucher/single-journal-voucher/${voucher.voucherid}`}
-                  >
-                    {voucher.voucherno}
-                  </Link>
-                </TableCell>
-                <TableCell>{voucher.date}</TableCell>
-                <TableCell>{voucher.notes}</TableCell>
-                <TableCell>{voucher.companyname}</TableCell>
-                <TableCell>{voucher.location}</TableCell>
-                <TableCell>{voucher.currency}</TableCell>
-                <TableCell>{`${voucher.state == 0 ? 'Draft' : 'Post'}`}</TableCell>
-                <TableCell className="text-right">
-                  {voucher.totalamount.toFixed(2)}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+      <VoucherList
+        vouchers={sortedVouchers}
+        columns={columns}
+        isLoading={isLoading}
+        onSort={handleSort}
+        linkGenerator={linkGenerator}
+      />
     </div>
   )
 }
