@@ -49,7 +49,7 @@ export default function VoucherTable() {
   ]
 
   const linkGenerator = (voucherId: number) =>
-    `/accounting/journal-voucher/single-journal-voucher/${voucherId}`
+    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.JournalVoucher}`
 
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
