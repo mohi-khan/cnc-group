@@ -120,7 +120,7 @@ export default function ContraVoucherTable() {
   ]
 
   const linkGenerator = (voucherId: number) =>
-    `/cash/contra-vouchers/single-contra-voucher/${voucherId}`
+    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.ContraVoucher}`
 
   return (
     <div className="container mx-auto py-10">
