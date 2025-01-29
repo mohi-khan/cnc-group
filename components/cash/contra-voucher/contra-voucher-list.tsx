@@ -1,14 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
+import React, { useState, useEffect } from 'react'
 import {
   type CompanyFromLocalstorage,
   type JournalQuery,
@@ -21,20 +13,12 @@ import { getAllVoucher } from '@/api/journal-voucher-api'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 import VoucherList from '@/components/voucher-list/voucher-list'
 
-const ITEMS_PER_PAGE = 10
-
-type SortField = keyof JournalResult
-type SortDirection = 'asc' | 'desc'
-
 export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortField, setSortField] = useState<SortField>('voucherno')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -85,29 +69,6 @@ export default function ContraVoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortField(field)
-      setSortDirection('asc')
-    }
-  }
-
-  const sortedVouchers = useMemo(() => {
-    return [...vouchers].sort((a, b) => {
-      if (a[sortField] == null || b[sortField] == null) return 0
-      if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
-      if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [vouchers, sortField, sortDirection])
-
-  const totalPages = Math.ceil(sortedVouchers.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
-
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'date' as const, label: 'Voucher Date' },
@@ -130,49 +91,12 @@ export default function ContraVoucherTable() {
       </div>
 
       <VoucherList
-        vouchers={currentVouchers}
+        vouchers={vouchers}
         columns={columns}
         isLoading={isLoading}
-        onSort={handleSort}
         linkGenerator={linkGenerator}
+        itemsPerPage={10}
       />
-
-      {totalPages > 1 && (
-        <Pagination className="mt-4">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={
-                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                }
-              />
-            </PaginationItem>
-            {[...Array(totalPages)].map((_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(i + 1)}
-                  isActive={currentPage === i + 1}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : ''
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
     </div>
   )
 }

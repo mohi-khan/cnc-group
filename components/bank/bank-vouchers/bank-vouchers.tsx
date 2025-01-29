@@ -76,6 +76,7 @@ import {
   getAllVoucher,
 } from '@/api/vouchers-api'
 import Link from 'next/link'
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 interface User {
   userId: number
@@ -180,12 +181,18 @@ export default function BankVoucher() {
     name: 'journalDetails',
   })
 
-  const getCompanyIds = React.useCallback((data: CompanyFromLocalstorage[]): number[] => {
-    return data.map((company) => company.company.companyId)
-  }, [])
-  const getLocationIds = React.useCallback((data: LocationFromLocalstorage[]): number[] => {
-    return data.map((location) => location.location.locationId)
-  }, [])
+  const getCompanyIds = React.useCallback(
+    (data: CompanyFromLocalstorage[]): number[] => {
+      return data.map((company) => company.company.companyId)
+    },
+    []
+  )
+  const getLocationIds = React.useCallback(
+    (data: LocationFromLocalstorage[]): number[] => {
+      return data.map((location) => location.location.locationId)
+    },
+    []
+  )
 
   async function getallVoucher(company: number[], location: number[]) {
     try {
@@ -405,6 +412,21 @@ export default function BankVoucher() {
       )
     )
   }
+
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'date' as const, label: 'Check No.' },
+    { key: 'notes' as const, label: 'Company Name' },
+    { key: 'companyname' as const, label: 'Location' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'totalamount' as const, label: 'Bank Name' },
+    { key: 'totalamount' as const, label: 'Amount' },
+    { key: 'state' as const, label: 'Status' },
+  ]
+
+  const linkGenerator = (voucherId: number) =>
+    `/cash/contra-vouchers/single-contra-voucher/${voucherId}`
 
   return (
     <div className="w-[97%] mx-auto py-10">
@@ -833,7 +855,7 @@ export default function BankVoucher() {
           </DialogContent>
         </Dialog>
       </div>
-      <Table className="border shadow md">
+      {/* <Table className="border shadow md">
         <TableHeader className='bg-slate-200 shadow-md'>
           <TableRow className="border-b">
             <TableHead>Voucher No.</TableHead>
@@ -913,7 +935,15 @@ export default function BankVoucher() {
             </TableRow>
           )}
         </TableBody>
-      </Table>
+      </Table> */}
+
+      <VoucherList
+        vouchers={currentVouchers}
+        columns={columns}
+        isLoading={isLoading}
+        onSort={handleSort}
+        linkGenerator={linkGenerator}
+      />
     </div>
   )
 }
