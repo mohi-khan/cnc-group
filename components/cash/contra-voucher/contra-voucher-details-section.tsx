@@ -266,7 +266,10 @@ export function ContraVoucherDetailsSection({
                         key={account.id}
                         value={account.id.toString()}
                       >
-                        {account.accountName}-{account.accountNumber}
+                        {account.accountName}-
+                        <span className="font-bold">
+                          {account.accountNumber}{' '}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -352,7 +355,7 @@ export function ContraVoucherDetailsSection({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
