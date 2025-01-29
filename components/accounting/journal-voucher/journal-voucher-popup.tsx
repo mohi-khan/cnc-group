@@ -51,14 +51,14 @@ export function JournalVoucherPopup({
         locationId: 0,
         currencyId: 1,
         amountTotal: 55,
-        createdBy: 60,
+        createdBy: 0,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: 60,
+          createdBy: 0,
         },
       ],
     },

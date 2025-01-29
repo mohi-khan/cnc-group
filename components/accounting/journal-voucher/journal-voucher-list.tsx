@@ -47,7 +47,7 @@ export default function VoucherTable() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
-  const [user, setUser] = useState<User | null>(null)
+  const [userId, setUserId] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -99,10 +99,10 @@ export default function VoucherTable() {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
-      setUser(userData)
+      setUserId(userData.userId)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
+      console.log('Current user from localStorage:', userData.userId)
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
@@ -152,8 +152,14 @@ export default function VoucherTable() {
       journalEntry: {
         ...data.journalEntry,
         amountTotal: data.journalEntry.amountTotal,
+        createdBy: userId,
       },
-    }
+      journalDetails: data.journalDetails.map(detail => ({
+        ...detail,
+        createdBy: userId,
+      })),
+    };
+    
     console.log('🚀 ~ handleSubmit ~ submissionData:', submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
@@ -232,7 +238,7 @@ export default function VoucherTable() {
             <TableRow>
               <TableCell colSpan={10} className="text-center py-4">
                 No journal voucher is available.
-                {retryCount <= 3 && (
+                {/* {retryCount <= 3 && (
                   <Button
                     onClick={() =>
                       fetchAllVoucher(
@@ -244,7 +250,7 @@ export default function VoucherTable() {
                   >
                     Retry
                   </Button>
-                )}
+                )} */}
               </TableCell>
             </TableRow>
           ) : (
