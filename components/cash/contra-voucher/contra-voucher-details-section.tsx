@@ -43,7 +43,7 @@ export function ContraVoucherDetailsSection({
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
-  const [userId, setUserId] = useState<number | null>(null)
+  const [userId, setUserId] = useState<number>()
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -195,7 +195,7 @@ export function ContraVoucherDetailsSection({
         debit: 0,
         credit: 0,
         notes: '',
-        createdBy: 0,
+        createdBy: userId ?? 0,
         analyticTags: null,
         taxId: null,
       },
