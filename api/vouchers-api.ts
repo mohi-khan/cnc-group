@@ -4,6 +4,7 @@ import {
   ChartOfAccount,
   costCentersArraySchema,
   Department,
+  GetDepartment,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   JournalQuery,
@@ -65,7 +66,7 @@ export async function getAllResPartners() {
 }
 
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })
