@@ -25,10 +25,10 @@ interface Voucher {
   voucherid: number
   voucherno: string
   date: string
-  notes: string | null
-  companyname: string | null
-  location: string | null
-  currency: string | null
+  notes: string
+  companyname: string
+  location: string
+  currency: string
   state: number
   totalamount: number
 }

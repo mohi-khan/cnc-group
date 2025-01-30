@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Check, Printer, RotateCcw, Trash, ChevronsUpDown } from 'lucide-react'
+import { Check, RotateCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -39,23 +39,17 @@ import {
   getAllDepartments,
   getAllResPartners,
   getAllVoucher,
-  getAllVoucherById,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
 import {
   type AccountsHead,
-  ChartOfAccount,
-  Company,
   type CompanyFromLocalstorage,
   type CostCenter,
-  Department,
-  DetailRow,
+  type Department,
   type FormData,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
-  type JournalResult,
-  Location,
   type LocationFromLocalstorage,
   type ResPartner,
   type User,
@@ -63,13 +57,12 @@ import {
   VoucherTypes,
 } from '@/utils/type'
 import { getAllCostCenters } from '@/api/cost-centers-api'
-import { Checkbox } from '@/components/ui/checkbox'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
-import { cn } from '@/lib/utils'
 import { Combobox } from '@/components/ui/combobox'
 import Loader from '@/utils/loader'
+import { set } from 'date-fns'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -110,8 +103,10 @@ export default function CashVoucher() {
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [departments, setDepartments] = React.useState<Department[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
-  const [formType, setFormType] = React.useState('Payment')
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
+    AccountsHead[]
+  >([])
+  const [cashCoa, setCashCoa] = React.useState<
     AccountsHead[]
   >([])
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true)
@@ -150,8 +145,7 @@ export default function CashVoucher() {
       setIsLoadingLocations(false)
       setIsLoading(false)
     }
-  }, [])
-  // For Getting All The Vouchers
+  }, [router]) // Added router to dependencies
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
@@ -203,14 +197,22 @@ export default function CashVoucher() {
     }
   }, [companies, locations])
   React.useEffect(() => {
-    const accounttype = formType == 'Debit' ? 'Expenses' : 'Income'
-    console.log(accounttype)
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      return account.isGroup == false && account.accountType == accounttype
+      return (
+        account.isGroup === true 
+      )
     })
-    setFilteredChartOfAccounts(filteredCoa)
-    console.log('🚀 ~ React.useEffect ~ filteredCoa:', filteredCoa)
-  }, [formType, chartOfAccounts])
+
+    const isCashCoa = chartOfAccounts?.filter((account) => {
+      return (
+        account.isCash === true
+      )
+    })
+    setFilteredChartOfAccounts(filteredCoa || [])
+    setCashCoa(isCashCoa || [])
+    console.log('Filtered Chart of Accounts:', filteredCoa)
+    console.log('cash Chart of Accounts:', isCashCoa)
+  }, [chartOfAccounts])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -238,8 +240,6 @@ export default function CashVoucher() {
     fetchDepartments()
   }, [])
 
-  //chart of accounts
-
   async function fetchChartOfAccounts() {
     setIsLoadingAccounts(true)
     try {
@@ -247,6 +247,7 @@ export default function CashVoucher() {
       if (!response.data) {
         throw new Error('No data received')
       }
+      console.log('Fetched Chart of Accounts:', response.data)
       setChartOfAccounts(response.data)
     } catch (error) {
       console.error('Error getting chart of accounts:', error)
@@ -279,7 +280,9 @@ export default function CashVoucher() {
       setIsLoading(false)
     }
   }
-  
+
+  //res partner
+
   //res partner
   async function fetchgetAllCostCenters() {
     setIsLoadingCostCenters(true)
@@ -301,7 +304,6 @@ export default function CashVoucher() {
     }
   }
 
-  //res partner
   async function fetchgetResPartner() {
     setIsLoadingPartners(true)
     try {
@@ -337,7 +339,7 @@ export default function CashVoucher() {
       },
       journalDetails: [
         {
-          accountId: 0,
+          accountId: cashCoa[0]?.accountId,
           costCenterId: null,
           departmentId: null,
           debit: 0,
@@ -346,6 +348,7 @@ export default function CashVoucher() {
           taxId: null,
           resPartnerId: null,
           notes: '',
+          type: 'Payment',
           createdBy: 0,
         },
       ],
@@ -362,12 +365,12 @@ export default function CashVoucher() {
       console.log('Current userId from localStorage:', userData.userId)
       setUser(userData)
     }
-    // To update the missing fields on the list
+    // Calculate the total amount
     const totalAmount = values.journalDetails.reduce(
-      (sum, detail) => sum + (detail.debit || detail.credit || 0),
+      (sum, detail) => sum + (detail.debit || 0) + (detail.credit || 0),
       0
     )
-    // To Update the total Amount
+    // Update the total Amount
     const updatedValues = {
       ...values,
       journalEntry: {
@@ -375,7 +378,7 @@ export default function CashVoucher() {
         state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
         notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Cash Voucher',
-        amountTotal: totalAmount,
+        amountTotal: totalAmount, // Set the calculated total amount
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
@@ -391,13 +394,19 @@ export default function CashVoucher() {
       journalDetails: [
         ...updatedValues.journalDetails, // Spread existing journalDetails
         {
-          accountId: 1,
+          accountId: cashCoa[0].accountId, //chart of accounts is cash filter by accountType will enter in database, (work in progress)
           costCenterId: null,
           departmentId: null,
-          debit:
-            formType === 'Receipt' ? updatedValues.journalEntry.amountTotal : 0,
-          credit:
-            formType === 'Payment' ? updatedValues.journalEntry.amountTotal : 0,
+          debit: updatedValues.journalDetails.reduce(
+            (sum, detail) =>
+              sum + (detail.type === 'Receipt' ? detail.credit : 0),
+            0
+          ),
+          credit: updatedValues.journalDetails.reduce(
+            (sum, detail) =>
+              sum + (detail.type === 'Payment' ? detail.debit : 0),
+            0
+          ),
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
@@ -436,7 +445,7 @@ export default function CashVoucher() {
 
   const addDetailRow = () => {
     append({
-      accountId: 0,
+      accountId: cashCoa[0].accountId,
       costCenterId: null,
       departmentId: null,
       debit: 0,
@@ -445,6 +454,7 @@ export default function CashVoucher() {
       taxId: null,
       resPartnerId: null,
       notes: '',
+      type: 'Payment',
       createdBy: 0,
     })
   }
@@ -581,21 +591,30 @@ export default function CashVoucher() {
                     <TableHead>Partner Name</TableHead>
                     <TableHead>Remarks</TableHead>
                     <TableHead>Amount</TableHead>
-                    {/* <TableHead>Actions</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell>
-                        <Combobox
-                          options={[
-                            { value: 'Payment', label: 'Payment' },
-                            { value: 'Receipt', label: 'Receipt' },
-                          ]}
-                          value={formType}
-                          onValueChange={setFormType}
-                          placeholder="Select type"
+                        <FormField
+                          control={form.control}
+                          name={`journalDetails.${index}.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Combobox
+                                  options={[
+                                    { value: 'Payment', label: 'Payment' },
+                                    { value: 'Receipt', label: 'Receipt' },
+                                  ]}
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                  placeholder="Select type"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
                       </TableCell>
                       <TableCell>
@@ -613,9 +632,10 @@ export default function CashVoucher() {
                                     })
                                   )}
                                   value={field.value?.toString() || ''}
-                                  onValueChange={(value) =>
+                                  onValueChange={(value) => {
                                     field.onChange(Number.parseInt(value, 10))
-                                  }
+                                    console.log('Selected Account:', value)
+                                  }}
                                   placeholder="Select account"
                                   loading={isLoadingAccounts}
                                 />
@@ -658,9 +678,11 @@ export default function CashVoucher() {
                             <FormItem>
                               <FormControl>
                                 <Combobox
-                                  options={departments.map((partner) => ({
-                                    value: partner.departmentID.toString(),
-                                    label: partner.departmentName || 'Unnamed Department',
+                                  options={departments.map((department) => ({
+                                    value: department.departmentID.toString(),
+                                    label:
+                                      department.departmentName ||
+                                      'Unnamed Department',
                                   }))}
                                   value={field.value?.toString() || ''}
                                   onValueChange={(value) =>
@@ -700,13 +722,13 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name="journalEntry.notes"
+                          name={`journalDetails.${index}.notes`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
                                 <Input
                                   {...field}
-                                  placeholder="Enter general remarks"
+                                  placeholder="Enter remarks"
                                   onChange={(e) =>
                                     field.onChange(e.target.value)
                                   }
@@ -719,7 +741,12 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name={`journalDetails.${index}.${formType === 'Payment' ? 'debit' : 'credit'}`}
+                          name={`journalDetails.${index}.${
+                            form.watch(`journalDetails.${index}`).type ===
+                            'Payment'
+                              ? 'debit'
+                              : 'credit'
+                          }`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
@@ -759,7 +786,6 @@ export default function CashVoucher() {
                     variant="outline"
                     onClick={() => {
                       const values = form.getValues()
-                      //console.log('Posted:', values)
                       onSubmit(values, 'Posted')
                     }}
                   >
@@ -771,7 +797,6 @@ export default function CashVoucher() {
                 </div>
               </div>
             </div>
-            {/* List Section */}
             <div className="mb-6">
               <Table className="border shadow-md">
                 <TableHeader className="bg-slate-200 shadow-md">
