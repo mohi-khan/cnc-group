@@ -2,10 +2,21 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
+import { CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
 
 import { VoucherById, VoucherTypes } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
@@ -13,6 +24,7 @@ import {
   getSingleVoucher,
   reverseJournalVoucher,
 } from '@/api/contra-voucher-api'
+import Loader from '@/utils/loader'
 
 export default function SingleVoucherDetails() {
   const { voucherid } = useParams()
@@ -28,7 +40,7 @@ export default function SingleVoucherDetails() {
   const reactToPrintFn = useReactToPrint({ contentRef })
   const [userId, setUserId] = React.useState<number | null>(null)
 
-  const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher // Check voucher type (change this as per your logic)
+  const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher
 
   useEffect(() => {
     async function fetchVoucher() {
@@ -133,7 +145,11 @@ export default function SingleVoucherDetails() {
   }
 
   if (!data) {
-    return <p>Loading...</p>
+    return (
+      <div className="felx items-center justify-center h-screen">
+        <Loader />
+      </div>
+    )
   }
 
   return (
@@ -181,110 +197,109 @@ export default function SingleVoucherDetails() {
         </div>
 
         {/* Journal Items Table */}
-        <div className="mb-6">
-          <h3 className="font-medium mb-4">Journal Items</h3>
-          <div className="border rounded-lg">
-            {/* Conditional Table Header based on Voucher Type */}
-            <div className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 bg-muted text-sm font-medium">
-              <div>Accounts</div>
-              {isContraVoucher ? (
-                <>
-                  <div>Bank Account</div>
-                  <div>Notes</div>
-                  <div>Debit</div>
-                  <div>Credit</div>
-                  <div>Action</div>
-                </>
-              ) : (
-                <>
-                  <div>Cost Center</div>
-                  <div>Department</div>
-                  <div>Partner</div>
-                  <div>Notes</div>
-                  <div>Debit</div>
-                  <div>Credit</div>
-                  <div>Action</div>
-                </>
-              )}
-            </div>
-            {data.map((item, index) => (
-              <div
-                key={item.id}
-                className="grid grid-cols-[2fr,1fr,1fr,1fr,2fr,1fr,1fr,auto] gap-2 p-3 border-t items-center text-sm"
-              >
-                <div>{item.accountsname}</div>
-                {isContraVoucher ? (
-                  <>
-                    <div>{item.bankaccount}</div>
-                    <div>
-                      {editingReferenceIndex === index ? (
-                        <input
-                          type="text"
-                          value={editingReferenceText}
-                          onChange={(e) =>
-                            setEditingReferenceText(e.target.value)
-                          }
-                          className="border rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        item.notes
-                      )}
-                    </div>
-                    <div>{item.debit}</div>
-                    <div>{item.credit}</div>
-                  </>
-                ) : (
-                  <>
-                    <div>{item.costcenter}</div>
-                    <div>{item.department}</div>
-                    <div>{item.partner}</div>
-                    <div>
-                      {editingReferenceIndex === index ? (
-                        <input
-                          type="text"
-                          value={editingReferenceText}
-                          onChange={(e) =>
-                            setEditingReferenceText(e.target.value)
-                          }
-                          className="border rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        item.notes
-                      )}
-                    </div>
-                    <div>{item.debit}</div>
-                    <div>{item.credit}</div>
-                  </>
-                )}
-                <div>
-                  {editingReferenceIndex === index ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleReferenceSave}
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{data[0]?.journaltype}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Accounts</TableHead>
+                  {isContraVoucher ? (
+                    <>
+                      <TableHead>Bank Account</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead>Debit</TableHead>
+                      <TableHead>Credit</TableHead>
+                    </>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleReferenceEdit(index, item.notes)}
-                    >
-                      Edit
-                    </Button>
+                    <>
+                      <TableHead>Cost Center</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Partner</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead>Debit</TableHead>
+                      <TableHead>Credit</TableHead>
+                    </>
                   )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6">
-            <div className="grid grid-cols-[120px,1fr] gap-2">
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.accountsname}</TableCell>
+                    {isContraVoucher ? (
+                      <>
+                        <TableCell>{item.bankaccount}</TableCell>
+                        <TableCell>
+                          {editingReferenceIndex === index ? (
+                            <Input
+                              type="text"
+                              value={editingReferenceText}
+                              onChange={(e) =>
+                                setEditingReferenceText(e.target.value)
+                              }
+                            />
+                          ) : (
+                            item.notes
+                          )}
+                        </TableCell>
+                        <TableCell>{item.debit}</TableCell>
+                        <TableCell>{item.credit}</TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell>{item.costcenter}</TableCell>
+                        <TableCell>{item.department}</TableCell>
+                        <TableCell>{item.partner}</TableCell>
+                        <TableCell>
+                          {editingReferenceIndex === index ? (
+                            <Input
+                              type="text"
+                              value={editingReferenceText}
+                              onChange={(e) =>
+                                setEditingReferenceText(e.target.value)
+                              }
+                            />
+                          ) : (
+                            item.notes
+                          )}
+                        </TableCell>
+                        <TableCell>{item.debit}</TableCell>
+                        <TableCell>{item.credit}</TableCell>
+                      </>
+                    )}
+                    <TableCell>
+                      {editingReferenceIndex === index ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleReferenceSave}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReferenceEdit(index, item.notes)}
+                        >
+                          Edit
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-6 grid grid-cols-[120px,1fr] gap-2">
               <span className="font-medium">Reference:</span>
               <span>{data[0].notes}</span>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </CardContent>
     </Card>
   )
