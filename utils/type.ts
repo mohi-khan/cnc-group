@@ -355,6 +355,7 @@ export const AccountsHeadSchema = z.object({
   isReconcilable: z.boolean(),
   notes: z.string(),
   isGroup: z.boolean(),
+  isCash: z.boolean()
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)

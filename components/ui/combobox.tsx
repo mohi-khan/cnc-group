@@ -27,7 +27,8 @@ interface ComboboxProps {
   emptyText?: string
   className?: string
   loading?: boolean
-  popoverContentClassName?: string // Additional styling for PopoverContent
+  popoverContentClassName?: string
+  inDialog?: boolean // New prop to indicate if the Combobox is inside a dialog
 }
 
 export function Combobox({
@@ -40,6 +41,7 @@ export function Combobox({
   className,
   loading = false,
   popoverContentClassName,
+  inDialog = false, // Default to false
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -68,7 +70,13 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className={cn(`w-full p-0 z-50 ${popoverContentClassName}`)}
+        className={cn(
+          'w-full p-0',
+          inDialog ? 'z-[60]' : 'z-50', // Increase z-index when in a dialog
+          popoverContentClassName
+        )}
+        // Use position: fixed when in a dialog to escape stacking contexts
+        style={inDialog ? { position: 'fixed' } : undefined}
       >
         <Command shouldFilter={false}>
           <CommandInput
