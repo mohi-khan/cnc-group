@@ -11,6 +11,7 @@ import { RotateCcw } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
 import { toWords } from 'number-to-words'
+import Loader from '@/utils/loader'
 
 export default function Voucher() {
   const { voucherid } = useParams() // Extract voucherId from the URL
@@ -52,7 +53,11 @@ export default function Voucher() {
   }, [voucherid])
 
   if (!voucherData) {
-    return <p>Loading...</p>
+    return (
+      <div>
+        <Loader />
+      </div>
+    )
   }
 
   // Calculate total amount
