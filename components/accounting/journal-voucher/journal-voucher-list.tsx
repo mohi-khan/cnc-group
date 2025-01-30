@@ -6,6 +6,7 @@ import {
   type CompanyFromLocalstorage,
   type JournalEntryWithDetails,
   type JournalQuery,
+  JournalResult,
   type LocationFromLocalstorage,
   VoucherTypes,
 } from '@/utils/type'
@@ -29,7 +30,7 @@ interface Voucher {
 }
 
 export default function VoucherTable() {
-  const [vouchers, setVouchers] = useState<Voucher[]>([])
+  const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [userId, setUserId] = useState(0)
@@ -63,7 +64,7 @@ export default function VoucherTable() {
       try {
         const response = await getAllVoucher(voucherQuery)
         if (response.error) {
-          throw new Error(response.error)
+          throw new Error(response.error.message)
         }
         console.log('API Response:', response.data)
         setVouchers(Array.isArray(response.data) ? response.data : [])
