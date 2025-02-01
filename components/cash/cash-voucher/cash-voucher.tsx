@@ -50,6 +50,7 @@ import {
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
+  JournalResult,
   type LocationFromLocalstorage,
   type ResPartner,
   type User,
@@ -63,9 +64,11 @@ import type { z } from 'zod'
 import { Combobox } from '@/components/ui/combobox'
 import Loader from '@/utils/loader'
 import { set } from 'date-fns'
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 export default function CashVoucher() {
   const router = useRouter()
+  const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
@@ -83,20 +86,20 @@ export default function CashVoucher() {
   })
   const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  const [vouchergrid, setVoucherGrid] = React.useState<
-    {
-      voucherid: number
-      voucherno: string
-      date: string
-      journaltype: string
-      state: number
-      companyname: string
-      location: string
-      currency: string
-      totalamount: number
-      notes: string
-    }[]
-  >([])
+  // const [vouchergrid, setVoucherGrid] = React.useState<
+  //   {
+  //     voucherid: number
+  //     voucherno: string
+  //     date: string
+  //     journaltype: string
+  //     state: number
+  //     companyname: string
+  //     location: string
+  //     currency: string
+  //     totalamount: number
+  //     notes: string
+  //   }[]
+  // >([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -106,9 +109,7 @@ export default function CashVoucher() {
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     AccountsHead[]
   >([])
-  const [cashCoa, setCashCoa] = React.useState<
-    AccountsHead[]
-  >([])
+  const [cashCoa, setCashCoa] = React.useState<AccountsHead[]>([])
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true)
   const [isLoadingLocations, setIsLoadingLocations] = useState(true)
   const [isLoadingPartners, setIsLoadingPartners] = useState(true)
@@ -117,6 +118,8 @@ export default function CashVoucher() {
   const [openComboboxes, setOpenComboboxes] = React.useState<{
     [key: string]: boolean
   }>({})
+  const linkGenerator = (voucherId: number) =>
+    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.CashVoucher}`
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -198,15 +201,11 @@ export default function CashVoucher() {
   }, [companies, locations])
   React.useEffect(() => {
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      return (
-        account.isGroup === true 
-      )
+      return account.isGroup === true
     })
 
     const isCashCoa = chartOfAccounts?.filter((account) => {
-      return (
-        account.isCash === true
-      )
+      return account.isCash === true
     })
     setFilteredChartOfAccounts(filteredCoa || [])
     setCashCoa(isCashCoa || [])
@@ -479,6 +478,17 @@ export default function CashVoucher() {
     )
   }
 
+  const columns: Column[] = [
+    { key: 'voucherno', label: 'Voucher No.' },
+    { key: 'companyname', label: 'Company Name' },
+    { key: 'currency', label: 'Currency' },
+    { key: 'location', label: 'Location' },
+    { key: 'date', label: 'Date' },
+    { key: 'notes', label: 'Remarks' },
+    { key: 'totalamount', label: 'Total Amount' },
+    { key: 'state', label: 'Status' },
+  ]
+
   return (
     <div className="w-full mx-auto">
       <div className="w-full mb-10 p-8">
@@ -599,7 +609,7 @@ export default function CashVoucher() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          name={`journalDetails.${index}.type`}
+                          name={`journalDetails.type`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
@@ -798,96 +808,13 @@ export default function CashVoucher() {
               </div>
             </div>
             <div className="mb-6">
-              <Table className="border shadow-md">
-                <TableHeader className="bg-slate-200 shadow-md">
-                  <TableRow>
-                    <TableHead>Voucher No</TableHead>
-                    <TableHead>Company Name</TableHead>
-                    <TableHead>Currency</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Date </TableHead>
-                    <TableHead>Remarks</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-4">
-                        <Loader />
-                      </TableCell>
-                    </TableRow>
-                  ) : vouchergrid.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-4">
-                        No cash voucher is available
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    vouchergrid.map((voucher) => (
-                      <TableRow key={voucher.voucherid}>
-                        <TableCell>
-                          <Link
-                            href={`/cash/cash-voucher/receipt-preview/${voucher.voucherid}`}
-                          >
-                            {voucher.voucherno}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{voucher.companyname}</TableCell>
-                        <TableCell>{voucher.currency}</TableCell>
-                        <TableCell>{voucher.location}</TableCell>
-                        <TableCell>{voucher.date}</TableCell>
-                        <TableCell>{voucher.notes}</TableCell>
-                        <TableCell>{voucher.totalamount}</TableCell>
-                        <TableCell>
-                          {voucher.state === 0 ? 'Draft' : 'Post'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="icon">
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-white">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will reverse the voucher status to
-                                    Draft.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() =>
-                                      handleReverse(voucher.voucherno)
-                                    }
-                                  >
-                                    Reverse
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handlePost(voucher.voucherno)}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+              <VoucherList
+                vouchers={voucherGrid}
+                columns={columns}
+                isLoading={isLoading}
+                linkGenerator={linkGenerator}
+                itemsPerPage={10}
+              />
             </div>
           </form>
         </Form>

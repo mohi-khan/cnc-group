@@ -388,11 +388,10 @@ export default function BankVoucher() {
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'date' as const, label: 'Check No.' },
-    { key: 'notes' as const, label: 'Company Name' },
-    { key: 'companyname' as const, label: 'Location' },
-    { key: 'currency' as const, label: 'Currency' },
+    { key: 'companyname' as const, label: 'Company Name' },
     { key: 'location' as const, label: 'Location' },
-    { key: 'totalamount' as const, label: 'Bank Name' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'bank' as const, label: 'Bank Name' },
     { key: 'totalamount' as const, label: 'Amount' },
     { key: 'state' as const, label: 'Status' },
   ]
