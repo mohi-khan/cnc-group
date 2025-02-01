@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,8 @@ import {
   getAllChartOfAccounts,
   getAllBankAccounts,
 } from '@/api/contra-voucher-api'
+import { Combobox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -40,10 +43,24 @@ export function ContraVoucherDetailsSection({
 }: ContraVoucherDetailsSectionProps) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
+  const [accountQuery, setAccountQuery] = useState('')
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
   const [userId, setUserId] = useState<number>()
+
+  const filteredAccounts =
+    accountQuery === ''
+      ? accounts
+      : accounts.filter(
+          (account) =>
+            account.accountName
+              .toLowerCase()
+              .includes(accountQuery.toLowerCase()) ||
+            account.accountNumber
+              .toLowerCase()
+              .includes(accountQuery.toLowerCase())
+        )
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -242,7 +259,7 @@ export function ContraVoucherDetailsSection({
           key={index}
           className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium"
         >
-          <FormField
+          {/* <FormField
             control={form.control}
             name={`journalDetails.${index}.bankaccountid`}
             render={({ field }) => (
@@ -274,6 +291,113 @@ export function ContraVoucherDetailsSection({
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+
+          <FormField
+            control={form.control}
+            name={`journalDetails.${index}.bankaccountid`}
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <Combobox
+                  value={
+                    accounts.find(
+                      (account) => Number(account.id) === Number(field.value)
+                    ) || null
+                  }
+                  onChange={(account) => {
+                    if (account) {
+                      field.onChange(account.id) // Ensure type consistency
+                      handleBankAccountChange(index, account.id)
+                    }
+                  }}
+                  disabled={disabledStates[index]?.bank}
+                >
+                  <div className="relative mt-1">
+                    <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none">
+                      <Combobox.Input
+                        className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                        // Adjust displayValue as needed.
+                        displayValue={(account: {
+                          accountName: string
+                          accountNumber: string
+                        }) =>
+                          account
+                            ? `${account.accountName} - ${account.accountNumber}`
+                            : ''
+                        }
+                        onChange={(event) =>
+                          setAccountQuery(event.target.value)
+                        }
+                      />
+                      <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <ChevronUpDownIcon
+                          className="h-5 w-5 text-gray-400"
+                          aria-hidden="true"
+                        />
+                      </Combobox.Button>
+                    </div>
+                    <Transition
+                      as={Fragment}
+                      leave="transition ease-in duration-100"
+                      leaveFrom="opacity-100"
+                      leaveTo="opacity-0"
+                      afterLeave={() => setAccountQuery('')}
+                    >
+                      <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                        {filteredAccounts.length === 0 &&
+                        accountQuery !== '' ? (
+                          <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
+                            Nothing found.
+                          </div>
+                        ) : (
+                          filteredAccounts.map((account) => (
+                            <Combobox.Option
+                              key={account.id}
+                              value={account}
+                              className={({ active }) =>
+                                `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                                  active
+                                    ? 'bg-teal-600 text-white'
+                                    : 'text-gray-900'
+                                }`
+                              }
+                            >
+                              {({ selected, active }) => (
+                                <>
+                                  <span
+                                    className={`block truncate ${
+                                      selected ? 'font-medium' : 'font-normal'
+                                    }`}
+                                  >
+                                    {account.accountName} -{' '}
+                                    <span className="font-bold">
+                                      {account.accountNumber}
+                                    </span>
+                                  </span>
+                                  {selected ? (
+                                    <span
+                                      className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                                        active ? 'text-white' : 'text-teal-600'
+                                      }`}
+                                    >
+                                      <CheckIcon
+                                        className="h-5 w-5"
+                                        aria-hidden="true"
+                                      />
+                                    </span>
+                                  ) : null}
+                                </>
+                              )}
+                            </Combobox.Option>
+                          ))
+                        )}
+                      </Combobox.Options>
+                    </Transition>
+                  </div>
+                </Combobox>
                 <FormMessage />
               </FormItem>
             )}
