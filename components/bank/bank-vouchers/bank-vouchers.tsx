@@ -4,7 +4,7 @@ import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
 import type * as z from 'zod'
-import { Check, ChevronsUpDown, Plus, Trash } from 'lucide-react'
+import { Plus, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -59,9 +59,6 @@ import {
   getAllVoucher,
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 
 interface User {
   userId: number
@@ -164,7 +161,6 @@ export default function BankVoucher() {
       return data.map((location) => location.location.locationId)
     },
     []
-    
   )
 
   async function getallVoucher(company: number[], location: number[]) {
@@ -396,7 +392,7 @@ export default function BankVoucher() {
     { key: 'companyname' as const, label: 'Location' },
     { key: 'currency' as const, label: 'Currency' },
     { key: 'location' as const, label: 'Location' },
-    { key: 'bankName' as const, label: 'Bank Name' },
+    { key: 'totalamount' as const, label: 'Bank Name' },
     { key: 'totalamount' as const, label: 'Amount' },
     { key: 'state' as const, label: 'Status' },
   ]
@@ -438,54 +434,24 @@ export default function BankVoucher() {
                     control={form.control}
                     name="journalEntry.companyId"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                      <FormLabel>Company Name</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                            >
-                              {field.value
-                                  ? companies.find((company) => company.company.companyId === field.value)?.company
-                                      .companyName
-                                  : "Select company"}
-                         
-                      
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Search company..." />
-                              <CommandList>
-                                <CommandEmpty>No company found.</CommandEmpty>
-                                <CommandGroup>
-                                  {companies.map((company) => (
-                                    <CommandItem
-                                      value={company.company.companyName || ""}
-                                      key={company.company.companyId}
-                                      onSelect={() => {
-                                        form.setValue("journalEntry.companyId", company.company.companyId)
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          company.company.companyId === field.value ? "opacity-100" : "opacity-0",
-                                        )}
-                                      />
-                                      {company.company.companyName}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                      <FormItem>
+                        <FormLabel>Company Name</FormLabel>
+                        <FormControl>
+                          <Combobox
+                            options={companies.map((company) => ({
+                              value: company.company.companyId.toString(),
+                              label:
+                                company.company.companyName ||
+                                'Unnamed Company',
+                            }))}
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) =>
+                              field.onChange(Number.parseInt(value, 10))
+                            }
+                            placeholder="Select company"
+                            popoverContentClassName="z-[100]"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -515,7 +481,6 @@ export default function BankVoucher() {
                       </FormItem>
                     )}
                   />
-                     
                   <FormField
                     control={form.control}
                     name="journalEntry.currencyId"
