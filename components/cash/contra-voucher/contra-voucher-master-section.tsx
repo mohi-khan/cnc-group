@@ -139,7 +139,7 @@ export function ContraVoucherMasterSection({
             </FormItem>
           )}
         />
-        <FormField
+        {/* <FormField
           control={control}
           name="journalEntry.companyId"
           render={({ field }) => (
@@ -203,7 +203,7 @@ export function ContraVoucherMasterSection({
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
 
         <FormField
           control={form.control}
