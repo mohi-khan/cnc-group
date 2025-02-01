@@ -19,15 +19,30 @@ import {
   CompanyFromLocalstorage,
   JournalEntryWithDetails,
   JournalQuery,
-  JournalResult,
   LocationFromLocalstorage,
   User,
   VoucherTypes,
 } from '@/utils/type'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import React from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CURRENCY_ITEMS } from '@/utils/constants'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -43,6 +58,9 @@ export function ContraVoucherMasterSection({
     []
   )
   const [user, setUser] = React.useState<User | null>(null)
+  const [open, setOpen] = React.useState(false)
+  const { control, setValue, watch } = form
+  const value = watch('journalEntry.companyId')
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -117,6 +135,71 @@ export function ContraVoucherMasterSection({
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="journalEntry.companyId"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Fruit</FormLabel>
+
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-[200px] justify-between"
+                  >
+                    {field.value
+                      ? companies.find(
+                          (company) =>
+                            company.company.companyId.toString() ===
+                            field.value?.toString()
+                        )?.company.companyName
+                      : 'Select framework...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search framework..." />
+                    <CommandList>
+                      <CommandEmpty>No framework found.</CommandEmpty>
+                      <CommandGroup>
+                        {companies?.map((company) => (
+                          <CommandItem
+                            key={company.company.companyId}
+                            value={company.company.companyId.toString()}
+                            onSelect={(currentValue) => {
+                              field.onChange(
+                                currentValue === field.value?.toString()
+                                  ? ''
+                                  : currentValue
+                              )
+                              setOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                field.value?.toString() ===
+                                  company.company.companyId.toString()
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            {company.company.companyName}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

@@ -8,7 +8,7 @@ export async function getAllDepartments() {
   })
 }
 
-export async function createDepartment(data: Omit<Department, 'departmentId'>) {
+export async function createDepartment(data: Department) {
   console.log('Creating department:', data)
   return fetchApi<Department>({
     url: 'api/department/create-department',

@@ -2,14 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   type CompanyFromLocalstorage,
   type JournalQuery,
   type JournalResult,
@@ -18,17 +10,15 @@ import {
   VoucherTypes,
 } from '@/utils/type'
 import { getAllVoucher } from '@/api/journal-voucher-api'
-import Link from 'next/link'
 import { ContraVoucherPopup } from './contra-voucher-popup'
-
-const initialVouchers: JournalResult[] = []
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 export default function ContraVoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
-  const [vouchergrid, setVoucherGrid] = useState<JournalResult[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -49,6 +39,7 @@ export default function ContraVoucherTable() {
   }, [])
 
   async function fetchAllVoucher(company: number[], location: number[]) {
+    setIsLoading(true)
     const voucherQuery: JournalQuery = {
       date: new Date().toISOString().split('T')[0],
       companyId: company,
@@ -56,15 +47,18 @@ export default function ContraVoucherTable() {
       voucherType: VoucherTypes.ContraVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
-    if (response.data) {
-      console.log('voucher', response.data)
-      setVoucherGrid(response.data)
+    if (response.data && Array.isArray(response.data)) {
+      console.log(
+        'contra voucher data line no 57 and i am from contra voucher list:',
+        response.data
+      )
+
       setVouchers(response.data)
     } else {
       console.log('No voucher data available')
-      setVoucherGrid([])
       setVouchers([])
     }
+    setIsLoading(false)
   }
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
@@ -75,62 +69,34 @@ export default function ContraVoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = (voucherData: Partial<JournalResult>) => {
-    console.log('Submitting voucher:', voucherData)
-    // Here you would typically send the data to your backend
-    // For now, we'll just add it to the local state
-    const newVoucher: JournalResult = {
-      ...voucherData,
-      id: vouchergrid.length + 1,
-      totalamount: Number(voucherData.totalamount),
-    } as JournalResult
-    setVoucherGrid([...vouchergrid, newVoucher])
-  }
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'date' as const, label: 'Voucher Date' },
+    { key: 'notes' as const, label: 'Notes' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'state' as const, label: 'Status' },
+    { key: 'totalamount' as const, label: 'Amount' },
+  ]
+
+  const linkGenerator = (voucherId: number) =>
+    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.ContraVoucher}`
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
-        <ContraVoucherPopup onSubmit={handleSubmit} />
+        <ContraVoucherPopup fetchAllVoucher={fetchAllVoucher} />
       </div>
-      <Table className='border'>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Voucher No.</TableHead>
-            <TableHead>Voucher Date</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead>Company Name & Location</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {vouchers.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
-                No contra voucher is available
-              </TableCell>
-            </TableRow>
-          ) : (
-            vouchers.map((voucher) => (
-              <TableRow key={voucher.id}>
-                <TableCell className="font-medium">
-                  <Link
-                    href={`/cash/contra-vouchers/single-contra-voucher/${voucher.voucherid}`}
-                  >
-                    {voucher.voucherno}
-                  </Link>
-                </TableCell>
-                <TableCell>{voucher.date}</TableCell>
-                <TableCell>{voucher.notes}</TableCell>
-                <TableCell>{`${voucher.companyname} - ${voucher.location}`}</TableCell>
-                <TableCell className="text-right">
-                  ${voucher.totalamount.toFixed(2)}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+
+      <VoucherList
+        vouchers={vouchers}
+        columns={columns}
+        isLoading={isLoading}
+        linkGenerator={linkGenerator}
+        itemsPerPage={10}
+      />
     </div>
   )
 }

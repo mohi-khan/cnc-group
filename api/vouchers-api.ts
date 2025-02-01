@@ -3,6 +3,8 @@ import {
   AccountsHead,
   ChartOfAccount,
   costCentersArraySchema,
+  Department,
+  GetDepartment,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   JournalQuery,
@@ -59,6 +61,13 @@ export async function getAllCostCenters() {
 export async function getAllResPartners() {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
+    method: 'GET',
+  })
+}
+
+export async function getAllDepartments() {
+  return fetchApi<GetDepartment[]>({
+    url: 'api/department/get-all-departments',
     method: 'GET',
   })
 }

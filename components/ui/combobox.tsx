@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/command'
 import {
   Popover,
-  PopoverContent,
   PopoverTrigger,
+  PopoverContent,
 } from '@/components/ui/popover'
 
 interface ComboboxProps {
@@ -27,7 +27,8 @@ interface ComboboxProps {
   emptyText?: string
   className?: string
   loading?: boolean
-  popoverContentClassName?: string // New prop for additional PopoverContent styling
+  popoverContentClassName?: string
+  inDialog?: boolean // New prop to indicate if the Combobox is inside a dialog
 }
 
 export function Combobox({
@@ -39,7 +40,8 @@ export function Combobox({
   emptyText = 'No items found.',
   className,
   loading = false,
-  popoverContentClassName, // New prop
+  popoverContentClassName,
+  inDialog = false, // Default to false
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -66,9 +68,16 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn(`w-full p-0 ${popoverContentClassName}`)}>
-        {' '}
-        {/* Added popoverContentClassName */}
+      <PopoverContent
+        align="start"
+        className={cn(
+          'w-full p-0',
+          inDialog ? 'z-[60]' : 'z-50', // Increase z-index when in a dialog
+          popoverContentClassName
+        )}
+        // Use position: fixed when in a dialog to escape stacking contexts
+        style={inDialog ? { position: 'fixed' } : undefined}
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={

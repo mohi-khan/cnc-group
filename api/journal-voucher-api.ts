@@ -1,13 +1,13 @@
 import { fetchApi } from '@/utils/http'
 import {
-  ChartOfAccount,
+  AccountsHead,
   Company,
   CostCenter,
-  Department,
+  GetDepartment,
   JournalEntryWithDetails,
-  JournalEntryWithDetailsSchema,
   JournalNotes,
   JournalQuery,
+  JournalResult,
   LocationData,
   VoucherById,
 } from '@/utils/type'
@@ -27,7 +27,7 @@ export async function getAllLocations() {
 }
 
 export async function getAllChartOfAccounts() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
@@ -41,13 +41,13 @@ export async function getAllCostCenters() {
 }
 
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })
 }
 
-export async function getSingleVoucher(voucherid: number) {
+export async function getSingleVoucher(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
@@ -91,8 +91,8 @@ export async function getAllVoucher(data: JournalQuery) {
     voucherType: data.voucherType,
   }).toString()
   console.log(queryParams)
-  return fetchApi<VoucherById[]>({
-    url: `api/journal/getJournalDetails/?${queryParams}`,
+  return fetchApi<JournalResult[]>({
+    url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
   })
 }
@@ -100,8 +100,7 @@ export async function getAllVoucher(data: JournalQuery) {
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails
 ) {
-  console.log("Under APi:");
-  console.log(data);
+  console.log('journal', data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',

@@ -191,7 +191,23 @@ export default function ChartOfAccountsTable() {
   const [parentCodes, setParentCodes] = React.useState<ChartOfAccount[]>([])
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
+  const [userId, setUserId] = React.useState<number | null>(null)
 
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
+
+  // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({
     resolver: zodResolver(chartOfAccountSchema),
     defaultValues: {
@@ -209,9 +225,16 @@ export default function ChartOfAccountsTable() {
       isCash: false,
       isBank: false,
       cashTag: '',
-      createdBy: 70,
+      createdBy: userId ?? undefined, // `undefined` to avoid passing `null`
     },
   })
+
+  // Optionally, useEffect to update form when `userId` changes
+  React.useEffect(() => {
+    if (userId !== null) {
+      form.setValue('createdBy', userId)
+    }
+  }, [userId, form])
 
   // code generate
   const generateAccountCode = React.useCallback(
@@ -489,6 +512,9 @@ export default function ChartOfAccountsTable() {
       setEditingAccount(null)
     }
   }
+
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   // return function for chart of accounts
   return (

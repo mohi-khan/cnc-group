@@ -1,6 +1,7 @@
 'use client'
+
 import React, { useEffect, useState, useMemo } from 'react'
-import { UseFormReturn } from 'react-hook-form'
+import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   FormControl,
@@ -17,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Trash2 } from 'lucide-react'
-import {
+import type {
   ChartOfAccount,
   JournalEntryWithDetails,
   BankAccount,
@@ -28,22 +29,35 @@ import {
   getAllBankAccounts,
 } from '@/api/contra-voucher-api'
 
-interface JournalVoucherDetailsSectionProps {
+interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
-  onAddEntry: () => void
   onRemoveEntry: (index: number) => void
 }
 
 export function ContraVoucherDetailsSection({
   form,
-  onAddEntry,
   onRemoveEntry,
-}: JournalVoucherDetailsSectionProps) {
+}: ContraVoucherDetailsSectionProps) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
+  const [userId, setUserId] = useState<number>()
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   const entries = form.watch('journalDetails')
 
@@ -56,14 +70,14 @@ export function ContraVoucherDetailsSection({
         debit: 0,
         credit: 0,
         notes: '',
-        createdBy: 70,
+        createdBy: 0,
         analyticTags: null,
         taxId: null,
       }
 
       form.setValue('journalDetails', [defaultEntry])
     }
-  }, [])
+  }, [entries.length, form])
 
   const fetchChartOfAccounts = async () => {
     const response = await getAllChartOfAccounts()
@@ -101,7 +115,7 @@ export function ContraVoucherDetailsSection({
   useEffect(() => {
     fetchChartOfAccounts()
     fetchBankAccounts()
-  }, [])
+  }, []) // Added fetchBankAccounts to dependencies
 
   const updateDisabledStates = (
     index: number,
@@ -158,6 +172,20 @@ export function ContraVoucherDetailsSection({
     return sanitizedValue
   }
 
+  const handleDebitChange = (index: number, value: string) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].debit = value === '' ? 0 : Number(value)
+    updatedEntries[index].credit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
+  const handleCreditChange = (index: number, value: string) => {
+    const updatedEntries = [...entries]
+    updatedEntries[index].credit = value === '' ? 0 : Number(value)
+    updatedEntries[index].debit = 0
+    form.setValue('journalDetails', updatedEntries)
+  }
+
   const addEntry = () => {
     form.setValue('journalDetails', [
       ...entries,
@@ -167,7 +195,7 @@ export function ContraVoucherDetailsSection({
         debit: 0,
         credit: 0,
         notes: '',
-        createdBy: 70,
+        createdBy: userId ?? 0,
         analyticTags: null,
         taxId: null,
       },
@@ -181,8 +209,8 @@ export function ContraVoucherDetailsSection({
   const calculateTotals = () => {
     return entries.reduce(
       (totals, entry) => {
-        totals.debit += Number(entry.debit) || 0
-        totals.credit += Number(entry.credit) || 0
+        totals.debit += entry.debit
+        totals.credit += entry.credit
         return totals
       },
       { debit: 0, credit: 0 }
@@ -190,7 +218,7 @@ export function ContraVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const isBalanced = Math.abs(totals.debit - totals.credit) < 0.01
+  const isBalanced = totals.debit === totals.credit
 
   const handleRemoveEntry = (index: number) => {
     if (entries.length > 2) {
@@ -238,7 +266,10 @@ export function ContraVoucherDetailsSection({
                         key={account.id}
                         value={account.id.toString()}
                       >
-                        {account.accountName}-{account.accountNumber}
+                        {account.accountName}-
+                        <span className="font-bold">
+                          {account.accountNumber}{' '}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -289,16 +320,10 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <FormControl>
                   <Input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => {
-                      const sanitizedValue = handleNumberInput(e.target.value)
-                      field.onChange(
-                        sanitizedValue ? Number(sanitizedValue) : 0
-                      )
-                    }}
+                    value={field.value === 0 ? '' : field.value}
+                    onChange={(e) => handleDebitChange(index, e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -313,16 +338,10 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <FormControl>
                   <Input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => {
-                      const sanitizedValue = handleNumberInput(e.target.value)
-                      field.onChange(
-                        sanitizedValue ? Number(sanitizedValue) : 0
-                      )
-                    }}
+                    value={field.value === 0 ? '' : field.value}
+                    onChange={(e) => handleCreditChange(index, e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -336,7 +355,7 @@ export function ContraVoucherDetailsSection({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

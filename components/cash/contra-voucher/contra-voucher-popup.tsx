@@ -1,8 +1,7 @@
 'use client'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,9 +24,30 @@ import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 
-export function ContraVoucherPopup() {
+interface ChildComponentProps {
+  fetchAllVoucher: (company: number[], location: number[]) => void
+}
+
+export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
+  fetchAllVoucher,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [userId, setUserId] = useState<number | null>(null)
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -38,78 +58,90 @@ export function ContraVoucherPopup() {
         state: 0,
         companyId: 0,
         locationId: 0,
-        currencyId: 1,
+        currencyId: 0,
         amountTotal: 0,
-        createdBy: 70,
+        createdBy: undefined, // Initialize as undefined
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: 71,
+          createdBy: undefined, // Initialize as undefined
         },
       ],
     },
   })
 
-  const handleSubmit = async (data: JournalEntryWithDetails) => {
-    try {
-      setIsSubmitting(true)
-      console.log('Submitting voucher:', data)
-
-      // Calculate total amount from details
-      const amountTotal = data.journalDetails.reduce(
-        (sum, detail) => sum + (Number(detail.debit) - Number(detail.credit)),
-        0
+  // Update form fields when `userId` changes
+  React.useEffect(() => {
+    if (userId !== null) {
+      form.setValue('journalEntry.createdBy', userId)
+      form.setValue(
+        'journalDetails',
+        form.getValues('journalDetails').map((detail) => ({
+          ...detail,
+          createdBy: userId,
+        }))
       )
-
-      // Update the total amount before submission
-      const submissionData = {
-        ...data,
-        journalEntry: {
-          ...data.journalEntry,
-          amountTotal,
-        },
-      }
-
-      const response = await createJournalEntryWithDetails(submissionData)
-
-      if (response.error || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create voucher')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Voucher created successfully',
-      })
-
-      setIsOpen(false)
-      form.reset()
-    } catch (error) {
-      console.error('Error creating voucher:', error)
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to create voucher',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsSubmitting(false)
     }
-  }
+  }, [userId, form])
 
-  const addEntry = () => {
-    const currentEntries = form.getValues('journalDetails')
-    form.setValue('journalDetails', [
-      ...currentEntries,
-      {
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        createdBy: 0,
+  const handleSubmit = async (data: JournalEntryWithDetails) => {
+    setIsSubmitting(true)
+    console.log('Submitting voucher:', data)
+
+    // Calculate total amount from details
+    const amountTotal = data.journalDetails.reduce(
+      (sum, detail) => sum + Number(detail.debit),
+      0
+    )
+
+    // Update the total amount before submission
+    const submissionData = {
+      ...data,
+      journalEntry: {
+        ...data.journalEntry,
+        amountTotal,
       },
-    ])
+    }
+
+    await createJournalEntryWithDetails(submissionData)
+      .then((response) => {
+        if (response.error || !response.data) {
+          console.error('Error creating voucher:', response.error)
+          toast({
+            title: 'Error',
+            description: response.error?.message || 'Failed to create voucher',
+            variant: 'destructive',
+          })
+          return
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Voucher created successfully',
+        })
+
+        form.reset()
+      })
+      .catch((error) => {
+        console.error('Error creating voucher:', error)
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error ? error.message : 'Failed to create voucher',
+          variant: 'destructive',
+        })
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+        fetchAllVoucher(
+          [data.journalEntry.companyId],
+          [data.journalEntry.locationId]
+        )
+        setIsOpen(false)
+      })
   }
 
   const removeEntry = (index: number) => {
@@ -126,7 +158,7 @@ export function ContraVoucherPopup() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Voucher
+          <Plus className="mr-2 h-4 w-4" /> ADD
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
@@ -142,7 +174,6 @@ export function ContraVoucherPopup() {
 
             <ContraVoucherDetailsSection
               form={form}
-              onAddEntry={addEntry}
               onRemoveEntry={removeEntry}
             />
 

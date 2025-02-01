@@ -3,7 +3,16 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Plus, Edit } from 'lucide-react'
+import {
+  Plus,
+  Edit,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowUpDown,
+} from 'lucide-react'
+import { useState, useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -42,14 +51,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  resPartnerSchema,
   createResPartner,
   editResPartner,
   getAllResPartners,
   getAllCompanies,
 } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
-import { ResPartner } from '@/utils/type'
+import { resPartnerSchema, type ResPartner } from '@/utils/type'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 export default function ResPartners() {
   const [partners, setPartners] = React.useState<ResPartner[]>([])
@@ -62,12 +78,16 @@ export default function ResPartners() {
   )
   const [userId, setUserId] = React.useState<number | undefined>()
   const { toast } = useToast()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+  const [sortColumn, setSortColumn] = useState<keyof ResPartner>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const form = useForm<ResPartner>({
     resolver: zodResolver(resPartnerSchema),
     defaultValues: {
       name: '',
-      companyId: undefined,
+      companyName: '',
       type: '',
       email: '',
       phone: '',
@@ -114,7 +134,7 @@ export default function ResPartners() {
     } else {
       form.reset({
         name: '',
-        companyId: undefined,
+        companyName: '',
         type: '',
         email: '',
         phone: '',
@@ -199,7 +219,8 @@ export default function ResPartners() {
         console.error('Error creating res partner:', response.error)
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to create res partner',
+          description:
+            response.error?.message || 'Failed to create res partner',
         })
       } else {
         console.log('Res partner created successfully')
@@ -220,8 +241,59 @@ export default function ResPartners() {
     setIsDialogOpen(true)
     console.log(partner, 'partner')
   }
-  // console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+
+  const handleSort = (column: keyof ResPartner | 'company') => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column as keyof ResPartner)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedPartners = useMemo(() => {
+    return [...partners].sort((a, b) => {
+      if (sortColumn === 'companyName') {
+        const aCompany =
+          companies.find((c) => c.companyId === a.companyId)?.companyName || ''
+        const bCompany =
+          companies.find((c) => c.companyId === b.companyId)?.companyName || ''
+        return sortDirection === 'asc'
+          ? aCompany.localeCompare(bCompany)
+          : bCompany.localeCompare(aCompany)
+      }
+      if (sortColumn === 'isCompany') {
+        return sortDirection === 'asc'
+          ? a.isCompany === b.isCompany
+            ? 0
+            : a.isCompany
+              ? -1
+              : 1
+          : a.isCompany === b.isCompany
+            ? 0
+            : a.isCompany
+              ? 1
+              : -1
+      }
+      const aValue = a[sortColumn] ?? ''
+      const bValue = b[sortColumn] ?? ''
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+      }
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [partners, companies, sortColumn, sortDirection])
+
+  const paginatedPartners = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return sortedPartners.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedPartners, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(partners.length / itemsPerPage)
 
   return (
     <div className="container mx-auto py-10">
@@ -272,32 +344,17 @@ export default function ResPartners() {
                     />
                     <FormField
                       control={form.control}
-                      name="companyId"
+                      name="companyName"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Company</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select company" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem
-                                  key={company.companyId}
-                                  value={company.companyId.toString()}
-                                >
-                                  {company.companyName}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter company name"
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -365,7 +422,7 @@ export default function ResPartners() {
                           <FormLabel>Mobile</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter mobile number"
+                              placeholder="Enter mobile number (optional)"
                               {...field}
                             />
                           </FormControl>
@@ -380,7 +437,14 @@ export default function ResPartners() {
                         <FormItem>
                           <FormLabel>Website</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter website" {...field} />
+                            <Input
+                              placeholder="Enter website (optional)"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                field.onChange(value === '' ? undefined : value)
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -454,7 +518,9 @@ export default function ResPartners() {
                               placeholder="0.00"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value))
+                                field.onChange(
+                                  Number.parseFloat(e.target.value)
+                                )
                               }
                             />
                           </FormControl>
@@ -474,7 +540,7 @@ export default function ResPartners() {
                               placeholder="0"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseInt(e.target.value))
+                                field.onChange(Number.parseInt(e.target.value))
                               }
                             />
                           </FormControl>
@@ -494,7 +560,7 @@ export default function ResPartners() {
                               placeholder="0"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseInt(e.target.value))
+                                field.onChange(Number.parseInt(e.target.value))
                               }
                             />
                           </FormControl>
@@ -578,30 +644,41 @@ export default function ResPartners() {
         </Dialog>
       </div>
       <div className="flex flex-col">
-        <Table>
-          <TableHeader>
+        <Table className="border shadow-md">
+          <TableHeader className="shadow-md bg-slate-200">
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Is Company</TableHead>
-              <TableHead>Active</TableHead>
+              {[
+                'Name',
+                'Company',
+                'Email',
+                'Phone',
+                'Type',
+                'Is Company',
+                'Active',
+              ].map((header) => (
+                <TableHead
+                  key={header}
+                  onClick={() =>
+                    handleSort(
+                      header.toLowerCase() === 'is company'
+                        ? 'isCompany'
+                        : (header.toLowerCase() as keyof ResPartner)
+                    )
+                  }
+                  className="cursor-pointer"
+                >
+                  {header} <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+              ))}
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.isArray(partners) &&
-              partners.map((partner) => (
+            {Array.isArray(paginatedPartners) &&
+              paginatedPartners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell>{partner.name}</TableCell>
-                  <TableCell>
-                    {partner.companyId
-                      ? companies.find((c) => c.companyId === partner.companyId)
-                          ?.companyName || 'Unknown Company'
-                      : ''}
-                  </TableCell>
+                  <TableCell>{partner.companyName || ''}</TableCell>
                   <TableCell>{partner.email}</TableCell>
                   <TableCell>{partner.phone}</TableCell>
                   <TableCell>{partner.type}</TableCell>
@@ -621,6 +698,44 @@ export default function ResPartners() {
               ))}
           </TableBody>
         </Table>
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                  }
+                />
+              </PaginationItem>
+              {[...Array(totalPages)].map((_, index) => (
+                <PaginationItem key={`page-${index}`}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(index + 1)}
+                    isActive={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : ''
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </div>
   )

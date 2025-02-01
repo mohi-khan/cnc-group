@@ -4,7 +4,7 @@ import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFieldArray, useForm } from 'react-hook-form'
 import type * as z from 'zod'
-import { Plus, Trash, Printer, RotateCcw, Check } from 'lucide-react'
+import { Plus, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -32,29 +32,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { useRouter } from 'next/navigation'
 
 import { toast } from '@/hooks/use-toast'
 import {
-  ChartOfAccount,
   type BankAccount,
-  Company,
   type CompanyFromLocalstorage,
   type CostCenter,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
-  LocationData,
   type LocationFromLocalstorage,
   type ResPartner,
   type JournalResult,
@@ -65,17 +51,14 @@ import {
 import {
   getAllBankAccounts,
   getAllChartOfAccounts,
-  getAllCompanies,
   getAllCostCenters,
-  getAllLocations,
   getAllResPartners,
 } from '@/api/bank-vouchers-api'
-import { userData } from '@/utils/user'
 import {
   createJournalEntryWithDetails,
   getAllVoucher,
 } from '@/api/vouchers-api'
-import Link from 'next/link'
+import VoucherList from '@/components/voucher-list/voucher-list'
 
 interface User {
   userId: number
@@ -84,22 +67,8 @@ interface User {
   roleName: string
 }
 
-type JournalResult = {
-  voucherid: number
-  voucherno: string
-  date: string
-  journaltype: string
-  state: number
-  companyname: string
-  location: string
-  currency: string
-  totalamount: number
-  notes: string
-}
-
 export default function BankVoucher() {
-  const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
-  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
@@ -124,6 +93,7 @@ export default function BankVoucher() {
     glCode: number
   } | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [dataLoaded, setDataLoaded] = React.useState(false) // Added dataLoaded state
   const router = useRouter()
 
   React.useEffect(() => {
@@ -180,14 +150,21 @@ export default function BankVoucher() {
     name: 'journalDetails',
   })
 
-  const getCompanyIds = React.useCallback((data: CompanyFromLocalstorage[]): number[] => {
-    return data.map((company) => company.company.companyId)
-  }, [])
-  const getLocationIds = React.useCallback((data: LocationFromLocalstorage[]): number[] => {
-    return data.map((location) => location.location.locationId)
-  }, [])
+  const getCompanyIds = React.useCallback(
+    (data: CompanyFromLocalstorage[]): number[] => {
+      return data.map((company) => company.company.companyId)
+    },
+    []
+  )
+  const getLocationIds = React.useCallback(
+    (data: LocationFromLocalstorage[]): number[] => {
+      return data.map((location) => location.location.locationId)
+    },
+    []
+  )
 
   async function getallVoucher(company: number[], location: number[]) {
+    let localVoucherGrid: JournalResult[] = []
     try {
       const voucherQuery: JournalQuery = {
         date: new Date().toISOString().split('T')[0],
@@ -199,37 +176,46 @@ export default function BankVoucher() {
       if (!response.data) {
         throw new Error('No data received from server')
       }
-      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-      console.log('Voucher data:', response.data)
+      localVoucherGrid = Array.isArray(response.data) ? response.data : []
+      console.log('Voucher data:', localVoucherGrid)
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
-      setVoucherGrid([])
       throw error
     }
+    setVoucherGrid(localVoucherGrid)
   }
 
   React.useEffect(() => {
     const fetchVoucherData = async () => {
-      setIsLoading(true)
-      try {
-        const mycompanies = getCompanyIds(companies)
-        const mylocations = getLocationIds(locations)
-        await getallVoucher(mycompanies, mylocations)
-      } catch (error) {
-        console.error('Error fetching voucher data:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load voucher data. Please try again.',
-        })
-      } finally {
-        setIsLoading(false)
+      if (companies.length > 0 && locations.length > 0 && !dataLoaded) {
+        // Added condition to check dataLoaded
+        setIsLoading(true)
+        try {
+          const mycompanies = getCompanyIds(companies)
+          const mylocations = getLocationIds(locations)
+          await getallVoucher(mycompanies, mylocations)
+          setDataLoaded(true)
+        } catch (error) {
+          console.error('Error fetching voucher data:', error)
+          toast({
+            title: 'Error',
+            description: 'Failed to load voucher data. Please try again.',
+          })
+        } finally {
+          setIsLoading(false)
+        }
       }
     }
 
-    if (companies.length > 0 && locations.length > 0) {
-      fetchVoucherData()
-    }
-  }, [companies, locations, getCompanyIds, getLocationIds]) // Added getCompanyIds and getLocationIds to dependencies
+    fetchVoucherData()
+  }, [
+    companies,
+    locations,
+    getCompanyIds,
+    getLocationIds,
+    getallVoucher,
+    dataLoaded,
+  ]) // Added dataLoaded to dependencies
 
   async function fetchBankAccounts() {
     const response = await getAllBankAccounts()
@@ -375,6 +361,7 @@ export default function BankVoucher() {
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
+      setDataLoaded(false) // Reset dataLoaded to trigger a refresh
       const mycompanies = getCompanyIds(companies)
       const mylocations = getLocationIds(locations)
       getallVoucher(mycompanies, mylocations)
@@ -387,24 +374,31 @@ export default function BankVoucher() {
   }
 
   function handleDelete(id: string) {
-    setVouchers(vouchers.filter((v) => v.journalEntry.voucherNo !== id))
+    //This function is not used anymore.  Keeping it for potential future use.
   }
 
   function handleReverse(id: string) {
-    setVouchers(
-      vouchers.map((v) =>
-        v.journalEntry.voucherNo === id ? { ...v, status: 'Draft' } : v
-      )
-    )
+    //This function is not used anymore. Keeping it for potential future use.
   }
 
   function handlePost(id: string) {
-    setVouchers(
-      vouchers.map((v) =>
-        v.journalEntry.voucherNo === id ? { ...v, status: 'Posted' } : v
-      )
-    )
+    //This function is not used anymore. Keeping it for potential future use.
   }
+
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'date' as const, label: 'Check No.' },
+    { key: 'notes' as const, label: 'Company Name' },
+    { key: 'companyname' as const, label: 'Location' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'totalamount' as const, label: 'Bank Name' },
+    { key: 'totalamount' as const, label: 'Amount' },
+    { key: 'state' as const, label: 'Status' },
+  ]
+
+  const linkGenerator = (voucherId: number) =>
+    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.BankVoucher}`
 
   return (
     <div className="w-[97%] mx-auto py-10">
@@ -833,87 +827,14 @@ export default function BankVoucher() {
           </DialogContent>
         </Dialog>
       </div>
-      <Table className="border">
-        <TableHeader>
-          <TableRow className="border-b">
-            <TableHead>Voucher No.</TableHead>
-            <TableHead>Check No.</TableHead>
-            <TableHead>Company Name</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Currency</TableHead>
-            <TableHead>Bank Name</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.isArray(vouchergrid) && vouchergrid.length > 0 ? (
-            vouchergrid.map((voucher) => (
-              <TableRow key={voucher.voucherid} className="border-b">
-                <TableCell className="">
-                  <Link
-                    href={`/bank/bank-vouchers/single-bank-voucher/${voucher.voucherid}`}
-                  >
-                    {voucher.voucherno}
-                  </Link>
-                </TableCell>
-                <TableCell className="">{voucher.notes}</TableCell>
-                <TableCell className="">{voucher.companyname}</TableCell>
-                <TableCell className="">{voucher.location}</TableCell>
-                <TableCell className="">{voucher.currency}</TableCell>
-                <TableCell className="">{voucher.journaltype}</TableCell>
-                <TableCell className="">{voucher.date}</TableCell>
-                <TableCell className="">{voucher.totalamount}</TableCell>
-                <TableCell className="">
-                  {voucher.state === 0 ? 'Draft' : 'Posted'}
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will reverse the voucher status to Draft.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleReverse(voucher.voucherno)}
-                          >
-                            Reverse
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handlePost(voucher.voucherno)}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center py-4">
-                No bank voucher is available
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+
+      <VoucherList
+        vouchers={voucherGrid}
+        columns={columns}
+        isLoading={isLoading}
+        linkGenerator={linkGenerator}
+        itemsPerPage={10}
+      />
     </div>
   )
 }

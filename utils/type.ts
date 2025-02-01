@@ -1,7 +1,5 @@
 import { isLastDayOfMonth } from 'date-fns'
-import { bankAccountSchema } from '@/api/bank-accounts-api'
 import { locationSchema } from '@/api/company-api'
-import { resPartnerSchema } from '@/api/res-partner-api'
 import { z } from 'zod'
 
 // export interface User {
@@ -55,10 +53,28 @@ export interface LocationFromLocalstorage {
   }
 }
 
-export type BankAccount = z.infer<typeof bankAccountSchema> & {
-  createdAt?: string
-  updatedAt?: string
-}
+export const resPartnerSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().min(1, 'Name is required'),
+  companyName: z.string().optional().nullable(),
+  type: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
+  website: z.union([z.string().url(), z.string().length(0)]).optional(),
+  isCompany: z.boolean().optional(),
+  vat: z.string().optional(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  zip: z.string().optional(),
+  active: z.boolean().optional(),
+  creditLimit: z.number().nonnegative().optional(),
+  customerRank: z.number().nonnegative().optional(),
+  supplierRank: z.number().nonnegative().optional(),
+  comment: z.string().optional(),
+  createdBy: z.number().optional(),
+  updatedBy: z.number().optional(),
+})
 
 export type ResPartner = z.infer<typeof resPartnerSchema> & {
   id: number
@@ -66,6 +82,15 @@ export type ResPartner = z.infer<typeof resPartnerSchema> & {
   createdAt?: string
   updatedAt?: string
 }
+
+export type ResPartnerCreate = Omit<
+  ResPartner,
+  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
+export type ResPartnerUpdate = Omit<
+  ResPartner,
+  'id' | 'createdBy' | 'createdAt' | 'updatedAt'
+>
 
 export type Period = {
   periodId: number
@@ -83,6 +108,147 @@ export const updatePostingPeriodsSchema = z.object({
   postingIds: z.array(z.number().positive()).nonempty(),
   isOpen: z.boolean(),
 })
+
+//bank account type
+export const bankAccountSchema = z.object({
+  id: z.number(),
+  accountName: z
+    .string()
+    .min(2, 'Account name must be at least 2 characters.')
+    .max(100, 'Account name must not exceed 100 characters.'),
+  accountNumber: z
+    .string()
+    .min(5, 'Account number must be at least 5 characters.')
+    .max(50, 'Account number must not exceed 50 characters.'),
+  bankName: z
+    .string()
+    .min(2, 'Bank name must be at least 2 characters.')
+    .max(100, 'Bank name must not exceed 100 characters.'),
+  branchName: z
+    .string()
+    .max(100, 'Branch name must not exceed 100 characters.')
+    .optional(),
+  ifscCode: z
+    .string()
+    .max(20, 'IFSC code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  swiftCode: z
+    .string()
+    .max(20, 'SWIFT code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  openingBalance: z
+    .number()
+    .nonnegative('Opening balance must be a non-negative number.')
+    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  validityDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  assetDetails: z
+    .string()
+    .max(255, 'Asset details must not exceed 255 characters')
+    .optional()
+    .nullable(),
+  isActive: z.boolean(),
+  isReconcilable: z.boolean(),
+  glAccountId: z.number(),
+  bankCode: z
+    .string()
+    .max(50, 'Bank code must not exceed 50 characters')
+    .optional()
+    .nullable(),
+  integrationId: z
+    .string()
+    .max(36, 'Integration ID must not exceed 36 characters')
+    .optional()
+    .nullable(),
+  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  createdBy: z.number(),
+  updatedBy: z.number().optional(),
+})
+
+export type BankAccount = z.infer<typeof bankAccountSchema> & {
+  createdAt?: string
+  updatedAt?: string
+}
+
+export const createBankAccountSchema = z.object({
+  accountName: z
+    .string()
+    .min(2, 'Account name must be at least 2 characters.')
+    .max(100, 'Account name must not exceed 100 characters.'),
+  accountNumber: z
+    .string()
+    .min(5, 'Account number must be at least 5 characters.')
+    .max(50, 'Account number must not exceed 50 characters.'),
+  bankName: z
+    .string()
+    .min(2, 'Bank name must be at least 2 characters.')
+    .max(100, 'Bank name must not exceed 100 characters.'),
+  branchName: z
+    .string()
+    .max(100, 'Branch name must not exceed 100 characters.')
+    .optional(),
+  ifscCode: z
+    .string()
+    .max(20, 'IFSC code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  swiftCode: z
+    .string()
+    .max(20, 'SWIFT code must not exceed 20 characters.')
+    .optional()
+    .nullable(),
+  currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  openingBalance: z
+    .number()
+    .nonnegative('Opening balance must be a non-negative number.')
+    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  validityDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  assetDetails: z
+    .string()
+    .max(255, 'Asset details must not exceed 255 characters')
+    .optional()
+    .nullable(),
+  isActive: z.boolean(),
+  isReconcilable: z.boolean(),
+  glAccountId: z.number(),
+  bankCode: z
+    .string()
+    .max(50, 'Bank code must not exceed 50 characters')
+    .optional()
+    .nullable(),
+  integrationId: z
+    .string()
+    .max(36, 'Integration ID must not exceed 36 characters')
+    .optional()
+    .nullable(),
+  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  createdBy: z.number(),
+  updatedBy: z.number().optional(),
+})
+
+export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type BankAccountCreate = Omit<
+  BankAccount,
+  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
+export type BankAccountUpdate = Omit<
+  BankAccount,
+  'id' | 'createdBy' | 'createdAt' | 'updatedAt'
+>
 
 //financial year zod Validation
 
@@ -152,13 +318,19 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive().optional(),
-  name: z.string().max(255).min(1, "Account type is required"),
-  code: z.string().min(1, "Code is required").max(64, "Maximum 64 characters allowed"),
-  accountType: z.string().min(1, "Account type is required").max(64, "Maximum 64 characters allowed"),
-  parentAccountId: z.number().int().positive("Parent account ID is required"),
+  accountId: z.number().int().positive(),
+  name: z.string().max(255).min(1, 'Account type is required'),
+  code: z
+    .string()
+    .min(1, 'Code is required')
+    .max(64, 'Maximum 64 characters allowed'),
+  accountType: z
+    .string()
+    .min(1, 'Account type is required')
+    .max(64, 'Maximum 64 characters allowed'),
+  parentAccountId: z.number().int().positive('Parent account ID is required'),
   parentName: z.string().optional(),
-  currencyId: z.number().int().positive("Currency is required"),
+  currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
   budgetTracking: z.boolean().default(false),
@@ -166,7 +338,7 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string().min(1, "Cash tag is required").nullable(),
+  cashTag: z.string().min(1, 'Cash tag is required').nullable(),
   createdBy: z.number().int().positive(),
   notes: z.string().min(3, 'Note is required, minimum 3 characters'),
 })
@@ -183,6 +355,7 @@ export const AccountsHeadSchema = z.object({
   isReconcilable: z.boolean(),
   notes: z.string(),
   isGroup: z.boolean(),
+  isCash: z.boolean()
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
@@ -318,7 +491,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentID: z.number(),
+  // departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   currencyCode: z.number().optional(),
@@ -330,13 +503,25 @@ export const departmentSchema = z.object({
 export type Department = z.infer<typeof departmentSchema>
 export const departmentsArraySchema = z.array(departmentSchema)
 
+export const getDepartmentSchema = z.object({
+  departmentID: z.number(),
+  departmentName: z.string().min(1, 'Department name is required'),
+  budget: z.number().optional(),
+  currencyCode: z.number().optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
+  actual: z.number().optional(),
+})
+export type GetDepartment = z.infer<typeof getDepartmentSchema>
+
 //cost center
 const costCenterSchema = z.object({
   costCenterId: z.number().min(1, 'Cost center id is required'),
   costCenterName: z.string().min(1, 'Cost center name is required'),
   costCenterDescription: z.string(),
-  budget: z.number(),
-  actual: z.number().optional(),
+  budget: z.string(),
+  actual: z.string().optional(),
   currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
   isActive: z.boolean(),
   createdBy: z.number().optional(),
@@ -366,6 +551,7 @@ const VoucherSchemaById = z.object({
   id: z.number(),
   accountsname: z.string(),
   costcenter: z.string().nullable(),
+  createdby: z.number(),
   department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
