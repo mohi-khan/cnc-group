@@ -12,6 +12,7 @@ interface CustomComboboxProps<T extends ComboboxItem> {
   value: T | null
   onChange: (item: T | null) => void
   placeholder?: string
+  disabled?: boolean
 }
 
 export function CustomCombobox<T extends ComboboxItem>({

@@ -127,11 +127,24 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Company</FormLabel>
-            <CustomCombobox 
-              items={companies.map(c => ({ id: c.company.companyId, name: c.company.companyName }))}
-              value={field.value ? { id: field.value, name: companies.find(c => c.company.companyId === field.value)?.company.companyName || '' } : null}
-              onChange={(value) => field.onChange(value?.id || null)}
-            />
+              <CustomCombobox
+                items={companies.map((c) => ({
+                  id: c.company.companyId,
+                  name: c.company.companyName,
+                }))}
+                value={
+                  field.value
+                    ? {
+                        id: field.value,
+                        name:
+                          companies.find(
+                            (c) => c.company.companyId === field.value
+                          )?.company.companyName || '',
+                      }
+                    : null
+                }
+                onChange={(value) => field.onChange(value?.id || null)}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -144,90 +157,25 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-              <Combobox
+
+              <CustomCombobox
+                items={locations.map((c) => ({
+                  id: c.location.locationId,
+                  name: c.location.address,
+                }))}
                 value={
-                  locations.find(
-                    (location) => location.location.locationId === field.value
-                  ) || null
-                }
-                onChange={(location) => {
-                  if (location) {
-                    field.onChange(location.location.locationId)
-                  }
-                }}
-              >
-                <div className="relative mt-1">
-                  <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-                    <Combobox.Input
-                      className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                      displayValue={(location: LocationFromLocalstorage) =>
-                        location?.location.address || ''
+                  field.value
+                    ? {
+                        id: field.value,
+                        name:
+                          locations.find(
+                            (c) => c.location.locationId === field.value
+                          )?.location.address || '',
                       }
-                      onChange={(event) => setLocationQuery(event.target.value)}
-                    />
-                    <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                      <ChevronUpDownIcon
-                        className="h-5 w-5 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    </Combobox.Button>
-                  </div>
-                  <Transition
-                    as={Fragment}
-                    leave="transition ease-in duration-100"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                    afterLeave={() => setLocationQuery('')}
-                  >
-                    <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                      {filteredLocations.length === 0 &&
-                      locationQuery !== '' ? (
-                        <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
-                          Nothing found.
-                        </div>
-                      ) : (
-                        filteredLocations.map((location) => (
-                          <Combobox.Option
-                            key={location.location.locationId}
-                            className={({ active }) =>
-                              `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                active
-                                  ? 'bg-teal-600 text-white'
-                                  : 'text-gray-900'
-                              }`
-                            }
-                            value={location}
-                          >
-                            {({ selected, active }) => (
-                              <>
-                                <span
-                                  className={`block truncate ${
-                                    selected ? 'font-medium' : 'font-normal'
-                                  }`}
-                                >
-                                  {location.location.address}
-                                </span>
-                                {selected ? (
-                                  <span
-                                    className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                      active ? 'text-white' : 'text-teal-600'
-                                    }`}
-                                  >
-                                    <CheckIcon
-                                      className="h-5 w-5"
-                                      aria-hidden="true"
-                                    />
-                                  </span>
-                                ) : null}
-                              </>
-                            )}
-                          </Combobox.Option>
-                        ))
-                      )}
-                    </Combobox.Options>
-                  </Transition>
-                </div>
-              </Combobox>
+                    : null
+                }
+                onChange={(value) => field.onChange(value?.id || null)}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -258,92 +206,24 @@ export function ContraVoucherMasterSection({
             name="journalEntry.currencyId"
             render={({ field }) => (
               <FormControl>
-                <Combobox
+                <CustomCombobox
+                  items={CURRENCY_ITEMS.map((c) => ({
+                    id: c.currencyId,
+                    name: c.currency,
+                  }))}
                   value={
-                    CURRENCY_ITEMS.find(
-                      (currency) => currency.currencyId === field.value
-                    ) || null
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            CURRENCY_ITEMS.find(
+                              (c) => c.currencyId === field.value
+                            )?.currency || '',
+                        }
+                      : null
                   }
-                  onChange={(currency) => {
-                    if (currency) {
-                      field.onChange(currency.currencyId)
-                    }
-                  }}
-                >
-                  <div className="relative">
-                    <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-                      <Combobox.Input
-                        className="w-full h-10 border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                        displayValue={(currency: (typeof CURRENCY_ITEMS)[0]) =>
-                          currency?.currency || ''
-                        }
-                        onChange={(event) =>
-                          setCurrencyQuery(event.target.value)
-                        }
-                      />
-                      <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <ChevronUpDownIcon
-                          className="h-5 w-5 text-gray-400"
-                          aria-hidden="true"
-                        />
-                      </Combobox.Button>
-                    </div>
-                    <Transition
-                      as={Fragment}
-                      leave="transition ease-in duration-100"
-                      leaveFrom="opacity-100"
-                      leaveTo="opacity-0"
-                      afterLeave={() => setCurrencyQuery('')}
-                    >
-                      <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                        {filteredCurrencies.length === 0 &&
-                        currencyQuery !== '' ? (
-                          <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
-                            Nothing found.
-                          </div>
-                        ) : (
-                          filteredCurrencies.map((currency) => (
-                            <Combobox.Option
-                              key={currency.currencyId}
-                              className={({ active }) =>
-                                `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                  active
-                                    ? 'bg-teal-600 text-white'
-                                    : 'text-gray-900'
-                                }`
-                              }
-                              value={currency}
-                            >
-                              {({ selected, active }) => (
-                                <>
-                                  <span
-                                    className={`block truncate ${
-                                      selected ? 'font-medium' : 'font-normal'
-                                    }`}
-                                  >
-                                    {currency.currency}
-                                  </span>
-                                  {selected ? (
-                                    <span
-                                      className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                        active ? 'text-white' : 'text-teal-600'
-                                      }`}
-                                    >
-                                      <CheckIcon
-                                        className="h-5 w-5"
-                                        aria-hidden="true"
-                                      />
-                                    </span>
-                                  ) : null}
-                                </>
-                              )}
-                            </Combobox.Option>
-                          ))
-                        )}
-                      </Combobox.Options>
-                    </Transition>
-                  </div>
-                </Combobox>
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
               </FormControl>
             )}
           />
