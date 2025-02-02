@@ -43,7 +43,7 @@ export function CustomCombobox<T extends ComboboxItem>({
             onChange={(event) => setQuery(event.target.value)}
             placeholder={placeholder}
           />
-          <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <Combobox.Button className="absolute inset-y-0 top-2 right-0 flex items-center pr-2">
             <ChevronsUpDown
               className="h-5 w-5 text-gray-400"
               aria-hidden="true"
@@ -74,22 +74,22 @@ export function CustomCombobox<T extends ComboboxItem>({
                   value={item}
                 >
                   {({ selected, active }) => (
-                    <>
-                      <span
-                        className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
-                      >
-                        {item.name}
-                      </span>
+                    <div className="flex items-center">
                       {selected ? (
                         <span
-                          className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                          className={` inset-y-0 left-0 flex items-center pl-3 ${
                             active ? 'text-teal-600' : 'text-teal-600'
                           }`}
                         >
                           <Check className="h-5 w-5" aria-hidden="true" />
                         </span>
                       ) : null}
-                    </>
+                      <span
+                        className={`block truncate px-3 ${selected ? 'font-medium' : 'font-normal'}`}
+                      >
+                        {item.name}
+                      </span>
+                    </div>
                   )}
                 </Combobox.Option>
               ))
