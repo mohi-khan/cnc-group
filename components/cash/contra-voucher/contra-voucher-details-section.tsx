@@ -31,6 +31,7 @@ import {
 } from '@/api/contra-voucher-api'
 import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -295,109 +296,48 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           /> */}
-
           <FormField
             control={form.control}
             name={`journalDetails.${index}.bankaccountid`}
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <Combobox
+                <CustomCombobox
+                  // Map each account to an object with id and name.
+                  items={accounts.map((account) => ({
+                    id: account.id,
+                    name: `${account.accountName} - ${account.accountNumber}`,
+                  }))}
+                  // When a value is selected, find the corresponding account and set the field’s value.
                   value={
-                    accounts.find(
-                      (account) => Number(account.id) === Number(field.value)
-                    ) || null
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            accounts.find(
+                              (account) =>
+                                Number(account.id) === Number(field.value)
+                            )?.accountName +
+                              ' - ' +
+                              accounts.find(
+                                (account) =>
+                                  Number(account.id) === Number(field.value)
+                              )?.accountNumber || '',
+                        }
+                      : null
                   }
-                  onChange={(account) => {
-                    if (account) {
-                      field.onChange(account.id) // Ensure type consistency
-                      handleBankAccountChange(index, account.id)
+                  // When an item is selected, update both the form field and perform additional logic.
+                  onChange={(selectedItem) => {
+                    const selectedId = selectedItem?.id || null
+                    field.onChange(selectedId)
+                    // Only trigger the bank account change if a valid account is selected.
+                    if (selectedId !== null) {
+                      handleBankAccountChange(index, selectedId)
                     }
                   }}
+                  // Disable the combobox based on your external disabled state.
                   disabled={disabledStates[index]?.bank}
-                >
-                  <div className="relative mt-1">
-                    <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none">
-                      <Combobox.Input
-                        className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                        // Adjust displayValue as needed.
-                        displayValue={(account: {
-                          accountName: string
-                          accountNumber: string
-                        }) =>
-                          account
-                            ? `${account.accountName} - ${account.accountNumber}`
-                            : ''
-                        }
-                        onChange={(event) =>
-                          setAccountQuery(event.target.value)
-                        }
-                      />
-                      <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <ChevronUpDownIcon
-                          className="h-5 w-5 text-gray-400"
-                          aria-hidden="true"
-                        />
-                      </Combobox.Button>
-                    </div>
-                    <Transition
-                      as={Fragment}
-                      leave="transition ease-in duration-100"
-                      leaveFrom="opacity-100"
-                      leaveTo="opacity-0"
-                      afterLeave={() => setAccountQuery('')}
-                    >
-                      <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                        {filteredAccounts.length === 0 &&
-                        accountQuery !== '' ? (
-                          <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
-                            Nothing found.
-                          </div>
-                        ) : (
-                          filteredAccounts.map((account) => (
-                            <Combobox.Option
-                              key={account.id}
-                              value={account}
-                              className={({ active }) =>
-                                `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                  active
-                                    ? 'bg-teal-600 text-white'
-                                    : 'text-gray-900'
-                                }`
-                              }
-                            >
-                              {({ selected, active }) => (
-                                <>
-                                  <span
-                                    className={`block truncate ${
-                                      selected ? 'font-medium' : 'font-normal'
-                                    }`}
-                                  >
-                                    {account.accountName} -{' '}
-                                    <span className="font-bold">
-                                      {account.accountNumber}
-                                    </span>
-                                  </span>
-                                  {selected ? (
-                                    <span
-                                      className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                        active ? 'text-white' : 'text-teal-600'
-                                      }`}
-                                    >
-                                      <CheckIcon
-                                        className="h-5 w-5"
-                                        aria-hidden="true"
-                                      />
-                                    </span>
-                                  ) : null}
-                                </>
-                              )}
-                            </Combobox.Option>
-                          ))
-                        )}
-                      </Combobox.Options>
-                    </Transition>
-                  </div>
-                </Combobox>
+                />
+
                 <FormMessage />
               </FormItem>
             )}
@@ -408,7 +348,7 @@ export function ContraVoucherDetailsSection({
             name={`journalDetails.${index}.accountId`}
             render={({ field }) => (
               <FormItem>
-                <Select
+                {/* <Select
                   onValueChange={(value) => {
                     field.onChange(Number(value))
                     handleAccountNameChange(index, Number(value))
@@ -431,7 +371,36 @@ export function ContraVoucherDetailsSection({
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select> */}
+
+                <CustomCombobox
+                  // Convert each chart-of-accounts entry into an object with id and name.
+                  items={chartOfAccounts.map((account) => ({
+                    id: account.accountId,
+                    name: account.name,
+                  }))}
+                  // Set the current value by finding the matching account.
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            chartOfAccounts.find(
+                              (account) => account.accountId === field.value
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                  // When an item is selected, update the field and trigger your account change handler.
+                  onChange={(selectedItem) => {
+                    const value = selectedItem?.id || null
+                    field.onChange(Number(value))
+                    handleAccountNameChange(index, Number(value))
+                  }}
+                  // Use the same disabled condition as before.
+                  disabled={disabledStates[index]?.account}
+                />
+
                 <FormMessage />
               </FormItem>
             )}
