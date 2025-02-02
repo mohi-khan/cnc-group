@@ -19,20 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Check, RotateCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   createJournalEntryWithDetails,
   getAllChartOfAccounts,
@@ -50,7 +37,7 @@ import {
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
-  JournalResult,
+  type JournalResult,
   type LocationFromLocalstorage,
   type ResPartner,
   type User,
@@ -61,10 +48,8 @@ import { getAllCostCenters } from '@/api/cost-centers-api'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
-import { Combobox } from '@/components/ui/combobox'
-import Loader from '@/utils/loader'
-import { set } from 'date-fns'
 import VoucherList from '@/components/voucher-list/voucher-list'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -504,18 +489,28 @@ export default function CashVoucher() {
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
-                      <Combobox
-                        options={companies.map((company) => ({
-                          value: company.company.companyId.toString(),
-                          label:
+                      <CustomCombobox
+                        items={companies.map((company) => ({
+                          id: company.company.companyId.toString(),
+                          name:
                             company.company.companyName || 'Unnamed Company',
                         }))}
-                        value={field.value?.toString() || ''}
-                        onValueChange={(value) =>
-                          field.onChange(Number.parseInt(value, 10))
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  companies.find(
+                                    (c) => c.company.companyId === field.value
+                                  )?.company.companyName || '',
+                              }
+                            : null
                         }
-                        placeholder="Select company"
-                        loading={isLoadingCompanies}
+                        onChange={(value) =>
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -529,18 +524,27 @@ export default function CashVoucher() {
                   <FormItem>
                     <FormLabel>Location</FormLabel>
                     <FormControl>
-                      <Combobox
-                        options={locations.map((location) => ({
-                          value: location.location.locationId.toString(),
-                          label:
-                            location.location.address || 'Unnamed Location',
+                      <CustomCombobox
+                        items={locations.map((location) => ({
+                          id: location.location.locationId.toString(),
+                          name: location.location.address || 'Unnamed Location',
                         }))}
-                        value={field.value?.toString() || ''}
-                        onValueChange={(value) =>
-                          field.onChange(Number.parseInt(value, 10))
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  locations.find(
+                                    (l) => l.location.locationId === field.value
+                                  )?.location.address || '',
+                              }
+                            : null
                         }
-                        placeholder="Select location"
-                        loading={isLoadingLocations}
+                        onChange={(value) =>
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -554,17 +558,26 @@ export default function CashVoucher() {
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
                     <FormControl>
-                      <Combobox
-                        options={[
-                          { value: '1', label: 'BDT' },
-                          { value: '2', label: 'USD' },
-                          { value: '3', label: 'EUR' },
+                      <CustomCombobox
+                        items={[
+                          { id: '1', name: 'BDT' },
+                          { id: '2', name: 'USD' },
+                          { id: '3', name: 'EUR' },
                         ]}
-                        value={field.value?.toString() || ''}
-                        onValueChange={(value) =>
-                          field.onChange(Number.parseInt(value, 10))
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  ['BDT', 'USD', 'EUR'][field.value - 1] || '',
+                              }
+                            : null
                         }
-                        placeholder="Select currency"
+                        onChange={(value) =>
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -613,14 +626,19 @@ export default function CashVoucher() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Combobox
-                                  options={[
-                                    { value: 'Payment', label: 'Payment' },
-                                    { value: 'Receipt', label: 'Receipt' },
+                                <CustomCombobox
+                                  items={[
+                                    { id: 'Payment', name: 'Payment' },
+                                    { id: 'Receipt', name: 'Receipt' },
                                   ]}
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                  placeholder="Select type"
+                                  value={
+                                    field.value
+                                      ? { id: field.value, name: field.value }
+                                      : null
+                                  }
+                                  onChange={(value) =>
+                                    field.onChange(value ? value.id : null)
+                                  }
                                 />
                               </FormControl>
                             </FormItem>
@@ -634,20 +652,32 @@ export default function CashVoucher() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Combobox
-                                  options={filteredChartOfAccounts.map(
+                                <CustomCombobox
+                                  items={filteredChartOfAccounts.map(
                                     (account) => ({
-                                      value: account.accountId.toString(),
-                                      label: account.name || 'Unnamed Account',
+                                      id: account.accountId.toString(),
+                                      name: account.name || 'Unnamed Account',
                                     })
                                   )}
-                                  value={field.value?.toString() || ''}
-                                  onValueChange={(value) => {
-                                    field.onChange(Number.parseInt(value, 10))
+                                  value={
+                                    field.value
+                                      ? {
+                                          id: field.value.toString(),
+                                          name:
+                                            filteredChartOfAccounts.find(
+                                              (a) => a.accountId === field.value
+                                            )?.name || '',
+                                        }
+                                      : null
+                                  }
+                                  onChange={(value) => {
+                                    field.onChange(
+                                      value
+                                        ? Number.parseInt(value.id, 10)
+                                        : null
+                                    )
                                     console.log('Selected Account:', value)
                                   }}
-                                  placeholder="Select account"
-                                  loading={isLoadingAccounts}
                                 />
                               </FormControl>
                             </FormItem>
@@ -661,19 +691,32 @@ export default function CashVoucher() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Combobox
-                                  options={costCenters.map((center) => ({
-                                    value: center.costCenterId.toString(),
-                                    label:
+                                <CustomCombobox
+                                  items={costCenters.map((center) => ({
+                                    id: center.costCenterId.toString(),
+                                    name:
                                       center.costCenterName ||
                                       'Unnamed Cost Center',
                                   }))}
-                                  value={field.value?.toString() || ''}
-                                  onValueChange={(value) =>
-                                    field.onChange(Number.parseInt(value, 10))
+                                  value={
+                                    field.value
+                                      ? {
+                                          id: field.value.toString(),
+                                          name:
+                                            costCenters.find(
+                                              (c) =>
+                                                c.costCenterId === field.value
+                                            )?.costCenterName || '',
+                                        }
+                                      : null
                                   }
-                                  placeholder="Select cost center"
-                                  loading={isLoadingCostCenters}
+                                  onChange={(value) =>
+                                    field.onChange(
+                                      value
+                                        ? Number.parseInt(value.id, 10)
+                                        : null
+                                    )
+                                  }
                                 />
                               </FormControl>
                             </FormItem>
@@ -687,18 +730,32 @@ export default function CashVoucher() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Combobox
-                                  options={departments.map((department) => ({
-                                    value: department.departmentID.toString(),
-                                    label:
+                                <CustomCombobox
+                                  items={departments.map((department) => ({
+                                    id: department.departmentID.toString(),
+                                    name:
                                       department.departmentName ||
                                       'Unnamed Department',
                                   }))}
-                                  value={field.value?.toString() || ''}
-                                  onValueChange={(value) =>
-                                    field.onChange(Number.parseInt(value, 10))
+                                  value={
+                                    field.value
+                                      ? {
+                                          id: field.value.toString(),
+                                          name:
+                                            departments.find(
+                                              (d) =>
+                                                d.departmentID === field.value
+                                            )?.departmentName || '',
+                                        }
+                                      : null
                                   }
-                                  placeholder="Select department"
+                                  onChange={(value) =>
+                                    field.onChange(
+                                      value
+                                        ? Number.parseInt(value.id, 10)
+                                        : null
+                                    )
+                                  }
                                 />
                               </FormControl>
                             </FormItem>
@@ -712,17 +769,29 @@ export default function CashVoucher() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Combobox
-                                  options={partners.map((partner) => ({
-                                    value: partner.id.toString(),
-                                    label: partner.name || 'Unnamed Partner',
+                                <CustomCombobox
+                                  items={partners.map((partner) => ({
+                                    id: partner.id.toString(),
+                                    name: partner.name || 'Unnamed Partner',
                                   }))}
-                                  value={field.value?.toString() || ''}
-                                  onValueChange={(value) =>
-                                    field.onChange(Number.parseInt(value, 10))
+                                  value={
+                                    field.value
+                                      ? {
+                                          id: field.value.toString(),
+                                          name:
+                                            partners.find(
+                                              (p) => p.id === field.value
+                                            )?.name || '',
+                                        }
+                                      : null
                                   }
-                                  placeholder="Select partner"
-                                  loading={isLoadingPartners}
+                                  onChange={(value) =>
+                                    field.onChange(
+                                      value
+                                        ? Number.parseInt(value.id, 10)
+                                        : null
+                                    )
+                                  }
                                 />
                               </FormControl>
                             </FormItem>
