@@ -25,10 +25,10 @@ interface Voucher {
   voucherid: number
   voucherno: string
   date: string
-  notes: string
-  companyname: string
-  location: string
-  currency: string
+  notes: string | null
+  companyname: string | null
+  location: string | null
+  currency: string | null
   state: number
   totalamount: number
 }
@@ -68,6 +68,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
 
   const sortedVouchers = useMemo(() => {
     return [...vouchers].sort((a, b) => {
+      if (a[sortField] == null || b[sortField] == null) return 0
       if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
       if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
       return 0
@@ -87,7 +88,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
             {columns.map(({ key, label }) => (
               <TableHead
                 key={key}
-                className="cursor-pointer"
+                className="cursor-pointer text-center"
                 onClick={() => handleSort(key)}
               >
                 <Button variant="ghost" className="hover:bg-transparent">
