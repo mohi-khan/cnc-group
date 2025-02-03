@@ -355,7 +355,7 @@ export const AccountsHeadSchema = z.object({
   isReconcilable: z.boolean(),
   notes: z.string(),
   isGroup: z.boolean(),
-  isCash: z.boolean()
+  isCash: z.boolean(),
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
@@ -849,3 +849,25 @@ export const EmployeeSchema = z.object({
 
 // employee master employeee TypeScript type
 export type Employee = z.infer<typeof EmployeeSchema>
+
+//Cash Position Bank Balance report type
+export interface BankBalance {
+  companyName: string
+  BankAccount: string
+  AccountType: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
+
+//cash position cash balance report type
+
+export interface CashBalance {
+  companyName: string
+  locationName: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
