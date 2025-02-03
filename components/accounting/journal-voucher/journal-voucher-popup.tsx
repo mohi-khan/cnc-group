@@ -4,22 +4,8 @@ import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from '@/components/ui/form'
 import { Plus } from 'lucide-react'
+import { Form } from '@/components/ui/form'
 import { JournalVoucherMasterSection } from './journal-voucher-master-section'
 import { JournalVoucherDetailsSection } from './journal-voucher-details-section'
 import { JournalVoucherSubmit } from './journal-voucher-submit'
@@ -28,6 +14,7 @@ import {
   JournalEntryWithDetailsSchema,
   VoucherTypes,
 } from '@/utils/type'
+import { Popup } from '@/utils/popup'
 
 interface JournalVoucherPopupProps {
   handleSubmit: (data: JournalEntryWithDetails) => void
@@ -38,7 +25,7 @@ export function JournalVoucherPopup({
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const [isOpen, setIsOpen] = useState(false) //this is for controlling the popup
+  const [isOpen, setIsOpen] = useState(false)
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -50,7 +37,7 @@ export function JournalVoucherPopup({
         companyId: 0,
         locationId: 0,
         currencyId: 1,
-        amountTotal: 55,
+        amountTotal: 0,
         createdBy: 0,
       },
       journalDetails: [
@@ -88,23 +75,36 @@ export function JournalVoucherPopup({
   }
 
   useEffect(() => {
-    const totalDebit = form
-      .watch('journalDetails')
-      .reduce((sum, detail) => sum + (detail.debit || 0), 0)
-    form.setValue('journalEntry.amountTotal', totalDebit)
-  }, [form.watch('journalDetails'), form.setValue]) // Added form.setValue to dependencies
+    const subscription = form.watch((value, { name, type }) => {
+      if (name?.startsWith('journalDetails')) {
+        const totalDebit =
+          value.journalDetails?.reduce(
+            (sum, detail) => sum + ((detail?.debit) || 0),
+            0
+          ) || 0
+        const totalCredit =
+          value.journalDetails?.reduce(
+            (sum, detail) => sum + (detail?.credit || 0),
+            0
+          ) || 0
+        const amountTotal = Math.max(totalDebit, totalCredit)
+        form.setValue('journalEntry.amountTotal', amountTotal)
+        console.log('amountTotal from popup:', amountTotal)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Voucher
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Journal Voucher</DialogTitle>
-        </DialogHeader>
+    <>
+      <Button onClick={() => setIsOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" /> Add Voucher
+      </Button>
+      <Popup
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Journal Voucher"
+      >
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -125,7 +125,7 @@ export function JournalVoucherPopup({
             />
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </Popup>
+    </>
   )
 }

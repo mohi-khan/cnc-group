@@ -134,33 +134,8 @@ export function JournalVoucherMasterSection({
           control={form.control}
           name="journalEntry.locationId"
           render={({ field }) => (
-            // <FormItem>
-            //   <FormLabel>Location</FormLabel>
-            //   <Select
-            //     onValueChange={(value) => field.onChange(Number(value))}
-            //     value={field.value?.toString() || ''}
-            //   >
-            //     <FormControl>
-            //       <SelectTrigger>
-            //         <SelectValue placeholder="Select location" />
-            //       </SelectTrigger>
-            //     </FormControl>
-            //     <SelectContent>
-            //       {locations.map((location) => (
-            //         <SelectItem
-            //           key={location.location.locationId}
-            //           value={location.location.locationId.toString()}
-            //         >
-            //           {location.location.address}
-            //         </SelectItem>
-            //       ))}
-            //     </SelectContent>
-            //   </Select>
-            //   <FormMessage />
-            // </FormItem>
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-
               <CustomCombobox
                 items={locations.map((c) => ({
                   id: c.location.locationId,
@@ -200,7 +175,7 @@ export function JournalVoucherMasterSection({
           )}
         />
 
-        <div className="flex flex-col">
+        <div className="flex flex-col pt-3">
           <FormLabel className="mb-2">Currency</FormLabel>
           <FormField
             control={form.control}

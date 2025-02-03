@@ -1,24 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
 import {
   createJournalEntryWithDetails,
@@ -48,8 +31,9 @@ import { getAllCostCenters } from '@/api/cost-centers-api'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
+import CashVoucherMaster from './cash-voucher-master'
+import CashVoucherDetails from './cash-voucher-details'
 import VoucherList from '@/components/voucher-list/voucher-list'
-import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function CashVoucher() {
   const router = useRouter()
@@ -69,22 +53,8 @@ export default function CashVoucher() {
     location: '',
     currency: '',
   })
-  const [cashBalance, setCashBalance] = useState(120000) // Initial cash balance
   const [isLoading, setIsLoading] = useState(true)
-  // const [vouchergrid, setVoucherGrid] = React.useState<
-  //   {
-  //     voucherid: number
-  //     voucherno: string
-  //     date: string
-  //     journaltype: string
-  //     state: number
-  //     companyname: string
-  //     location: string
-  //     currency: string
-  //     totalamount: number
-  //     notes: string
-  //   }[]
-  // >([])
+
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -100,9 +70,6 @@ export default function CashVoucher() {
   const [isLoadingPartners, setIsLoadingPartners] = useState(true)
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [isLoadingCostCenters, setIsLoadingCostCenters] = useState(true)
-  const [openComboboxes, setOpenComboboxes] = React.useState<{
-    [key: string]: boolean
-  }>({})
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.CashVoucher}`
 
@@ -129,8 +96,8 @@ export default function CashVoucher() {
         description: 'Failed to load user data',
       })
     } finally {
-      setIsLoadingCompanies(false)
-      setIsLoadingLocations(false)
+      // setIsLoadingCompanies(false)
+      // setIsLoadingLocations(false)
       setIsLoading(false)
     }
   }, [router]) // Added router to dependencies
@@ -481,401 +448,23 @@ export default function CashVoucher() {
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <div className="grid grid-cols-4 gap-4">
-              <FormField
-                control={form.control}
-                name="journalEntry.companyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <CustomCombobox
-                        items={companies.map((company) => ({
-                          id: company.company.companyId.toString(),
-                          name:
-                            company.company.companyName || 'Unnamed Company',
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                id: field.value.toString(),
-                                name:
-                                  companies.find(
-                                    (c) => c.company.companyId === field.value
-                                  )?.company.companyName || '',
-                              }
-                            : null
-                        }
-                        onChange={(value) =>
-                          field.onChange(
-                            value ? Number.parseInt(value.id, 10) : null
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="journalEntry.locationId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <CustomCombobox
-                        items={locations.map((location) => ({
-                          id: location.location.locationId.toString(),
-                          name: location.location.address || 'Unnamed Location',
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                id: field.value.toString(),
-                                name:
-                                  locations.find(
-                                    (l) => l.location.locationId === field.value
-                                  )?.location.address || '',
-                              }
-                            : null
-                        }
-                        onChange={(value) =>
-                          field.onChange(
-                            value ? Number.parseInt(value.id, 10) : null
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="journalEntry.currencyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <FormControl>
-                      <CustomCombobox
-                        items={[
-                          { id: '1', name: 'BDT' },
-                          { id: '2', name: 'USD' },
-                          { id: '3', name: 'EUR' },
-                        ]}
-                        value={
-                          field.value
-                            ? {
-                                id: field.value.toString(),
-                                name:
-                                  ['BDT', 'USD', 'EUR'][field.value - 1] || '',
-                              }
-                            : null
-                        }
-                        onChange={(value) =>
-                          field.onChange(
-                            value ? Number.parseInt(value.id, 10) : null
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="journalEntry.date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <CashVoucherMaster
+              form={form}
+              companies={companies}
+              locations={locations}
+            />
 
-            <div className="mb-6">
-              <Table className="border shadow-md">
-                <TableHeader className="bg-slate-200 shadow-md">
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Account Name</TableHead>
-                    <TableHead>Cost Center</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Partner Name</TableHead>
-                    <TableHead>Remarks</TableHead>
-                    <TableHead>Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.type`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <CustomCombobox
-                                  items={[
-                                    { id: 'Payment', name: 'Payment' },
-                                    { id: 'Receipt', name: 'Receipt' },
-                                  ]}
-                                  value={
-                                    field.value
-                                      ? { id: field.value, name: field.value }
-                                      : null
-                                  }
-                                  onChange={(value) =>
-                                    field.onChange(value ? value.id : null)
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.accountId`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <CustomCombobox
-                                  items={filteredChartOfAccounts.map(
-                                    (account) => ({
-                                      id: account.accountId.toString(),
-                                      name: account.name || 'Unnamed Account',
-                                    })
-                                  )}
-                                  value={
-                                    field.value
-                                      ? {
-                                          id: field.value.toString(),
-                                          name:
-                                            filteredChartOfAccounts.find(
-                                              (a) => a.accountId === field.value
-                                            )?.name || '',
-                                        }
-                                      : null
-                                  }
-                                  onChange={(value) => {
-                                    field.onChange(
-                                      value
-                                        ? Number.parseInt(value.id, 10)
-                                        : null
-                                    )
-                                    console.log('Selected Account:', value)
-                                  }}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.costCenterId`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <CustomCombobox
-                                  items={costCenters.map((center) => ({
-                                    id: center.costCenterId.toString(),
-                                    name:
-                                      center.costCenterName ||
-                                      'Unnamed Cost Center',
-                                  }))}
-                                  value={
-                                    field.value
-                                      ? {
-                                          id: field.value.toString(),
-                                          name:
-                                            costCenters.find(
-                                              (c) =>
-                                                c.costCenterId === field.value
-                                            )?.costCenterName || '',
-                                        }
-                                      : null
-                                  }
-                                  onChange={(value) =>
-                                    field.onChange(
-                                      value
-                                        ? Number.parseInt(value.id, 10)
-                                        : null
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.departmentId`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <CustomCombobox
-                                  items={departments.map((department) => ({
-                                    id: department.departmentID.toString(),
-                                    name:
-                                      department.departmentName ||
-                                      'Unnamed Department',
-                                  }))}
-                                  value={
-                                    field.value
-                                      ? {
-                                          id: field.value.toString(),
-                                          name:
-                                            departments.find(
-                                              (d) =>
-                                                d.departmentID === field.value
-                                            )?.departmentName || '',
-                                        }
-                                      : null
-                                  }
-                                  onChange={(value) =>
-                                    field.onChange(
-                                      value
-                                        ? Number.parseInt(value.id, 10)
-                                        : null
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.resPartnerId`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <CustomCombobox
-                                  items={partners.map((partner) => ({
-                                    id: partner.id.toString(),
-                                    name: partner.name || 'Unnamed Partner',
-                                  }))}
-                                  value={
-                                    field.value
-                                      ? {
-                                          id: field.value.toString(),
-                                          name:
-                                            partners.find(
-                                              (p) => p.id === field.value
-                                            )?.name || '',
-                                        }
-                                      : null
-                                  }
-                                  onChange={(value) =>
-                                    field.onChange(
-                                      value
-                                        ? Number.parseInt(value.id, 10)
-                                        : null
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.notes`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Enter remarks"
-                                  onChange={(e) =>
-                                    field.onChange(e.target.value)
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          name={`journalDetails.${index}.${
-                            form.watch(`journalDetails.${index}`).type ===
-                            'Payment'
-                              ? 'debit'
-                              : 'credit'
-                          }`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Enter amount"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      Number.parseFloat(e.target.value)
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="text-right">
-                <div className="flex justify-end space-x-2 mt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const values = form.getValues()
-                      onSubmit(values, 'Draft')
-                    }}
-                  >
-                    Save as Draft
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const values = form.getValues()
-                      onSubmit(values, 'Posted')
-                    }}
-                  >
-                    Save as Post
-                  </Button>
-                  <Button type="button" onClick={addDetailRow} className="">
-                    Add Another
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <CashVoucherDetails
+              form={form}
+              fields={fields}
+              filteredChartOfAccounts={filteredChartOfAccounts}
+              costCenters={costCenters}
+              departments={departments}
+              partners={partners}
+              addDetailRow={addDetailRow}
+              onSubmit={onSubmit}
+            />
+
             <div className="mb-6">
               <VoucherList
                 vouchers={voucherGrid}

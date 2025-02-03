@@ -17,18 +17,6 @@ import {
 } from '@/api/journal-voucher-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
 
-interface Voucher {
-  voucherid: number
-  voucherno: string
-  date: string
-  notes: string
-  companyname: string
-  location: string
-  currency: string
-  state: number
-  totalamount: number
-}
-
 export default function VoucherTable() {
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])

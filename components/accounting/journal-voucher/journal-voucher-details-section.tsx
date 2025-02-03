@@ -7,13 +7,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Trash2 } from 'lucide-react'
 import type {
   CostCenter,
@@ -174,235 +167,206 @@ export function JournalVoucherDetailsSection({
   const isBalanced = totals.debit === totals.credit
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium">
-        <div>Account Name</div>
-        <div>Cost Center</div>
-        <div>Department</div>
-        <div>Debit</div>
-        <div>Credit</div>
-        <div>Notes</div>
-        <div>Action</div>
-      </div>
+    <div>
+      <div className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">
+        <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
+          <div>Account Name</div>
+          <div>Cost Center</div>
+          <div>Department</div>
+          <div>Debit</div>
+          <div>Credit</div>
+          <div>Notes</div>
+          <div>Action</div>
+        </div>
 
-      {entries.map((_, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center"
-        >
-          {/* <FormField
-            control={form.control}
-            name={`journalDetails.${index}.accountId`}
-            render={({ field }) => (
-              <FormItem>
-                <Select
-                  onValueChange={(value) => field.onChange(Number(value))}
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger
-                      ref={index === entries.length - 1 ? newRowRef : null}
-                    >
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {chartOfAccounts
-                      ?.filter((coa) => !coa.isGroup)
-                      .map((coa) => (
-                        <SelectItem
-                          key={coa.accountId}
-                          value={coa.accountId.toString()}
-                        >
-                          {coa.name} ({coa.code})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.accountId`}
-            render={({ field }) => (
-              <FormItem>
-                <CustomCombobox
-                  // Convert each chart-of-accounts entry into an object with id and name.
-                  items={chartOfAccounts.map((account) => ({
-                    id: account.accountId,
-                    name: account.name,
-                  }))}
-                  // Set the current value by finding the matching account.
-                  value={
-                    field.value
-                      ? {
-                          id: field.value,
-                          name:
-                            chartOfAccounts.find(
-                              (account) => account.accountId === field.value
-                            )?.name || '',
-                        }
-                      : null
-                  }
-                  onChange={(selectedItem) =>
-                    field.onChange(selectedItem?.id || null)
-                  }
-                />
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.costCenterId`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <CustomCombobox
-                    items={costCenters.map((center) => ({
-                      id: center.costCenterId.toString(),
-                      name: center.costCenterName || 'Unnamed Cost Center',
-                    }))}
-                    value={
-                      field.value
-                        ? {
-                            id: field.value.toString(),
-                            name:
-                              costCenters.find(
-                                (c) => c.costCenterId === field.value
-                              )?.costCenterName || '',
-                          }
-                        : null
-                    }
-                    onChange={(value) =>
-                      field.onChange(
-                        value ? Number.parseInt(value.id, 10) : null
-                      )
-                    }
-                    placeholder="Select cost center"
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.departmentId`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <CustomCombobox
-                    items={departments.map((department) => ({
-                      id: department.departmentID.toString(),
-                      name: department.departmentName || 'Unnamed Department',
-                    }))}
-                    value={
-                      field.value
-                        ? {
-                            id: field.value.toString(),
-                            name:
-                              departments.find(
-                                (d) => d.departmentID === field.value
-                              )?.departmentName || '',
-                          }
-                        : null
-                    }
-                    onChange={(value) =>
-                      field.onChange(
-                        value ? Number.parseInt(value.id, 10) : null
-                      )
-                    }
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.debit`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) =>
-                      handleDebitChange(index, Number(e.target.value))
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.credit`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) =>
-                      handleCreditChange(index, Number(e.target.value))
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name={`journalDetails.${index}.notes`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onRemoveEntry(index)}
-            disabled={entries.length <= 2}
+        {entries.map((_, index) => (
+          <div
+            key={index}
+            className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center px-4"
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.accountId`}
+              render={({ field }) => (
+                <FormItem>
+                  <CustomCombobox
+                    // Convert each chart-of-accounts entry into an object with id and name.
+                    items={chartOfAccounts.map((account) => ({
+                      id: account.accountId,
+                      name: account.name,
+                    }))}
+                    // Set the current value by finding the matching account.
+                    value={
+                      field.value
+                        ? {
+                            id: field.value,
+                            name:
+                              chartOfAccounts.find(
+                                (account) => account.accountId === field.value
+                              )?.name || '',
+                          }
+                        : null
+                    }
+                    onChange={(selectedItem) =>
+                      field.onChange(selectedItem?.id || null)
+                    }
+                  />
 
-      <Button type="button" variant="outline" onClick={addEntry}>
-        Add Another Line
-      </Button>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      <div className="flex justify-between items-center">
-        <div>
-          <p>Total Debit: {totals.debit}</p>
-          <p>Total Credit: {totals.credit}</p>
-        </div>
-        <div>
-          {!isBalanced && (
-            <p className="text-red-500">
-              Debit and Credit totals must be equal to post/draft the voucher.
-            </p>
-          )}
-        </div>
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.costCenterId`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <CustomCombobox
+                      items={costCenters.map((center) => ({
+                        id: center.costCenterId.toString(),
+                        name: center.costCenterName || 'Unnamed Cost Center',
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value.toString(),
+                              name:
+                                costCenters.find(
+                                  (c) => c.costCenterId === field.value
+                                )?.costCenterName || '',
+                            }
+                          : null
+                      }
+                      onChange={(value) =>
+                        field.onChange(
+                          value ? Number.parseInt(value.id, 10) : null
+                        )
+                      }
+                      placeholder="Select cost center"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.departmentId`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <CustomCombobox
+                      items={departments.map((department) => ({
+                        id: department.departmentID.toString(),
+                        name: department.departmentName || 'Unnamed Department',
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value.toString(),
+                              name:
+                                departments.find(
+                                  (d) => d.departmentID === field.value
+                                )?.departmentName || '',
+                            }
+                          : null
+                      }
+                      onChange={(value) =>
+                        field.onChange(
+                          value ? Number.parseInt(value.id, 10) : null
+                        )
+                      }
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.debit`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        handleDebitChange(index, Number(e.target.value))
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.credit`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        handleCreditChange(index, Number(e.target.value))
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name={`journalDetails.${index}.notes`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className='border rounded-md'>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemoveEntry(index)}
+                disabled={entries.length <= 2}
+              >
+                <Trash2 className="w-10 h-10" />
+              </Button>
+            </div>
+          </div>
+        ))}
+
       </div>
+        <Button type="button" variant="outline" onClick={addEntry}>
+          Add Another Line
+        </Button>
+
+        <div className="flex justify-between items-center pt-4">
+          <div>
+            <p>Total Debit: {totals.debit}</p>
+            <p>Total Credit: {totals.credit}</p>
+          </div>
+          <div>
+            {!isBalanced && (
+              <p className="text-red-500">
+                Debit and Credit totals must be equal to post/draft the voucher.
+              </p>
+            )}
+          </div>
+        </div>
     </div>
   )
 }
