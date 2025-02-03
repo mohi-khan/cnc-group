@@ -58,7 +58,7 @@ export function CustomCombobox<T extends ComboboxItem>({
           afterLeave={() => setQuery('')}
         >
          
-         <Combobox.Options className="absolute z-20 mt-1 h-24  overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none">
+         <Combobox.Options className="absolute z-20 mt-1 h-24 min-w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none">
             {filteredItems.length === 0 && query !== '' ? (
               <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                 Nothing found.
