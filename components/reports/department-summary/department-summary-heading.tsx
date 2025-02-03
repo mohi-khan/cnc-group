@@ -17,7 +17,7 @@ import {
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
-import { Company, Department, User } from '@/utils/type'
+import { Company, Department, GetDepartment, User } from '@/utils/type'
 
 import { getAllDepartments } from '@/api/department-summary-api'
 
@@ -46,7 +46,9 @@ const DeparmentSummaryHeading = ({
   const [companies, setCompanies] = useState<Company[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [departmentSummary, setDepartmentSummary] = useState<Department[]>([])
+  const [departmentSummary, setDepartmentSummary] = useState<GetDepartment[]>(
+    []
+  )
 
   // Fetch company data
   async function fetchCompanies() {
