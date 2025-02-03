@@ -1,5 +1,180 @@
+// 'use client'
+
+// import { getBankBalance } from '@/api/cash-position-api'
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from '@/components/ui/table'
+// import { BankBalance } from '@/utils/type'
+// import { use, useEffect, useState } from 'react'
+
+// interface BankTransaction {
+//   bankName: string
+//   amount: number
+//   accountNo: string
+//   previousBalance: number
+//   amountDebited: number
+//   amountCredited: number
+//   presentBalance: number
+// }
+
+// const bankFinanceData: BankTransaction[] = [
+//   {
+//     bankName: 'draper bank',
+//     amount: 0,
+//     accountNo: '#########',
+//     previousBalance: 0,
+//     amountDebited: 3050514,
+//     amountCredited: 8821547,
+//     presentBalance: 0,
+//   },
+// ]
+
+// const CashPositionTable = () => {
+//   const [bankBalances, setBankBalances] = useState<BankBalance[]>([])
+
+//   async function fetchGetBankBalance() {
+//     const respons = await getBankBalance()
+//     setBankBalances(respons.data || [])
+//     console.log('This is all Bank Balance  data: ', respons.data || [])
+//   }
+
+//   useEffect(() => {
+//     fetchGetBankBalance()
+//   }, [])
+
+//   return (
+//     <div>
+//       <div className="rounded-md border">
+//         <Table>
+//           {/* <TableCaption>Bank Transaction Report</TableCaption> */}
+
+//           {/* First Section: Bank Transactions */}
+//           <TableHeader>
+//             <TableRow>
+//               <TableHead colSpan={7} className="border bg-slate-50 font-bold">
+//                 A. Bank Transactions
+//               </TableHead>
+//             </TableRow>
+//             <TableRow className="bg-slate-200 shadow-md sticky top-28">
+//               <TableHead className="border  font-semibold">Bank Name</TableHead>
+//               <TableHead className="border  font-semibold">$ Amount</TableHead>
+//               <TableHead className="border  font-semibold">A/C No.</TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Previous Balance
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Amount Debited
+//                 <br />
+//                 (Outgoing)
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Amount Credited
+//                 <br />
+//                 (Incoming)
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Present Balance
+//               </TableHead>
+//             </TableRow>
+//           </TableHeader>
+//           <TableBody>
+//             {bankBalances.map((bankBalance, index) => (
+//               <TableRow key={index}>
+//                 <TableCell className="border"></TableCell>
+//                 <TableCell className="border">
+//                   {/* ${bankBalance.amount.toLocaleString()} */}
+//                 </TableCell>
+//                 <TableCell className="border">
+//                   {bankBalance.BankAccount}
+//                 </TableCell>
+//                 <TableCell className="border">
+//                   ${bankBalance.openingBalance.toLocaleString()}
+//                 </TableCell>
+//                 <TableCell className="border text-red-600">
+//                   ${bankBalance.debitSum.toLocaleString()}
+//                 </TableCell>
+//                 <TableCell className="border text-green-600">
+//                   ${bankBalance.creditSum.toLocaleString()}
+//                 </TableCell>
+//                 <TableCell className="border">
+//                   ${bankBalance.closingBalance.toLocaleString()}
+//                 </TableCell>
+//               </TableRow>
+//             ))}
+//           </TableBody>
+
+//           {/* Second Section: Bank Finance */}
+//           <TableHeader>
+//             <TableRow>
+//               <TableHead colSpan={7} className="border bg-slate-50 font-bold">
+//                 B. Bank Finance:
+//               </TableHead>
+//             </TableRow>
+//             <TableRow className="bg-state-200 shadow-md">
+//               <TableHead className="border  font-semibold">Bank Name</TableHead>
+//               <TableHead className="border  font-semibold">$ Amount</TableHead>
+//               <TableHead className="border  font-semibold">A/C No.</TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Previous Balance
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Amount Debited
+//                 <br />
+//                 (Outgoing)
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Amount Credited
+//                 <br />
+//                 (Incoming)
+//               </TableHead>
+//               <TableHead className="border  font-semibold">
+//                 Present Balance
+//               </TableHead>
+//             </TableRow>
+//           </TableHeader>
+//           <TableBody>
+//             {bankBalances.map((finance, index) => (
+//               <TableRow key={index} className="font-bold">
+//                 <TableCell className="border"></TableCell>
+//                 <TableCell className="border">
+//                   {/* {finance.amount ? `$${finance.amount.toLocaleString()}` : ''} */}
+//                 </TableCell>
+//                 <TableCell className="border">{finance.BankAccount}</TableCell>
+//                 <TableCell className="border">
+//                   {finance.openingBalance
+//                     ? `$${finance.openingBalance.toLocaleString()}`
+//                     : ''}
+//                 </TableCell>
+//                 <TableCell className="border text-red-600">
+//                   ${finance.debitSum.toLocaleString()}
+//                 </TableCell>
+//                 <TableCell className="border text-green-600">
+//                   ${finance.creditSum.toLocaleString()}
+//                 </TableCell>
+//                 <TableCell className="border">
+//                   {finance.closingBalance
+//                     ? `$${finance.closingBalance.toLocaleString()}`
+//                     : ''}
+//                 </TableCell>
+//               </TableRow>
+//             ))}
+//           </TableBody>
+//         </Table>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default CashPositionTable
+
 'use client'
 
+import { getBankBalance } from '@/api/cash-position-api'
 import {
   Table,
   TableBody,
@@ -8,57 +183,34 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-interface BankTransaction {
-  bankName: string
-  amount: number
-  accountNo: string
-  previousBalance: number
-  amountDebited: number
-  amountCredited: number
-  presentBalance: number
-}
-
-const transactions: BankTransaction[] = [
-  {
-    bankName: 'First National Bank',
-    amount: 5000,
-    accountNo: '1234567890',
-    previousBalance: 10000,
-    amountDebited: 2000,
-    amountCredited: 7000,
-    presentBalance: 15000,
-  },
-  {
-    bankName: 'City Bank',
-    amount: 3000,
-    accountNo: '0987654321',
-    previousBalance: 8000,
-    amountDebited: 1000,
-    amountCredited: 4000,
-    presentBalance: 11000,
-  },
-]
-
-const bankFinanceData: BankTransaction[] = [
-  {
-    bankName: 'Total',
-    amount: 0,
-    accountNo: '#########',
-    previousBalance: 0,
-    amountDebited: 3050514,
-    amountCredited: 8821547,
-    presentBalance: 0,
-  },
-]
+import { BankBalance } from '@/utils/type'
+import { useEffect, useState } from 'react'
 
 const CashPositionTable = () => {
+  const [bankBalances, setBankBalances] = useState<BankBalance[]>([])
+
+  async function fetchGetBankBalance() {
+    const respons = await getBankBalance()
+    setBankBalances(respons.data || [])
+    console.log('This is all Bank Balance data: ', respons.data || [])
+  }
+
+  useEffect(() => {
+    fetchGetBankBalance()
+  }, [])
+
+  // Filter the data based on AccountType
+  const bankTransactions = bankBalances.filter(
+    (bank) => bank.AccountType !== 'Overdraft'
+  )
+  const bankFinance = bankBalances.filter(
+    (bank) => bank.AccountType === 'Overdraft'
+  )
+
   return (
     <div>
       <div className="rounded-md border">
         <Table>
-          {/* <TableCaption>Bank Transaction Report</TableCaption> */}
-
           {/* First Section: Bank Transactions */}
           <TableHeader>
             <TableRow>
@@ -66,55 +218,48 @@ const CashPositionTable = () => {
                 A. Bank Transactions
               </TableHead>
             </TableRow>
-            <TableRow className="bg-emerald-50">
-              <TableHead className="border border-emerald-600 font-semibold">
-                Bank Name
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
-                $ Amount
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
-                A/C No.
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+            <TableRow className="bg-slate-200 shadow-md sticky top-28">
+              <TableHead className="border font-semibold">Bank Name</TableHead>
+              <TableHead className="border font-semibold">$ Amount</TableHead>
+              <TableHead className="border font-semibold">A/C No.</TableHead>
+              <TableHead className="border font-semibold">
                 Previous Balance
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Amount Debited
                 <br />
                 (Outgoing)
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Amount Credited
                 <br />
                 (Incoming)
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Present Balance
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction, index) => (
+            {bankTransactions.map((bank, index) => (
               <TableRow key={index}>
-                <TableCell className="border">{transaction.bankName}</TableCell>
+                <TableCell className="border"></TableCell>
                 <TableCell className="border">
-                  ${transaction.amount.toLocaleString()}
+                  {/* Uncomment and update below if you have an amount property */}
+                  {/* ${bank.amount?.toLocaleString()} */}
                 </TableCell>
+                <TableCell className="border">{bank.BankAccount}</TableCell>
                 <TableCell className="border">
-                  {transaction.accountNo}
-                </TableCell>
-                <TableCell className="border">
-                  ${transaction.previousBalance.toLocaleString()}
+                  ${bank.openingBalance.toLocaleString()}
                 </TableCell>
                 <TableCell className="border text-red-600">
-                  ${transaction.amountDebited.toLocaleString()}
+                  ${bank.debitSum.toLocaleString()}
                 </TableCell>
                 <TableCell className="border text-green-600">
-                  ${transaction.amountCredited.toLocaleString()}
+                  ${bank.creditSum.toLocaleString()}
                 </TableCell>
                 <TableCell className="border">
-                  ${transaction.presentBalance.toLocaleString()}
+                  ${bank.closingBalance.toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}
@@ -124,60 +269,51 @@ const CashPositionTable = () => {
           <TableHeader>
             <TableRow>
               <TableHead colSpan={7} className="border bg-slate-50 font-bold">
-                B. Bank Finance:
+                B. Bank Finance
               </TableHead>
             </TableRow>
-            <TableRow className="bg-emerald-50">
-              <TableHead className="border border-emerald-600 font-semibold">
-                Bank Name
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
-                $ Amount
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
-                A/C No.
-              </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+            <TableRow className="bg-slate-200 shadow-md">
+              <TableHead className="border font-semibold">Bank Name</TableHead>
+              <TableHead className="border font-semibold">$ Amount</TableHead>
+              <TableHead className="border font-semibold">A/C No.</TableHead>
+              <TableHead className="border font-semibold">
                 Previous Balance
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Amount Debited
                 <br />
                 (Outgoing)
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Amount Credited
                 <br />
                 (Incoming)
               </TableHead>
-              <TableHead className="border border-emerald-600 font-semibold">
+              <TableHead className="border font-semibold">
                 Present Balance
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bankFinanceData.map((finance, index) => (
+            {bankFinance.map((finance, index) => (
               <TableRow key={index} className="font-bold">
-                <TableCell className="border">{finance.bankName}</TableCell>
+                <TableCell className="border"></TableCell>
                 <TableCell className="border">
-                  {finance.amount ? `$${finance.amount.toLocaleString()}` : ''}
+                  {/* Uncomment and update below if you have an amount property */}
+                  {/* {finance.amount ? `$${finance.amount.toLocaleString()}` : ''} */}
                 </TableCell>
-                <TableCell className="border">{finance.accountNo}</TableCell>
+                <TableCell className="border">{finance.BankAccount}</TableCell>
                 <TableCell className="border">
-                  {finance.previousBalance
-                    ? `$${finance.previousBalance.toLocaleString()}`
-                    : ''}
+                  {finance.openingBalance.toLocaleString()}
                 </TableCell>
                 <TableCell className="border text-red-600">
-                  ${finance.amountDebited.toLocaleString()}
+                  ${finance.debitSum.toLocaleString()}
                 </TableCell>
                 <TableCell className="border text-green-600">
-                  ${finance.amountCredited.toLocaleString()}
+                  ${finance.creditSum.toLocaleString()}
                 </TableCell>
                 <TableCell className="border">
-                  {finance.presentBalance
-                    ? `$${finance.presentBalance.toLocaleString()}`
-                    : ''}
+                  ${finance.closingBalance.toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}
