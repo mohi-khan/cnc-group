@@ -28,6 +28,7 @@ import {
   getAllCostCenters,
   getAllDepartments,
 } from '@/api/journal-voucher-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface JournalVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -136,7 +137,6 @@ export function JournalVoucherDetailsSection({
         createdBy: 60,
         analyticTags: null,
         taxId: null,
-        amountTotal: 0,
       },
     ])
     // Focus on the first input of the new row after a short delay
@@ -190,7 +190,7 @@ export function JournalVoucherDetailsSection({
           key={index}
           className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center"
         >
-          <FormField
+          {/* <FormField
             control={form.control}
             name={`journalDetails.${index}.accountId`}
             render={({ field }) => (
@@ -222,6 +222,38 @@ export function JournalVoucherDetailsSection({
                 <FormMessage />
               </FormItem>
             )}
+          /> */}
+          <FormField
+            control={form.control}
+            name={`journalDetails.${index}.accountId`}
+            render={({ field }) => (
+              <FormItem>
+                <CustomCombobox
+                  // Convert each chart-of-accounts entry into an object with id and name.
+                  items={chartOfAccounts.map((account) => ({
+                    id: account.accountId,
+                    name: account.name,
+                  }))}
+                  // Set the current value by finding the matching account.
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            chartOfAccounts.find(
+                              (account) => account.accountId === field.value
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                  onChange={(selectedItem) =>
+                    field.onChange(selectedItem?.id || null)
+                  }
+                />
+
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <FormField
@@ -229,29 +261,31 @@ export function JournalVoucherDetailsSection({
             name={`journalDetails.${index}.costCenterId`}
             render={({ field }) => (
               <FormItem>
-                <Select
-                  onValueChange={(value) =>
-                    field.onChange(value ? Number(value) : null)
-                  }
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {costCenters.map((center) => (
-                      <SelectItem
-                        key={center.costCenterId}
-                        value={center?.costCenterId?.toString()}
-                      >
-                        {center.costCenterName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
+                <FormControl>
+                  <CustomCombobox
+                    items={costCenters.map((center) => ({
+                      id: center.costCenterId.toString(),
+                      name: center.costCenterName || 'Unnamed Cost Center',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              costCenters.find(
+                                (c) => c.costCenterId === field.value
+                              )?.costCenterName || '',
+                          }
+                        : null
+                    }
+                    onChange={(value) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select cost center"
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
@@ -261,29 +295,30 @@ export function JournalVoucherDetailsSection({
             name={`journalDetails.${index}.departmentId`}
             render={({ field }) => (
               <FormItem>
-                <Select
-                  onValueChange={(value) =>
-                    field.onChange(value ? Number(value) : null)
-                  }
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {departments?.map((department) => (
-                      <SelectItem
-                        key={department.departmentID}
-                        value={department.departmentID.toString()}
-                      >
-                        {department.departmentName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
+                <FormControl>
+                  <CustomCombobox
+                    items={departments.map((department) => ({
+                      id: department.departmentID.toString(),
+                      name: department.departmentName || 'Unnamed Department',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              departments.find(
+                                (d) => d.departmentID === field.value
+                              )?.departmentName || '',
+                          }
+                        : null
+                    }
+                    onChange={(value) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
