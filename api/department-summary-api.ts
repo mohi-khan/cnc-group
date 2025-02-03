@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Department, DepartmentSummaryType } from '@/utils/type'
+import { Department, DepartmentSummaryType, GetDepartment } from '@/utils/type'
 
 export async function getDepartmentSummary({
   fromdate,
@@ -26,7 +26,7 @@ export async function getDepartmentSummary({
 
 //get all department fetch api
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })

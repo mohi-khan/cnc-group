@@ -202,8 +202,8 @@ export default function SingleVoucherDetails() {
             <CardTitle>{data[0]?.journaltype}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
+            <Table className="shadow-md border">
+              <TableHeader className="bg-slate-200 shadow-md">
                 <TableRow>
                   <TableHead>Accounts</TableHead>
                   {isContraVoucher ? (
