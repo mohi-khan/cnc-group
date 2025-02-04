@@ -6,12 +6,13 @@ interface PopupProps {
   onClose: () => void
   title: string
   children: React.ReactNode
+  size: String
 }
 
-export function Popup({ isOpen, onClose, title, children }: PopupProps) {
+export function Popup({ isOpen, onClose, title, children, size }: PopupProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
+      <DialogContent className={`${size} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

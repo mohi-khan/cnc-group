@@ -88,12 +88,12 @@ const VoucherList: React.FC<VoucherListProps> = ({
             {columns.map(({ key, label }) => (
               <TableHead
                 key={key}
-                className="cursor-pointer text-center"
+                className="cursor-pointer text-left"
                 onClick={() => handleSort(key)}
               >
                 <Button variant="ghost" className="hover:bg-transparent">
                   {label}
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </TableHead>
             ))}

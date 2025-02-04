@@ -369,8 +369,8 @@ export interface FormData {
 }
 
 export interface Voucher {
-  voucherNo: string
-  companyName: string
+  voucherno: string
+  companyname: string
   location: string
   currency: string
   type: string
@@ -378,9 +378,10 @@ export interface Voucher {
   costCenter: string
   department: string
   partnerName: string
-  remarks: string
-  totalAmount: string
-  status: string
+  notes: string
+  totalamount: string
+  state: string
+  date: string
 }
 
 export interface DetailRow {
@@ -438,6 +439,7 @@ const JournalDetailSchema = z.object({
   resPartnerId: z.number().nullable().optional(),
   bankaccountid: z.number().nullable().optional(),
   notes: z.string().optional(),
+  type: z.string().optional(),
   createdBy: z.number(),
 })
 
@@ -871,3 +873,11 @@ export interface CashBalance {
   creditSum: number
   closingBalance: number
 }
+
+export const exchangeSchema = z.object({
+  exchangeDate: z.coerce.date(),
+  baseCurrency: z.number().int(),
+  rate: z.number(),
+})
+
+export type ExchangeType = z.infer<typeof exchangeSchema>

@@ -104,6 +104,7 @@ export function JournalVoucherPopup({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Journal Voucher"
+        size="max-w-6xl"
       >
         <Form {...form}>
           <form

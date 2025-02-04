@@ -411,13 +411,13 @@ export default function CashVoucher() {
   }
 
   const handleDelete = (voucherNo: string) => {
-    setVoucherList(voucherList.filter((v) => v.voucherNo !== voucherNo))
+    setVoucherList(voucherList.filter((v) => v.voucherno !== voucherNo))
   }
 
   const handleReverse = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherno ? { ...v, status: 'Draft' } : v
+        v.voucherno === voucherno ? { ...v, status: 'Draft' } : v
       )
     )
   }
@@ -425,12 +425,12 @@ export default function CashVoucher() {
   const handlePost = (voucherno: string) => {
     setVoucherList(
       voucherList.map((v) =>
-        v.voucherNo === voucherno ? { ...v, status: 'Posted' } : v
+        v.voucherno === voucherno ? { ...v, status: 'Posted' } : v
       )
     )
   }
 
-  const columns: Column[] = [
+  const columns: { key: keyof Voucher; label: string }[] = [
     { key: 'voucherno', label: 'Voucher No.' },
     { key: 'companyname', label: 'Company Name' },
     { key: 'currency', label: 'Currency' },
