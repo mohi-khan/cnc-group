@@ -16,15 +16,36 @@ import {
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { CalendarIcon, FileText } from 'lucide-react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
-const CashPositonHeading = () => {
+interface CashPositonHeadingProps {
+  generatePdf: () => void
+  generateExcel: () => void
+  onFilterChange: (
+    startDate: Date | undefined,
+    endDate: Date | undefined
+  ) => void
+}
+
+const CashPositonHeading = ({
+  generatePdf,
+  generateExcel,
+  onFilterChange,
+}: CashPositonHeadingProps) => {
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    onFilterChange(startDate, endDate)
+  }, [startDate, endDate, onFilterChange])
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
         <div className="flex items-center gap-2">
           <Button
-            onClick=""
+            onClick={generatePdf}
             variant="ghost"
             size="sm"
             className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-900 hover:bg-purple-200"
@@ -33,7 +54,7 @@ const CashPositonHeading = () => {
             <span className="font-medium">PDF</span>
           </Button>
           <Button
-            onClick=""
+            onClick={generateExcel}
             variant="ghost"
             size="sm"
             className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
@@ -83,10 +104,8 @@ const CashPositonHeading = () => {
             <span className="font-medium">Excel</span>
           </Button>
         </div>
-        {/* <div className="flex items-center gap-4 flex-1 justify-center">
-          <Popover
-
-          >
+        <div className="flex items-center gap-4 flex-1 justify-center">
+          <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -120,7 +139,7 @@ const CashPositonHeading = () => {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected=
+                        selected={startDate}
                         onSelect={(date) => {
                           setStartDate(date)
                           setIsDropdownOpen(false)
@@ -150,7 +169,7 @@ const CashPositonHeading = () => {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected=
+                        selected={endDate}
                         onSelect={(date) => {
                           setEndDate(date)
                           setIsDropdownOpen(false)
@@ -163,8 +182,7 @@ const CashPositonHeading = () => {
               </div>
             </PopoverContent>
           </Popover>
-
-        </div> */}
+        </div>
       </div>
     </div>
   )
