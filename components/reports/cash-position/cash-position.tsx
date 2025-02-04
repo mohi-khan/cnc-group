@@ -16,7 +16,7 @@ const CashPositon = () => {
   const [toDate, setToDate] = useState<string>('2025-03-02')
 
   // Function to fetch bank balance data
-  const fetchGetBankBalance = async () => {
+  const fetchGetBankBalance = React.useCallback(async () => {
     try {
       const response = await getBankBalance(fromDate, toDate)
       setBankBalances(response.data || [])
@@ -24,9 +24,9 @@ const CashPositon = () => {
     } catch (error) {
       console.error('Error fetching bank balance:', error)
     }
-  }
+  }, [fromDate, toDate])
 
-  const fetchGetCashBalance = async () => {
+  const fetchGetCashBalance = React.useCallback(async () => {
     try {
       const response = await getCashBalance(fromDate, toDate)
       setCashBalances(response.data || [])
@@ -34,43 +34,61 @@ const CashPositon = () => {
     } catch (error) {
       console.error('Error fetching cash balance:', error)
     }
-  }
+  }, [fromDate, toDate])
 
   // Fetch data when the component mounts or when date changes
   useEffect(() => {
     fetchGetBankBalance()
     fetchGetCashBalance()
-  }, [fromDate, toDate])
+  }, [fetchGetBankBalance, fetchGetCashBalance])
 
   // Function to generate PDF
   const generatePdf = () => {
     toPDF()
   }
 
-  // Function to format data for Excel export
-  const flattenData = (data: BankBalance[]) => {
-    return data?.map((item) => ({
-      companyName: item.companyName,
+  // Function to flatten and combine both bankBalances and cashBalances for Excel export
+  const flattenAllData = () => {
+    // Map over bankBalances and add a Source field
+    const bankData = bankBalances.map((item) => ({
+      Source: 'Bank',
+      CompanyName: item.companyName,
       BankAccount: item.BankAccount,
       AccountType: item.AccountType,
-      openingBalance: item.openingBalance,
-      debitSum: item.debitSum,
-      creditSum: item.creditSum,
-      closingBalance: item.closingBalance,
+      OpeningBalance: item.openingBalance,
+      DebitSum: item.debitSum,
+      CreditSum: item.creditSum,
+      ClosingBalance: item.closingBalance,
     }))
+
+    // Map over cashBalances and add a Source field and adjust the fields as needed
+    const cashData = cashBalances.map((item) => ({
+      Source: 'Cash',
+      CompanyName: item.companyName,
+      Location: item.locationName,
+      // If you have any cash-specific account field, you can add it here.
+      OpeningBalance: item.openingBalance,
+      DebitSum: item.debitSum,
+      CreditSum: item.creditSum,
+      ClosingBalance: item.closingBalance,
+    }))
+
+    // Combine the two arrays
+    return [...bankData, ...cashData]
   }
 
-  // Function to export data to Excel
+  // Function to export data to Excel (includes both bank and cash details)
   const generateExcel = () => {
-    if (bankBalances.length === 0) {
+    const allData = flattenAllData()
+    if (allData.length === 0) {
       console.warn('No data available for export.')
       return
     }
-    exportToExcel(bankBalances, 'cash_position')
+    exportToExcel(allData, 'cash_position')
   }
 
-  const exportToExcel = (data: BankBalance[], fileName: string) => {
-    const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
+  const exportToExcel = (data: any[], fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(data)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Cash Position')
     const excelBuffer = XLSX.write(workbook, {
@@ -108,3 +126,5 @@ const CashPositon = () => {
 }
 
 export default CashPositon
+
+
