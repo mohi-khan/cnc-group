@@ -35,6 +35,7 @@ const CashPositonHeading = ({
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
 
   useEffect(() => {
     onFilterChange(startDate, endDate)
@@ -105,11 +106,12 @@ const CashPositonHeading = ({
           </Button>
         </div>
         <div className="flex items-center gap-4 flex-1 justify-center">
-          <Popover>
+          <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className="w-[230px] h-10 justify-start text-left truncate"
+                onClick={() => setIsDropdownOpen(true)}
               >
                 <CalendarIcon className="mr-2 h-5 w-5" />
                 {startDate && endDate
@@ -120,9 +122,13 @@ const CashPositonHeading = ({
 
             <PopoverContent className="w-auto p-4" align="start">
               <div className="flex flex-col gap-4">
+                {/* Start Date Picker */}
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Start Date:</span>
-                  <Popover>
+                  <Popover
+                    open={isStartPopoverOpen}
+                    onOpenChange={setIsStartPopoverOpen}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -142,7 +148,7 @@ const CashPositonHeading = ({
                         selected={startDate}
                         onSelect={(date) => {
                           setStartDate(date)
-                          setIsDropdownOpen(false)
+                          setIsStartPopoverOpen(false) // Close Start Date dropdown immediately
                         }}
                         className="rounded-md border"
                       />
@@ -150,6 +156,7 @@ const CashPositonHeading = ({
                   </Popover>
                 </div>
 
+                {/* End Date Picker */}
                 <div className="flex items-center gap-2">
                   <span className="font-medium">End Date:</span>
                   <Popover>
@@ -172,7 +179,9 @@ const CashPositonHeading = ({
                         selected={endDate}
                         onSelect={(date) => {
                           setEndDate(date)
-                          setIsDropdownOpen(false)
+                          if (startDate && date) {
+                            setIsDropdownOpen(false) // Close main dropdown when both dates are selected
+                          }
                         }}
                         className="rounded-md border"
                       />
