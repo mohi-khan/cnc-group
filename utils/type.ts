@@ -873,3 +873,11 @@ export interface CashBalance {
   creditSum: number
   closingBalance: number
 }
+
+export const exchangeSchema = z.object({
+  exchangeDate: z.coerce.date(),
+  baseCurrency: z.number().int(),
+  rate: z.number(),
+})
+
+export type ExchangeType = z.infer<typeof exchangeSchema>

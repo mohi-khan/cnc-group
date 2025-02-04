@@ -330,6 +330,7 @@ export default function BankVoucher() {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           title="Add New Voucher"
+          size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
             Enter the details for the bank voucher here. Click save when you're

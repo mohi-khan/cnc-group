@@ -148,6 +148,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Contra Voucher"
+        size="max-w-6xl"
       >
         <Form {...form}>
           <form

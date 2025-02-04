@@ -246,6 +246,7 @@ export const MENU_ITEMS: MenuItem[] = [
           },
           { name: 'Financial Year', source: '/settings/financial-year' },
           { name: 'Number Series', source: '/settings/number-series' },
+          { name: 'Exchange', source: '/settings/exchange' },
         ],
       },
     ],
