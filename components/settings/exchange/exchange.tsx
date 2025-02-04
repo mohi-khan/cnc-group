@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -23,13 +23,21 @@ import {
 } from '@/components/ui/form'
 import { exchangeSchema, type ExchangeType } from '@/utils/type'
 import { Popup } from '@/utils/popup'
-import { Plus, Edit2, Save, Check } from 'lucide-react'
+import { Plus, Edit2, Save } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import {
+  createExchange,
+  editExchange,
+  getAllExchange,
+} from '@/api/exchange-api'
 
 export default function ExchangePage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editRate, setEditRate] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
   const form = useForm<ExchangeType>({
     resolver: zodResolver(exchangeSchema),
@@ -40,33 +48,80 @@ export default function ExchangePage() {
     },
   })
 
-  function onSubmit(data: ExchangeType) {
-    setExchanges([...exchanges, { ...data, id: Date.now() }])
-    setIsPopupOpen(false)
-    form.reset()
+  useEffect(() => {
+    fetchExchanges()
+  }, [])
+
+  const fetchExchanges = async () => {
+    setIsLoading(true)
+    const data = await getAllExchange()
+    if (data.error || !data.data) {
+      console.error('Error getting exchanges:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get exchanges',
+      })
+    } else {
+      setExchanges(data.data)
+    }
+    setIsLoading(false)
   }
 
-  function handleEdit(id: number, currentRate: number) {
-    setEditingId(id)
+  async function onSubmit(data: ExchangeType) {
+    setIsLoading(true)
+    const result = await createExchange(data)
+    if (result.error || !result.data) {
+      console.error('Error creating exchange:', result.error)
+      toast({
+        title: 'Error',
+        description: result.error?.message || 'Failed to create exchange',
+      })
+    } else {
+      setExchanges([...exchanges, ...result.data])
+      setIsPopupOpen(false)
+      form.reset()
+      toast({
+        title: 'Success',
+        description: 'Exchange created successfully',
+      })
+    }
+    setIsLoading(false)
+  }
+
+  function handleEdit(
+    exchangeDate: string,
+    baseCurrency: number,
+    currentRate: number
+  ) {
+    setEditingId(`${exchangeDate}-${baseCurrency}`)
     setEditRate(currentRate.toString())
   }
 
-  function handleUpdate(id: number) {
-    setExchanges(
-      exchanges.map((exchange) =>
-        exchange.id === id
-          ? { ...exchange, rate: Number.parseFloat(editRate) }
-          : exchange
-      )
-    )
-    setEditingId(null)
+  async function handleUpdate(exchangeDate: string, baseCurrency: number) {
+    setIsLoading(true)
+    const result = await editExchange(exchangeDate, baseCurrency)
+    if (result.error || !result.data) {
+      console.error('Error updating exchange:', result.error)
+      toast({
+        title: 'Error',
+        description: result.error?.message || 'Failed to update exchange',
+      })
+    } else {
+      setExchanges(result.data)
+      setEditingId(null)
+      toast({
+        title: 'Success',
+        description: 'Exchange updated successfully',
+      })
+    }
+    setIsLoading(false)
   }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Exchange</h1>
-        <Button onClick={() => setIsPopupOpen(true)}>
+        <Button onClick={() => setIsPopupOpen(true)} disabled={isLoading}>
           <Plus className="mr-2 h-4 w-4" />
           Add
         </Button>
@@ -83,13 +138,14 @@ export default function ExchangePage() {
         </TableHeader>
         <TableBody>
           {exchanges.map((exchange) => (
-            <TableRow key={exchange.id}>
+            <TableRow key={`${exchange.exchangeDate}-${exchange.baseCurrency}`}>
               <TableCell>
-                {exchange.exchangeDate.toLocaleDateString()}
+                {new Date(exchange.exchangeDate).toLocaleDateString()}
               </TableCell>
               <TableCell>{exchange.baseCurrency}</TableCell>
               <TableCell>
-                {editingId === exchange.id ? (
+                {editingId ===
+                `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (
                   <Input
                     type="number"
                     step="0.01"
@@ -102,26 +158,33 @@ export default function ExchangePage() {
                 )}
               </TableCell>
               <TableCell>
-                {editingId === exchange.id ? (
-                  <div className="border rounded-md border-black w-fit">
-                    <Button
-                      onClick={() => handleUpdate(exchange.id)}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
+                {editingId ===
+                `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (
+                  <Button
+                    onClick={() =>
+                      handleUpdate(exchange.exchangeDate, exchange.baseCurrency)
+                    }
+                    size="sm"
+                    variant="ghost"
+                    disabled={isLoading}
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
                 ) : (
-                  <div className="border rounded-md border-black w-fit">
-                    <Button
-                      onClick={() => handleEdit(exchange.id, exchange.rate)}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() =>
+                      handleEdit(
+                        exchange.exchangeDate,
+                        exchange.baseCurrency,
+                        exchange.rate
+                      )
+                    }
+                    size="sm"
+                    variant="ghost"
+                    disabled={isLoading}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
                 )}
               </TableCell>
             </TableRow>
@@ -198,7 +261,7 @@ export default function ExchangePage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
               Save
             </Button>
           </form>
