@@ -18,14 +18,15 @@ import React, { useEffect, useState } from 'react'
 const DayBooks = () => {
   const router = useRouter()
   const { toast } = useToast()
-  const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [voucherGrid, setVoucherGrid] = useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
-    []
-  )
-  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>(
-    []
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+  const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+
+  // New state for the selected date. Defaults to today's date.
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
   )
 
   const linkGenerator = (voucherId: number, voucherType: VoucherTypes) =>
@@ -63,10 +64,15 @@ const DayBooks = () => {
     return data.map((location) => location.location.locationId)
   }
 
-  async function getallVoucher(company: number[], location: number[]) {
+  // Updated to accept a date parameter
+  async function getallVoucher(
+    company: number[],
+    location: number[],
+    date: string
+  ) {
     try {
       const voucherQuery: JournalQuery = {
-        date: new Date().toISOString().split('T')[0],
+        date: date,
         companyId: company,
         locationId: location,
       }
@@ -83,13 +89,14 @@ const DayBooks = () => {
     }
   }
 
-  React.useEffect(() => {
+  // Fetch voucher data whenever companies, locations, or the selected date changes
+  useEffect(() => {
     const fetchVoucherData = async () => {
       setIsLoading(true)
       try {
         const mycompanies = getCompanyIds(companies)
         const mylocations = getLocationIds(locations)
-        await getallVoucher(mycompanies, mylocations)
+        await getallVoucher(mycompanies, mylocations, selectedDate)
       } catch (error) {
         console.error('Error fetching voucher data:', error)
         toast({
@@ -104,7 +111,7 @@ const DayBooks = () => {
     if (companies.length > 0 && locations.length > 0) {
       fetchVoucherData()
     }
-  }, [companies, locations]) // Added getCompanyIds and getLocationIds to dependencies
+  }, [companies, locations, selectedDate, toast])
 
   const columns: { key: keyof Voucher; label: string }[] = [
     { key: 'voucherno', label: 'Voucher No.' },
@@ -121,6 +128,21 @@ const DayBooks = () => {
   return (
     <div className="w-[96%] mx-auto">
       <h1 className="text-2xl font-bold my-6">Day Books</h1>
+
+      {/* Date input for user selection */}
+      <div className="mb-4">
+        <label htmlFor="voucher-date" className="mr-2 font-medium">
+          Select Date:
+        </label>
+        <input
+          type="date"
+          id="voucher-date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border rounded p-1"
+        />
+      </div>
+
       <VoucherList
         vouchers={voucherGrid}
         columns={columns}
