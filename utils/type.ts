@@ -883,3 +883,12 @@ export const exchangeSchema = z.object({
 })
 
 export type ExchangeType = z.infer<typeof exchangeSchema>
+
+export const currencySchema = z.object({
+  currencyId: z.number(),
+  currencyCode: z.string(),
+  currencyName: z.string(),
+  baseCurrency: z.boolean(),
+})
+
+export type CurrencyType = z.infer<typeof currencySchema>
