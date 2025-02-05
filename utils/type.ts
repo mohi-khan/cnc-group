@@ -854,6 +854,7 @@ export type Employee = z.infer<typeof EmployeeSchema>
 
 //Cash Position Bank Balance report type
 export interface BankBalance {
+  companyId: string
   companyName: string
   BankAccount: string
   AccountType: string
@@ -866,6 +867,7 @@ export interface BankBalance {
 //cash position cash balance report type
 
 export interface CashBalance {
+  companyId: string
   companyName: string
   locationName: string
   openingBalance: number
