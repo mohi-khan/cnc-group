@@ -3,7 +3,7 @@ import { ExchangeType } from '@/utils/type'
 
 export async function getAllExchange() {
   return fetchApi<ExchangeType[]>({
-    url: 'api/exchange/get-all-asset',
+    url: 'api/exchange/get-all-exchange',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

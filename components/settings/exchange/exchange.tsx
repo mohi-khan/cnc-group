@@ -23,13 +23,14 @@ import {
 } from '@/components/ui/form'
 import { exchangeSchema, type ExchangeType } from '@/utils/type'
 import { Popup } from '@/utils/popup'
-import { Plus, Edit2, Save } from 'lucide-react'
+import { Plus, Edit2, Save, Check } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   createExchange,
   editExchange,
   getAllExchange,
 } from '@/api/exchange-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function ExchangePage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
@@ -52,6 +53,12 @@ export default function ExchangePage() {
     fetchExchanges()
   }, [])
 
+  useEffect(() => {
+    if (!isPopupOpen) {
+      form.reset()
+    }
+  }, [isPopupOpen, form])
+
   const fetchExchanges = async () => {
     setIsLoading(true)
     const data = await getAllExchange()
@@ -63,6 +70,7 @@ export default function ExchangePage() {
       })
     } else {
       setExchanges(data.data)
+      console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
     setIsLoading(false)
   }
@@ -77,7 +85,7 @@ export default function ExchangePage() {
         description: result.error?.message || 'Failed to create exchange',
       })
     } else {
-      setExchanges([...exchanges, ...result.data])
+      fetchExchanges()
       setIsPopupOpen(false)
       form.reset()
       toast({
@@ -101,10 +109,10 @@ export default function ExchangePage() {
     setIsLoading(true)
     const result = await editExchange(exchangeDate, baseCurrency)
     if (result.error || !result.data) {
-      console.error('Error updating exchange:', result.error)
       toast({
         title: 'Error',
         description: result.error?.message || 'Failed to update exchange',
+        variant: 'destructive',
       })
     } else {
       setExchanges(result.data)
@@ -118,7 +126,7 @@ export default function ExchangePage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-[98%] mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Exchange</h1>
         <Button onClick={() => setIsPopupOpen(true)} disabled={isLoading}>
@@ -142,7 +150,7 @@ export default function ExchangePage() {
               <TableCell>
                 {new Date(exchange.exchangeDate).toLocaleDateString()}
               </TableCell>
-              <TableCell>{exchange.baseCurrency}</TableCell>
+              <TableCell>{exchange.baseCurrency == 1 && 'BDT'}</TableCell>
               <TableCell>
                 {editingId ===
                 `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (
@@ -160,31 +168,38 @@ export default function ExchangePage() {
               <TableCell>
                 {editingId ===
                 `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (
-                  <Button
-                    onClick={() =>
-                      handleUpdate(exchange.exchangeDate, exchange.baseCurrency)
-                    }
-                    size="sm"
-                    variant="ghost"
-                    disabled={isLoading}
-                  >
-                    <Save className="h-4 w-4" />
-                  </Button>
+                  <div className="border border-black rounded-md w-fit">
+                    <Button
+                      onClick={() =>
+                        handleUpdate(
+                          exchange.exchangeDate,
+                          exchange.baseCurrency
+                        )
+                      }
+                      size="sm"
+                      variant="ghost"
+                      disabled={isLoading}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ) : (
-                  <Button
-                    onClick={() =>
-                      handleEdit(
-                        exchange.exchangeDate,
-                        exchange.baseCurrency,
-                        exchange.rate
-                      )
-                    }
-                    size="sm"
-                    variant="ghost"
-                    disabled={isLoading}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
+                  <div className="border border-black rounded-md w-fit">
+                    <Button
+                      onClick={() =>
+                        handleEdit(
+                          exchange.exchangeDate,
+                          exchange.baseCurrency,
+                          exchange.rate
+                        )
+                      }
+                      size="sm"
+                      variant="ghost"
+                      disabled={isLoading}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
               </TableCell>
             </TableRow>
@@ -194,7 +209,10 @@ export default function ExchangePage() {
 
       <Popup
         isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
+        onClose={() => {
+          setIsPopupOpen(false)
+          form.reset()
+        }}
         title="Create Exchange"
         size="max-w-md"
       >
@@ -229,12 +247,29 @@ export default function ExchangePage() {
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(Number.parseInt(e.target.value))
+                    <CustomCombobox
+                      items={[
+                        { id: '1', name: 'BDT' },
+                        { id: '2', name: 'USD' },
+                        { id: '3', name: 'EUR' },
+                        { id: '4', name: 'GBP' },
+                      ]}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value.toString(),
+                              name: ['BDT', 'USD', 'EUR', 'GBP'][
+                                field.value - 1
+                              ],
+                            }
+                          : null
                       }
+                      onChange={(value) =>
+                        field.onChange(
+                          value ? Number.parseInt(value.id, 10) : null
+                        )
+                      }
+                      placeholder="Select currency"
                     />
                   </FormControl>
                   <FormMessage />
@@ -261,8 +296,12 @@ export default function ExchangePage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              Save
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting || isLoading}
+            >
+              {form.formState.isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </form>
         </Form>
