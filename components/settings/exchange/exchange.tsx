@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/form'
 import { CurrencyType, exchangeSchema, type ExchangeType } from '@/utils/type'
 import { Popup } from '@/utils/popup'
-import { Plus, Edit2, Save, Check } from 'lucide-react'
+import { Plus, Edit2, Check } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   createExchange,
@@ -126,8 +126,20 @@ export default function ExchangePage() {
 
   async function handleUpdate(exchangeDate: string, baseCurrency: number) {
     setIsLoading(true)
-    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0] // Ensures date format is YYYY-MM-DD
-    const result = await editExchange(formattedDate, baseCurrency)
+    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0] // Ensure correct format
+    const rate = parseFloat(editRate) // Convert to number
+
+    if (isNaN(rate)) {
+      toast({
+        title: 'Error',
+        description: 'Rate must be a valid number.',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
+      return
+    }
+
+    const result = await editExchange(formattedDate, baseCurrency, rate) // Pass rate
 
     if (result.error || !result.data) {
       toast({
@@ -136,7 +148,7 @@ export default function ExchangePage() {
         variant: 'destructive',
       })
     } else {
-      setExchanges(result.data)
+      fetchExchanges() // Refresh data
       setEditingId(null)
       toast({
         title: 'Success',
