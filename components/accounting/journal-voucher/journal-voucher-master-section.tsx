@@ -28,6 +28,7 @@ import React from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CURRENCY_ITEMS } from '@/utils/constants'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -104,28 +105,26 @@ export function JournalVoucherMasterSection({
           control={form.control}
           name="journalEntry.companyId"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Company</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select company" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem
-                      key={company.company.companyId}
-                      value={company.company.companyId.toString()}
-                    >
-                      {company.company.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomCombobox
+                items={companies.map((c) => ({
+                  id: c.company.companyId,
+                  name: c.company.companyName,
+                }))}
+                value={
+                  field.value
+                    ? {
+                        id: field.value,
+                        name:
+                          companies.find(
+                            (c) => c.company.companyId === field.value
+                          )?.company.companyName || '',
+                      }
+                    : null
+                }
+                onChange={(value) => field.onChange(value?.id || null)}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -135,28 +134,26 @@ export function JournalVoucherMasterSection({
           control={form.control}
           name="journalEntry.locationId"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem
-                      key={location.location.locationId}
-                      value={location.location.locationId.toString()}
-                    >
-                      {location.location.address}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomCombobox
+                items={locations.map((c) => ({
+                  id: c.location.locationId,
+                  name: c.location.address,
+                }))}
+                value={
+                  field.value
+                    ? {
+                        id: field.value,
+                        name:
+                          locations.find(
+                            (c) => c.location.locationId === field.value
+                          )?.location.address || '',
+                      }
+                    : null
+                }
+                onChange={(value) => field.onChange(value?.id || null)}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -169,52 +166,53 @@ export function JournalVoucherMasterSection({
           name="journalEntry.date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Voucher Date</FormLabel>
+              <FormLabel className="mb-2">Voucher Date</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input type="date" {...field} className="h-10" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="journalEntry.currencyId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Currency" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {CURRENCY_ITEMS.map((currency) => (
-                    <SelectItem
-                      key={currency.currencyId}
-                      value={currency.currencyId.toString()}
-                    >
-                      {currency.currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex flex-col pt-3">
+          <FormLabel className="mb-2">Currency</FormLabel>
+          <FormField
+            control={form.control}
+            name="journalEntry.currencyId"
+            render={({ field }) => (
+              <FormControl>
+                <CustomCombobox
+                  items={CURRENCY_ITEMS.map((c) => ({
+                    id: c.currencyId,
+                    name: c.currency,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            CURRENCY_ITEMS.find(
+                              (c) => c.currencyId === field.value
+                            )?.currency || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
+              </FormControl>
+            )}
+          />
+
+          <FormMessage />
+        </div>
 
         <FormField
           control={form.control}
           name="journalEntry.journalType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Analysis tags</FormLabel>
+              <FormLabel className="mb-2">Analysis tags</FormLabel>
               <FormControl>
                 <Input />
               </FormControl>

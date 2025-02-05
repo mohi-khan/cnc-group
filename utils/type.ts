@@ -355,7 +355,7 @@ export const AccountsHeadSchema = z.object({
   isReconcilable: z.boolean(),
   notes: z.string(),
   isGroup: z.boolean(),
-  isCash: z.boolean()
+  isCash: z.boolean(),
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
@@ -369,8 +369,8 @@ export interface FormData {
 }
 
 export interface Voucher {
-  voucherNo: string
-  companyName: string
+  voucherno: string
+  companyname: string
   location: string
   currency: string
   type: string
@@ -378,9 +378,10 @@ export interface Voucher {
   costCenter: string
   department: string
   partnerName: string
-  remarks: string
-  totalAmount: string
-  status: string
+  notes: string
+  totalamount: string
+  state: string
+  date: string
 }
 
 export interface DetailRow {
@@ -438,6 +439,7 @@ const JournalDetailSchema = z.object({
   resPartnerId: z.number().nullable().optional(),
   bankaccountid: z.number().nullable().optional(),
   notes: z.string().optional(),
+  type: z.string().optional(),
   createdBy: z.number(),
 })
 
@@ -849,3 +851,33 @@ export const EmployeeSchema = z.object({
 
 // employee master employeee TypeScript type
 export type Employee = z.infer<typeof EmployeeSchema>
+
+//Cash Position Bank Balance report type
+export interface BankBalance {
+  companyName: string
+  BankAccount: string
+  AccountType: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
+
+//cash position cash balance report type
+
+export interface CashBalance {
+  companyName: string
+  locationName: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
+
+export const exchangeSchema = z.object({
+  exchangeDate: z.coerce.date(),
+  baseCurrency: z.number().int(),
+  rate: z.number(),
+})
+
+export type ExchangeType = z.infer<typeof exchangeSchema>

@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, Fragment } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,9 @@ import {
   getAllChartOfAccounts,
   getAllBankAccounts,
 } from '@/api/contra-voucher-api'
+import { Combobox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -40,10 +44,24 @@ export function ContraVoucherDetailsSection({
 }: ContraVoucherDetailsSectionProps) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
+  const [accountQuery, setAccountQuery] = useState('')
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
   const [userId, setUserId] = useState<number>()
+
+  const filteredAccounts =
+    accountQuery === ''
+      ? accounts
+      : accounts.filter(
+          (account) =>
+            account.accountName
+              .toLowerCase()
+              .includes(accountQuery.toLowerCase()) ||
+            account.accountNumber
+              .toLowerCase()
+              .includes(accountQuery.toLowerCase())
+        )
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -242,7 +260,7 @@ export function ContraVoucherDetailsSection({
           key={index}
           className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium"
         >
-          <FormField
+          {/* <FormField
             control={form.control}
             name={`journalDetails.${index}.bankaccountid`}
             render={({ field }) => (
@@ -277,6 +295,52 @@ export function ContraVoucherDetailsSection({
                 <FormMessage />
               </FormItem>
             )}
+          /> */}
+          <FormField
+            control={form.control}
+            name={`journalDetails.${index}.bankaccountid`}
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <CustomCombobox
+                  // Map each account to an object with id and name.
+                  items={accounts.map((account) => ({
+                    id: account.id,
+                    name: `${account.accountName} - ${account.accountNumber}`,
+                  }))}
+                  // When a value is selected, find the corresponding account and set the field’s value.
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            accounts.find(
+                              (account) =>
+                                Number(account.id) === Number(field.value)
+                            )?.accountName +
+                              ' - ' +
+                              accounts.find(
+                                (account) =>
+                                  Number(account.id) === Number(field.value)
+                              )?.accountNumber || '',
+                        }
+                      : null
+                  }
+                  // When an item is selected, update both the form field and perform additional logic.
+                  onChange={(selectedItem) => {
+                    const selectedId = selectedItem?.id || null
+                    field.onChange(selectedId)
+                    // Only trigger the bank account change if a valid account is selected.
+                    if (selectedId !== null) {
+                      handleBankAccountChange(index, selectedId)
+                    }
+                  }}
+                  // Disable the combobox based on your external disabled state.
+                  disabled={disabledStates[index]?.bank}
+                />
+
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <FormField
@@ -284,7 +348,7 @@ export function ContraVoucherDetailsSection({
             name={`journalDetails.${index}.accountId`}
             render={({ field }) => (
               <FormItem>
-                <Select
+                {/* <Select
                   onValueChange={(value) => {
                     field.onChange(Number(value))
                     handleAccountNameChange(index, Number(value))
@@ -307,7 +371,36 @@ export function ContraVoucherDetailsSection({
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select> */}
+
+                <CustomCombobox
+                  // Convert each chart-of-accounts entry into an object with id and name.
+                  items={chartOfAccounts.map((account) => ({
+                    id: account.accountId,
+                    name: account.name,
+                  }))}
+                  // Set the current value by finding the matching account.
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            chartOfAccounts.find(
+                              (account) => account.accountId === field.value
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                  // When an item is selected, update the field and trigger your account change handler.
+                  onChange={(selectedItem) => {
+                    const value = selectedItem?.id || null
+                    field.onChange(Number(value))
+                    handleAccountNameChange(index, Number(value))
+                  }}
+                  // Use the same disabled condition as before.
+                  disabled={disabledStates[index]?.account}
+                />
+
                 <FormMessage />
               </FormItem>
             )}

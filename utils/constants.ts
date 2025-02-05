@@ -184,6 +184,10 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Other Reports',
         items: [
           {
+            name: 'Cash Position',
+            source: '/reports/cash-position',
+          },
+          {
             name: 'Bank and Cash Reports',
             source: '/reports/bank-cash-reports',
           },
@@ -242,6 +246,7 @@ export const MENU_ITEMS: MenuItem[] = [
           },
           { name: 'Financial Year', source: '/settings/financial-year' },
           { name: 'Number Series', source: '/settings/number-series' },
+          { name: 'Exchange', source: '/settings/exchange' },
         ],
       },
     ],

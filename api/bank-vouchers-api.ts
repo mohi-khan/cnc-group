@@ -11,6 +11,7 @@ import {
   JournalQuery,
   JournalEntryWithDetails,
   VoucherById,
+  GetDepartment,
 } from '@/utils/type'
 import { ChartOfAccounts } from './chart-of-accounts-api'
 
@@ -53,6 +54,13 @@ export async function getAllCostCenters() {
 export async function getAllResPartners() {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
+    method: 'GET',
+  })
+}
+
+export async function getAllDepartments() {
+  return fetchApi<GetDepartment[]>({
+    url: 'api/department/get-all-departments',
     method: 'GET',
   })
 }

@@ -1,20 +1,15 @@
 'use client'
-import React, { useState } from 'react'
+
+import type React from 'react'
+import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Form } from '@/components/ui/form'
 import { Plus } from 'lucide-react'
 
 import {
-  JournalEntryWithDetails,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   VoucherTypes,
 } from '@/utils/type'
@@ -23,6 +18,7 @@ import { toast } from '@/hooks/use-toast'
 import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
+import { Popup } from '@/utils/popup'
 
 interface ChildComponentProps {
   fetchAllVoucher: (company: number[], location: number[]) => void
@@ -35,7 +31,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
@@ -60,21 +56,20 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         locationId: 0,
         currencyId: 0,
         amountTotal: 0,
-        createdBy: undefined, // Initialize as undefined
+        createdBy: undefined,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: undefined, // Initialize as undefined
+          createdBy: undefined,
         },
       ],
     },
   })
 
-  // Update form fields when `userId` changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (userId !== null) {
       form.setValue('journalEntry.createdBy', userId)
       form.setValue(
@@ -91,13 +86,11 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
 
-    // Calculate total amount from details
     const amountTotal = data.journalDetails.reduce(
       (sum, detail) => sum + Number(detail.debit),
       0
     )
 
-    // Update the total amount before submission
     const submissionData = {
       ...data,
       journalEntry: {
@@ -106,42 +99,34 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
       },
     }
 
-    await createJournalEntryWithDetails(submissionData)
-      .then((response) => {
-        if (response.error || !response.data) {
-          console.error('Error creating voucher:', response.error)
-          toast({
-            title: 'Error',
-            description: response.error?.message || 'Failed to create voucher',
-            variant: 'destructive',
-          })
-          return
-        }
+    try {
+      const response = await createJournalEntryWithDetails(submissionData)
+      if (response.error || !response.data) {
+        throw new Error(response.error?.message || 'Failed to create voucher')
+      }
 
-        toast({
-          title: 'Success',
-          description: 'Voucher created successfully',
-        })
+      toast({
+        title: 'Success',
+        description: 'Voucher created successfully',
+      })
 
-        form.reset()
+      form.reset()
+    } catch (error) {
+      console.error('Error creating voucher:', error)
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to create voucher',
+        variant: 'destructive',
       })
-      .catch((error) => {
-        console.error('Error creating voucher:', error)
-        toast({
-          title: 'Error',
-          description:
-            error instanceof Error ? error.message : 'Failed to create voucher',
-          variant: 'destructive',
-        })
-      })
-      .finally(() => {
-        setIsSubmitting(false)
-        fetchAllVoucher(
-          [data.journalEntry.companyId],
-          [data.journalEntry.locationId]
-        )
-        setIsOpen(false)
-      })
+    } finally {
+      setIsSubmitting(false)
+      fetchAllVoucher(
+        [data.journalEntry.companyId],
+        [data.journalEntry.locationId]
+      )
+      setIsOpen(false)
+    }
   }
 
   const removeEntry = (index: number) => {
@@ -155,28 +140,26 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> ADD
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-6xl max-h-[600px] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Contra Voucher</DialogTitle>
-        </DialogHeader>
+    <>
+      <Button onClick={() => setIsOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" /> ADD
+      </Button>
+      <Popup
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Contra Voucher"
+        size="max-w-6xl"
+      >
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             <ContraVoucherMasterSection form={form} />
-
             <ContraVoucherDetailsSection
               form={form}
               onRemoveEntry={removeEntry}
             />
-
             <ContraVoucherSubmit
               form={form}
               onSubmit={form.handleSubmit(handleSubmit)}
@@ -184,7 +167,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
             />
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </Popup>
+    </>
   )
 }
