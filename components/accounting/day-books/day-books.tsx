@@ -1,16 +1,16 @@
 'use client'
 
 import { getAllVoucher } from '@/api/day-books-api'
-import VoucherList from '@/components/voucher-list/voucher-list'
+import VoucherList, { Column } from '@/components/voucher-list/voucher-list'
 import { useToast } from '@/hooks/use-toast'
-import type {
-  CompanyFromLocalstorage,
-  JournalQuery,
-  JournalResult,
-  LocationFromLocalstorage,
-  User,
-  Voucher,
+import {
   VoucherTypes,
+  type CompanyFromLocalstorage,
+  type JournalQuery,
+  type JournalResult,
+  type LocationFromLocalstorage,
+  type User,
+  type Voucher,
 } from '@/utils/type'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
@@ -29,8 +29,31 @@ const DayBooks = () => {
     new Date().toISOString().split('T')[0]
   )
 
-  const linkGenerator = (voucherId: number, voucherType: VoucherTypes) =>
-    `/voucher-list/single-voucher-details/${voucherId}?voucherType=${voucherType}`
+  const linkGenerator = (voucherId: number): string => {
+    const voucher = voucherGrid.find(
+      (voucher) => voucher.voucherid === voucherId
+    )
+
+    let type = ''
+    if (voucher) {
+      switch (voucher.journaltype) {
+        case 'Cash Voucher':
+          type = VoucherTypes.CashVoucher
+          break
+        case 'Contra Voucher':
+          type = VoucherTypes.ContraVoucher
+          break
+        case 'Journal Voucher':
+          type = VoucherTypes.JournalVoucher
+          break
+        case 'Bank Voucher':
+          type = VoucherTypes.BankVoucher
+          break
+      }
+    }
+
+    return `/voucher-list/single-voucher-details/${voucherId}?voucherType=${type}`
+  }
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -113,7 +136,7 @@ const DayBooks = () => {
     }
   }, [companies, locations, selectedDate, toast])
 
-  const columns: { key: keyof Voucher; label: string }[] = [
+  const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No.' },
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
