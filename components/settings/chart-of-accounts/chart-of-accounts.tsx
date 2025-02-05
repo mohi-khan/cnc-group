@@ -64,6 +64,7 @@ import {
   type CodeGroup,
   type ChartOfAccount,
   chartOfAccountSchema,
+  CurrencyType,
 } from '@/utils/type'
 import {
   createChartOfAccounts,
@@ -81,6 +82,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllCurrency } from '@/api/exchange-api'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
@@ -192,6 +195,7 @@ export default function ChartOfAccountsTable() {
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
   const [userId, setUserId] = React.useState<number | null>(null)
+  const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -317,7 +321,23 @@ export default function ChartOfAccountsTable() {
   React.useEffect(() => {
     fetchCoaAccounts()
     fetchParentCodes()
+    fetchCurrency()
   }, [])
+
+  // get all currency api
+  const fetchCurrency = async () => {
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+    }
+  }
 
   async function fetchCoaAccounts() {
     const fetchedAccounts = await getAllCoa()
@@ -679,28 +699,34 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          } // Ensure currencyId is saved as a number
-                          defaultValue={field.value?.toString()} // Convert to string for Select compatibility
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select currency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {currencyItems.map((currency) => (
-                              <SelectItem
-                                key={currency.currencyId}
-                                value={currency.currencyId.toString()}
-                              >
-                                {currency.currency}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <CustomCombobox
+                          items={currency
+                            .filter((curr) => curr.baseCurrency)
+                            .map((curr) => ({
+                              id: curr.currencyId.toString(),
+                              name: curr.currencyCode || 'Unnamed Currency',
+                            }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    currency.find(
+                                      (c) =>
+                                        c.currencyId === field.value &&
+                                        c.baseCurrency
+                                    )?.currencyCode || '',
+                                }
+                              : null
+                          }
+                          onChange={(value) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
