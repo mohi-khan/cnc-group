@@ -14,29 +14,44 @@ const CashPositon = () => {
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([])
   const [fromDate, setFromDate] = useState<string>('2024-01-01')
   const [toDate, setToDate] = useState<string>('2025-03-02')
+  // Use companyName (instead of companyId) for filtering
+  const [companyName, setCompanyName] = useState<string>('')
 
-  // Function to fetch bank balance data
+  // Fetch bank balance data and filter by companyName if one is selected
   const fetchGetBankBalance = React.useCallback(async () => {
     try {
       const response = await getBankBalance(fromDate, toDate)
-      setBankBalances(response.data || [])
-      console.log('This is all Bank Balance data: ', response.data || [])
+      let data: BankBalance[] = response.data || []
+      if (companyName) {
+        data = data.filter(
+          (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+        )
+      }
+      setBankBalances(data)
+      console.log('Filtered Bank Balance data: ', data)
     } catch (error) {
       console.error('Error fetching bank balance:', error)
     }
-  }, [fromDate, toDate])
+  }, [fromDate, toDate, companyName])
 
+  // Fetch cash balance data and filter by companyName if one is selected
   const fetchGetCashBalance = React.useCallback(async () => {
     try {
       const response = await getCashBalance(fromDate, toDate)
-      setCashBalances(response.data || [])
-      console.log('This is all Cash Balance data: ', response.data || [])
+      let data: CashBalance[] = response.data || []
+      if (companyName) {
+        data = data.filter(
+          (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+        )
+      }
+      setCashBalances(data)
+      console.log('Filtered Cash Balance data: ', data)
     } catch (error) {
       console.error('Error fetching cash balance:', error)
     }
-  }, [fromDate, toDate])
+  }, [fromDate, toDate, companyName])
 
-  // Fetch data when the component mounts or when date changes
+  // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
     fetchGetBankBalance()
     fetchGetCashBalance()
@@ -47,9 +62,8 @@ const CashPositon = () => {
     toPDF()
   }
 
-  // Function to flatten and combine both bankBalances and cashBalances for Excel export
+  // Flatten and combine both bankBalances and cashBalances for Excel export
   const flattenAllData = () => {
-    // Map over bankBalances and add a Source field
     const bankData = bankBalances.map((item) => ({
       Source: 'Bank',
       CompanyName: item.companyName,
@@ -61,23 +75,20 @@ const CashPositon = () => {
       ClosingBalance: item.closingBalance,
     }))
 
-    // Map over cashBalances and add a Source field and adjust the fields as needed
     const cashData = cashBalances.map((item) => ({
       Source: 'Cash',
       CompanyName: item.companyName,
       Location: item.locationName,
-      // If you have any cash-specific account field, you can add it here.
       OpeningBalance: item.openingBalance,
       DebitSum: item.debitSum,
       CreditSum: item.creditSum,
       ClosingBalance: item.closingBalance,
     }))
 
-    // Combine the two arrays
     return [...bankData, ...cashData]
   }
 
-  // Function to export data to Excel (includes both bank and cash details)
+  // Export data to Excel (both bank and cash)
   const generateExcel = () => {
     const allData = flattenAllData()
     if (allData.length === 0) {
@@ -101,12 +112,16 @@ const CashPositon = () => {
     saveAs(blob, `${fileName}.xlsx`)
   }
 
+  // Receive filter changes from the heading component.
+  // Note: The third parameter now represents the selected company name.
   const handleFilterChange = (
     newStartDate: Date | undefined,
-    newEndDate: Date | undefined
+    newEndDate: Date | undefined,
+    newCompanyName: string
   ) => {
     setFromDate(newStartDate ? newStartDate.toISOString().split('T')[0] : '')
     setToDate(newEndDate ? newEndDate.toISOString().split('T')[0] : '')
+    setCompanyName(newCompanyName)
   }
 
   return (
@@ -119,12 +134,10 @@ const CashPositon = () => {
       <CashPositionTable
         targetRef={targetRef}
         bankBalances={bankBalances}
-        cashkBalances={cashBalances}
+        cashBalances={cashBalances}
       />
     </div>
   )
 }
 
 export default CashPositon
-
-

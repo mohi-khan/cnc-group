@@ -107,10 +107,10 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Bank Management',
         items: [
-          // {
-          //   name: 'Create Bank Account',
-          //   source: '/bank/create-bank-account',
-          // },
+          {
+            name: 'Currency ',
+            source: '/bank/currency',
+          },
           { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
           {
             name: 'Bank Reconciliation',

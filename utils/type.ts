@@ -318,7 +318,6 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()
@@ -854,6 +853,7 @@ export type Employee = z.infer<typeof EmployeeSchema>
 
 //Cash Position Bank Balance report type
 export interface BankBalance {
+  companyId: string
   companyName: string
   BankAccount: string
   AccountType: string
@@ -866,6 +866,7 @@ export interface BankBalance {
 //cash position cash balance report type
 
 export interface CashBalance {
+  companyId: string
   companyName: string
   locationName: string
   openingBalance: number
@@ -881,3 +882,12 @@ export const exchangeSchema = z.object({
 })
 
 export type ExchangeType = z.infer<typeof exchangeSchema>
+
+export const currencySchema = z.object({
+  currencyId: z.number(),
+  currencyCode: z.string(),
+  currencyName: z.string(),
+  baseCurrency: z.boolean(),
+})
+
+export type CurrencyType = z.infer<typeof currencySchema>

@@ -1,5 +1,4 @@
 'use client'
-
 import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
@@ -17,13 +16,16 @@ import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { CalendarIcon, FileText } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
+import { getAllCompany } from '@/api/company-api'
+import { Company, User } from '@/utils/type'
 
 interface CashPositonHeadingProps {
   generatePdf: () => void
   generateExcel: () => void
   onFilterChange: (
     startDate: Date | undefined,
-    endDate: Date | undefined
+    endDate: Date | undefined,
+    selectedCompanyName: string
   ) => void
 }
 
@@ -36,10 +38,36 @@ const CashPositonHeading = ({
   const [endDate, setEndDate] = useState<Date>()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [companies, setCompanies] = useState<Company[]>([])
+  // Now store the selected company name instead of companyId
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>('')
+
+  async function fetchCompanies() {
+    const response = await getAllCompany()
+    const data: Company[] = response.data || []
+
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData: User = JSON.parse(userStr)
+      setUser(userData)
+
+      const userCompanyIds = userData.userCompanies.map((uc) => uc.companyId)
+      const filteredCompanies = data.filter((company) =>
+        userCompanyIds.includes(company.companyId)
+      )
+      setCompanies(filteredCompanies)
+    }
+  }
 
   useEffect(() => {
-    onFilterChange(startDate, endDate)
-  }, [startDate, endDate, onFilterChange])
+    fetchCompanies()
+  }, [])
+
+  // Whenever the start date, end date, or selected company name changes, pass the new filters upward.
+  useEffect(() => {
+    onFilterChange(startDate, endDate, selectedCompanyName)
+  }, [startDate, endDate, selectedCompanyName, onFilterChange])
 
   return (
     <div>
@@ -115,7 +143,10 @@ const CashPositonHeading = ({
               >
                 <CalendarIcon className="mr-2 h-5 w-5" />
                 {startDate && endDate
-                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
+                      endDate,
+                      'dd/MM/yyyy'
+                    )}`
                   : 'Select Date Range'}
               </Button>
             </PopoverTrigger>
@@ -148,7 +179,7 @@ const CashPositonHeading = ({
                         selected={startDate}
                         onSelect={(date) => {
                           setStartDate(date)
-                          setIsStartPopoverOpen(false) // Close Start Date dropdown immediately
+                          setIsStartPopoverOpen(false)
                         }}
                         className="rounded-md border"
                       />
@@ -180,7 +211,7 @@ const CashPositonHeading = ({
                         onSelect={(date) => {
                           setEndDate(date)
                           if (startDate && date) {
-                            setIsDropdownOpen(false) // Close main dropdown when both dates are selected
+                            setIsDropdownOpen(false)
                           }
                         }}
                         className="rounded-md border"
@@ -191,6 +222,22 @@ const CashPositonHeading = ({
               </div>
             </PopoverContent>
           </Popover>
+          <Select
+            value={selectedCompanyName}
+            onValueChange={(value) => setSelectedCompanyName(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a company" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((company) => (
+                // Use companyName as the select value for filtering
+                <SelectItem key={company.companyId} value={company.companyName}>
+                  {company.companyName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

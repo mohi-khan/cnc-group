@@ -21,13 +21,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { exchangeSchema, type ExchangeType } from '@/utils/type'
+import { CurrencyType, exchangeSchema, type ExchangeType } from '@/utils/type'
 import { Popup } from '@/utils/popup'
-import { Plus, Edit2, Save, Check } from 'lucide-react'
+import { Plus, Edit2, Check } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
   createExchange,
   editExchange,
+  getAllCurrency,
   getAllExchange,
 } from '@/api/exchange-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -35,6 +36,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 export default function ExchangePage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editRate, setEditRate] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
@@ -51,6 +53,7 @@ export default function ExchangePage() {
 
   useEffect(() => {
     fetchExchanges()
+    fetchCurrency()
   }, [])
 
   useEffect(() => {
@@ -71,6 +74,22 @@ export default function ExchangePage() {
     } else {
       setExchanges(data.data)
       console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
+    }
+    setIsLoading(false)
+  }
+
+  const fetchCurrency = async () => {
+    setIsLoading(true)
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
     setIsLoading(false)
   }
@@ -107,7 +126,21 @@ export default function ExchangePage() {
 
   async function handleUpdate(exchangeDate: string, baseCurrency: number) {
     setIsLoading(true)
-    const result = await editExchange(exchangeDate, baseCurrency)
+    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0] // Ensure correct format
+    const rate = parseFloat(editRate) // Convert to number
+
+    if (isNaN(rate)) {
+      toast({
+        title: 'Error',
+        description: 'Rate must be a valid number.',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
+      return
+    }
+
+    const result = await editExchange(formattedDate, baseCurrency, rate) // Pass rate
+
     if (result.error || !result.data) {
       toast({
         title: 'Error',
@@ -115,7 +148,7 @@ export default function ExchangePage() {
         variant: 'destructive',
       })
     } else {
-      setExchanges(result.data)
+      fetchExchanges() // Refresh data
       setEditingId(null)
       toast({
         title: 'Success',
@@ -172,7 +205,7 @@ export default function ExchangePage() {
                     <Button
                       onClick={() =>
                         handleUpdate(
-                          exchange.exchangeDate,
+                          exchange.exchangeDate.toString(),
                           exchange.baseCurrency
                         )
                       }
@@ -188,7 +221,7 @@ export default function ExchangePage() {
                     <Button
                       onClick={() =>
                         handleEdit(
-                          exchange.exchangeDate,
+                          exchange.exchangeDate.toString(),
                           exchange.baseCurrency,
                           exchange.rate
                         )
@@ -248,19 +281,22 @@ export default function ExchangePage() {
                   <FormLabel>Currency</FormLabel>
                   <FormControl>
                     <CustomCombobox
-                      items={[
-                        { id: '1', name: 'BDT' },
-                        { id: '2', name: 'USD' },
-                        { id: '3', name: 'EUR' },
-                        { id: '4', name: 'GBP' },
-                      ]}
+                      items={currency
+                        .filter((curr) => curr.baseCurrency)
+                        .map((curr) => ({
+                          id: curr.currencyId.toString(),
+                          name: curr.currencyCode || 'Unnamed Currency',
+                        }))}
                       value={
                         field.value
                           ? {
                               id: field.value.toString(),
-                              name: ['BDT', 'USD', 'EUR', 'GBP'][
-                                field.value - 1
-                              ],
+                              name:
+                                currency.find(
+                                  (c) =>
+                                    c.currencyId === field.value &&
+                                    c.baseCurrency
+                                )?.currencyCode || '',
                             }
                           : null
                       }
@@ -269,7 +305,7 @@ export default function ExchangePage() {
                           value ? Number.parseInt(value.id, 10) : null
                         )
                       }
-                      placeholder="Select currency"
+                      placeholder="Select base currency"
                     />
                   </FormControl>
                   <FormMessage />
