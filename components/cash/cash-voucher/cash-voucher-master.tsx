@@ -1,4 +1,5 @@
 'use client'
+import { getAllCurrency } from '@/api/exchange-api'
 import {
   FormControl,
   FormField,
@@ -7,11 +8,14 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
   CompanyFromLocalstorage,
+  CurrencyType,
   LocationFromLocalstorage,
 } from '@/utils/type'
+import { useEffect, useState } from 'react'
 
 interface CashVoucherMasterProps {
   form: any
@@ -24,6 +28,26 @@ export default function CashVoucherMaster({
   companies,
   locations,
 }: CashVoucherMasterProps) {
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
+
+  const fetchCurrency = async () => {
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+    }
+  }
+
+  useEffect(() => {
+    fetchCurrency()
+  }, [])
+
   return (
     <div className="grid grid-cols-4 gap-4">
       <FormField
@@ -98,22 +122,28 @@ export default function CashVoucherMaster({
             <FormLabel>Currency</FormLabel>
             <FormControl>
               <CustomCombobox
-                items={[
-                  { id: '1', name: 'BDT' },
-                  { id: '2', name: 'USD' },
-                  { id: '3', name: 'EUR' },
-                ]}
+                items={currency
+                  .filter((curr) => curr.baseCurrency)
+                  .map((curr) => ({
+                    id: curr.currencyId.toString(),
+                    name: curr.currencyCode || 'Unnamed Currency',
+                  }))}
                 value={
                   field.value
                     ? {
                         id: field.value.toString(),
-                        name: ['BDT', 'USD', 'EUR'][field.value - 1] || '',
+                        name:
+                          currency.find(
+                            (c) =>
+                              c.currencyId === field.value && c.baseCurrency
+                          )?.currencyCode || '',
                       }
                     : null
                 }
                 onChange={(value) =>
                   field.onChange(value ? Number.parseInt(value.id, 10) : null)
                 }
+                placeholder="Select currency"
               />
             </FormControl>
             <FormMessage />
