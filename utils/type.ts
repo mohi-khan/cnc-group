@@ -318,7 +318,6 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  accountId: z.number().int().positive(),
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()

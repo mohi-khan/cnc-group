@@ -818,7 +818,7 @@ export default function ChartOfAccountsTable() {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Is Cash</FormLabel>
+                          <FormLabel>Is Bank</FormLabel>
                           <FormDescription>
                             Uncheck to deactivate this bank
                           </FormDescription>
