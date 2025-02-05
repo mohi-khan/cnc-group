@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { ExchangeType } from '@/utils/type'
+import { CurrencyType, ExchangeType } from '@/utils/type'
 
 export async function getAllExchange() {
   return fetchApi<ExchangeType[]>({
@@ -27,5 +27,15 @@ export async function editExchange(exchangeDate: string, baseCurrency: number) {
   return fetchApi<ExchangeType[]>({
     url: `api/exchange/edit-exchange/${exchangeDate}/${baseCurrency}`,
     method: 'PATCH',
+  })
+}
+
+export async function getAllCurrency() {
+  return fetchApi<CurrencyType[]>({
+    url: 'api/exchange/get-all-currency',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 }
