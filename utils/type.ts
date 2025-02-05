@@ -373,7 +373,7 @@ export interface Voucher {
   companyname: string
   location: string
   currency: string
-  type: string
+  journaltype: string
   accountName: string
   costCenter: string
   department: string
@@ -463,7 +463,7 @@ export const JournalQuerySchema = z.object({
   date: z.string(),
   companyId: z.array(z.number()),
   locationId: z.array(z.number()),
-  voucherType: z.nativeEnum(VoucherTypes),
+  voucherType: z.nativeEnum(VoucherTypes).optional(),
 })
 export type JournalQuery = z.infer<typeof JournalQuerySchema>
 
