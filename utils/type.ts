@@ -525,6 +525,7 @@ const costCenterSchema = z.object({
   actual: z.string().optional(),
   currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
   isActive: z.boolean(),
+  isVehicle: z.boolean(),
   createdBy: z.number().optional(),
 })
 
