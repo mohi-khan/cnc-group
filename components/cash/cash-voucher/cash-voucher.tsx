@@ -153,7 +153,7 @@ export default function CashVoucher() {
   }, [companies, locations])
   React.useEffect(() => {
     const filteredCoa = chartOfAccounts?.filter((account) => {
-      return account.isGroup === true
+      return account.isGroup === false
     })
 
     const isCashCoa = chartOfAccounts?.filter((account) => {

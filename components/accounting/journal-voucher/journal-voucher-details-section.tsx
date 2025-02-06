@@ -51,7 +51,10 @@ export function JournalVoucherDetailsSection({
           response.error?.message || 'Failed to get Chart Of accounts',
       })
     } else {
-      setChartOfAccounts(response.data)
+      const filteredCoa = response.data?.filter((account) => {
+        return account.isGroup === false
+      })
+      setChartOfAccounts(filteredCoa)
     }
   }
 

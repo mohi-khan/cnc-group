@@ -137,12 +137,14 @@ export default function BankVoucher() {
         getAllResPartners(),
         getAllDepartments(),
       ])
-
+      const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
+        return account.isGroup === false
+      })
       setFormState((prevState) => ({
         ...prevState,
         bankAccounts: bankAccountsResponse.data || [],
         chartOfAccounts: chartOfAccountsResponse.data || [],
-        filteredChartOfAccounts: chartOfAccountsResponse.data || [],
+        filteredChartOfAccounts: filteredCoa || [],
         costCenters: costCentersResponse.data || [],
         partners: partnersResponse.data || [],
         departments: departmentsResponse.data || [],
