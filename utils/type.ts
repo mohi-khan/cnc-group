@@ -327,8 +327,8 @@ export const chartOfAccountSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int().positive('Parent account ID is required'),
-  parentName: z.string().optional(),
+  parentAccountId: z.number().int(),
+  parentName: z.string().min(1, 'Parent account ID is required').optional(),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -337,9 +337,9 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string().min(1, 'Cash tag is required').nullable(),
+  cashTag: z.string(),
   createdBy: z.number().int().positive(),
-  notes: z.string().min(3, 'Note is required, minimum 3 characters'),
+  notes: z.string(),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>

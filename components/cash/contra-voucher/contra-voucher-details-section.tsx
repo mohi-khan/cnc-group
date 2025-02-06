@@ -23,6 +23,7 @@ import type {
   ChartOfAccount,
   JournalEntryWithDetails,
   BankAccount,
+  AccountsHead,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -43,7 +44,7 @@ export function ContraVoucherDetailsSection({
   onRemoveEntry,
 }: ContraVoucherDetailsSectionProps) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
   const [accountQuery, setAccountQuery] = useState('')
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
