@@ -204,25 +204,23 @@ export function JournalVoucherMasterSection({
             render={({ field }) => (
               <FormControl>
                 <CustomCombobox
-                  items={currency
-                    .filter((curr) => curr.baseCurrency)
-                    .map((curr) => ({
-                      id: curr.currencyId.toString(),
-                      name: curr.currencyCode || 'Unnamed Currency',
-                    }))}
+                  items={currency.map((curr: CurrencyType) => ({
+                    id: curr.currencyId.toString(),
+                    name: curr.currencyCode || 'Unnamed Currency',
+                  }))}
                   value={
                     field.value
                       ? {
                           id: field.value.toString(),
                           name:
                             currency.find(
-                              (c) =>
-                                c.currencyId === field.value && c.baseCurrency
-                            )?.currencyCode || '',
+                              (curr: CurrencyType) =>
+                                curr.currencyId === field.value
+                            )?.currencyCode || 'Unnamed Currency',
                         }
                       : null
                   }
-                  onChange={(value) =>
+                  onChange={(value: { id: string; name: string } | null) =>
                     field.onChange(value ? Number.parseInt(value.id, 10) : null)
                   }
                   placeholder="Select currency"

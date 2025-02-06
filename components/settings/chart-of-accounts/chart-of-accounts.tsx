@@ -701,26 +701,25 @@ export default function ChartOfAccountsTable() {
                         <FormLabel>Currency</FormLabel>
 
                         <CustomCombobox
-                          items={currency
-                            .filter((curr) => curr.baseCurrency)
-                            .map((curr) => ({
-                              id: curr.currencyId.toString(),
-                              name: curr.currencyCode || 'Unnamed Currency',
-                            }))}
+                          items={currency.map((curr: CurrencyType) => ({
+                            id: curr.currencyId.toString(),
+                            name: curr.currencyCode || 'Unnamed Currency',
+                          }))}
                           value={
                             field.value
                               ? {
                                   id: field.value.toString(),
                                   name:
                                     currency.find(
-                                      (c) =>
-                                        c.currencyId === field.value &&
-                                        c.baseCurrency
-                                    )?.currencyCode || '',
+                                      (curr: CurrencyType) =>
+                                        curr.currencyId === field.value
+                                    )?.currencyCode || 'Unnamed Currency',
                                 }
                               : null
                           }
-                          onChange={(value) =>
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
                             field.onChange(
                               value ? Number.parseInt(value.id, 10) : null
                             )
@@ -1057,7 +1056,7 @@ export default function ChartOfAccountsTable() {
                   </TableBody>
                 </Table>
                 <div className="flex justify-center mt-4">
-                  <Pagination>
+                  {/* <Pagination>
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
@@ -1098,6 +1097,66 @@ export default function ChartOfAccountsTable() {
                             Math.ceil(filteredAccounts.length / itemsPerPage)
                               ? 'disabled-class'
                               : ''
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination> */}
+                  <Pagination>
+                    <PaginationContent>
+                      {/* Previous Button */}
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(1, prev - 1))
+                          }
+                          className={
+                            currentPage === 1
+                              ? 'pointer-events-none opacity-50' // Disabled styles (no cursor-not-allowed)
+                              : 'hover:bg-gray-100' // Default styles
+                          }
+                        />
+                      </PaginationItem>
+
+                      {/* Page Numbers */}
+                      {[
+                        ...Array(
+                          Math.ceil(filteredAccounts.length / itemsPerPage)
+                        ),
+                      ].map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(i + 1)}
+                            isActive={currentPage === i + 1}
+                            className={
+                              currentPage === i + 1
+                                ? 'bg-blue-500 text-white' // Active page styles
+                                : 'hover:bg-gray-100' // Default styles
+                            }
+                          >
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      {/* Next Button */}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(
+                                Math.ceil(
+                                  filteredAccounts.length / itemsPerPage
+                                ),
+                                prev + 1
+                              )
+                            )
+                          }
+                          className={
+                            currentPage ===
+                            Math.ceil(filteredAccounts.length / itemsPerPage)
+                              ? 'pointer-events-none opacity-50' // Disabled styles (no cursor-not-allowed)
+                              : 'hover:bg-gray-100' // Default styles
                           }
                         />
                       </PaginationItem>

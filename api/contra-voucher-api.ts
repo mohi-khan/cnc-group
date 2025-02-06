@@ -1,5 +1,6 @@
 import { fetchApi } from '@/utils/http'
 import {
+  AccountsHead,
   BankAccount,
   ChartOfAccount,
   Company,
@@ -26,7 +27,7 @@ export async function getAllLocations() {
 }
 
 export async function getAllChartOfAccounts() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })

@@ -35,9 +35,6 @@ export function CustomCombobox<T extends ComboboxItem>({
             .includes(query.toLowerCase().replace(/\s+/g, ''))
         )
 
-  // Modified onMouseDown handler:
-  // It checks if the click target (or its ancestor) has the 'combobox-option' class.
-  // If so, it lets the event pass through, allowing mouse selection.
   const handleContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
@@ -58,7 +55,6 @@ export function CustomCombobox<T extends ComboboxItem>({
   }
 
   return (
-    // Attach the modified onMouseDown handler to the outer container.
     <div onMouseDown={handleContainerMouseDown}>
       <Combobox value={value} onChange={onChange}>
         <div className="relative">
@@ -94,7 +90,6 @@ export function CustomCombobox<T extends ComboboxItem>({
                   <Combobox.Option
                     key={item.id}
                     value={item}
-                    // Add a custom class so we can detect clicks on options.
                     className={({ active }) =>
                       `combobox-option relative cursor-default select-none py-1 px-10 mx-2 rounded-md ${
                         active ? 'bg-slate-200 text-black' : 'text-gray-900'
