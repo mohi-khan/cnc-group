@@ -299,6 +299,7 @@ export default function BankVoucher() {
       'Submitted values:',
       JSON.stringify(updateValueswithBank, null, 2)
     )
+
     const response = await createJournalEntryWithDetails(updateValueswithBank)
     if (response.error || !response.data) {
       toast({
@@ -310,10 +311,21 @@ export default function BankVoucher() {
       const mycompanies = getCompanyIds(formState.companies)
       const mylocations = getLocationIds(formState.locations)
       getallVoucher(mycompanies, mylocations)
+
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
+      })
+
+      // Close popup and reset form
+      setIsDialogOpen(false)
+      form.reset()
+      setFormState({
+        ...formState,
+        selectedBankAccount: null,
+        formType: 'Credit',
+        status: 'Draft',
       })
     }
   }
@@ -350,8 +362,8 @@ export default function BankVoucher() {
           size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
-            Enter the details for the bank voucher here. Click save when you&apos;re
-            done.
+            Enter the details for the bank voucher here. Click save when
+            you&apos;re done.
           </p>
           <Form {...form}>
             <form
