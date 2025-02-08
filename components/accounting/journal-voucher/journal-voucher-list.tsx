@@ -118,6 +118,8 @@ export default function VoucherTable() {
       journalDetails: data.journalDetails.map((detail) => ({
         ...detail,
         createdBy: userId,
+        costCenterId: detail.costCenterId || null,
+        departmentId: detail.departmentId || null
       })),
     }
 
