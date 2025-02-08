@@ -145,7 +145,7 @@ export default function VoucherTable() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Journal Vouchers</h1>
         <JournalVoucherPopup

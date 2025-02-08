@@ -47,7 +47,7 @@ export default function BankVoucher() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         journalType: '',
         companyId: 0,
         locationId: 0,
