@@ -584,7 +584,7 @@ export default function ChartOfAccountsTable() {
                 ADD
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Account</DialogTitle>
               </DialogHeader>
@@ -640,6 +640,8 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Cash Tag</FormLabel>
+
+                        
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value ?? undefined}
@@ -668,7 +670,33 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Parent Account Name</FormLabel>
-                        <Select
+                        <CustomCombobox
+                          items={parentCodes.map((account: ChartOfAccount) => ({
+                            id: account.code.toString(),
+                            name: account.name || 'Unnamed Account',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    parentCodes.find(
+                                      (id: ChartOfAccount) =>
+                                        Number(id.code) === field.value
+                                    )?.name || 'Select Parent Account',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
+                        {/* <Select
                           onValueChange={(value) =>
                             field.onChange(Number(value))
                           } // Convert to number before updating the field
@@ -686,7 +714,7 @@ export default function ChartOfAccountsTable() {
                               </SelectItem>
                             ))}
                           </SelectContent>
-                        </Select>
+                        </Select> */}
 
                         <FormMessage />
                       </FormItem>
@@ -1056,52 +1084,6 @@ export default function ChartOfAccountsTable() {
                   </TableBody>
                 </Table>
                 <div className="flex justify-center mt-4">
-                  {/* <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(1, prev - 1))
-                          }
-                          className={currentPage === 1 ? 'disabled-class' : ''}
-                        />
-                      </PaginationItem>
-                      {[
-                        ...Array(
-                          Math.ceil(filteredAccounts.length / itemsPerPage)
-                        ),
-                      ].map((_, i) => (
-                        <PaginationItem key={i}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(i + 1)}
-                            isActive={currentPage === i + 1}
-                          >
-                            {i + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(
-                                Math.ceil(
-                                  filteredAccounts.length / itemsPerPage
-                                ),
-                                prev + 1
-                              )
-                            )
-                          }
-                          className={
-                            currentPage ===
-                            Math.ceil(filteredAccounts.length / itemsPerPage)
-                              ? 'disabled-class'
-                              : ''
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination> */}
                   <Pagination>
                     <PaginationContent>
                       {/* Previous Button */}
@@ -1112,7 +1094,7 @@ export default function ChartOfAccountsTable() {
                           }
                           className={
                             currentPage === 1
-                              ? 'pointer-events-none opacity-50' // Disabled styles (no cursor-not-allowed)
+                              ? 'pointer-events-none opacity-30' // Disabled styles (no cursor-not-allowed)
                               : 'hover:bg-gray-100' // Default styles
                           }
                         />
@@ -1155,7 +1137,7 @@ export default function ChartOfAccountsTable() {
                           className={
                             currentPage ===
                             Math.ceil(filteredAccounts.length / itemsPerPage)
-                              ? 'pointer-events-none opacity-50' // Disabled styles (no cursor-not-allowed)
+                              ? 'pointer-events-none opacity-30' // Disabled styles (no cursor-not-allowed)
                               : 'hover:bg-gray-100' // Default styles
                           }
                         />
