@@ -96,8 +96,8 @@ export function JournalVoucherDetailsSection({
       form.setValue('journalDetails', [
         {
           accountId: 0,
-          costCenterId: 0,
-          departmentId: 0,
+          costCenterId: null,
+          departmentId: null,
           debit: 0,
           credit: 0,
           notes: '',
@@ -107,8 +107,8 @@ export function JournalVoucherDetailsSection({
         },
         {
           accountId: 0,
-          costCenterId: 0,
-          departmentId: 0,
+          costCenterId: null,
+          departmentId: null,
           debit: 0,
           credit: 0,
           notes: '',
@@ -125,8 +125,8 @@ export function JournalVoucherDetailsSection({
       ...entries,
       {
         accountId: 0,
-        costCenterId: 0,
-        departmentId: 0,
+        costCenterId: null,
+        departmentId: null,
         debit: 0,
         credit: 0,
         notes: '',
@@ -338,7 +338,7 @@ export function JournalVoucherDetailsSection({
               )}
             />
 
-            <div className='border rounded-md'>
+            <div className="border rounded-md">
               <Button
                 type="button"
                 variant="ghost"
@@ -351,25 +351,25 @@ export function JournalVoucherDetailsSection({
             </div>
           </div>
         ))}
-
+        
       </div>
-        <Button type="button" variant="outline" onClick={addEntry}>
-          Add Another Line
-        </Button>
+      <Button type="button" variant="outline" onClick={addEntry}>
+        Add Another Line
+      </Button>
 
-        <div className="flex justify-between items-center pt-4">
-          <div>
-            <p>Total Debit: {totals.debit}</p>
-            <p>Total Credit: {totals.credit}</p>
-          </div>
-          <div>
-            {!isBalanced && (
-              <p className="text-red-500">
-                Debit and Credit totals must be equal to post/draft the voucher.
-              </p>
-            )}
-          </div>
+      <div className="flex justify-between items-center pt-4">
+        <div>
+          <p>Total Debit: {totals.debit}</p>
+          <p>Total Credit: {totals.credit}</p>
         </div>
+        <div>
+          {!isBalanced && (
+            <p className="text-red-500">
+              Debit and Credit totals must be equal to post/draft the voucher.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
