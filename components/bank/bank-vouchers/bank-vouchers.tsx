@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import type * as z from 'zod'
@@ -16,7 +17,7 @@ import {
   type JournalResult,
   type JournalQuery,
   VoucherTypes,
-  User,
+  type User,
 } from '@/utils/type'
 import {
   getAllBankAccounts,
@@ -41,6 +42,7 @@ export default function BankVoucher() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [dataLoaded, setDataLoaded] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const router = useRouter()
 
   const form = useForm<JournalEntryWithDetails>({
@@ -233,10 +235,21 @@ export default function BankVoucher() {
       const userData = JSON.parse(userStr)
       console.log('Current userId from localStorage:', userData.userId)
     }
-    const totalAmount = values.journalDetails.reduce(
+
+    const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
       0
     )
+
+    if (Math.abs(values.journalEntry.amountTotal - totalDetailsAmount) > 0.01) {
+      setValidationError(
+        "The total amount in journal details doesn't match the journal entry amount total."
+      )
+      return
+    }
+
+    setValidationError(null)
+
     const updatedValues = {
       ...values,
       journalEntry: {
@@ -244,7 +257,7 @@ export default function BankVoucher() {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
-        amountTotal: totalAmount,
+        amountTotal: totalDetailsAmount,
         createdBy: user?.userId ?? 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
@@ -253,7 +266,9 @@ export default function BankVoucher() {
         createdBy: user?.userId ?? 0,
       })),
     }
+
     console.log('After Adding created by', updatedValues)
+
     const updateValueswithBank = {
       ...updatedValues,
       journalDetails: [
@@ -335,7 +350,7 @@ export default function BankVoucher() {
           size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
-            Enter the details for the bank voucher here. Click save when you're
+            Enter the details for the bank voucher here. Click save when you&apos;re
             done.
           </p>
           <Form {...form}>
@@ -345,6 +360,11 @@ export default function BankVoucher() {
               )}
               className="space-y-8"
             >
+              {validationError && (
+                <div className="text-red-500 text-sm mb-4">
+                  {validationError}
+                </div>
+              )}
               <BankVoucherMaster
                 form={form}
                 formState={formState}
