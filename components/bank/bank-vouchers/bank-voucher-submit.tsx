@@ -4,7 +4,7 @@ import { UseFormReturn } from 'react-hook-form'
 import { z } from 'zod'
 
 interface BankVoucherSubmitProps {
-  form: any
+  form: UseFormReturn<any>
   onSubmit: (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
@@ -14,10 +14,7 @@ interface BankVoucherSubmitProps {
 export default function BankVoucherSubmit({
   form,
   onSubmit,
-}: {
-  form: UseFormReturn<any>
-  onSubmit: (values: Number, status: 'Draft' | 'Posted') => void
-}) {
+}: BankVoucherSubmitProps) {
   return (
     <div className="flex justify-end space-x-2">
       <Button

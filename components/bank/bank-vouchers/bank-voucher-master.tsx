@@ -172,7 +172,7 @@ export default function BankVoucherMaster({
         />
       </FormItem>
       <FormItem>
-        <FormLabel>Bank Account</FormLabel>
+        <FormLabel>Bank Account Details</FormLabel>
         <CustomCombobox
           items={formState.bankAccounts.map((account) => ({
             id: account.id.toString(),
@@ -241,7 +241,11 @@ export default function BankVoucherMaster({
           <FormItem>
             <FormLabel>Date</FormLabel>
             <FormControl>
-              <Input type="date" placeholder="mm/dd/yyyy" {...field} />
+              <Input
+                type="date"
+                {...field}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -35,8 +35,8 @@ export default function BankVoucherDetails({
 
   return (
     <div>
-      <Table className="border">
-        <TableHeader>
+      <Table className="border shadow-md">
+        <TableHeader className='bg-slate-200 shadow-md'>
           <TableRow>
             <TableHead>Account Name</TableHead>
             <TableHead>Cost Center</TableHead>
@@ -245,12 +245,12 @@ export default function BankVoucherDetails({
         type="button"
         variant="outline"
         size="sm"
-        className="mt-2"
+        className="mt-5"
         onClick={() =>
           append({
             voucherId: 0,
             accountId: 0,
-            costCenterId: 0,
+            costCenterId: null,
             departmentId: null,
             debit: 0,
             credit: 0,
