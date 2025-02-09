@@ -1,6 +1,7 @@
 import { isLastDayOfMonth } from 'date-fns'
 import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
+import exp from 'constants'
 
 // export interface User {
 //   userId: number
@@ -892,3 +893,14 @@ export const currencySchema = z.object({
 })
 
 export type CurrencyType = z.infer<typeof currencySchema>
+
+
+const CreateBudgetItemsSchema = z.object({
+  budgetId: z.number().int(),
+  accountId: z.number().int(),
+  amount: z.number().nullable().optional(),
+  createdBy: z.number().int().nullable().optional(),
+  actual: z.number().int().nullable().optional(),
+})
+
+export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
