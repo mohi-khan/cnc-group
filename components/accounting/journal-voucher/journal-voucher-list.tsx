@@ -99,7 +99,10 @@ export default function VoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = async (data: JournalEntryWithDetails) => {
+  const handleSubmit = async (
+    data: JournalEntryWithDetails,
+    resetForm: () => void
+  ) => {
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
 
@@ -114,9 +117,11 @@ export default function VoucherTable() {
         ...detail,
         createdBy: userId,
         costCenterId: detail.costCenterId || null,
-        departmentId: detail.departmentId || null
+        departmentId: detail.departmentId || null,
       })),
     }
+
+    console.log('Submission data:', submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
 
@@ -131,7 +136,8 @@ export default function VoucherTable() {
         title: 'Success',
         description: 'Voucher created successfully',
       })
-      setIsPopupOpen(false) // Close popup after successful creation
+      resetForm()
+      setIsPopupOpen(false)
     }
 
     setIsSubmitting(false)
