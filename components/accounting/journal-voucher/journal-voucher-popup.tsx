@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -17,16 +17,18 @@ import {
 import { Popup } from '@/utils/popup'
 
 interface JournalVoucherPopupProps {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
   handleSubmit: (data: JournalEntryWithDetails) => void
   isSubmitting: boolean
 }
 
 export function JournalVoucherPopup({
+  isOpen,
+  onOpenChange,
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
@@ -79,7 +81,7 @@ export function JournalVoucherPopup({
       if (name?.startsWith('journalDetails')) {
         const totalDebit =
           value.journalDetails?.reduce(
-            (sum, detail) => sum + ((detail?.debit) || 0),
+            (sum, detail) => sum + (detail?.debit || 0),
             0
           ) || 0
         const totalCredit =
@@ -97,12 +99,12 @@ export function JournalVoucherPopup({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
+      <Button onClick={() => onOpenChange(true)}>
         <Plus className="mr-2 h-4 w-4" /> Add
       </Button>
       <Popup
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => onOpenChange(false)}
         title="Journal Voucher"
         size="max-w-6xl"
       >
@@ -112,13 +114,11 @@ export function JournalVoucherPopup({
             className="space-y-6"
           >
             <JournalVoucherMasterSection form={form} />
-
             <JournalVoucherDetailsSection
               form={form}
               onAddEntry={addEntry}
               onRemoveEntry={removeEntry}
             />
-
             <JournalVoucherSubmit
               form={form}
               onSubmit={form.handleSubmit(handleSubmit)}

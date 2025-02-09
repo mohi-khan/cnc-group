@@ -24,7 +24,7 @@ export default function VoucherTable() {
   const [userId, setUserId] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -103,11 +103,6 @@ export default function VoucherTable() {
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
 
-    console.log(
-      '🚀 ~ handleSubmit ~ amountTotal:',
-      data.journalEntry.amountTotal
-    )
-
     const submissionData = {
       ...data,
       journalEntry: {
@@ -123,8 +118,6 @@ export default function VoucherTable() {
       })),
     }
 
-    console.log('🚀 ~ handleSubmit ~ submissionData:', submissionData)
-
     const response = await createJournalEntryWithDetails(submissionData)
 
     if (response.error || !response.data) {
@@ -138,10 +131,9 @@ export default function VoucherTable() {
         title: 'Success',
         description: 'Voucher created successfully',
       })
-      setIsOpen(false)
+      setIsPopupOpen(false) // Close popup after successful creation
     }
 
-    setIsOpen(false)
     setIsSubmitting(false)
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
   }
@@ -151,6 +143,8 @@ export default function VoucherTable() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Journal Vouchers</h1>
         <JournalVoucherPopup
+          isOpen={isPopupOpen}
+          onOpenChange={setIsPopupOpen}
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
