@@ -331,7 +331,7 @@ export function JournalVoucherDetailsSection({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -351,7 +351,6 @@ export function JournalVoucherDetailsSection({
             </div>
           </div>
         ))}
-        
       </div>
       <Button type="button" variant="outline" onClick={addEntry}>
         Add Another Line
