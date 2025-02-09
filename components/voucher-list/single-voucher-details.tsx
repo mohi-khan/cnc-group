@@ -17,8 +17,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
-import { VoucherById, VoucherTypes } from '@/utils/type'
+import { type VoucherById, VoucherTypes } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
 import {
   getSingleVoucher,
@@ -35,6 +46,7 @@ export default function SingleVoucherDetails() {
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
 
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
@@ -100,9 +112,14 @@ export default function SingleVoucherDetails() {
     }
   }
 
-  const handleReverseVoucher = async () => {
+  const handleReverseVoucher = () => {
+    setIsAlertDialogOpen(true)
+  }
+
+  const confirmReverseVoucher = async () => {
+    setIsAlertDialogOpen(false)
     const createdId = userId ?? 0 // Replace with actual user ID
-    let voucherId = data?.[0].voucherno
+    const voucherId = data?.[0].voucherno
     if (!voucherId || !data) return
 
     if (!voucherId) {
@@ -143,56 +160,6 @@ export default function SingleVoucherDetails() {
       setIsReversingVoucher(false)
     }
   }
-  // const handleReverseVoucher = async () => {
-  //   const createdId = userId ?? 0 // Replace with actual user ID
-  //   let voucherId = data?.[0].voucherno
-  //   if (!voucherId || !data) return
-
-  //   if (!voucherId) {
-  //     toast({
-  //       title: 'Error',
-  //       description: 'Invalid voucher number',
-  //       variant: 'destructive',
-  //     })
-  //     return
-  //   }
-
-  //   // Show confirmation dialog
-  //   const confirmReverse = window.confirm(
-  //     'Are you sure you want to reverse this voucher?'
-  //   )
-
-  //   if (!confirmReverse) return
-
-  //   try {
-  //     setIsReversingVoucher(true)
-  //     const response = await reverseJournalVoucher(Number(voucherId), createdId)
-
-  //     if (!response.data || response.error) {
-  //       toast({
-  //         title: 'Error',
-  //         description:
-  //           response.error?.message || 'Failed to reverse the voucher',
-  //         variant: 'destructive',
-  //       })
-  //     } else {
-  //       toast({
-  //         title: 'Success',
-  //         description: 'Voucher reversed successfully',
-  //       })
-  //       router.refresh()
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Reverse voucher error:', error)
-  //     toast({
-  //       title: 'Error',
-  //       description: error.message || 'Failed to reverse the voucher',
-  //       variant: 'destructive',
-  //     })
-  //   } finally {
-  //     setIsReversingVoucher(false)
-  //   }
-  // }
 
   if (!data) {
     return (
@@ -232,15 +199,37 @@ export default function SingleVoucherDetails() {
             </div>
           </div>
           <div className="flex justify-end gap-2 no-print">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReverseVoucher}
-              disabled={isReversingVoucher}
+            <AlertDialog
+              open={isAlertDialogOpen}
+              onOpenChange={setIsAlertDialogOpen}
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {isReversingVoucher ? 'Reversing...' : 'Reverse'}
-            </Button>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReverseVoucher}
+                  disabled={isReversingVoucher}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  {isReversingVoucher ? 'Reversing...' : 'Reverse'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className='bg-white'>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will reverse the voucher. This action cannot be
+                    undone. Are you sure?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>No</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmReverseVoucher}>
+                    Yes
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="outline"
               size="sm"
@@ -361,7 +350,7 @@ export default function SingleVoucherDetails() {
                 {data
                   .reduce(
                     (total, item) =>
-                      total + parseFloat(String(item.debit || '0')),
+                      total + Number.parseFloat(String(item.debit || '0')),
                     0
                   )
                   .toFixed(2)}
