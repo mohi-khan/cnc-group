@@ -353,7 +353,7 @@ export default function BankVoucher() {
             setIsDialogOpen(true)
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add Voucher
+          <Plus className="mr-2 h-4 w-4" /> Add
         </Button>
         <Popup
           isOpen={isDialogOpen}
