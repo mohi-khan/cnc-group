@@ -26,15 +26,6 @@ import {
 } from '@/api/contra-voucher-api'
 import Loader from '@/utils/loader'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-
 export default function SingleVoucherDetails() {
   const { voucherid } = useParams()
   const router = useRouter()
@@ -48,7 +39,6 @@ export default function SingleVoucherDetails() {
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
   const [userId, setUserId] = React.useState<number | null>(null)
-  const [isOpen, setIsOpen] = useState(false) // Modal open state
 
   const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher
 
@@ -65,6 +55,7 @@ export default function SingleVoucherDetails() {
           })
         } else {
           setData(response.data)
+          console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
         }
       } catch (error) {
         toast({
@@ -88,6 +79,12 @@ export default function SingleVoucherDetails() {
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUserId(userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
     }
   }, [])
 
@@ -117,19 +114,9 @@ export default function SingleVoucherDetails() {
       return
     }
 
-    setIsOpen(true) // Open the confirmation modal
-  }
-
-  const confirmReverse = async () => {
-    setIsOpen(false) // Close the modal
-
-    const createdId = userId ?? 0
-    let voucherId = data?.[0].voucherno
-    if (!voucherId || !data) return
-
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(Number(voucherId), createdId)
+      const response = await reverseJournalVoucher(Number(voucherid), createdId)
 
       if (!response.data || response.error) {
         toast({
@@ -156,6 +143,56 @@ export default function SingleVoucherDetails() {
       setIsReversingVoucher(false)
     }
   }
+  // const handleReverseVoucher = async () => {
+  //   const createdId = userId ?? 0 // Replace with actual user ID
+  //   let voucherId = data?.[0].voucherno
+  //   if (!voucherId || !data) return
+
+  //   if (!voucherId) {
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Invalid voucher number',
+  //       variant: 'destructive',
+  //     })
+  //     return
+  //   }
+
+  //   // Show confirmation dialog
+  //   const confirmReverse = window.confirm(
+  //     'Are you sure you want to reverse this voucher?'
+  //   )
+
+  //   if (!confirmReverse) return
+
+  //   try {
+  //     setIsReversingVoucher(true)
+  //     const response = await reverseJournalVoucher(Number(voucherId), createdId)
+
+  //     if (!response.data || response.error) {
+  //       toast({
+  //         title: 'Error',
+  //         description:
+  //           response.error?.message || 'Failed to reverse the voucher',
+  //         variant: 'destructive',
+  //       })
+  //     } else {
+  //       toast({
+  //         title: 'Success',
+  //         description: 'Voucher reversed successfully',
+  //       })
+  //       router.refresh()
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Reverse voucher error:', error)
+  //     toast({
+  //       title: 'Error',
+  //       description: error.message || 'Failed to reverse the voucher',
+  //       variant: 'destructive',
+  //     })
+  //   } finally {
+  //     setIsReversingVoucher(false)
+  //   }
+  // }
 
   if (!data) {
     return (
@@ -314,7 +351,7 @@ export default function SingleVoucherDetails() {
               </TableBody>
             </Table>
             <div className="mt-6 grid grid-cols-[120px,1fr] gap-2">
-              <span className="font-medium">Reference:</span>{' '}
+              <span className="font-medium">Reference:</span>
               <span>{data[0].notes}</span>
             </div>
             {/* Total Debit Amount */}
@@ -323,7 +360,8 @@ export default function SingleVoucherDetails() {
               <span>
                 {data
                   .reduce(
-                    (total, item) => total + parseFloat(String(item.debit || '0')),
+                    (total, item) =>
+                      total + parseFloat(String(item.debit || '0')),
                     0
                   )
                   .toFixed(2)}
@@ -342,28 +380,6 @@ export default function SingleVoucherDetails() {
           </CardContent>
         </Card>
       </CardContent>
-
-      {/* Confirmation Modal */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Reversal</DialogTitle>
-          </DialogHeader>
-          <p>Are you sure you want to reverse this voucher?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmReverse}
-              disabled={isReversingVoucher}
-            >
-              {isReversingVoucher ? 'Reversing...' : 'Confirm'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   )
 }
@@ -396,6 +412,15 @@ export default function SingleVoucherDetails() {
 // } from '@/api/contra-voucher-api'
 // import Loader from '@/utils/loader'
 
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from '@/components/ui/dialog'
+
 // export default function SingleVoucherDetails() {
 //   const { voucherid } = useParams()
 //   const router = useRouter()
@@ -409,6 +434,7 @@ export default function SingleVoucherDetails() {
 //   const contentRef = useRef<HTMLDivElement>(null)
 //   const reactToPrintFn = useReactToPrint({ contentRef })
 //   const [userId, setUserId] = React.useState<number | null>(null)
+//   const [isOpen, setIsOpen] = useState(false) // Modal open state
 
 //   const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher
 
@@ -425,7 +451,6 @@ export default function SingleVoucherDetails() {
 //           })
 //         } else {
 //           setData(response.data)
-//           console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
 //         }
 //       } catch (error) {
 //         toast({
@@ -449,12 +474,6 @@ export default function SingleVoucherDetails() {
 //     if (userStr) {
 //       const userData = JSON.parse(userStr)
 //       setUserId(userData.userId)
-//       console.log(
-//         'Current userId from localStorage in everywhere:',
-//         userData.userId
-//       )
-//     } else {
-//       console.log('No user data found in localStorage')
 //     }
 //   }, [])
 
@@ -470,49 +489,6 @@ export default function SingleVoucherDetails() {
 //     }
 //   }
 
-//   // const handleReverseVoucher = async () => {
-//   //   const createdId = userId ?? 0 // Replace with actual user ID
-//   //   let voucherId = data?.[0].voucherno
-//   //   if (!voucherId || !data) return
-
-//   //   if (!voucherId) {
-//   //     toast({
-//   //       title: 'Error',
-//   //       description: 'Invalid voucher number',
-//   //       variant: 'destructive',
-//   //     })
-//   //     return
-//   //   }
-
-//   //   try {
-//   //     setIsReversingVoucher(true)
-//   //     const response = await reverseJournalVoucher(Number(voucherid), createdId)
-
-//   //     if (!response.data || response.error) {
-//   //       toast({
-//   //         title: 'Error',
-//   //         description:
-//   //           response.error?.message || 'Failed to reverse the voucher',
-//   //         variant: 'destructive',
-//   //       })
-//   //     } else {
-//   //       toast({
-//   //         title: 'Success',
-//   //         description: 'Voucher reversed successfully',
-//   //       })
-//   //       router.refresh()
-//   //     }
-//   //   } catch (error: any) {
-//   //     console.error('Reverse voucher error:', error)
-//   //     toast({
-//   //       title: 'Error',
-//   //       description: error.message || 'Failed to reverse the voucher',
-//   //       variant: 'destructive',
-//   //     })
-//   //   } finally {
-//   //     setIsReversingVoucher(false)
-//   //   }
-//   // }
 //   const handleReverseVoucher = async () => {
 //     const createdId = userId ?? 0 // Replace with actual user ID
 //     let voucherId = data?.[0].voucherno
@@ -527,10 +503,15 @@ export default function SingleVoucherDetails() {
 //       return
 //     }
 
-//     // Show confirmation dialog
-//     const confirmReverse = window.confirm('Are you sure you want to reverse this voucher?')
+//     setIsOpen(true) // Open the confirmation modal
+//   }
 
-//     if (!confirmReverse) return
+//   const confirmReverse = async () => {
+//     setIsOpen(false) // Close the modal
+
+//     const createdId = userId ?? 0
+//     let voucherId = data?.[0].voucherno
+//     if (!voucherId || !data) return
 
 //     try {
 //       setIsReversingVoucher(true)
@@ -539,7 +520,8 @@ export default function SingleVoucherDetails() {
 //       if (!response.data || response.error) {
 //         toast({
 //           title: 'Error',
-//           description: response.error?.message || 'Failed to reverse the voucher',
+//           description:
+//             response.error?.message || 'Failed to reverse the voucher',
 //           variant: 'destructive',
 //         })
 //       } else {
@@ -718,8 +700,20 @@ export default function SingleVoucherDetails() {
 //               </TableBody>
 //             </Table>
 //             <div className="mt-6 grid grid-cols-[120px,1fr] gap-2">
-//               <span className="font-medium">Reference:</span>
+//               <span className="font-medium">Reference:</span>{' '}
 //               <span>{data[0].notes}</span>
+//             </div>
+//             {/* Total Debit Amount */}
+//             <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
+//               <span className="font-medium">Total:</span>
+//               <span>
+//                 {data
+//                   .reduce(
+//                     (total, item) => total + parseFloat(String(item.debit || '0')),
+//                     0
+//                   )
+//                   .toFixed(2)}
+//               </span>
 //             </div>
 //             <div className="flex justify-between mt-20">
 //               <h1 className="border-t-2 border-black pt-2">
@@ -734,6 +728,28 @@ export default function SingleVoucherDetails() {
 //           </CardContent>
 //         </Card>
 //       </CardContent>
+
+//       {/* Confirmation Modal */}
+//       <Dialog open={isOpen} onOpenChange={setIsOpen}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>Confirm Reversal</DialogTitle>
+//           </DialogHeader>
+//           <p>Are you sure you want to reverse this voucher?</p>
+//           <DialogFooter>
+//             <Button variant="outline" onClick={() => setIsOpen(false)}>
+//               Cancel
+//             </Button>
+//             <Button
+//               variant="destructive"
+//               onClick={confirmReverse}
+//               disabled={isReversingVoucher}
+//             >
+//               {isReversingVoucher ? 'Reversing...' : 'Confirm'}
+//             </Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
 //     </Card>
 //   )
 // }
