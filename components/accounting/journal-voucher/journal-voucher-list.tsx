@@ -24,7 +24,7 @@ export default function VoucherTable() {
   const [userId, setUserId] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -99,14 +99,12 @@ export default function VoucherTable() {
     return data.map((location) => location.location.locationId)
   }
 
-  const handleSubmit = async (data: JournalEntryWithDetails) => {
+  const handleSubmit = async (
+    data: JournalEntryWithDetails,
+    resetForm: () => void
+  ) => {
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
-
-    console.log(
-      '🚀 ~ handleSubmit ~ amountTotal:',
-      data.journalEntry.amountTotal
-    )
 
     const submissionData = {
       ...data,
@@ -119,11 +117,11 @@ export default function VoucherTable() {
         ...detail,
         createdBy: userId,
         costCenterId: detail.costCenterId || null,
-        departmentId: detail.departmentId || null
+        departmentId: detail.departmentId || null,
       })),
     }
 
-    console.log('🚀 ~ handleSubmit ~ submissionData:', submissionData)
+    console.log('Submission data:', submissionData)
 
     const response = await createJournalEntryWithDetails(submissionData)
 
@@ -138,10 +136,10 @@ export default function VoucherTable() {
         title: 'Success',
         description: 'Voucher created successfully',
       })
-      setIsOpen(false)
+      resetForm()
+      setIsPopupOpen(false)
     }
 
-    setIsOpen(false)
     setIsSubmitting(false)
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
   }
@@ -151,6 +149,8 @@ export default function VoucherTable() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Journal Vouchers</h1>
         <JournalVoucherPopup
+          isOpen={isPopupOpen}
+          onOpenChange={setIsPopupOpen}
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
