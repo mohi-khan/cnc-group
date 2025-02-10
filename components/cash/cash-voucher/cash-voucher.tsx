@@ -15,8 +15,8 @@ import {
   type AccountsHead,
   type CompanyFromLocalstorage,
   type CostCenter,
-  type Department,
   type FormData,
+  type GetDepartment,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
@@ -59,7 +59,7 @@ export default function CashVoucher() {
     []
   )
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [departments, setDepartments] = React.useState<Department[]>([])
+  const [departments, setDepartments] = React.useState<GetDepartment[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     AccountsHead[]
@@ -387,6 +387,47 @@ export default function CashVoucher() {
         title: 'Success',
         description: 'Voucher is created successfully',
       })
+      form.reset({
+        journalEntry: {
+          date: new Date().toISOString().split('T')[0],
+          journalType: '',
+          companyId: 0,
+          locationId: 0,
+          currencyId: 0,
+          amountTotal: 0,
+          notes: '',
+          createdBy: 0,
+        },
+        journalDetails: [
+          {
+            accountId: cashCoa[0]?.accountId,
+            costCenterId: null,
+            departmentId: null,
+            debit: 0,
+            credit: 0,
+            analyticTags: null,
+            taxId: null,
+            resPartnerId: null,
+            notes: '',
+            type: 'Payment',
+            createdBy: 0,
+          },
+        ],
+      })
+      remove()
+      append({
+        accountId: cashCoa[0]?.accountId,
+        costCenterId: null,
+        departmentId: null,
+        debit: 0,
+        credit: 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: null,
+        notes: '',
+        type: 'Payment',
+        createdBy: 0,
+      })
     }
   }
   const { fields, append, remove } = useFieldArray({
@@ -430,15 +471,15 @@ export default function CashVoucher() {
     )
   }
 
-  const columns: { key: keyof Voucher; label: string }[] = [
-    { key: 'voucherno', label: 'Voucher No.' },
-    { key: 'companyname', label: 'Company Name' },
-    { key: 'currency', label: 'Currency' },
-    { key: 'location', label: 'Location' },
-    { key: 'date', label: 'Date' },
-    { key: 'notes', label: 'Remarks' },
-    { key: 'totalamount', label: 'Total Amount' },
-    { key: 'state', label: 'Status' },
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'date' as const, label: 'Date' },
+    { key: 'notes' as const, label: 'Remarks' },
+    { key: 'totalamount' as const, label: 'Total Amount' },
+    { key: 'state' as const, label: 'Status' },
   ]
 
   return (
