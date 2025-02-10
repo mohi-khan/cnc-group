@@ -17,6 +17,7 @@ import {
   type CostCenter,
   type Department,
   type FormData,
+  GetDepartment,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
@@ -59,7 +60,7 @@ export default function CashVoucher() {
     []
   )
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [departments, setDepartments] = React.useState<Department[]>([])
+  const [departments, setDepartments] = React.useState<GetDepartment[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
     AccountsHead[]
@@ -430,15 +431,15 @@ export default function CashVoucher() {
     )
   }
 
-  const columns: { key: keyof Voucher; label: string }[] = [
-    { key: 'voucherno', label: 'Voucher No.' },
-    { key: 'companyname', label: 'Company Name' },
-    { key: 'currency', label: 'Currency' },
-    { key: 'location', label: 'Location' },
-    { key: 'date', label: 'Date' },
-    { key: 'notes', label: 'Remarks' },
-    { key: 'totalamount', label: 'Total Amount' },
-    { key: 'state', label: 'Status' },
+  const columns = [
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'date' as const, label: 'Date' },
+    { key: 'notes' as const, label: 'Remarks' },
+    { key: 'totalamount' as const, label: 'Total Amount' },
+    { key: 'state' as const, label: 'Status' },
   ]
 
   return (
