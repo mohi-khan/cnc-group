@@ -15,9 +15,8 @@ import {
   type AccountsHead,
   type CompanyFromLocalstorage,
   type CostCenter,
-  type Department,
   type FormData,
-  GetDepartment,
+  type GetDepartment,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
@@ -387,6 +386,47 @@ export default function CashVoucher() {
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
+      })
+      form.reset({
+        journalEntry: {
+          date: new Date().toISOString().split('T')[0],
+          journalType: '',
+          companyId: 0,
+          locationId: 0,
+          currencyId: 0,
+          amountTotal: 0,
+          notes: '',
+          createdBy: 0,
+        },
+        journalDetails: [
+          {
+            accountId: cashCoa[0]?.accountId,
+            costCenterId: null,
+            departmentId: null,
+            debit: 0,
+            credit: 0,
+            analyticTags: null,
+            taxId: null,
+            resPartnerId: null,
+            notes: '',
+            type: 'Payment',
+            createdBy: 0,
+          },
+        ],
+      })
+      remove()
+      append({
+        accountId: cashCoa[0]?.accountId,
+        costCenterId: null,
+        departmentId: null,
+        debit: 0,
+        credit: 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: null,
+        notes: '',
+        type: 'Payment',
+        createdBy: 0,
       })
     }
   }
