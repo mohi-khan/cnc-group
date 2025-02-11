@@ -16,6 +16,7 @@ interface PaymentRequisitionListProps {
 const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   requisitions,
 }) => {
+  console.log('dkdkdkd', requisitions)
   return (
     <div>
       <Table>
@@ -31,14 +32,14 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
         <TableBody>
           {requisitions && requisitions.length > 0 ? (
             requisitions.map((req) => (
-              <TableRow key={req.purchaseMaster.poNo}>
-                <TableCell>{req.purchaseMaster.poNo}</TableCell>
+              <TableRow key={req.poNo}>
+                {/* <TableCell>{req.purchaseMaster.poNo}</TableCell> */}
                 <TableCell>
-                  {new Date(req.purchaseMaster.poDate).toLocaleDateString()}
+                  {/* {new Date(req.purchaseMaster.poDate).toLocaleDateString()} */}
                 </TableCell>
-                <TableCell>${req.purchaseMaster.totalAmount}</TableCell>
-                <TableCell>{req.purchaseMaster.status}</TableCell>
-                <TableCell>{req.purchaseMaster.vendorCode}</TableCell>
+                {/* <TableCell>${req.purchaseMaster.totalAmount}</TableCell> */}
+                <TableCell>{req.status}</TableCell>
+                <TableCell>{req.vendorCode}</TableCell>
               </TableRow>
             ))
           ) : (
