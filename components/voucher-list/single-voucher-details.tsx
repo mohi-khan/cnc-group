@@ -214,7 +214,7 @@ export default function SingleVoucherDetails() {
                   {isReversingVoucher ? 'Reversing...' : 'Reverse'}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className='bg-white'>
+              <AlertDialogContent className="bg-white">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -341,7 +341,7 @@ export default function SingleVoucherDetails() {
             </Table>
             <div className="mt-6 grid grid-cols-[120px,1fr] gap-2">
               <span className="font-medium">Reference:</span>
-              <span>{data[0].notes}</span>
+              <span>{data[data.length - 1].notes}</span>
             </div>
             {/* Total Debit Amount */}
             <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
