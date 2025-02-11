@@ -904,3 +904,43 @@ const CreateBudgetItemsSchema = z.object({
 })
 
 export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
+
+//purchase requisition
+export enum PurchaseOrderStatus {
+  PurchaseOrder = "Purchase Order",
+  GRNCompleted = "GRN Completed",
+  InvoiceCreated = "Invoice Created",
+  PaymentMade = "Payment Made",
+}
+
+export const purchaseOrderMasterSchema = z.object({
+  attn: z.string().nullable().optional(),
+  poNo: z.string(),
+  poDate: z.coerce.date(),
+  termsAndConditions: z.string().nullable().optional(),
+  totalAmount: z.number(),
+  preparedBy: z.string().nullable().optional(),
+  checkedBy: z.string().nullable().optional(),
+  authorizedBy: z.string().nullable().optional(),
+  reqNo: z.string().nullable().optional(),
+  status: z.nativeEnum(PurchaseOrderStatus),
+  companyId:z.number().int(),
+  vendorCode: z.string(),
+  createdBy:z.number()
+})
+
+// Zod schema for PurchaseOrderDetails
+export const purchaseOrderDetailsSchema = z.object({
+  itemCode: z.string(),
+  unit: z.string().nullable().optional(),
+  quantity: z.number(),
+  rate: z.number(),
+})
+
+// Zod schema for PurchaseEntryWithDetailsSchema
+export const purchaseEntrySchema = z.object({
+  purchaseMaster: purchaseOrderMasterSchema,
+  purchaseDetails: z.array(purchaseOrderDetailsSchema),
+})
+
+export type PurchaseEntryType = z.infer<typeof purchaseEntrySchema>
