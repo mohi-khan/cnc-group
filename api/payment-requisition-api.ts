@@ -10,8 +10,7 @@ export async function getAllPaymentRequisition(data: {
     url: `api/purchase/getPurchaseData?company=73,75,77`,
     method: 'GET',
     headers: {
-      Authorization: `Bearer ${data.token}`,
-      //   Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5MjU3ODA3LCJleHAiOjE3MzkzNDQyMDd9.U2bbHQSkwzTps9MV5ixvKK81IpdpAJqU474i9hBpPuI`,
+      Authorization: `${data.token}`,
     },
   })
 }

@@ -67,7 +67,7 @@ const PaymentRequisitionPopup: React.FC<PaymentRequisitionPopupProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Create Payment Requisition"
-      size="sm:max-w-[425px]"
+      size="max-w-6xl"
     >
       <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
         <div className="space-y-2">

@@ -26,14 +26,15 @@ const PaymentRequisition = () => {
         companyId: 75,
         token: token
       })
-      setRequisitions(data)
-      console.log("🚀 ~ fetchRequisitions ~ data:", data)
+      setRequisitions(data.data)
+      console.log("🚀 ~ fetchRequisitions ~ data:", data.data)
     } catch (err) {
       setError('Failed to fetch requisitions')
     } finally {
       setLoading(false)
     }
   }
+
 
   const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
     try {
