@@ -1,59 +1,65 @@
 import type React from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import type { PurchaseEntryType } from '@/utils/type'
+import type { GetPaymentOrder } from '@/utils/type'
 
 interface PaymentRequisitionListProps {
-  requisitions: PurchaseEntryType[]
+  requisitions: GetPaymentOrder[]
 }
 
 const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   requisitions,
 }) => {
-  console.log('dkdkdkd', requisitions)
+  if (!requisitions || requisitions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-500 text-xl font-light">
+        No payment requisitions available
+      </div>
+    )
+  }
+
   return (
-    <div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>PO No</TableHead>
-            <TableHead>PO Date</TableHead>
-            <TableHead>Total Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Vendor Code</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {requisitions && requisitions.length > 0 ? (
-            requisitions.map((req) => (
-              <TableRow key={req.poNo}>
-                {/* <TableCell>{req.purchaseMaster.poNo}</TableCell> */}
-                <TableCell>
-                  {/* {new Date(req.purchaseMaster.poDate).toLocaleDateString()} */}
-                </TableCell>
-                {/* <TableCell>${req.purchaseMaster.totalAmount}</TableCell> */}
-                <TableCell>{req.status}</TableCell>
-                <TableCell>{req.vendorCode}</TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="text-center h-24 text-muted-foreground"
-              >
-                No payment requisition is available
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+    <div className="space-y-6 border rounded-md p-6">
+      {requisitions.map((req, index) => (
+        <div className="p-6" key={req.id}>
+          <h2 className="text-3xl font-bold text-center pb-10">
+            {req.companyName}
+          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">{req.poNo}</h2>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                req.status === 'Approved'
+                  ? 'bg-black text-white'
+                  : 'bg-gray-200 text-black'
+              }`}
+            >
+              {req.status}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-sm text-gray-500">Vendor</p>
+              <p className="font-medium">{req.vendorName}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Amount</p>
+              <p className="font-medium">${req.amount}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Purchase Date</p>
+              <p className="font-medium">
+                {new Date(req.PurDate).toLocaleDateString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Req No</p>
+              <p className="font-medium">{req.reqNo}</p>
+            </div>
+          </div>
+          <div className="flex justify-between items-center text-sm text-gray-500">
+            <p>Prepared by: {req.preparedBy}</p>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

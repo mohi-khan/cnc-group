@@ -1,12 +1,12 @@
 import { fetchApi } from '@/utils/http'
-import { PurchaseEntryType } from '@/utils/type'
+import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
 
 export async function getAllPaymentRequisition(data: {
   token: string
   companyId: number
 }) {
   console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
-  return fetchApi({
+  return fetchApi<GetPaymentOrder[]>({
     url: `api/purchase/getPurchaseData?company=73,75,77`,
     method: 'GET',
     headers: {
@@ -14,6 +14,26 @@ export async function getAllPaymentRequisition(data: {
     },
   })
 }
+
+// interface ApiResponse<T> {
+//   data: T;
+// }
+
+// export async function getAllPaymentRequisition(data: {
+//   token: string;
+//   companyId: number;
+// }): Promise<GetPaymentOrder[]> {
+//   console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token);
+//   const response = await fetchApi<ApiResponse<GetPaymentOrder[]>>({
+//     url: `api/purchase/getPurchaseData?company=73,75,77`,
+//     method: 'GET',
+//     headers: {
+//       Authorization: `${data.token}`,
+//     },
+//   });
+  
+//   return response.data;
+// }
 
 export async function createPaymentRequisition(
   data: PurchaseEntryType,

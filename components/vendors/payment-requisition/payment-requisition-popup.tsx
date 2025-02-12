@@ -21,12 +21,14 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { Popup } from '@/utils/popup'
 
 interface PaymentRequisitionPopupProps {
+  status: string
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: PurchaseEntryType) => void
 }
 
 const PaymentRequisitionPopup: React.FC<PaymentRequisitionPopupProps> = ({
+  status,
   isOpen,
   onClose,
   onSubmit,
@@ -41,7 +43,7 @@ const PaymentRequisitionPopup: React.FC<PaymentRequisitionPopupProps> = ({
     defaultValues: {
       purchaseMaster: {
         poNo: '',
-        poDate: new Date().toISOString().split('T')[0],
+        poDate: new Date(),
         totalAmount: 0,
         status: PurchaseOrderStatus.PurchaseOrder,
         companyId: 0,
@@ -51,6 +53,8 @@ const PaymentRequisitionPopup: React.FC<PaymentRequisitionPopupProps> = ({
       purchaseDetails: [{ itemCode: '', quantity: 0, rate: 0 }],
     },
   })
+
+  console.log('stu', status)
 
   const { fields, append, remove } = useFieldArray({
     control,
