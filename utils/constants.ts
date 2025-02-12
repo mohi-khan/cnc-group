@@ -72,6 +72,14 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
+      {
+        name: 'Vechile',
+        items: [
+          { name: 'Vehicle', source: '/vendors/vehicle' },
+          { name: 'Vehicle Fuel Consumption', source: '/vendors/vehicle-fuel-consumption' },
+         
+        ],
+      },
     ],
   },
   {
