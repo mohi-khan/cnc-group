@@ -1,5 +1,5 @@
-import { fetchApi } from '@/utils/http'
-import { AccountsHead, CreateBudgetItemsType } from '@/utils/type'
+import { fetchApi } from "@/utils/http";
+import { AccountsHead, CreateBudgetItemsType, CreateBudgetMasterType } from "@/utils/type";
 
 //get all data coa
 export async function getAllCoa() {
@@ -9,53 +9,26 @@ export async function getAllCoa() {
   })
 }
 
-// export async function createBudgetItems(payload: any) {
-//   const token = localStorage.getItem('authToken') // Ensure key matches storage
-//   // console.log('sfslfslfsljfsjlf', token)
-
-//   return fetchApi<CreateBudgetItemsType[]>({
-//     url: 'api/budget/createBudgetItems',
-//     method: 'POST',
-//     body: JSON.stringify(payload),
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   })
-// }
-
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-
-    const response = await fetch(
-      'http://localhost:4000/api/budget/createBudgetItems',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5MjYxOTgxLCJleHAiOjE3MzkzNDgzODF9.Jix-dSEUgpknO7ghX8eLQ4iJSFWijFFBXLTy0VjkrDc',
-        },
-        body: JSON.stringify(body),
+export async function createBudgetMaster(budgetMasterData: CreateBudgetMasterType) {
+    return fetchApi<{ id: number }>({
+      url: "api/budget/createBudget",
+      method: "POST",
+      body: budgetMasterData,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5Mzc0MzQ3LCJleHAiOjE3Mzk0NjA3NDd9.LPOqRjCgtiqA-PZEZ8hqG7ErCcUbHGqRirK2fGV_2tk`
       }
-    )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: data.message || 'Something went wrong' },
-        { status: response.status }
-      )
-    }
-
-    return NextResponse.json(data, { status: 200 })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
+    })
   }
-}
+  
+  export async function createBudgetDetails(budgetDetailsData: CreateBudgetItemsType[]) {
+    return fetchApi<{ success: boolean }>({
+      url: "api/budget/createBudgetItems",
+      method: "POST",
+      body: budgetDetailsData,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5Mzc0MzQ3LCJleHAiOjE3Mzk0NjA3NDd9.LPOqRjCgtiqA-PZEZ8hqG7ErCcUbHGqRirK2fGV_2tk`
+      }
+    })
+  }
