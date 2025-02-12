@@ -919,7 +919,7 @@ export const CreateBudgetMasterSchema = z.object({
   })
   export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
 
-//purchase requisition
+//payment requisition
 export enum PurchaseOrderStatus {
   PurchaseOrder = "Purchase Order",
   GRNCompleted = "GRN Completed",
@@ -958,3 +958,18 @@ export const purchaseEntrySchema = z.object({
 })
 
 export type PurchaseEntryType = z.infer<typeof purchaseEntrySchema>
+
+export interface GetPaymentOrder {
+  id: number;
+  poNo: string;
+  PurDate: string;
+  purAttn: string;
+  reqNo: string;
+  vendorName: string;
+  amount: string;
+  preparedBy: string;
+  checkedBy: string;
+  authorizedBy: string;
+  companyName: string;
+  status: string;
+}
