@@ -973,3 +973,21 @@ export interface GetPaymentOrder {
   companyName: string;
   status: string;
 }
+
+//Get All Vehicle Type
+export interface GetAllVehicleType {
+  vehicleNo: number;
+  costCenterId: number;
+  vehicleDescription: string;
+  purchaseDate: string;
+  assetId: number;
+};
+
+//Create Vehicle zod schema
+export const createVehicleSchema = z.object({
+  costCenterId: z.number().int().nullable(),
+  vehicleDescription: z.string().max(45).nullable(),
+  purchaseDate: z.coerce.date().nullable(),
+  assetId: z.number().int().nullable(),
+});
+export type CreateVehicleType = z.infer<typeof createVehicleSchema>;
