@@ -894,7 +894,7 @@ export const currencySchema = z.object({
 
 export type CurrencyType = z.infer<typeof currencySchema>
 
-
+// create budget items schema zod
 const CreateBudgetItemsSchema = z.object({
   budgetId: z.number().int(),
   accountId: z.number().int(),
@@ -904,6 +904,20 @@ const CreateBudgetItemsSchema = z.object({
 })
 
 export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
+
+//create budget master schema zod
+export const CreateBudgetMasterSchema = z.object({
+    budgetName: z.string().min(1).max(80),
+    fromDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date format",
+    }),
+    toDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date format",
+    }),
+    active: z.boolean(),
+    createdBy: z.number().int(),
+  })
+  export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
 
 //purchase requisition
 export enum PurchaseOrderStatus {

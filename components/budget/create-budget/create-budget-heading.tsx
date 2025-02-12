@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button'
 
 interface HeaderProps {
   onDraft: () => void
-  onSave: () => void
+  // onSave: () => void
   onNew: () => void
 }
 
-const CreateBudgetHeading = ({ onDraft, onSave, onNew }: HeaderProps) => {
+const CreateBudgetHeading = ({ onDraft,  onNew }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-2">
@@ -21,7 +21,7 @@ const CreateBudgetHeading = ({ onDraft, onSave, onNew }: HeaderProps) => {
         <Button variant="outline" onClick={onDraft}>
           Draft
         </Button>
-        <Button variant="default" onClick={onSave}>
+        <Button variant="default" >
           Final Posting
         </Button>
       </div>
@@ -30,3 +30,7 @@ const CreateBudgetHeading = ({ onDraft, onSave, onNew }: HeaderProps) => {
 }
 
 export default CreateBudgetHeading
+
+
+
+
