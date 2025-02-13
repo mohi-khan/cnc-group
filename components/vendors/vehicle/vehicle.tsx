@@ -1,54 +1,187 @@
+// 'use client'
+// import React, { useEffect, useState } from 'react'
+
+// import VehiclePopUp from './vehicle-popup'
+// import { getAllVehicles } from '@/api/vehicle'
+// import {
+//   CostCenter,
+//   CreateVehicleType,
+//   GetAllVehicleType,
+//   GetAssetData,
+// } from '@/utils/type'
+// import { VehicleList } from './vehicle-list'
+// import { toast } from '@/hooks/use-toast'
+// import { getAllCostCenters } from '@/api/cost-center-summary-api'
+// import { getAssets } from '@/api/assets.api'
+
+// const Vehicle = () => {
+//   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
+//   const [isOpen, setIsOpen] = useState(false)
+//   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
+//   const [asset, setAsset] = useState<GetAssetData[]>([])
+
+//   const handleAddVehicle = () => {
+//     setIsOpen(true)
+//   }
+
+//   const handleClose = () => {
+//     setIsOpen(false)
+//   }
+
+//   //fetch all cost center
+//   async function fetchgetAllCostCenters() {
+//     try {
+//       const response = await getAllCostCenters()
+//       if (!response.data) {
+//         throw new Error('No data received')
+//       }
+//       setCostCenters(response.data)
+//     } catch (error) {
+//       console.error('Error getting cost centers:', error)
+//       toast({
+//         title: 'Error',
+//         description: 'Failed to load cost centers',
+//       })
+//       setCostCenters([])
+//     } finally {
+//     }
+//   }
+
+//   // Fetch all assets
+//   const fetchVehicles = async () => {
+//     const assetdata = await getAllVehicles()
+//     setVehicles(assetdata.data || [])
+//     console.log('Show The Vehicle All Data :', assetdata.data)
+//   }
+
+//   // Fetch all assets
+//   const fetchAssets = async () => {
+//     try {
+//       const assetdata = await getAssets()
+//       if (assetdata.data) {
+//         setAsset(assetdata.data)
+//       } else {
+//         setAsset([])
+//       }
+//       console.log('Show The Assets All Data :', assetdata.data)
+//     } catch (error) {
+//       console.error('Failed to fetch asset categories:', error)
+//     }
+//   }
+
+//   useEffect(() => {
+//     fetchgetAllCostCenters()
+//     fetchVehicles()
+//     fetchAssets()
+//   }, [])
+
+ 
+
+//   return (
+//     <div>
+//       <VehicleList
+//         AllVehicles={vehicles}
+//         onAddVehicle={handleAddVehicle}
+//         costCenters={costCenters}
+//         asset={asset}
+//       />
+//       <VehiclePopUp
+//         isOpen={isOpen}
+//         onClose={handleClose}
+        
+//       />
+//     </div>
+//   )
+// }
+
+// export default Vehicle
+
 'use client'
 import React, { useEffect, useState } from 'react'
 
 import VehiclePopUp from './vehicle-popup'
-import { getAllVehicles } from '@/api/vehicle';
-import { CreateVehicleType, GetAllVehicleType } from '@/utils/type';
-import { VehicleList } from './vehicle-list';
+import { getAllVehicles } from '@/api/vehicle'
+import { CostCenter, GetAllVehicleType, GetAssetData } from '@/utils/type'
+import { VehicleList } from './vehicle-list'
+import { toast } from '@/hooks/use-toast'
+import { getAllCostCenters } from '@/api/cost-center-summary-api'
+import { getAssets } from '@/api/assets.api'
 
 const Vehicle = () => {
-    const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
+  const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+  const [asset, setAsset] = useState<GetAssetData[]>([])
 
-// Fetch all assets
-const fetchAssets = async () => {
-    const assetdata = await getAllVehicles();
-    setVehicles(assetdata.data || []);
-    console.log('Show The Vehicle All Data :', assetdata.data);
-  };
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
   const handleAddVehicle = () => {
-    setIsOpen(true);
-  };
+    setIsOpen(true)
+  }
 
   const handleClose = () => {
-    setIsOpen(false);
-  };
+    setIsOpen(false)
+  }
 
-  const handleSubmit = async (data: CreateVehicleType) => {
+  // Fetch all cost centers
+  async function fetchgetAllCostCenters() {
+    try {
+      const response = await getAllCostCenters()
+      if (!response.data) throw new Error('No data received')
+      setCostCenters(response.data)
+    } catch (error) {
+      console.error('Error getting cost centers:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load cost centers',
+      })
+      setCostCenters([])
+    }
+  }
 
-    
-   
-    handleClose();
-  };
+  // Fetch all vehicles
+  const fetchVehicles = async () => {
+    try {
+      const vehicleData = await getAllVehicles()
+      setVehicles(vehicleData.data || [])
+      console.log('Show The Vehicle All Data :', vehicleData.data)
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error)
+    }
+  }
+
+  // Fetch all assets
+  const fetchAssets = async () => {
+    try {
+      const assetData = await getAssets()
+      setAsset(assetData.data || [])
+      console.log('Show The Assets All Data :', assetData.data)
+    } catch (error) {
+      console.error('Failed to fetch assets:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchgetAllCostCenters()
+    fetchVehicles()
+    fetchAssets()
+  }, [])
 
   return (
     <div>
-        <VehicleList
+      <VehicleList
         AllVehicles={vehicles}
         onAddVehicle={handleAddVehicle}
-         />
-        <VehiclePopUp 
-          isOpen={isOpen}
-          onClose={handleClose}
-          onSubmit={handleSubmit}
-        />
+        costCenters={costCenters}
+        asset={asset}
+      />
+      <VehiclePopUp
+        isOpen={isOpen}
+        onClose={handleClose}
+        refreshVehicles={fetchVehicles} // Pass fetchVehicles as a prop
+        costCenters={costCenters}
+        asset={asset}
+      />
     </div>
   )
-  
 }
 
 export default Vehicle
