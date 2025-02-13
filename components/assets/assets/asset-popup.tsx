@@ -87,12 +87,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     },
   })
 
-  // Optionally, useEffect to update form when `userId` changes
-  // React.useEffect(() => {
-  //   if (userId !== null) {
-  //     form.setValue('createdBy', userId)
-  //   }
-  // }, [userId, form])
 
   const onSubmit = async (data: CreateAssetData) => {
     setIsSubmitting(true)
