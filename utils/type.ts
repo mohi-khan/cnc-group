@@ -991,3 +991,16 @@ export const createVehicleSchema = z.object({
   assetId: z.number().int().nullable(),
 });
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>;
+
+//bank reconciliation
+export const bankReconciliationSchema = z.object({
+  bankId: z.number().int(),
+  voucherId: z.number().int().nullable(),
+  checkNo: z.string().max(45).nullable(),
+  amount: z.number().nullable(),
+  type: z.string().max(45).nullable(),
+  reconciled: z.number().int().min(0).max(1).nullable(),
+  comments: z.string().max(45).nullable(),
+});
+
+export type BankReconciliationType = z.infer<typeof bankReconciliationSchema> & { id: number };
