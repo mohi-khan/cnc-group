@@ -41,7 +41,9 @@ export const BankReconciliation = () => {
       try {
         setLoading(true)
         const accounts = await getAllBankAccounts()
-        setBankAccounts(accounts.data)
+        if (accounts.data) {
+          setBankAccounts(accounts.data)
+        }
       } catch (error) {
         toast({
           title: 'Error',
@@ -62,10 +64,12 @@ export const BankReconciliation = () => {
           setLoading(true)
           const data = await getBankReconciliations()
           // Filter reconciliations based on the selected bank account
-          const filteredReconciliations = data.data.filter(
-            (reconciliation: BankReconciliationType) =>
-              reconciliation.bankId === selectedBankAccount.id
-          )
+          const filteredReconciliations = data.data
+            ? data.data.filter(
+                (reconciliation: BankReconciliationType) =>
+                  reconciliation.bankId === selectedBankAccount.id
+              )
+            : []
           setReconciliations(filteredReconciliations)
         } catch (error) {
           toast({
