@@ -1,9 +1,12 @@
+import VehicleFuelConsumption from '@/components/vendors/vehicle-fuel-consumption/vehicle-fuel-consumption'
 import React from 'react'
 
-const VehicleFuelConsumption = () => {
+const VehicleFuelConsumptionPage = () => {
   return (
-    <div>VehicleFuelConsumption</div>
+    <div>
+      <VehicleFuelConsumption />
+    </div>
   )
 }
 
-export default VehicleFuelConsumption
+export default VehicleFuelConsumptionPage

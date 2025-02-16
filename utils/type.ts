@@ -907,24 +907,24 @@ export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
 
 //create budget master schema zod
 export const CreateBudgetMasterSchema = z.object({
-    budgetName: z.string().min(1).max(80),
-    fromDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      message: "Invalid date format",
-    }),
-    toDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      message: "Invalid date format",
-    }),
-    active: z.boolean(),
-    createdBy: z.number().int(),
-  })
-  export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
+  budgetName: z.string().min(1).max(80),
+  fromDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format',
+  }),
+  toDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format',
+  }),
+  active: z.boolean(),
+  createdBy: z.number().int(),
+})
+export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
 
 //payment requisition
 export enum PurchaseOrderStatus {
-  PurchaseOrder = "Purchase Order",
-  GRNCompleted = "GRN Completed",
-  InvoiceCreated = "Invoice Created",
-  PaymentMade = "Payment Made",
+  PurchaseOrder = 'Purchase Order',
+  GRNCompleted = 'GRN Completed',
+  InvoiceCreated = 'Invoice Created',
+  PaymentMade = 'Payment Made',
 }
 
 export const purchaseOrderMasterSchema = z.object({
@@ -938,9 +938,9 @@ export const purchaseOrderMasterSchema = z.object({
   authorizedBy: z.string().nullable().optional(),
   reqNo: z.string().nullable().optional(),
   status: z.nativeEnum(PurchaseOrderStatus),
-  companyId:z.number().int(),
+  companyId: z.number().int(),
   vendorCode: z.string(),
-  createdBy:z.number()
+  createdBy: z.number(),
 })
 
 // Zod schema for PurchaseOrderDetails
@@ -960,28 +960,28 @@ export const purchaseEntrySchema = z.object({
 export type PurchaseEntryType = z.infer<typeof purchaseEntrySchema>
 
 export interface GetPaymentOrder {
-  id: number;
-  poNo: string;
-  PurDate: string;
-  purAttn: string;
-  reqNo: string;
-  vendorName: string;
-  amount: string;
-  preparedBy: string;
-  checkedBy: string;
-  authorizedBy: string;
-  companyName: string;
-  status: string;
+  id: number
+  poNo: string
+  PurDate: string
+  purAttn: string
+  reqNo: string
+  vendorName: string
+  amount: string
+  preparedBy: string
+  checkedBy: string
+  authorizedBy: string
+  companyName: string
+  status: string
 }
 
 //Get All Vehicle Type
 export interface GetAllVehicleType {
-  vehicleNo: number;
-  costCenterId: number;
-  vehicleDescription: string;
-  purchaseDate: string;
-  assetId: number;
-};
+  vehicleNo: number
+  costCenterId: number
+  vehicleDescription: string
+  purchaseDate: string
+  assetId: number
+}
 
 //Create Vehicle zod schema
 export const createVehicleSchema = z.object({
@@ -989,8 +989,37 @@ export const createVehicleSchema = z.object({
   vehicleDescription: z.string().max(45).nullable(),
   purchaseDate: z.coerce.date().nullable(),
   assetId: z.number().int().nullable(),
-});
-export type CreateVehicleType = z.infer<typeof createVehicleSchema>;
+})
+export type CreateVehicleType = z.infer<typeof createVehicleSchema>
+
+// Get GetVehicleConsumptionType
+
+export interface GetVehicleConsumptionType {
+  id: number
+  vehicleId: number
+  octConsumption: number
+  gasConsumption: number
+  totalConsumption: number
+  kmrsPerLitr: number
+  transDate: string // ISO date string
+  createdBy: number
+  createdAt: string // ISO date string
+}
+
+//Create createVehicleFuelConsumptionSchema
+export const createVehicleFuelConsumptionSchema = z.object({
+  vehicleId: z.number().int(),
+  octConsumption: z.number().nullable(),
+  gasConsumption: z.number().nullable(),
+  totalConsumption: z.number().nullable(),
+  kmrsPerLitr: z.number().nullable(),
+  transDate: z.coerce.date(),
+  createdBy: z.number().int(),
+})
+
+export type createVehicleFuelConsumptionType = z.infer<
+  typeof createVehicleFuelConsumptionSchema
+>
 
 //bank reconciliation
 export const bankReconciliationSchema = z.object({
@@ -1001,6 +1030,8 @@ export const bankReconciliationSchema = z.object({
   type: z.string().max(45).nullable(),
   reconciled: z.number().int().min(0).max(1).nullable(),
   comments: z.string().max(45).nullable(),
-});
+})
 
-export type BankReconciliationType = z.infer<typeof bankReconciliationSchema> & { id: number };
+export type BankReconciliationType = z.infer<
+  typeof bankReconciliationSchema
+> & { id: number }
