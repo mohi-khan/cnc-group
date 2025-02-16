@@ -43,7 +43,7 @@ const PaymentRequisition = () => {
   const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
     try {
       await createPaymentRequisition(newRequisition, token)
-      await fetchRequisitions() // Refresh the list after creating
+      await fetchRequisitions()
       setIsPopupOpen(false)
     } catch (err) {
       setError('Failed to create requisition')
