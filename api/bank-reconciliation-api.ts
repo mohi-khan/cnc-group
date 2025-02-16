@@ -1,5 +1,5 @@
-import { fetchApi } from "@/utils/http";
-import { BankAccount, BankReconciliationType } from "@/utils/type";
+import { fetchApi } from '@/utils/http'
+import type { BankAccount, BankReconciliationType } from '@/utils/type'
 
 export async function getAllBankAccounts() {
   return fetchApi<BankAccount[]>({
@@ -12,14 +12,28 @@ export async function getBankReconciliations() {
   return fetchApi<BankReconciliationType[]>({
     url: 'api/bank-reconciliation/get-all-bank-reconciliations',
     method: 'GET',
-  });
+  })
 }
 
-export async function updateBankReconciliation(id: number, data: Pick<BankReconciliationType, 'reconciled' | 'comments'>) {
-  console.log('Updating bank reconciliation:', id, data);
+export async function updateBankReconciliationComments(
+  id: number,
+  comments: string
+) {
+  console.log('Updating bank reconciliation comments:', id, comments)
   return fetchApi<BankReconciliationType>({
-    url: `api/bank-reconciliation/edit-bank-reconciliation/${id}`,
+    url: `api/bank-reconciliation/edit-bank-reconciliations-comment/${id}`,
     method: 'PATCH',
-    body: data,
-  });
+    body: { comments },
+  })
+}
+
+export async function setReconciled(id: number, reconciled: boolean) {
+  const url = reconciled
+    ? `api/bank-reconciliation/true-bank-reconciliations/${id}`
+    : `api/bank-reconciliation/false-bank-reconciliations/${id}`
+
+  return fetchApi<BankReconciliationType>({
+    url,
+    method: 'PATCH',
+  })
 }

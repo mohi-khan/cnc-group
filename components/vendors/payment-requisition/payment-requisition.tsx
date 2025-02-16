@@ -16,8 +16,9 @@ const PaymentRequisition = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const token =
-    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5MjU3ODA3LCJleHAiOjE3MzkzNDQyMDd9.U2bbHQSkwzTps9MV5ixvKK81IpdpAJqU474i9hBpPuI' // Replace with actual token management logic
+  const mainToken = localStorage.getItem('authToken')
+  console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  const token = `Bearer ${mainToken}`
 
   useEffect(() => {
     fetchRequisitions()
@@ -30,7 +31,7 @@ const PaymentRequisition = () => {
         companyId: 75,
         token: token,
       })
-      setRequisitions(data.data)
+      setRequisitions(data.data || [])
       console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
     } catch (err) {
       setError('Failed to fetch requisitions')
@@ -42,7 +43,7 @@ const PaymentRequisition = () => {
   const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
     try {
       await createPaymentRequisition(newRequisition, token)
-      await fetchRequisitions() // Refresh the list after creating
+      await fetchRequisitions()
       setIsPopupOpen(false)
     } catch (err) {
       setError('Failed to create requisition')

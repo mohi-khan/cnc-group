@@ -18,7 +18,8 @@ import { useToast } from '@/hooks/use-toast'
 import {
   getAllBankAccounts,
   getBankReconciliations,
-  updateBankReconciliation,
+  updateBankReconciliationComments,
+  setReconciled,
 } from '@/api/bank-reconciliation-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
@@ -63,7 +64,6 @@ export const BankReconciliation = () => {
         try {
           setLoading(true)
           const data = await getBankReconciliations()
-          // Filter reconciliations based on the selected bank account
           const filteredReconciliations = data.data
             ? data.data.filter(
                 (reconciliation: BankReconciliationType) =>
@@ -89,15 +89,16 @@ export const BankReconciliation = () => {
 
   const handleReconciliationUpdate = async (
     id: number,
-    reconciled: number,
+    reconciled: boolean,
     comments: string
   ) => {
     try {
       setLoading(true)
-      await updateBankReconciliation(id, { reconciled, comments })
+      await setReconciled(id, reconciled)
+      await updateBankReconciliationComments(id, comments)
       setReconciliations((prevReconciliations) =>
         prevReconciliations.map((r) =>
-          r.id === id ? { ...r, reconciled, comments } : r
+          r.id === id ? { ...r, reconciled: reconciled ? 1 : 0, comments } : r
         )
       )
       setEditingId(null)
@@ -193,7 +194,7 @@ export const BankReconciliation = () => {
                       onCheckedChange={(checked) =>
                         handleReconciliationUpdate(
                           reconciliation.id,
-                          checked ? 1 : 0,
+                          checked === true,
                           reconciliation.comments || ''
                         )
                       }
@@ -224,7 +225,7 @@ export const BankReconciliation = () => {
                         onClick={() =>
                           handleReconciliationUpdate(
                             reconciliation.id,
-                            reconciliation.reconciled || 0,
+                            reconciliation.reconciled === 1,
                             reconciliation.comments || ''
                           )
                         }
