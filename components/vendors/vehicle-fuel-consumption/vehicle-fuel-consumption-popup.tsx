@@ -76,25 +76,8 @@ const VehicleFuelConsumptionPopUp: React.FC<
             <label className="block text-sm font-medium text-gray-700">
               Vehicle
             </label>
-            {/* <select
-              {...register('vehicleId', {
-                required: 'Vehicle is required',
-                setValueAs: (value) => Number(value) || 0, // Convert to number
-              })}
-              className="mt-1 w-full border border-gray-300 rounded p-2"
-            >
-              <option value="">Select a vehicle</option>
-              {loading ? (
-                <option disabled>Loading vehicles...</option>
-              ) : (
-                vehicles.map((vehicle) => (
-                  <option key={vehicle.vehicleNo} value={vehicle.vehicleNo}>
-                    {vehicle.vehicleDescription}
-                  </option>
-                ))
-              )}
-            </select> */}
-            <Controller
+
+            {/* <Controller
               control={control}
               name="vehicleId"
               rules={{ required: 'Vehicle is required' }}
@@ -105,7 +88,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
                     name: vehicle.vehicleDescription || 'Unnamed Vehicle',
                   }))}
                   value={
-                    
+
                     field.value
                       ? {
                           id: field.value.toString(),
@@ -119,6 +102,36 @@ const VehicleFuelConsumptionPopUp: React.FC<
                       : null
                   }
                   onChange={(value) => field.onChange(value ? value.id : null)}
+                  placeholder={
+                    loading ? 'Loading vehicles...' : 'Select a vehicle'
+                  }
+                  disabled={loading}
+                />
+              )}
+            /> */}
+            <Controller
+              control={control}
+              name="vehicleId"
+              rules={{ required: 'Vehicle is required' }}
+              render={({ field }) => (
+                <CustomCombobox
+                  items={vehicles.map((vehicle) => ({
+                    id: vehicle.vehicleNo.toString(), // Ensure ids are string for consistency
+                    name: vehicle.vehicleDescription || 'Unnamed Vehicle',
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(), // Convert value to string for matching
+                          name:
+                            vehicles.find((v) => v.vehicleNo === field.value)
+                              ?.vehicleDescription || '',
+                        }
+                      : null
+                  }
+                  onChange={
+                    (value) => field.onChange(value ? Number(value.id) : null) // Convert the string id to a number
+                  }
                   placeholder={
                     loading ? 'Loading vehicles...' : 'Select a vehicle'
                   }
