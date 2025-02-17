@@ -16,7 +16,7 @@ const VehicleFuelConsumption = () => {
     []
   )
     const [isOpen, setIsOpen] = useState(false)
-      const [vehicles, setVehicles] = useState<Vehicle[]>([])
+      const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
       const [loading, setLoading] = useState<boolean>(true)
 
   const handleAddVehicle = () => {
@@ -42,21 +42,17 @@ const VehicleFuelConsumption = () => {
 
   useEffect(() => {
     fetchVehicleFuelConsumptionData()
+    fetchVehicles()
   }, [])
     
     
-     useEffect(() => {
+   
         // Fetch the vehicle data from API
         const fetchVehicles = async () => {
           try {
             const response = await getAllVehicles()
             const data: GetAllVehicleType[] = response.data ?? []
-            setVehicles(
-              data.map((vehicle) => ({
-                id: vehicle.vehicleNo,
-                name: vehicle.vehicleDescription,
-              }))
-            )
+            setVehicles(data)
             setLoading(false)
           } catch (error) {
             console.error('Failed to fetch vehicles:', error)
@@ -64,8 +60,7 @@ const VehicleFuelConsumption = () => {
           }
         }
     
-        if (isOpen) fetchVehicles()
-      }, [isOpen])
+       
   return (
     <div>
       <VehicleFuelConsumptionList
@@ -86,3 +81,5 @@ const VehicleFuelConsumption = () => {
 }
 
 export default VehicleFuelConsumption
+
+

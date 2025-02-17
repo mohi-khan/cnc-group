@@ -122,7 +122,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
         <Button onClick={onAddVehicle}>ADD</Button>
       </div>
       <Table className="border shadow-md">
-        <TableHeader className="bg-slate-200">
+        <TableHeader className="sticky top-28 bg-slate-200">
           <TableRow>
             <SortableTableHead column="vehicleNo">Vehicle No</SortableTableHead>
             <SortableTableHead column="costCenterId">

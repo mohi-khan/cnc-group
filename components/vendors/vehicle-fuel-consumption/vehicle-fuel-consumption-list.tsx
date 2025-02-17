@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -19,13 +19,12 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { ArrowUpDown } from 'lucide-react'
-import { GetVehicleConsumptionType } from '@/utils/type'
-import { Vehicle } from './vehicle-fuel-consumption'
+import { GetAllVehicleType, GetVehicleConsumptionType } from '@/utils/type'
 
 interface VehicleFuelConsumptionListProps {
   vehicleFuel: GetVehicleConsumptionType[]
   onAddVehicle: () => void
-  vehicles: Vehicle[]
+  vehicles: GetAllVehicleType[]
 }
 
 type SortColumn =
@@ -47,10 +46,15 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const getVehicleName = (vehicleId: number) => {
-    const vehicle = vehicles.find((v) => v.id === vehicleId)
-    return vehicle ? vehicle.name : 'Unknown Vehicle'
-  }
+  const getVehicleName = useCallback(
+    (vehicleNo: number) => {
+      const vehicle = vehicles.find((v) => v.vehicleNo === vehicleNo)
+      return vehicle?.vehicleDescription || 'Unknown Vehicle'
+    },
+    [vehicles]
+  )
+  
+  
 
   const sortedFuelData = useMemo(() => {
     const sorted = [...vehicleFuel].map((item) => ({
@@ -69,7 +73,8 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
         : String(b[sortColumn]).localeCompare(String(a[sortColumn]))
     })
     return sorted
-  }, [vehicleFuel, sortColumn, sortDirection, vehicles])
+  }, [vehicleFuel, sortColumn, sortDirection, getVehicleName])
+
 
   const paginatedFuelData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -109,7 +114,7 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
         <Button onClick={onAddVehicle}>ADD</Button>
       </div>
       <Table className="border shadow-md">
-        <TableHeader className="bg-slate-200">
+        <TableHeader className="sticky top-28 bg-slate-200">
           <TableRow>
             <SortableTableHead column="vehicleName">
               Vehicle Name
@@ -185,3 +190,6 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
 }
 
 export default VehicleFuelConsumptionList
+
+
+

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,15 +18,14 @@ import {
   createVehicleFuelConsumptionType,
   GetAllVehicleType,
 } from '@/utils/type'
-import { getAllVehicles } from '@/api/vehicle'
-import { Vehicle } from './vehicle-fuel-consumption'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface VehicleFuelConsumptionPopUpProps {
   isOpen: boolean
   onClose: () => void
   refreshFuelData: () => Promise<void>
   vehicleId: string | null
-  vehicles: Vehicle[] // Add this line
+  vehicles: GetAllVehicleType[] // Add this line
   loading: boolean
 }
 
@@ -38,6 +37,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    control,
   } = useForm<createVehicleFuelConsumptionType>({
     resolver: zodResolver(createVehicleFuelConsumptionSchema),
     defaultValues: {
@@ -76,7 +76,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
             <label className="block text-sm font-medium text-gray-700">
               Vehicle
             </label>
-            <select
+            {/* <select
               {...register('vehicleId', {
                 required: 'Vehicle is required',
                 setValueAs: (value) => Number(value) || 0, // Convert to number
@@ -88,12 +88,45 @@ const VehicleFuelConsumptionPopUp: React.FC<
                 <option disabled>Loading vehicles...</option>
               ) : (
                 vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.name}
+                  <option key={vehicle.vehicleNo} value={vehicle.vehicleNo}>
+                    {vehicle.vehicleDescription}
                   </option>
                 ))
               )}
-            </select>
+            </select> */}
+            <Controller
+              control={control}
+              name="vehicleId"
+              rules={{ required: 'Vehicle is required' }}
+              render={({ field }) => (
+                <CustomCombobox
+                  items={vehicles.map((vehicle) => ({
+                    id: vehicle.vehicleNo.toString(),
+                    name: vehicle.vehicleDescription || 'Unnamed Vehicle',
+                  }))}
+                  value={
+                    
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            vehicles.find(
+                              (v) =>
+                                v.vehicleNo.toString() ===
+                                field.value.toString()
+                            )?.vehicleDescription || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value ? value.id : null)}
+                  placeholder={
+                    loading ? 'Loading vehicles...' : 'Select a vehicle'
+                  }
+                  disabled={loading}
+                />
+              )}
+            />
+
             {errors.vehicleId && (
               <p className="text-red-500 text-sm">{errors.vehicleId.message}</p>
             )}
