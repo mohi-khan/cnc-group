@@ -8,8 +8,9 @@ import {
   AreaChart,
   XAxis,
   YAxis,
-  Bar,
-  BarChart,
+  Pie,
+  PieChart,
+  Cell,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
 
@@ -81,50 +82,96 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Current Month Revenue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">726,318</div>
-            <p className="text-xs text-green-500">+10% vs prev</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Current Month Cost
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$146,723</div>
-            <p className="text-xs text-green-500">+10% vs prev</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Current Month Gross Margin
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">580,145</div>
-            <p className="text-xs text-red-500">-10% vs prev</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Current Month Net Margin
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,259</div>
-            <p className="text-xs text-green-500">+10% vs prev</p>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-4 gap-4 col-span-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Month Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">726,318</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Month Cost
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">$146,723</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Month Gross Margin
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">580,145</div>
+              <p className="text-xs text-red-500">-10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Month Net Margin
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,259</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Financial Year Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,259</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Financial Year Cost
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,259</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Financial Year Gross Margin
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,259</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Current Financial Year Net Margin
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,259</div>
+              <p className="text-xs text-green-500">+10% vs prev</p>
+            </CardContent>
+          </Card>
+        </div>
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Cost Breakdown</CardTitle>
@@ -138,36 +185,32 @@ export default function Dashboard() {
                 },
               }}
             >
-              <BarChart
-                data={costBreakdownData}
-                layout="vertical"
-                margin={{ top: 0, right: 0, bottom: 0, left: 100 }}
-                width={300}
-                height={300}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" />
-                <Bar
+              <PieChart width={300} height={300}>
+                <Pie
+                  data={costBreakdownData}
                   dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
                   fill="hsl(252, 100%, 70%)"
-                  radius={[0, 4, 4, 0]}
-                />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                  cursor={{ fill: 'transparent' }}
-                />
-              </BarChart>
+                  label
+                >
+                  {costBreakdownData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`hsl(${index * 60}, 100%, 70%)`}
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
             </ChartContainer>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">       
+      <div className="grid grid-cols-2 gap-4">
         <Card className="">
           <CardHeader>
             <CardTitle>Fund Position</CardTitle>

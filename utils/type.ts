@@ -1045,6 +1045,7 @@ export const bankReconciliationSchema = z.object({
   type: z.string().max(45).nullable(),
   reconciled: z.number().int().min(0).max(1).nullable(),
   comments: z.string().max(45).nullable(),
+  date: z.string().max(45).nullable(),
 })
 
 export type BankReconciliationType = z.infer<
