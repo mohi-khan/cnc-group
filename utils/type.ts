@@ -919,6 +919,21 @@ export const CreateBudgetMasterSchema = z.object({
 })
 export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
 
+//get master budget type
+export interface MasterBudgetType {
+  id: number
+  name: string
+  fromDate: string // ISO date string
+  toDate: string // ISO date string
+}
+
+// get budget items type
+export interface BudgetItems {
+  id: number
+  name: string
+  budgetAmount: number
+}
+
 //payment requisition
 export enum PurchaseOrderStatus {
   PurchaseOrder = 'Purchase Order',

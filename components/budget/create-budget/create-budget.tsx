@@ -7,13 +7,10 @@ import CreateBudgetForm from './create-budget-form'
 
 import { useToast } from '@/hooks/use-toast'
 import { CreateBudgetItemsType } from '@/utils/type'
+import CreateBudgetList from './create-budget-list'
 
 const CreateBudget = () => {
   const [showForm, setShowForm] = useState<boolean>(false)
-  const [budgetData, setBudgetData] = useState<CreateBudgetItemsType[] | null>(
-    null
-  )
-  const { toast } = useToast()
 
   const handleDraft = () => {
     console.log('Draft saved')
@@ -26,10 +23,10 @@ const CreateBudget = () => {
   return (
     <div className="container mx-auto p-6">
       <CreateBudgetHeading onDraft={handleDraft} onNew={handleNew} />
-      {showForm && <CreateBudgetForm  />}
+      <CreateBudgetList />
+      {showForm && <CreateBudgetForm />}
     </div>
   )
 }
 
 export default CreateBudget
-

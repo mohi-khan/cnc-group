@@ -1,5 +1,11 @@
-import { fetchApi } from "@/utils/http";
-import { AccountsHead, CreateBudgetItemsType, CreateBudgetMasterType } from "@/utils/type";
+import { fetchApi } from '@/utils/http'
+import {
+  AccountsHead,
+  BudgetItems,
+  CreateBudgetItemsType,
+  CreateBudgetMasterType,
+  MasterBudgetType,
+} from '@/utils/type'
 
 //get all data coa
 export async function getAllCoa() {
@@ -9,26 +15,55 @@ export async function getAllCoa() {
   })
 }
 
-export async function createBudgetMaster(budgetMasterData: CreateBudgetMasterType) {
-    return fetchApi<{ id: number }>({
-      url: "api/budget/createBudget",
-      method: "POST",
-      body: budgetMasterData,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5Mzc0MzQ3LCJleHAiOjE3Mzk0NjA3NDd9.LPOqRjCgtiqA-PZEZ8hqG7ErCcUbHGqRirK2fGV_2tk`
-      }
-    })
-  }
-  
-  export async function createBudgetDetails(budgetDetailsData: CreateBudgetItemsType[]) {
-    return fetchApi<{ success: boolean }>({
-      url: "api/budget/createBudgetItems",
-      method: "POST",
-      body: budgetDetailsData,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5Mzc0MzQ3LCJleHAiOjE3Mzk0NjA3NDd9.LPOqRjCgtiqA-PZEZ8hqG7ErCcUbHGqRirK2fGV_2tk`
-      }
-    })
-  }
+export async function createBudgetMaster(
+  budgetMasterData: CreateBudgetMasterType
+) {
+  return fetchApi<{ id: number }>({
+    url: 'api/budget/createBudget',
+    method: 'POST',
+    body: budgetMasterData,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+    },
+  })
+}
+
+export async function createBudgetDetails(
+  budgetDetailsData: CreateBudgetItemsType[]
+) {
+  return fetchApi<{ success: boolean }>({
+    url: 'api/budget/createBudgetItems',
+    method: 'POST',
+    body: budgetDetailsData,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+    },
+  })
+}
+
+// Get All Master Budget API
+export async function getAllMasterBudget() {
+  return fetchApi<MasterBudgetType[]>({
+    url: 'api/budget/getBudgerMaster',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+    },
+  })
+}
+
+// Get All Budget Items API
+
+export async function getAllBudgetDetails() {
+  return fetchApi<BudgetItems[]>({
+    url: 'api/budget/getBudget/2',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+    },
+  })
+}
