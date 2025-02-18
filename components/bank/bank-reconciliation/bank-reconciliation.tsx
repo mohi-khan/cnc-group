@@ -9,7 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -35,7 +41,13 @@ export const BankReconciliation = () => {
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const { toast } = useToast()
-  const form = useForm()
+  const form = useForm({
+    defaultValues: {
+      bankAccount: '',
+      fromDate: '',
+      toDate: '',
+    },
+  })
 
   useEffect(() => {
     const fetchBankAccounts = async () => {
@@ -58,34 +70,37 @@ export const BankReconciliation = () => {
     fetchBankAccounts()
   }, [toast])
 
-  useEffect(() => {
-    const fetchReconciliations = async () => {
-      if (selectedBankAccount) {
-        try {
-          setLoading(true)
-          const data = await getBankReconciliations()
-          const filteredReconciliations = data.data
-            ? data.data.filter(
-                (reconciliation: BankReconciliationType) =>
-                  reconciliation.bankId === selectedBankAccount.id
-              )
-            : []
-          setReconciliations(filteredReconciliations)
-        } catch (error) {
-          toast({
-            title: 'Error',
-            description: 'Failed to fetch reconciliations',
-            variant: 'destructive',
-          })
-        } finally {
-          setLoading(false)
-        }
-      } else {
-        setReconciliations([])
+  const fetchReconciliations = async (data: {
+    bankAccount: string
+    fromDate: string
+    toDate: string
+  }) => {
+    if (data.bankAccount && data.fromDate && data.toDate) {
+      try {
+        setLoading(true)
+        console.log('Fetching reconciliations with:', data) // Debug log
+        const response = await getBankReconciliations(
+          Number.parseInt(data.bankAccount),
+          data.fromDate,
+          data.toDate
+        )
+        console.log('Received reconciliations:', response.data) // Debug log
+        setReconciliations(response.data || [])
+      } catch (error) {
+        console.error('Error fetching reconciliations:', error) // Debug log
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch reconciliations',
+          variant: 'destructive',
+        })
+      } finally {
+        setLoading(false)
       }
+    } else {
+      console.log('Missing required data:', data) // Debug log
+      setReconciliations([])
     }
-    fetchReconciliations()
-  }, [selectedBankAccount, toast])
+  }
 
   const handleReconciliationUpdate = async (
     id: number,
@@ -120,15 +135,38 @@ export const BankReconciliation = () => {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(() => {})}
+        onSubmit={form.handleSubmit(fetchReconciliations)}
         className="w-[98%] mx-auto p-4"
       >
-        <FormField
-          control={form.control}
-          name="bankAccount"
-          render={({ field }) => (
-            <FormItem>
-              <div className="w-1/4 mx-auto py-5">
+        <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">
+          <FormField
+            control={form.control}
+            name="fromDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>From Date</FormLabel>
+                <Input type="date" {...field} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="toDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>To Date</FormLabel>
+                <Input type="date" {...field} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="bankAccount"
+            render={({ field }) => (
+              <FormItem className="w-1/3">
+                <FormLabel>Bank Account</FormLabel>
                 <CustomCombobox
                   items={bankAccounts.map((account) => ({
                     id: account.id.toString(),
@@ -156,11 +194,14 @@ export const BankReconciliation = () => {
                   }}
                   placeholder="Select bank account"
                 />
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={!form.formState.isValid}>
+            Show
+          </Button>
+        </div>
 
         <Table className="mt-4 shadow-md border">
           <TableHeader className="bg-slate-200 shadow-md">
@@ -181,7 +222,7 @@ export const BankReconciliation = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : selectedBankAccount ? (
+            ) : selectedBankAccount && reconciliations.length > 0 ? (
               reconciliations.map((reconciliation) => (
                 <TableRow key={reconciliation.id}>
                   <TableCell>{reconciliation.voucherId}</TableCell>
@@ -246,7 +287,7 @@ export const BankReconciliation = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
-                  Please select a bank account
+                  Please select a bank account and date range, then click "Show"
                 </TableCell>
               </TableRow>
             )}

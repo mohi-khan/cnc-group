@@ -8,9 +8,20 @@ export async function getAllBankAccounts() {
   })
 }
 
-export async function getBankReconciliations() {
+export async function getBankReconciliations(
+  bankId: number,
+  fromDate: string,
+  toDate: string
+) {
+  const params = new URLSearchParams({
+    bankId: bankId.toString(),
+    fromDate: fromDate,
+    toDate: toDate,
+  })
+  console.log('🚀 ~ params:', params)
+  const url = `api/bank-reconciliation/get-all-bank-reconciliations?${params}`
   return fetchApi<BankReconciliationType[]>({
-    url: 'api/bank-reconciliation/get-all-bank-reconciliations',
+    url,
     method: 'GET',
   })
 }
