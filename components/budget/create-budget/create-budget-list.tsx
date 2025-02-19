@@ -1,77 +1,154 @@
-import { getAllBudgetDetails, getAllMasterBudget } from '@/api/budget-api'
-import { FormItem, FormLabel } from '@/components/ui/form'
-import { toast } from '@/hooks/use-toast'
-import { CustomCombobox } from '@/utils/custom-combobox'
-import { BudgetItems, MasterBudgetType } from '@/utils/type'
-import React, { useEffect, useState } from 'react'
+'use client'
+import React, { useState, useMemo } from 'react'
+import { MasterBudgetType } from '@/utils/type'
 
-const CreateBudgetList = () => {
-  const [masterBudget, setMasterBudget] = useState<MasterBudgetType[]>()
-  const [budgetItems, setBudgetItems] = useState<BudgetItems[]>()
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
-  async function fetchGetAllMasterBudget() {
-    try {
-      const response = await getAllMasterBudget()
-      if (!response.data) throw new Error('No data received')
-      setMasterBudget(response.data)
-      console.log('master budget data: ', response.data)
-    } catch (error) {
-      console.error('Error getting master budget:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load master budget',
-      })
-      setMasterBudget([])
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from '@/components/ui/pagination'
+
+import { ArrowUpDown } from 'lucide-react'
+import Link from 'next/link'
+
+interface CreateBudgetProps {
+  masterBudget: MasterBudgetType[]
+}
+
+// Define valid keys of MasterBudgetType for sorting
+type SortColumn = keyof MasterBudgetType
+
+const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [itemsPerPage] = useState<number>(5)
+
+  const totalPages = Math.ceil(masterBudget.length / itemsPerPage)
+
+  // Sorting Function
+  const sortData = (data: MasterBudgetType[]) => {
+    return [...data].sort((a, b) => {
+      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
+      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
+      return 0
+    })
+  }
+
+  // Handle Sorting
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
     }
   }
 
-  async function fetchGetBudgetItems() {
-    try {
-      const response = await getAllBudgetDetails()
-      if (!response.data) throw new Error('No data received')
-      setBudgetItems(response.data)
-      console.log('Budget Items data: ', response.data)
-    } catch (error) {
-      console.error('Error getting Budget Items:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load Budget Items',
-      })
-      setBudgetItems([])
-    }
+  // Sortable Table Head Component
+  const SortableTableHead: React.FC<{
+    column: SortColumn
+    children: React.ReactNode
+  }> = ({ column, children }) => {
+    const isActive = column === sortColumn
+    return (
+      <TableHead
+        onClick={() => handleSort(column)}
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-1">
+          <span>{children}</span>
+          <ArrowUpDown
+            className={`h-4 w-4 ${isActive ? 'text-black' : 'text-muted-foreground'}`}
+          />
+        </div>
+      </TableHead>
+    )
   }
 
-  useEffect(() => {
-    fetchGetAllMasterBudget()
-    fetchGetBudgetItems()
-  }, [])
-  const [field, setField] = useState<{ value: number | null }>({ value: null })
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+
+  const currentItems = useMemo(() => {
+    const sortedData = sortData(masterBudget)
+    return sortedData.slice(indexOfFirstItem, indexOfLastItem)
+  }, [masterBudget, currentPage, sortColumn, sortDirection])
 
   return (
     <div>
-          <FormItem>
-              
-        <CustomCombobox
-          items={(masterBudget ?? []).map((riad, index) => ({
-            id: index.toString(),
-            name: riad.name || 'Unnamed Budget',
-          }))}
-          value={
-            field.value
-              ? {
-                  id: field.value.toString(),
-                  name:
-                    masterBudget?.find((_, idx) => idx === field.value)?.name ||
-                    'Select Budget',
+      <Table className="border shadow-md mt-2">
+        <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
+          <TableRow>
+            <SortableTableHead column="name">Budget Name</SortableTableHead>
+            <SortableTableHead column="fromDate">From Date</SortableTableHead>
+            <SortableTableHead column="toDate">End Date</SortableTableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentItems.map((item, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Link href={`/budget/create-budget/${item.id}`}>
+                  {item.name}
+                </Link>
+              </TableCell>
+              <TableCell>{item.fromDate}</TableCell>
+              <TableCell>{item.toDate}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Pagination (Following Your Style) */}
+      <div className="mt-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className={
+                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
                 }
-              : null
-          }
-          onChange={(value: { id: string; name: string } | null) =>
-            setField({ value: value ? Number.parseInt(value.id, 10) : null })
-          }
-          placeholder="Select Budget"
-        />
-      </FormItem>
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  onClick={() => setCurrentPage(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : ''
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   )
 }
