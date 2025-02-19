@@ -38,7 +38,7 @@ export async function createBudgetDetails(
     body: budgetDetailsData,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5OTQ2MTY2LCJleHAiOjE3NDAwMzI1NjZ9.DWiZa8yXBW-6-C2PdQpa22V6NHleoT_80kpFCrLmk-w`,
     },
   })
 }
@@ -50,20 +50,21 @@ export async function getAllMasterBudget() {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5OTQ2MTY2LCJleHAiOjE3NDAwMzI1NjZ9.DWiZa8yXBW-6-C2PdQpa22V6NHleoT_80kpFCrLmk-w`,
     },
   })
 }
 
 // Get All Budget Items API
 
-export async function getAllBudgetDetails() {
+export async function getAllBudgetDetails(id: number) {
+  console.log('dkdkd', id)
   return fetchApi<BudgetItems[]>({
-    url: 'api/budget/getBudget/2',
+    url: `api/budget/getBudget/${id}`,
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5ODU5NDI0LCJleHAiOjE3Mzk5NDU4MjR9.JRp9I6buFmjyDMJPD4hh4ag4hIKuikktECPz9TJLxPU`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzM5OTQ2MTY2LCJleHAiOjE3NDAwMzI1NjZ9.DWiZa8yXBW-6-C2PdQpa22V6NHleoT_80kpFCrLmk-w`,
     },
   })
 }
