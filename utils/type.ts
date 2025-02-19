@@ -1051,3 +1051,27 @@ export const bankReconciliationSchema = z.object({
 export type BankReconciliationType = z.infer<
   typeof bankReconciliationSchema
 > & { id: number }
+
+//fund position
+const BalanceEntrySchema = z.object({
+  date: z.string(),
+  accountNumber: z.string().nullable(),
+  accountHead: z.null(),
+  balance: z.string().nullable(),
+  companyName: z.string().nullable(),
+})
+
+// Define the schema for cash balance
+const CashBalanceSchema = z.array(BalanceEntrySchema)
+
+// Define the schema for bank balance
+const BankBalanceSchema = z.array(z.array(BalanceEntrySchema))
+
+// Define the main response schema
+export const FundPositionSchema = z.object({
+  cashBalance: CashBalanceSchema,
+  BankBalance: BankBalanceSchema,
+})
+
+// Infer the TypeScript type from the schema
+export type FundPositionType = z.infer<typeof FundPositionSchema>
