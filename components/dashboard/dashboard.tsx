@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import {
   CartesianGrid,
   Line,
@@ -11,6 +12,7 @@ import {
   Pie,
   PieChart,
   Cell,
+  Tooltip,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
 
@@ -28,16 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getFundPosition } from '@/api/dashboard-api'
 
-const fundPositionData = [
-  { date: 'Jan 25', availableFund: 30, loan: 45 },
-  { date: 'Feb 25', availableFund: 25, loan: 38 },
-  { date: 'Mar 25', availableFund: 15, loan: 42 },
-  { date: 'Apr 25', availableFund: 35, loan: 30 },
-  { date: 'May 25', availableFund: 45, loan: 35 },
-  { date: 'Jun 25', availableFund: 20, loan: 48 },
-]
-
+// Dummy data for other charts (unchanged)
 const inventoryData = [
   { date: 'Jan 25', rawMaterials: 120, color: 45, packaging: 30 },
   { date: 'Feb 25', rawMaterials: 130, color: 35, packaging: 25 },
@@ -55,6 +50,46 @@ const costBreakdownData = [
 ]
 
 export default function Dashboard() {
+  const [fundPositionData, setFundPositionData] = React.useState<{ date: string; netAmount: number }[]>([])
+
+  React.useEffect(() => {
+    async function fetchFundPosition() {
+      try {
+        const data = await getFundPosition(77, '2025-03-03', '03')
+        const formattedData = processFundPositionData(data)
+        console.log("🚀 ~ fetchFundPosition ~ data:", data)
+        setFundPositionData(formattedData)
+      } catch (error) {
+        console.error('Error fetching fund position data:', error)
+      }
+    }
+
+    fetchFundPosition()
+  }, [])
+
+  const processFundPositionData = (data) => {
+    const cashBalance = data.cashBalance.reduce(
+      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
+      0
+    )
+    const bankBalance = data.BankBalance.flat().reduce(
+      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
+      0
+    )
+    const totalBalance = cashBalance + bankBalance
+
+    const latestDate =
+      data.cashBalance[0]?.date || data.BankBalance[0]?.[0]?.date || ''
+    const [month, day, year] = latestDate.split('/')
+
+    return [
+      {
+        date: `${month}'${year.slice(-2)}`,
+        netAmount: totalBalance,
+      },
+    ]
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -218,13 +253,9 @@ export default function Dashboard() {
           <CardContent>
             <ChartContainer
               config={{
-                availableFund: {
-                  label: 'Available Fund',
+                netAmount: {
+                  label: 'Net Amount',
                   color: 'hsl(252, 100%, 70%)',
-                },
-                loan: {
-                  label: 'Loan',
-                  color: 'hsl(180, 100%, 70%)',
                 },
               }}
             >
@@ -237,25 +268,14 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <Tooltip content={<ChartTooltipContent />} />
                 <Line
                   type="monotone"
-                  dataKey="availableFund"
+                  dataKey="netAmount"
                   stroke="hsl(252, 100%, 70%)"
                   strokeWidth={2}
                   dot={{
                     stroke: 'hsl(252, 100%, 70%)',
-                    fill: 'white',
-                    strokeWidth: 2,
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="loan"
-                  stroke="hsl(180, 100%, 70%)"
-                  strokeWidth={2}
-                  dot={{
-                    stroke: 'hsl(180, 100%, 70%)',
                     fill: 'white',
                     strokeWidth: 2,
                   }}
