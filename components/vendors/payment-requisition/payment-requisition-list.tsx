@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { GetPaymentOrder } from '@/utils/type'
+import { Button } from '@/components/ui/button'
 
 interface PaymentRequisitionListProps {
   requisitions: GetPaymentOrder[]
@@ -25,14 +26,13 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
           </h2>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">{req.poNo}</h2>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                req.status === 'Approved'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-200 text-black'
-              }`}
-            >
-              {req.status}
+            <span className='flex flex-col items-center gap-5'>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-black">
+                {req.status}
+              </span>
+              {req.status === 'Invoice Created' && (
+                <Button>Approve Invoice</Button>
+              )}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
