@@ -31,6 +31,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { updateBudgetMaster } from '@/api/budget-api'
 
@@ -42,83 +43,142 @@ interface CreateBudgetProps {
 type SortColumn = keyof MasterBudgetType
 
 // New component to handle editing and submitting budget changes
+// Function to format ISO date to "yyyy-MM-dd"
+const formatDate = (isoString: string) => {
+  return isoString ? isoString.split('T')[0] : '' // Extracts only 'yyyy-MM-dd'
+}
+
 const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
-  const [name, setName] = useState(item.name)
-  const [fromDate, setFromDate] = useState(item.fromDate)
-  const [toDate, setToDate] = useState(item.toDate)
+  const [name, setName] = useState(item.name || '')
+  const [fromDate, setFromDate] = useState(formatDate(item.fromDate))
+  const [toDate, setToDate] = useState(formatDate(item.toDate))
 
- 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault()
 
-  try {
-    const token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMjg0NjEzLCJleHAiOjE3NDAzNzEwMTN9.kfBHfbDQbHpMH19zhgh4qVrNSqe0Kh_BkqczoycE2fc'; // Replace with actual auth token
-    const response = await updateBudgetMaster(item.budgetId, token);
+    try {
+      const token =
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMzc2OTk5LCJleHAiOjE3NDA0NjMzOTl9.hkw5KGg7HD7CQsT_byrvxlLWbxjIDQnS2i5q_abCjUg' // Replace with actual auth token
+      const response = await updateBudgetMaster(
+        item.budgetId,
+        { name, fromDate, toDate },
+        token
+       
+      )
 
-    if (response.data) {
-      console.log('Budget updated successfully:', {
-        id: item.budgetId,
-        name,
-        fromDate,
-        toDate,
-      });
-    } else {
-      console.error('Failed to update budget');
+      if (response?.data) {
+        console.log('Budget updated successfully:', {
+          id: item.budgetId,
+          name,
+          fromDate,
+          toDate,
+        })
+      } else {
+        console.error('Failed to update budget')
+      }
+    } catch (error) {
+      console.error('Error updating budget:', error)
     }
-  } catch (error) {
-    console.error('Error updating budget:', error);
   }
-};
-
 
   return (
+    // <Dialog>
+    //   <DialogTrigger asChild>
+    //     <Button variant="ghost" size="sm">
+    //       <Edit className="h-4 w-4 mr-2" />
+    //       Edit
+    //     </Button>
+    //   </DialogTrigger>
+    //   <DialogContent>
+    //     <DialogHeader>
+    //       <DialogTitle>Edit Budget</DialogTitle>
+    //     </DialogHeader>
+    //     <form onSubmit={handleSubmit} className="mt-4">
+    //       <label className="block mb-2">
+    //         Budget Name:
+    //         <input
+    //           type="text"
+    //           value={name}
+    //           onChange={(e) => setName(e.target.value)}
+    //           className="border rounded p-1 w-full"
+    //         />
+    //       </label>
+    //       <label className="block mb-2">
+    //         From Date:
+    //         <input
+    //           type="date"
+    //           value={fromDate}
+    //           onChange={(e) => setFromDate(e.target.value)}
+    //           className="border rounded p-1 w-full"
+    //         />
+    //       </label>
+    //       <label className="block mb-2">
+    //         End Date:
+    //         <input
+    //           type="date"
+    //           value={toDate}
+    //           onChange={(e) => setToDate(e.target.value)}
+    //           className="border rounded p-1 w-full"
+    //         />
+    //       </label>
+    //       <Button type="submit" variant="default" className="mt-2">
+    //         Save Changes
+    //       </Button>
+    //     </form>
+    //   </DialogContent>
+    // </Dialog>
+
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
+    <DialogTrigger asChild>
+      <Button variant="ghost" size="sm">
+        <Edit className="h-4 w-4 mr-2" />
+        Edit
+      </Button>
+    </DialogTrigger>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Edit Budget</DialogTitle>
+        <DialogDescription>Modify the details of your budget below.</DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handleSubmit} className="mt-4">
+        <label className="block mb-2">
+          Budget Name:
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="border rounded p-1 w-full"
+            required
+          />
+        </label>
+        <label className="block mb-2">
+          From Date:
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="border rounded p-1 w-full"
+            required
+          />
+        </label>
+        <label className="block mb-2">
+          End Date:
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="border rounded p-1 w-full"
+            required
+          />
+        </label>
+        <Button type="submit" variant="default" className="mt-2">
+          Save Changes
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Budget</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="mt-4">
-          <label className="block mb-2">
-            Budget Name:
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border rounded p-1 w-full"
-            />
-          </label>
-          <label className="block mb-2">
-            From Date:
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="border rounded p-1 w-full"
-            />
-          </label>
-          <label className="block mb-2">
-            End Date:
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="border rounded p-1 w-full"
-            />
-          </label>
-          <Button type="submit" variant="default" className="mt-2">
-            Save Changes
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
+      </form>
+    </DialogContent>
+  </Dialog>
+);
+};
 
 const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name')
@@ -248,5 +308,3 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
 }
 
 export default CreateBudgetList
-
-
