@@ -61,9 +61,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMzc2OTk5LCJleHAiOjE3NDA0NjMzOTl9.hkw5KGg7HD7CQsT_byrvxlLWbxjIDQnS2i5q_abCjUg' // Replace with actual auth token
       const response = await updateBudgetMaster(
         item.budgetId,
-        { name, fromDate, toDate },
         token
-       
       )
 
       if (response?.data) {

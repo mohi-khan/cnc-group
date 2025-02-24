@@ -284,7 +284,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
     }
 
     fetchCoaAccounts()
-  }, [token])
+  }, [])
 
   const addBudgetLine = () => {
     setBudgetLines([
@@ -302,15 +302,15 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
     try {
       // Create budget master
       const budgetMasterResponse = await createBudgetMaster(
-        {
-          budgetName: budgetName,
-          fromDate: startDate,
-          toDate: endDate,
-          active: isActive,
-          createdBy: 1, // Replace with actual user ID
-        },
-        token // Pass token
-      )
+          { token: token },
+          {
+            budgetName: budgetName,
+            fromDate: startDate,
+            toDate: endDate,
+            active: isActive,
+            createdBy: 1, // Replace with actual user ID
+          }
+        )
 
       if (budgetMasterResponse.error || !budgetMasterResponse.data) {
         throw new Error(budgetMasterResponse.error?.message || 'Failed to create budget master')
@@ -328,7 +328,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
         createdBy: 1, // Replace with actual user ID
       }))
 
-      const budgetDetailsResponse = await createBudgetDetails(budgetDetailsData, token) // Pass token
+      const budgetDetailsResponse = await createBudgetDetails({ token: token }, budgetDetailsData) // Pass token
 
       if (budgetDetailsResponse.error) {
         throw new Error(budgetDetailsResponse.error.message || 'Failed to create budget details')
