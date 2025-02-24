@@ -18,9 +18,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   }
 
   return (
-    <div className="space-y-6 border rounded-md p-6">
+    <div className="space-y-6">
       {requisitions.map((req, index) => (
-        <div className="p-6" key={req.id}>
+        <div className=" border rounded-md p-6" key={req.id}>
           <h2 className="text-3xl font-bold text-center pb-10">
             {req.companyName}
           </h2>
@@ -32,6 +32,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
               </span>
               {req.status === 'Invoice Created' && (
                 <Button>Approve Invoice</Button>
+              )}
+              {req.status === 'Invoice Approved' && (
+                <Button>Create Payment</Button>
               )}
             </span>
           </div>
