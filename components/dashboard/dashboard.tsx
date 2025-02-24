@@ -55,8 +55,9 @@ export default function Dashboard() {
   React.useEffect(() => {
     async function fetchFundPosition() {
       try {
-        const data = await getFundPosition(77, '2025-03-03', '03')
+        const data = await getFundPosition(77, '2025-02-19', '02')
         const formattedData = processFundPositionData(data)
+        console.log("🚀 ~ fetchFundPosition ~ formattedData:", formattedData)
         console.log("🚀 ~ fetchFundPosition ~ data:", data)
         setFundPositionData(formattedData)
       } catch (error) {
