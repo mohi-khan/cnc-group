@@ -15,30 +15,58 @@ export async function getAllCoa() {
   })
 }
 
+// export async function createBudgetMaster(data: { token: string },
+//   budgetMasterData: CreateBudgetMasterType
+// ) {
+//   return fetchApi<{ id: number }>({
+//     url: 'api/budget/createBudget',
+//     method: 'POST',
+//     body: budgetMasterData,
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `${data.token}`,
+//     },
+//   })
+// }
 export async function createBudgetMaster(
+  data: { token: string },
   budgetMasterData: CreateBudgetMasterType
 ) {
   return fetchApi<{ id: number }>({
-    url: 'api/budget/createBudget',
-    method: 'POST',
+    url: "api/budget/createBudget",
+    method: "POST",
     body: budgetMasterData,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMDMwNjQ1LCJleHAiOjE3NDAxMTcwNDV9.xtn0DYUaJP2vq7VS30J9fMaiOhandyAtlAFAy56RZuk`,
+      "Content-Type": "application/json",
+      Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
     },
   })
 }
 
+// export async function createBudgetDetails(data: { token: string },
+//   budgetDetailsData: CreateBudgetItemsType[]
+// ) {
+//   return fetchApi<{ success: boolean }>({
+//     url: 'api/budget/createBudgetItems',
+//     method: 'POST',
+//     body: budgetDetailsData,
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `${data.token}`,
+//     },
+//   })
+// }
 export async function createBudgetDetails(
+  data: { token: string },
   budgetDetailsData: CreateBudgetItemsType[]
 ) {
   return fetchApi<{ success: boolean }>({
-    url: 'api/budget/createBudgetItems',
-    method: 'POST',
+    url: "api/budget/createBudgetItems",
+    method: "POST",
     body: budgetDetailsData,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMjg0NjEzLCJleHAiOjE3NDAzNzEwMTN9.kfBHfbDQbHpMH19zhgh4qVrNSqe0Kh_BkqczoycE2fc`,
+      "Content-Type": "application/json",
+      Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
     },
   })
 }
