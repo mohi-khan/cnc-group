@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
+import { ApproveInvoiceType, CreateInvoiceType, GetPaymentOrder, PurchaseEntryType, RequisitionAdvanceType } from '@/utils/type'
 
 export async function getAllPaymentRequisition(data: {
   token: string
@@ -15,25 +15,63 @@ export async function getAllPaymentRequisition(data: {
   })
 }
 
-// interface ApiResponse<T> {
-//   data: T;
-// }
+export async function getAllAdvance(data: {
+  token: string
+}) {
+  console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
+  return fetchApi<RequisitionAdvanceType[]>({
+    url: `api/Advance/getAdvance`,
+    method: 'GET',
+    headers: {
+      Authorization: `${data.token}`,
+    },
+  })
+}
 
-// export async function getAllPaymentRequisition(data: {
-//   token: string;
-//   companyId: number;
-// }): Promise<GetPaymentOrder[]> {
-//   console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token);
-//   const response = await fetchApi<ApiResponse<GetPaymentOrder[]>>({
-//     url: `api/purchase/getPurchaseData?company=73,75,77`,
-//     method: 'GET',
-//     headers: {
-//       Authorization: `${data.token}`,
-//     },
-//   });
-  
-//   return response.data;
-// }
+export async function createInvoice(
+  data: CreateInvoiceType,
+  token: string
+) {
+  return fetchApi({
+    url: 'api/invoice/createInvoice',
+    method: 'POST',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+}
+
+export async function createAdvance(
+  data: RequisitionAdvanceType,
+  token: string
+) {
+  return fetchApi({
+    url: 'api/Advance/createAdvance',
+    method: 'POST',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+}
+
+export async function approveInvoice(
+  data: ApproveInvoiceType,
+  token: string
+) {
+  return fetchApi({
+    url: 'api/invoice/updateInvoice',
+    method: 'POST',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+}
 
 export async function createPaymentRequisition(
   data: PurchaseEntryType,

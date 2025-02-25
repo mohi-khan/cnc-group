@@ -990,6 +990,59 @@ export interface GetPaymentOrder {
   status: string
 }
 
+//approve invoice
+export const approveInvoiceSchema = z.object({
+  invoiceId: z.string(),
+  approvalStatus: z.string(),
+  approvedBy: z.string(),
+  poId: z.string(),
+})
+
+export type ApproveInvoiceType = z.infer<typeof approveInvoiceSchema>
+
+//create invoice
+export const createInvoiceSchema = z.object({
+  poId: z.number().int().positive(),
+  vendorId: z.number().int().positive(),
+  invoiceNumber: z.string().max(50),
+  invoiceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  currency: z.string().max(10),
+  totalAmount: z.number().nonnegative(),
+  vatAmount: z.number().nonnegative().optional(),
+  taxAmount: z.number().nonnegative().optional(),
+  tdsAmount: z.number().nonnegative().optional(),
+  discountAmount: z.number().nonnegative().optional(),
+  paymentStatus: z.enum(["Pending", "Partially Paid", "Paid", "Cancelled"]),
+  paymentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  approvalStatus: z.enum(["Pending", "Approved", "Rejected"]),
+  approvedBy: z.number().int().positive().optional().nullable(),
+  attachmentUrl: z.string().url().optional(),
+  createdBy:z.number(),
+});
+
+export type CreateInvoiceType = z.infer<typeof createInvoiceSchema>
+
+export const requisitionAdvanceSchema = z.object({
+  requisitionNo: z.string().max(50), // Max length of 50
+  poId: z.number().int().positive(), // Must be a positive integer
+  vendorId: z.number().int().positive(), // Must be a positive integer
+  requestedBy: z.number().int().positive(), // Must be a positive integer
+  createdBy: z.number().int().positive(), // Must be a positive integer
+  checkName: z.string().max(255).optional(), // Optional string with max length 255
+  requestedDate: z.coerce.date().optional(), // Auto-defaults to current date if missing
+  advanceAmount: z.number().positive(), // Must be a positive number
+  approvedAmount: z.number().min(0).optional(), // Cannot be negative, defaults to 0
+  currency: z.string().max(10), // Currency as string (ISO code like "USD", "BDT")
+  paymentStatus: z.enum(["PENDING", "PAID", "REJECTED"]).default("PENDING"), // Enum validation
+  approvalStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]).default("PENDING"), // Enum validation
+  approvedBy: z.number().int().positive().nullable().optional(), // Can be null if not yet approved
+  approvedDate: z.coerce.date().nullable().optional(), // Can be null if not yet approved
+  remarks: z.string().optional(), // Optional text
+});
+
+export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
+
 //Get All Vehicle Type
 export interface GetAllVehicleType {
   vehicleNo: number
