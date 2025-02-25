@@ -36,6 +36,12 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
               {req.status === 'Invoice Approved' && (
                 <Button>Create Payment</Button>
               )}
+              {req.status === 'GRN Completed' && (
+                <Button>Create Invoice</Button>
+              )}
+              {req.status === 'Purchase Order' && (
+                <Button>Create Advance</Button>
+              )}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
