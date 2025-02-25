@@ -81,6 +81,7 @@ const CreateBudget = () => {
     const mainToken = localStorage.getItem('authToken')
     if (mainToken) {
       setToken(`Bearer ${mainToken}`)
+      console.log('🚀 ~ create budget token:', mainToken)
     }
   }, [])
 
