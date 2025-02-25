@@ -43,33 +43,33 @@ export async function createBudgetMaster(
   })
 }
 
-// export async function createBudgetDetails(data: { token: string },
-//   budgetDetailsData: CreateBudgetItemsType[]
-// ) {
-//   return fetchApi<{ success: boolean }>({
-//     url: 'api/budget/createBudgetItems',
-//     method: 'POST',
-//     body: budgetDetailsData,
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `${data.token}`,
-//     },
-//   })
-// }
-export async function createBudgetDetails(
-  data: { token: string },
+export async function createBudgetDetails(data: { token: string },
   budgetDetailsData: CreateBudgetItemsType[]
 ) {
   return fetchApi<{ success: boolean }>({
-    url: "api/budget/createBudgetItems",
-    method: "POST",
+    url: 'api/budget/createBudgetItems',
+    method: 'POST',
     body: budgetDetailsData,
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
+      'Content-Type': 'application/json',
+      Authorization: `${data.token}`,
     },
   })
 }
+// export async function createBudgetDetails(
+//   data: { token: string },
+//   budgetDetailsData: CreateBudgetItemsType[]
+// ) {
+//   return fetchApi<{ success: boolean }>({
+//     url: "api/budget/createBudgetItems",
+//     method: "POST",
+//     body: budgetDetailsData,
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
+//     },
+//   })
+// }
 
 // Get All Master Budget API
 export async function getAllMasterBudget(data: { token: string }) {
