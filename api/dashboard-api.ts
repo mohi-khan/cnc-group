@@ -13,7 +13,7 @@ export async function getFundPosition(
   })
   console.log('🚀 ~ params:', params)
   const url = `api/dashboard/fundPosition?companyId=77,75&date=2025-02-19&month=02`
-  return fetchApi<FundPositionType[]>({
+  return fetchApi<FundPositionType>({
     url,
     method: 'GET',
   })

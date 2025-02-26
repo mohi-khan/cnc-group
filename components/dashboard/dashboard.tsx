@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getFundPosition } from '@/api/dashboard-api'
+import type { FundPositionType } from '@/utils/type'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -50,37 +51,39 @@ const costBreakdownData = [
 ]
 
 export default function Dashboard() {
-  const [fundPositionData, setFundPositionData] = React.useState<{ date: string; netAmount: number }[]>([])
+  const [fundPositionData, setFundPositionData] =
+    React.useState<FundPositionType | null>(null)
 
-  React.useEffect(() => {
-    async function fetchFundPosition() {
-      try {
-        const data = await getFundPosition(77, '2025-02-19', '02')
-        const formattedData = processFundPositionData(data)
-        console.log("🚀 ~ fetchFundPosition ~ formattedData:", formattedData)
-        console.log("🚀 ~ fetchFundPosition ~ data:", data)
-        setFundPositionData(formattedData)
-      } catch (error) {
-        console.error('Error fetching fund position data:', error)
-      }
+  async function fetchFundPosition() {
+    try {
+      const data = await getFundPosition(77, '2025-02-19', '02')
+      console.log('🚀 ~ fetchFundPosition ~ data:', data)
+      setFundPositionData(data.data)
+    } catch (error) {
+      console.error('Error fetching fund position data:', error)
     }
-
+  }
+  React.useEffect(() => {
     fetchFundPosition()
   }, [])
 
-  const processFundPositionData = (data) => {
-    const cashBalance = data.cashBalance.reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
+  const processedFundPositionData = React.useMemo(() => {
+    if (!fundPositionData) return []
+
+    const cashBalance = fundPositionData.cashBalance.reduce(
+      (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
       0
     )
-    const bankBalance = data.BankBalance.flat().reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
+    const bankBalance = fundPositionData.BankBalance.flat().reduce(
+      (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
       0
     )
     const totalBalance = cashBalance + bankBalance
 
     const latestDate =
-      data.cashBalance[0]?.date || data.BankBalance[0]?.[0]?.date || ''
+      fundPositionData.cashBalance[0]?.date ||
+      fundPositionData.BankBalance[0]?.[0]?.date ||
+      ''
     const [month, day, year] = latestDate.split('/')
 
     return [
@@ -89,7 +92,7 @@ export default function Dashboard() {
         netAmount: totalBalance,
       },
     ]
-  }
+  }, [fundPositionData])
 
   return (
     <div className="p-6 space-y-6">
@@ -261,7 +264,7 @@ export default function Dashboard() {
               }}
             >
               <LineChart
-                data={fundPositionData}
+                data={processedFundPositionData}
                 margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
                 width={600}
                 height={300}
