@@ -5,14 +5,15 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  Area,
-  AreaChart,
   XAxis,
   YAxis,
+  Tooltip,
+  Legend,
+  Area,
+  AreaChart,
   Pie,
   PieChart,
   Cell,
-  Tooltip,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
 
@@ -54,45 +55,55 @@ export default function Dashboard() {
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
 
-  async function fetchFundPosition() {
+  const fetchFundPosition = React.useCallback(async () => {
     try {
       const data = await getFundPosition(77, '2025-02-19', '02')
-      console.log('🚀 ~ fetchFundPosition ~ data:', data)
+      console.log('Fetched fund position data:', data)
       setFundPositionData(data.data)
     } catch (error) {
       console.error('Error fetching fund position data:', error)
     }
-  }
+  }, [])
+
   React.useEffect(() => {
     fetchFundPosition()
-  }, [])
+  }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []
 
-    const cashBalance = fundPositionData.cashBalance.reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
-      0
-    )
-    const bankBalance = fundPositionData.BankBalance.flat().reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
-      0
-    )
-    const totalBalance = cashBalance + bankBalance
+    console.log('Processing fund position data:', fundPositionData)
 
-    const latestDate =
-      fundPositionData.cashBalance[0]?.date ||
-      fundPositionData.BankBalance[0]?.[0]?.date ||
-      ''
-    const [month, day, year] = latestDate.split('/')
+    const dates = ['03/03/2025', '02/28/2025'] // We know there are two dates
 
-    return [
-      {
-        date: `${month}'${year.slice(-2)}`,
-        netAmount: totalBalance,
-      },
-    ]
+    return dates.map((date) => {
+      const cashBalance = fundPositionData.cashBalance
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      const bankBalance = fundPositionData.BankBalance.flat()
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
+
+      const [month, day, year] = date.split('/')
+      return {
+        date: `${month}/${day}`,
+        cashBalance,
+        bankBalance,
+        netBalance: cashBalance + bankBalance,
+      }
+    })
   }, [fundPositionData])
+
+  console.log('Processed fund position data:', processedFundPositionData)
 
   return (
     <div className="p-6 space-y-6">
@@ -257,9 +268,17 @@ export default function Dashboard() {
           <CardContent>
             <ChartContainer
               config={{
-                netAmount: {
-                  label: 'Net Amount',
+                cashBalance: {
+                  label: 'Cash Balance',
                   color: 'hsl(252, 100%, 70%)',
+                },
+                bankBalance: {
+                  label: 'Bank Balance',
+                  color: 'hsl(180, 100%, 70%)',
+                },
+                netBalance: {
+                  label: 'Net Balance',
+                  color: 'hsl(0, 100%, 70%)',
                 },
               }}
             >
@@ -273,13 +292,36 @@ export default function Dashboard() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
+                <Legend />
                 <Line
                   type="monotone"
-                  dataKey="netAmount"
+                  dataKey="cashBalance"
                   stroke="hsl(252, 100%, 70%)"
                   strokeWidth={2}
                   dot={{
                     stroke: 'hsl(252, 100%, 70%)',
+                    fill: 'white',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="bankBalance"
+                  stroke="hsl(180, 100%, 70%)"
+                  strokeWidth={2}
+                  dot={{
+                    stroke: 'hsl(180, 100%, 70%)',
+                    fill: 'white',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="netBalance"
+                  stroke="hsl(0, 100%, 70%)"
+                  strokeWidth={2}
+                  dot={{
+                    stroke: 'hsl(0, 100%, 70%)',
                     fill: 'white',
                     strokeWidth: 2,
                   }}
