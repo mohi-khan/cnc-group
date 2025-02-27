@@ -59,10 +59,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
     try {
       const token =
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMzc2OTk5LCJleHAiOjE3NDA0NjMzOTl9.hkw5KGg7HD7CQsT_byrvxlLWbxjIDQnS2i5q_abCjUg' // Replace with actual auth token
-      const response = await updateBudgetMaster(
-        item.budgetId,
-        token
-      )
+      const response = await updateBudgetMaster(item.budgetId, token)
 
       if (response?.data) {
         console.log('Budget updated successfully:', {
@@ -80,103 +77,59 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
   }
 
   return (
-    // <Dialog>
-    //   <DialogTrigger asChild>
-    //     <Button variant="ghost" size="sm">
-    //       <Edit className="h-4 w-4 mr-2" />
-    //       Edit
-    //     </Button>
-    //   </DialogTrigger>
-    //   <DialogContent>
-    //     <DialogHeader>
-    //       <DialogTitle>Edit Budget</DialogTitle>
-    //     </DialogHeader>
-    //     <form onSubmit={handleSubmit} className="mt-4">
-    //       <label className="block mb-2">
-    //         Budget Name:
-    //         <input
-    //           type="text"
-    //           value={name}
-    //           onChange={(e) => setName(e.target.value)}
-    //           className="border rounded p-1 w-full"
-    //         />
-    //       </label>
-    //       <label className="block mb-2">
-    //         From Date:
-    //         <input
-    //           type="date"
-    //           value={fromDate}
-    //           onChange={(e) => setFromDate(e.target.value)}
-    //           className="border rounded p-1 w-full"
-    //         />
-    //       </label>
-    //       <label className="block mb-2">
-    //         End Date:
-    //         <input
-    //           type="date"
-    //           value={toDate}
-    //           onChange={(e) => setToDate(e.target.value)}
-    //           className="border rounded p-1 w-full"
-    //         />
-    //       </label>
-    //       <Button type="submit" variant="default" className="mt-2">
-    //         Save Changes
-    //       </Button>
-    //     </form>
-    //   </DialogContent>
-    // </Dialog>
-
     <Dialog>
-    <DialogTrigger asChild>
-      <Button variant="ghost" size="sm">
-        <Edit className="h-4 w-4 mr-2" />
-        Edit
-      </Button>
-    </DialogTrigger>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Edit Budget</DialogTitle>
-        <DialogDescription>Modify the details of your budget below.</DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="mt-4">
-        <label className="block mb-2">
-          Budget Name:
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border rounded p-1 w-full"
-            required
-          />
-        </label>
-        <label className="block mb-2">
-          From Date:
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="border rounded p-1 w-full"
-            required
-          />
-        </label>
-        <label className="block mb-2">
-          End Date:
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="border rounded p-1 w-full"
-            required
-          />
-        </label>
-        <Button type="submit" variant="default" className="mt-2">
-          Save Changes
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
         </Button>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
-};
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Budget</DialogTitle>
+          <DialogDescription>
+            Modify the details of your budget below.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="mt-4">
+          <label className="block mb-2">
+            Budget Name:
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="border rounded p-1 w-full"
+              required
+            />
+          </label>
+          <label className="block mb-2">
+            From Date:
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border rounded p-1 w-full"
+              required
+            />
+          </label>
+          <label className="block mb-2">
+            End Date:
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border rounded p-1 w-full"
+              required
+            />
+          </label>
+          <Button type="submit" variant="default" className="mt-2">
+            Save Changes
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name')
@@ -306,6 +259,3 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
 }
 
 export default CreateBudgetList
-
-
-

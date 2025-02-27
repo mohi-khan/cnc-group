@@ -15,35 +15,25 @@ export async function getAllCoa() {
   })
 }
 
-// export async function createBudgetMaster(data: { token: string },
-//   budgetMasterData: CreateBudgetMasterType
-// ) {
-//   return fetchApi<{ id: number }>({
-//     url: 'api/budget/createBudget',
-//     method: 'POST',
-//     body: budgetMasterData,
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `${data.token}`,
-//     },
-//   })
-// }
+//Create Budget Master API
 export async function createBudgetMaster(
   data: { token: string },
   budgetMasterData: CreateBudgetMasterType
 ) {
   return fetchApi<{ id: number }>({
-    url: "api/budget/createBudget",
-    method: "POST",
+    url: 'api/budget/createBudget',
+    method: 'POST',
     body: budgetMasterData,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
     },
   })
 }
 
-export async function createBudgetDetails(data: { token: string },
+//Create Budget Details API
+export async function createBudgetDetails(
+  data: { token: string },
   budgetDetailsData: CreateBudgetItemsType[]
 ) {
   return fetchApi<{ success: boolean }>({
@@ -56,20 +46,6 @@ export async function createBudgetDetails(data: { token: string },
     },
   })
 }
-// export async function createBudgetDetails(
-//   data: { token: string },
-//   budgetDetailsData: CreateBudgetItemsType[]
-// ) {
-//   return fetchApi<{ success: boolean }>({
-//     url: "api/budget/createBudgetItems",
-//     method: "POST",
-//     body: budgetDetailsData,
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `${data.token}`, // 🔥 Fixed: Added "Bearer "
-//     },
-//   })
-// }
 
 // Get All Master Budget API
 export async function getAllMasterBudget(data: { token: string }) {
@@ -83,9 +59,12 @@ export async function getAllMasterBudget(data: { token: string }) {
   })
 }
 
-
 export async function getAllBudgetDetails(id: number, token: string) {
-  console.log('Fetching budget details for ID and tokekn from budget api:', id, token)
+  console.log(
+    'Fetching budget details for ID and tokekn from budget api:',
+    id,
+    token
+  )
   return fetchApi<BudgetItems[]>({
     url: `api/budget/getBudget/${id}`,
     method: 'GET',
@@ -97,10 +76,7 @@ export async function getAllBudgetDetails(id: number, token: string) {
 }
 
 //update budget master api
-export async function updateBudgetMaster(
-  budgetId: number,
-  token: string
-) {
+export async function updateBudgetMaster(budgetId: number, token: string) {
   return fetchApi<MasterBudgetType[]>({
     url: `api/budget/updateBudget/${budgetId}`,
     method: 'POST',
