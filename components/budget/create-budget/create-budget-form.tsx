@@ -34,9 +34,13 @@ interface BudgetLine {
 
 interface CreateBudgetFormProps {
   token: string
+  refreshBudgetList: () => void
 }
 
-const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
+const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
+  token,
+  refreshBudgetList,
+}) => {
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([
     {
       id: Math.floor(Math.random() * 1000000),
@@ -146,7 +150,6 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
       const masterData = masterResponse.data.data || masterResponse.data
       // Try both keys: "id" or "budgetId"
       const budgetId = masterData.id || masterData.budgetId
-
       console.log('Master budget response:', masterData)
 
       if (!budgetId) {
@@ -179,6 +182,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({ token }) => {
         title: 'Success',
         description: 'Budget created successfully',
       })
+      refreshBudgetList()
     } catch (error: any) {
       console.error('Error creating budget:', error)
       toast({
