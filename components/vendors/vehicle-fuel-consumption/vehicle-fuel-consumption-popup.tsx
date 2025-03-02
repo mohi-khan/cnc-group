@@ -77,38 +77,6 @@ const VehicleFuelConsumptionPopUp: React.FC<
               Vehicle
             </label>
 
-            {/* <Controller
-              control={control}
-              name="vehicleId"
-              rules={{ required: 'Vehicle is required' }}
-              render={({ field }) => (
-                <CustomCombobox
-                  items={vehicles.map((vehicle) => ({
-                    id: vehicle.vehicleNo.toString(),
-                    name: vehicle.vehicleDescription || 'Unnamed Vehicle',
-                  }))}
-                  value={
-
-                    field.value
-                      ? {
-                          id: field.value.toString(),
-                          name:
-                            vehicles.find(
-                              (v) =>
-                                v.vehicleNo.toString() ===
-                                field.value.toString()
-                            )?.vehicleDescription || '',
-                        }
-                      : null
-                  }
-                  onChange={(value) => field.onChange(value ? value.id : null)}
-                  placeholder={
-                    loading ? 'Loading vehicles...' : 'Select a vehicle'
-                  }
-                  disabled={loading}
-                />
-              )}
-            /> */}
             <Controller
               control={control}
               name="vehicleId"
@@ -180,7 +148,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
             )}
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">
               Total Consumption
             </label>
@@ -195,7 +163,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
                 {errors.totalConsumption.message}
               </p>
             )}
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
