@@ -54,7 +54,7 @@ const PaymentRequisition = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Payment Requisition</h1>
-        {requisitions[0]?.status === 'GRN Completed' && (
+        {/* {requisitions[0]?.status === 'GRN Completed' && (
           <Button onClick={() => setIsPopupOpen(true)}>Create Invoice</Button>
         )}
         {requisitions[0]?.status === 'Invoice Approved' && (
@@ -62,7 +62,7 @@ const PaymentRequisition = () => {
         )}
         {requisitions[0]?.status === 'Purchase Orderd' && (
           <Button onClick={() => setIsPopupOpen(true)}>Create Advance</Button>
-        )}
+        )} */}
       </div>
       {loading ? (
         <p>Loading...</p>
