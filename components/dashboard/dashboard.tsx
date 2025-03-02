@@ -5,14 +5,15 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  Area,
-  AreaChart,
   XAxis,
   YAxis,
+  Tooltip,
+  Legend,
+  Area,
+  AreaChart,
   Pie,
   PieChart,
   Cell,
-  Tooltip,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
 
@@ -31,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getFundPosition } from '@/api/dashboard-api'
+import type { FundPositionType } from '@/utils/type'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -50,46 +52,58 @@ const costBreakdownData = [
 ]
 
 export default function Dashboard() {
-  const [fundPositionData, setFundPositionData] = React.useState<{ date: string; netAmount: number }[]>([])
+  const [fundPositionData, setFundPositionData] =
+    React.useState<FundPositionType | null>(null)
 
-  React.useEffect(() => {
-    async function fetchFundPosition() {
-      try {
-        const data = await getFundPosition(77, '2025-02-19', '02')
-        const formattedData = processFundPositionData(data)
-        console.log("🚀 ~ fetchFundPosition ~ formattedData:", formattedData)
-        console.log("🚀 ~ fetchFundPosition ~ data:", data)
-        setFundPositionData(formattedData)
-      } catch (error) {
-        console.error('Error fetching fund position data:', error)
-      }
+  const fetchFundPosition = React.useCallback(async () => {
+    try {
+      const data = await getFundPosition(77, '2025-02-19', '02')
+      console.log('Fetched fund position data:', data)
+      setFundPositionData(data.data)
+    } catch (error) {
+      console.error('Error fetching fund position data:', error)
     }
-
-    fetchFundPosition()
   }, [])
 
-  const processFundPositionData = (data) => {
-    const cashBalance = data.cashBalance.reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
-      0
-    )
-    const bankBalance = data.BankBalance.flat().reduce(
-      (sum, item) => sum + (Number.parseFloat(item.balance) || 0),
-      0
-    )
-    const totalBalance = cashBalance + bankBalance
+  React.useEffect(() => {
+    fetchFundPosition()
+  }, [fetchFundPosition])
 
-    const latestDate =
-      data.cashBalance[0]?.date || data.BankBalance[0]?.[0]?.date || ''
-    const [month, day, year] = latestDate.split('/')
+  const processedFundPositionData = React.useMemo(() => {
+    if (!fundPositionData) return []
 
-    return [
-      {
-        date: `${month}'${year.slice(-2)}`,
-        netAmount: totalBalance,
-      },
-    ]
-  }
+    console.log('Processing fund position data:', fundPositionData)
+
+    const dates = ['03/03/2025', '02/28/2025'] // We know there are two dates
+
+    return dates.map((date) => {
+      const cashBalance = fundPositionData.cashBalance
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      const bankBalance = fundPositionData.BankBalance.flat()
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
+
+      const [month, day, year] = date.split('/')
+      return {
+        date: `${month}/${day}`,
+        cashBalance,
+        bankBalance,
+        netBalance: cashBalance + bankBalance,
+      }
+    })
+  }, [fundPositionData])
+
+  console.log('Processed fund position data:', processedFundPositionData)
 
   return (
     <div className="p-6 space-y-6">
@@ -254,14 +268,22 @@ export default function Dashboard() {
           <CardContent>
             <ChartContainer
               config={{
-                netAmount: {
-                  label: 'Net Amount',
+                cashBalance: {
+                  label: 'Cash Balance',
                   color: 'hsl(252, 100%, 70%)',
+                },
+                bankBalance: {
+                  label: 'Bank Balance',
+                  color: 'hsl(180, 100%, 70%)',
+                },
+                netBalance: {
+                  label: 'Net Balance',
+                  color: 'hsl(0, 100%, 70%)',
                 },
               }}
             >
               <LineChart
-                data={fundPositionData}
+                data={processedFundPositionData}
                 margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
                 width={600}
                 height={300}
@@ -270,13 +292,36 @@ export default function Dashboard() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
+                <Legend />
                 <Line
                   type="monotone"
-                  dataKey="netAmount"
+                  dataKey="cashBalance"
                   stroke="hsl(252, 100%, 70%)"
                   strokeWidth={2}
                   dot={{
                     stroke: 'hsl(252, 100%, 70%)',
+                    fill: 'white',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="bankBalance"
+                  stroke="hsl(180, 100%, 70%)"
+                  strokeWidth={2}
+                  dot={{
+                    stroke: 'hsl(180, 100%, 70%)',
+                    fill: 'white',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="netBalance"
+                  stroke="hsl(0, 100%, 70%)"
+                  strokeWidth={2}
+                  dot={{
+                    stroke: 'hsl(0, 100%, 70%)',
                     fill: 'white',
                     strokeWidth: 2,
                   }}
