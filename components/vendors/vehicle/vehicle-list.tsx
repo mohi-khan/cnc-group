@@ -134,7 +134,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
             <SortableTableHead column="purchaseDate">
               Purchase Date
             </SortableTableHead>
-            <SortableTableHead column="assetId">Asset ID</SortableTableHead>
+            <SortableTableHead column="assetId">Asset Name</SortableTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -143,7 +143,10 @@ export const VehicleList: React.FC<VehicleListProps> = ({
               <TableCell>{vehicle.vehicleNo}</TableCell>
               <TableCell>{getCostCenterName(vehicle.costCenterId)}</TableCell>
               <TableCell>{vehicle.vehicleDescription}</TableCell>
-              <TableCell>{vehicle.purchaseDate}</TableCell>
+              <TableCell>
+                {new Date(vehicle.purchaseDate).toLocaleDateString()}
+               
+              </TableCell>
               <TableCell>{getAssetName(vehicle.assetId)}</TableCell>
             </TableRow>
           ))}

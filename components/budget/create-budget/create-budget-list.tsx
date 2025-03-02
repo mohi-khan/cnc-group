@@ -50,7 +50,9 @@ const formatDate = (isoString: string) => {
 
 const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
   const [name, setName] = useState(item.name || '')
-  const [fromDate, setFromDate] = useState(formatDate(item.fromDate))
+  const [fromDate, setFromDate] = useState(() => {
+    return new Date().toISOString().split('T')[0] // Extracts YYYY-MM-DD
+  })
   const [toDate, setToDate] = useState(formatDate(item.toDate))
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -102,6 +104,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
               required
             />
           </label>
+
           <label className="block mb-2">
             From Date:
             <input
@@ -112,6 +115,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
               required
             />
           </label>
+
           <label className="block mb-2">
             End Date:
             <input
@@ -207,8 +211,13 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
                   {item.name}
                 </Link>
               </TableCell>
-              <TableCell>{item.fromDate}</TableCell>
-              <TableCell>{item.toDate}</TableCell>
+              <TableCell>
+                {new Date(item.fromDate).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                {' '}
+                {new Date(item.toDate).toLocaleDateString()}
+              </TableCell>
               <TableCell>
                 <EditBudgetDialog item={item} />
               </TableCell>

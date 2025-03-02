@@ -144,7 +144,10 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
               <TableCell>{data.gasConsumption}</TableCell>
               <TableCell>{data.totalConsumption}</TableCell>
               <TableCell>{data.kmrsPerLitr}</TableCell>
-              <TableCell>{data.transDate}</TableCell>
+              <TableCell>
+                {' '}
+                {new Date(data.transDate).toLocaleDateString()} 
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

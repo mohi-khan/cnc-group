@@ -173,8 +173,9 @@ const SingleBudgetItemsDetails = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentItems.map((item, ) => (
+              {currentItems.map((item) => (
                 <TableRow key={item.id}>
+                  <TableCell>{item.id}</TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.budgetAmount}</TableCell>
                   <TableCell>

@@ -265,7 +265,6 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
               <TableRow>
                 <TableHead>Account Head</TableHead>
                 <TableHead className="text-right">Budgeted Amount</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -319,16 +318,6 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
                       className="w-full text-right"
                     />
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Input
-                      type="number"
-                      value={line.actual ?? ''}
-                      onChange={(e) =>
-                        updateBudgetLine(line.id, 'actual', e.target.value)
-                      }
-                      className="w-full text-right"
-                    />
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -336,7 +325,9 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
           <Button type="button" variant="outline" onClick={addBudgetLine}>
             Add Budget Line
           </Button>
-          <Button type="submit">Create Budget</Button>
+          <Button className="ml-2" type="submit">
+            Final Posting
+          </Button>
         </form>
       </CardContent>
     </Card>
