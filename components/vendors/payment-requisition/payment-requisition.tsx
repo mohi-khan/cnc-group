@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import PaymentRequisitionList from './payment-requisition-list'
-import PaymentRequisitionPopup from './payment-requisition-popup'
 import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
 import {
   createPaymentRequisition,
   getAllPaymentRequisition,
 } from '@/api/payment-requisition-api'
+import { PaymentRequisitionPopup } from './payment-requisition-popup'
 
 const PaymentRequisition = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)

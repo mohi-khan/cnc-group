@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { approveInvoice } from '@/api/payment-requisition-api'
+import { PaymentRequisitionPopup } from './payment-requisition-popup'
 
 interface PaymentRequisitionListProps {
   requisitions: GetPaymentOrder[]
@@ -39,10 +40,18 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   const [selectedRequisition, setSelectedRequisition] =
     useState<GetPaymentOrder | null>(null)
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false)
+  const [paymentPopupOpen, setPaymentPopupOpen] = useState(false)
+  const [currentStatus, setCurrentStatus] = useState<string>('')
 
   const handleApproveClick = (requisition: GetPaymentOrder) => {
     setSelectedRequisition(requisition)
     setApprovalDialogOpen(true)
+  }
+
+  const handleActionClick = (requisition: GetPaymentOrder, status: string) => {
+    setSelectedRequisition(requisition)
+    setCurrentStatus(status)
+    setPaymentPopupOpen(true)
   }
 
   const handleApproveInvoice = async () => {
@@ -127,13 +136,28 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                   </Button>
                 )}
                 {req.status === 'Invoice Approved' && (
-                  <Button size="sm">Create Payment</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'Invoice Approved')}
+                  >
+                    Create Payment
+                  </Button>
                 )}
                 {req.status === 'GRN Completed' && (
-                  <Button size="sm">Create Invoice</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'GRN Completed')}
+                  >
+                    Create Invoice
+                  </Button>
                 )}
                 {req.status === 'Purchase Order' && (
-                  <Button size="sm">Create Advance</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'Purchase Order')}
+                  >
+                    Create Advance
+                  </Button>
                 )}
               </TableCell>
             </TableRow>
@@ -165,6 +189,18 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Payment Requisition Popup */}
+      {selectedRequisition && (
+        <PaymentRequisitionPopup
+          isOpen={paymentPopupOpen}
+          onOpenChange={setPaymentPopupOpen}
+          requisition={selectedRequisition}
+          token={token}
+          onSuccess={onRefresh}
+          status={currentStatus}
+        />
+      )}
     </div>
   )
 }
