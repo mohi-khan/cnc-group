@@ -1,14 +1,97 @@
+'use client'
+
+import { useState } from 'react'
 import type React from 'react'
 import type { GetPaymentOrder } from '@/utils/type'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useToast } from '@/hooks/use-toast'
+import { approveInvoice } from '@/api/payment-requisition-api'
+import { PaymentRequisitionPopup } from './payment-requisition-popup'
 
 interface PaymentRequisitionListProps {
   requisitions: GetPaymentOrder[]
+  token: string
+  onRefresh: () => void
 }
 
 const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   requisitions,
+  token,
+  onRefresh,
 }) => {
+  const { toast } = useToast()
+  const [isApproving, setIsApproving] = useState(false)
+  const [selectedRequisition, setSelectedRequisition] =
+    useState<GetPaymentOrder | null>(null)
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false)
+  const [paymentPopupOpen, setPaymentPopupOpen] = useState(false)
+  const [currentStatus, setCurrentStatus] = useState<string>('')
+
+  const handleApproveClick = (requisition: GetPaymentOrder) => {
+    setSelectedRequisition(requisition)
+    setApprovalDialogOpen(true)
+  }
+
+  const handleActionClick = (requisition: GetPaymentOrder, status: string) => {
+    setSelectedRequisition(requisition)
+    setCurrentStatus(status)
+    setPaymentPopupOpen(true)
+  }
+
+  const handleApproveInvoice = async () => {
+    if (!selectedRequisition) return
+
+    try {
+      setIsApproving(true)
+
+      // Prepare the data for approval
+      const approvalData = {
+        invoiceId: '5',
+        approvalStatus: 'Approved',
+        approvedBy: '1',
+        poId: '10',
+      }
+
+      await approveInvoice(approvalData, token)
+
+      // Only show success toast and close dialog if API call succeeds
+      toast({
+        title: 'Invoice approved',
+        description: `Invoice for PO ${selectedRequisition.poNo} has been approved successfully.`,
+      })
+
+      // Close dialog and refresh data
+      setApprovalDialogOpen(false)
+      onRefresh()
+    } catch (error) {
+      console.error('Error approving invoice:', error)
+      toast({
+        title: 'Approval failed',
+        description:
+          'There was an error approving the invoice. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsApproving(false)
+    }
+  }
+
   if (!requisitions || requisitions.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500 text-xl font-light">
@@ -18,57 +101,106 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {requisitions.map((req, index) => (
-        <div className=" border rounded-md p-6" key={req.id}>
-          <h2 className="text-3xl font-bold text-center pb-10">
-            {req.companyName}
-          </h2>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">{req.poNo}</h2>
-            <span className='flex flex-col items-center gap-5'>
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-black">
-                {req.status}
-              </span>
-              {req.status === 'Invoice Created' && (
-                <Button>Approve Invoice</Button>
-              )}
-              {req.status === 'Invoice Approved' && (
-                <Button>Create Payment</Button>
-              )}
-              {req.status === 'GRN Completed' && (
-                <Button>Create Invoice</Button>
-              )}
-              {req.status === 'Purchase Order' && (
-                <Button>Create Advance</Button>
-              )}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <p className="text-sm text-gray-500">Vendor</p>
-              <p className="font-medium">{req.vendorName}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Amount</p>
-              <p className="font-medium">${req.amount}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Purchase Date</p>
-              <p className="font-medium">
+    <div className="w-full">
+      <Table className="border shadow-md">
+        <TableHeader className="border bg-slate-200 shadow-md">
+          <TableRow>
+            <TableHead>Company Name</TableHead>
+            <TableHead>PO Number</TableHead>
+            <TableHead>Vendor</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Purchase Date</TableHead>
+            <TableHead>Req No</TableHead>
+            <TableHead>Prepared By</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {requisitions.map((req) => (
+            <TableRow key={req.id}>
+              <TableCell className="font-medium">{req.companyName}</TableCell>
+              <TableCell>{req.poNo}</TableCell>
+              <TableCell>{req.vendorName}</TableCell>
+              <TableCell>${req.amount}</TableCell>
+              <TableCell>
                 {new Date(req.PurDate).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Req No</p>
-              <p className="font-medium">{req.reqNo}</p>
-            </div>
-          </div>
-          <div className="flex justify-between items-center text-sm text-gray-500">
-            <p>Prepared by: {req.preparedBy}</p>
-          </div>
-        </div>
-      ))}
+              </TableCell>
+              <TableCell>{req.reqNo}</TableCell>
+              <TableCell>{req.preparedBy}</TableCell>
+              <TableCell>{req.status}</TableCell>
+              <TableCell className="text-right">
+                {req.status === 'Invoice Created' && (
+                  <Button size="sm" onClick={() => handleApproveClick(req)}>
+                    Approve Invoice
+                  </Button>
+                )}
+                {req.status === 'Invoice Approved' && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'Invoice Approved')}
+                  >
+                    Create Payment
+                  </Button>
+                )}
+                {req.status === 'GRN Completed' && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'GRN Completed')}
+                  >
+                    Create Invoice
+                  </Button>
+                )}
+                {req.status === 'Purchase Order' && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleActionClick(req, 'Purchase Order')}
+                  >
+                    Create Advance
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Approval Confirmation Dialog */}
+      <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Invoice</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to approve the invoice for PO{' '}
+              {selectedRequisition?.poNo}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setApprovalDialogOpen(false)}
+              disabled={isApproving}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleApproveInvoice} disabled={isApproving}>
+              {isApproving ? 'Approving...' : 'Approve'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Requisition Popup */}
+      {selectedRequisition && (
+        <PaymentRequisitionPopup
+          isOpen={paymentPopupOpen}
+          onOpenChange={setPaymentPopupOpen}
+          requisition={selectedRequisition}
+          token={token}
+          onSuccess={onRefresh}
+          status={currentStatus}
+        />
+      )}
     </div>
   )
 }

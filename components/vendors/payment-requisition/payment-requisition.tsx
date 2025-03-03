@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import PaymentRequisitionList from './payment-requisition-list'
-import PaymentRequisitionPopup from './payment-requisition-popup'
 import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
 import {
   createPaymentRequisition,
   getAllPaymentRequisition,
 } from '@/api/payment-requisition-api'
+import { PaymentRequisitionPopup } from './payment-requisition-popup'
 
 const PaymentRequisition = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
@@ -54,22 +53,13 @@ const PaymentRequisition = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Payment Requisition</h1>
-        {requisitions[0]?.status === 'GRN Completed' && (
-          <Button onClick={() => setIsPopupOpen(true)}>Create Invoice</Button>
-        )}
-        {requisitions[0]?.status === 'Invoice Approved' && (
-          <Button onClick={() => setIsPopupOpen(true)}>Create Payment</Button>
-        )}
-        {requisitions[0]?.status === 'Purchase Orderd' && (
-          <Button onClick={() => setIsPopupOpen(true)}>Create Advance</Button>
-        )}
       </div>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <PaymentRequisitionList requisitions={requisitions} />
+        <PaymentRequisitionList requisitions={requisitions} token={token} onRefresh={fetchRequisitions} />
       )}
       <PaymentRequisitionPopup
         status={requisitions[0]?.status}
