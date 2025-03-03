@@ -39,7 +39,7 @@ export async function createInvoice(
       Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: data,
   })
 }
 
@@ -54,7 +54,7 @@ export async function createAdvance(
       Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: data,
   })
 }
 
@@ -69,7 +69,7 @@ export async function approveInvoice(
       Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: data,
   })
 }
 
@@ -84,6 +84,6 @@ export async function createPaymentRequisition(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: data,
   })
 }

@@ -55,12 +55,13 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
       const approvalData = {
         invoiceId: '5',
         approvalStatus: 'Approved',
-        approvedBy: '61',
+        approvedBy: '1',
         poId: '10',
       }
 
       await approveInvoice(approvalData, token)
 
+      // Only show success toast and close dialog if API call succeeds
       toast({
         title: 'Invoice approved',
         description: `Invoice for PO ${selectedRequisition.poNo} has been approved successfully.`,
