@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Form } from '@/components/ui/form'
@@ -23,7 +23,7 @@ import {
   getAllResPartners,
 } from '@/api/bank-vouchers-api'
 import { z } from 'zod'
-import { createJournalEntryWithDetails } from '@/api/vouchers-api'
+import { createJournalEntryWithDetails, getAllVoucher } from '@/api/vouchers-api'
 
 interface PaymentRequisitionPopupProps {
   isOpen: boolean
@@ -47,6 +47,15 @@ export function PaymentRequisitionPopup({
   const [validationError, setValidationError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const getCompanyIds = useCallback((data: any[]): number[] => {
+      return data.map((company) => company.company.companyId)
+    }, [])
+  
+    const getLocationIds = useCallback((data: any[]): number[] => {
+      return data.map((location) => location.location.locationId)
+    }, [])
+
   interface FormState {
     companies: any[]
     locations: any[]
@@ -85,7 +94,7 @@ export function PaymentRequisitionPopup({
       locationId: requisition?.locationId || 0,
       currencyId: 1,
       amountTotal: requisition?.amount || 0,
-      createdBy: 0,
+      createdBy: 60,
       notes: `Payment for PO: ${requisition?.poNo || ''}, Vendor: ${requisition?.vendorName || ''}`,
       poId: requisition?.id || null,
     },
@@ -94,14 +103,14 @@ export function PaymentRequisitionPopup({
         accountId: 0, // Account payable
         debit: requisition?.amount || 0,
         credit: 0,
-        createdBy: 0,
+        createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
       },
       {
         accountId: 0, // Bank or cash account
         debit: 0,
         credit: requisition?.amount || 0,
-        createdBy: 0,
+        createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
       },
     ],
@@ -119,8 +128,8 @@ export function PaymentRequisitionPopup({
         ...defaultValues,
         journalEntry: {
           ...defaultValues.journalEntry,
-          companyId: requisition.companyId || 0,
-          locationId: requisition.locationId || 0,
+          companyId: requisition.companyId || 75,
+          locationId: requisition.locationId || 41,
           amountTotal: requisition.amount || 0,
           notes: `Payment for PO: ${requisition.poNo || ''}, Vendor: ${requisition.vendorName || ''}`,
         },
@@ -129,14 +138,14 @@ export function PaymentRequisitionPopup({
             accountId: 0, // Account payable
             debit: requisition.amount || 0,
             credit: 0,
-            createdBy: 0,
+            createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
           },
           {
             accountId: 0, // Bank or cash account
             debit: 0,
             credit: requisition.amount || 0,
-            createdBy: 0,
+            createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
           },
         ],
@@ -222,12 +231,12 @@ export function PaymentRequisitionPopup({
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
         amountTotal: totalDetailsAmount,
-        createdBy: user?.userId ?? 0,
+        createdBy: user?.userId ?? 60,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         notes: detail.notes || '',
-        createdBy: user?.userId ?? 0,
+        createdBy: user?.userId ?? 60,
       })),
     }
 
@@ -254,7 +263,7 @@ export function PaymentRequisitionPopup({
           resPartnerId: null,
           bankaccountid: formState.selectedBankAccount?.id,
           notes: updatedValues.journalEntry.notes || '',
-          createdBy: user?.userId ?? 0,
+          createdBy: user?.userId ?? 60,
         },
       ],
     }
@@ -271,8 +280,6 @@ export function PaymentRequisitionPopup({
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
-      // const mycompanies = getCompanyIds(formState.companies)
-      // const mylocations = getLocationIds(formState.locations)
 
       console.log('Voucher is created successfully', response.data)
       toast({
@@ -300,7 +307,7 @@ export function PaymentRequisitionPopup({
         accountId: 0,
         debit: 0,
         credit: 0,
-        createdBy: 0,
+        createdBy: 60,
       },
     ])
   }
