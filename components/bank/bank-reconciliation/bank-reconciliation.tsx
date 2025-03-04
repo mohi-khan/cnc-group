@@ -24,8 +24,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   getAllBankAccounts,
   getBankReconciliations,
-  updateBankReconciliationComments,
-  setReconciled,
+  updateBankReconciliation,
 } from '@/api/bank-reconciliation-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
@@ -102,18 +101,21 @@ export const BankReconciliation = () => {
     }
   }
 
+  // Update the handleReconciliationUpdate function
   const handleReconciliationUpdate = async (
     id: number,
-    reconciled: boolean,
+    reconciled: number, // Changed from boolean to number
     comments: string
   ) => {
     try {
       setLoading(true)
-      await setReconciled(id, reconciled)
-      await updateBankReconciliationComments(id, comments)
+      // Update both reconciled status and comments in a single API call
+      await updateBankReconciliation(id, reconciled, comments)
+
+      // Update local state
       setReconciliations((prevReconciliations) =>
         prevReconciliations.map((r) =>
-          r.id === id ? { ...r, reconciled: reconciled ? 1 : 0, comments } : r
+          r.id === id ? { ...r, reconciled, comments } : r
         )
       )
       setEditingId(null)
@@ -131,6 +133,36 @@ export const BankReconciliation = () => {
       setLoading(false)
     }
   }
+
+  // Update the updateLocalReconciliation function
+  const updateLocalReconciliation = (
+    id: number,
+    field: 'reconciled' | 'comments',
+    value: any
+  ) => {
+    setReconciliations((prevReconciliations) =>
+      prevReconciliations.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              [field]:
+                field === 'reconciled'
+                  ? value
+                    ? 1
+                    : 0 // Convert to 1 or 0 for reconciled field
+                  : value,
+            }
+          : r
+      )
+    )
+  }
+
+  // Helper function to toggle edit mode for a reconciliation
+  const toggleEditMode = (id: number) => {
+    setEditingId(id === editingId ? null : id)
+  }
+
+  // Helper function to update local reconciliation data while editing
 
   return (
     <Form {...form}>
@@ -229,44 +261,50 @@ export const BankReconciliation = () => {
                   <TableCell>{reconciliation.checkNo}</TableCell>
                   <TableCell>{reconciliation.amount}</TableCell>
                   <TableCell>{reconciliation.type}</TableCell>
+                  {/* Update the Checkbox in the table */}
                   <TableCell>
-                    <Checkbox
-                      checked={reconciliation.reconciled === 1}
-                      onCheckedChange={(checked) =>
-                        handleReconciliationUpdate(
-                          reconciliation.id,
-                          checked === true,
-                          reconciliation.comments || ''
-                        )
-                      }
-                    />
+                    {editingId === reconciliation.id ? (
+                      <Checkbox
+                        checked={reconciliation.reconciled === 1}
+                        onCheckedChange={(checked) =>
+                          updateLocalReconciliation(
+                            reconciliation.id,
+                            'reconciled',
+                            checked ? 1 : 0 // Convert to 1 or 0
+                          )
+                        }
+                      />
+                    ) : reconciliation.reconciled === 1 ? (
+                      'Yes'
+                    ) : (
+                      'No'
+                    )}
                   </TableCell>
                   <TableCell>
                     {editingId === reconciliation.id ? (
                       <Input
                         value={reconciliation.comments || ''}
-                        onChange={(e) => {
-                          const updatedReconciliations = reconciliations.map(
-                            (r) =>
-                              r.id === reconciliation.id
-                                ? { ...r, comments: e.target.value }
-                                : r
+                        onChange={(e) =>
+                          updateLocalReconciliation(
+                            reconciliation.id,
+                            'comments',
+                            e.target.value
                           )
-                          setReconciliations(updatedReconciliations)
-                        }}
+                        }
                       />
                     ) : (
                       reconciliation.comments || ''
                     )}
                   </TableCell>
                   <TableCell>
+                    {/* Update the Button onClick handler */}
                     {editingId === reconciliation.id ? (
                       <Button
                         type="button"
                         onClick={() =>
                           handleReconciliationUpdate(
                             reconciliation.id,
-                            reconciliation.reconciled === 1,
+                            reconciliation.reconciled ?? 0,
                             reconciliation.comments || ''
                           )
                         }
@@ -276,7 +314,7 @@ export const BankReconciliation = () => {
                     ) : (
                       <Button
                         type="button"
-                        onClick={() => setEditingId(reconciliation.id)}
+                        onClick={() => toggleEditMode(reconciliation.id)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

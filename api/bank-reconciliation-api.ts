@@ -26,25 +26,15 @@ export async function getBankReconciliations(
   })
 }
 
-export async function updateBankReconciliationComments(
+export async function updateBankReconciliation(
   id: number,
-  comments: string
+  reconciled: number,
+  comments: string,
 ) {
-  console.log('Updating bank reconciliation comments:', id, comments)
+  console.log("Updating bank reconciliation:", id, reconciled, comments)
   return fetchApi<BankReconciliationType>({
-    url: `api/bank-reconciliation/edit-bank-reconciliations-comment/${id}`,
-    method: 'PATCH',
-    body: { comments },
-  })
-}
-
-export async function setReconciled(id: number, reconciled: boolean) {
-  const url = reconciled
-    ? `api/bank-reconciliation/true-bank-reconciliations/${id}`
-    : `api/bank-reconciliation/false-bank-reconciliations/${id}`
-
-  return fetchApi<BankReconciliationType>({
-    url,
-    method: 'PATCH',
+    url: `api/bank-reconciliation/edit-bank-reconciliation/${id}`,
+    method: "PATCH",
+    body: { reconciled, comments },
   })
 }
