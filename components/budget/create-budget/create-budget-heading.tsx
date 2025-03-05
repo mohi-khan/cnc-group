@@ -18,12 +18,12 @@ const CreateBudgetHeading = ({ onDraft,  onNew }: HeaderProps) => {
         </Button>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={onDraft}>
+        {/* <Button variant="outline" onClick={onDraft}>
           Draft
         </Button>
         <Button variant="default" >
           Final Posting
-        </Button>
+        </Button> */}
       </div>
     </div>
   )

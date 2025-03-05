@@ -34,9 +34,12 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { updateBudgetMaster } from '@/api/budget-api'
+import { CompanyType } from '@/api/company-api'
 
 interface CreateBudgetProps {
   masterBudget: MasterBudgetType[]
+  token: string | null
+  company: CompanyType[]
 }
 
 // Define valid keys of MasterBudgetType for sorting
@@ -48,22 +51,25 @@ const formatDate = (isoString: string) => {
   return isoString ? isoString.split('T')[0] : '' // Extracts only 'yyyy-MM-dd'
 }
 
-const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
+
+
+const EditBudgetDialog: React.FC<{ item: MasterBudgetType; token: string | null }> = ({ item, token }) => {
   const [name, setName] = useState(item.name || '')
-  const [fromDate, setFromDate] = useState(() => {
-    return new Date().toISOString().split('T')[0] // Extracts YYYY-MM-DD
-  })
-  const [toDate, setToDate] = useState(formatDate(item.toDate))
+  const [fromDate, setFromDate] = useState(item.fromDate || '') // Ensure it is never null
+  const [toDate, setToDate] = useState(item.toDate || '') // Ensure it is never null
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
-      const token =
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQwMzc2OTk5LCJleHAiOjE3NDA0NjMzOTl9.hkw5KGg7HD7CQsT_byrvxlLWbxjIDQnS2i5q_abCjUg' // Replace with actual auth token
-      const response = await updateBudgetMaster(item.budgetId, token)
+      if (!token) return
+      const response = await updateBudgetMaster(item.budgetId, token, {
+        name,
+        fromDate,
+        toDate,
+      })
 
-      if (response?.data) {
+      if (response.data) {
         console.log('Budget updated successfully:', {
           id: item.budgetId,
           name,
@@ -89,9 +95,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Budget</DialogTitle>
-          <DialogDescription>
-            Modify the details of your budget below.
-          </DialogDescription>
+          <DialogDescription>Modify the details of your budget below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4">
           <label className="block mb-2">
@@ -109,7 +113,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
             From Date:
             <input
               type="date"
-              value={fromDate}
+              value={fromDate || ''} // Ensure it's never null
               onChange={(e) => setFromDate(e.target.value)}
               className="border rounded p-1 w-full"
               required
@@ -120,7 +124,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
             End Date:
             <input
               type="date"
-              value={toDate}
+              value={toDate || ''} // Ensure it's never null
               onChange={(e) => setToDate(e.target.value)}
               className="border rounded p-1 w-full"
               required
@@ -135,7 +139,8 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType }> = ({ item }) => {
   )
 }
 
-const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
+
+const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget, token, company }) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -198,6 +203,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
         <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
           <TableRow>
             <SortableTableHead column="name">Budget Name</SortableTableHead>
+            <SortableTableHead column="fromDate">Company Name</SortableTableHead>
             <SortableTableHead column="fromDate">From Date</SortableTableHead>
             <SortableTableHead column="toDate">End Date</SortableTableHead>
             <TableHead>Actions</TableHead>
@@ -211,6 +217,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
                   {item.name}
                 </Link>
               </TableCell>
+              <TableCell>{company.find(c => c.companyId === item.companyId)?.companyName}</TableCell>
               <TableCell>
                 {new Date(item.fromDate).toLocaleDateString()}
               </TableCell>
@@ -219,7 +226,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget }) => {
                 {new Date(item.toDate).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                <EditBudgetDialog item={item} />
+                <EditBudgetDialog item={item} token={token} />
               </TableCell>
             </TableRow>
           ))}
