@@ -1,5 +1,6 @@
 'use client'
-import { getAllBudgetDetails } from '@/api/budget-api'
+
+import { getAllBudgetDetails, createBudgetDetails } from '@/api/budget-api'
 import { toast } from '@/hooks/use-toast'
 import { BudgetItems } from '@/utils/type'
 import React, { useEffect, useState, useMemo } from 'react'
@@ -12,58 +13,44 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useParams } from 'next/navigation'
-import { Edit, ArrowUpDown } from 'lucide-react'
+import { Edit, ArrowUpDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Loader from '@/utils/loader'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationLink,
-} from '@/components/ui/pagination'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SmallButton } from '@/components/custom-ui/small-button'
 
 const SingleBudgetItemsDetails = () => {
   const [budgetItems, setBudgetItems] = useState<BudgetItems[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [sortColumn, setSortColumn] = useState<keyof BudgetItems>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage] = useState<number>(10)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const [selectedItem, setSelectedItem] = useState<BudgetItems | null>(null)
   const [editedName, setEditedName] = useState<string>('')
   const [editedAmount, setEditedAmount] = useState<number>(0)
+  const [open, setOpen] = useState(false)
 
   const { id } = useParams()
+  const budgetId = Number(id)
 
   const mainToken = localStorage.getItem('authToken')
-  console.log(
-    '🚀 ~ create budget token in single budget items details:',
-    mainToken
-  )
   const token = `Bearer ${mainToken}`
 
-  async function fetchGetAllBudgetItems(
-    id: number,
-    { token }: { token: string }
-  ) {
+  const fetchGetAllBudgetItems = React.useCallback(async () => {
     setLoading(true)
     try {
-      const response = await getAllBudgetDetails(id, token)
+      const response = await getAllBudgetDetails(budgetId, token)
       if (!response.data) throw new Error('No data received')
       setBudgetItems(response.data)
-      console.log('budget items data: ', response.data)
     } catch (error) {
       console.error('Error getting budget details:', error)
       toast({
@@ -74,194 +61,114 @@ const SingleBudgetItemsDetails = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [budgetId, token])
 
   useEffect(() => {
-    fetchGetAllBudgetItems(Number(id), { token })
-  }, [id, token])
-  // Sorting Function
-  const sortData = (data: BudgetItems[]) => {
-    return [...data].sort((a, b) => {
-      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
-      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }
+    fetchGetAllBudgetItems()
+  }, [fetchGetAllBudgetItems])
 
-  // Handle Sorting
-  const handleSort = (column: keyof BudgetItems) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(column)
-      setSortDirection('asc')
+  const handleAddItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const newItem = {
+      budgetId: budgetId,
+      name: editedName,
+      budgetAmount: editedAmount,
+      accountId: 5, // Replace with the actual account ID from your application
+      createdBy: null,
+      amount: editedAmount,
+      actual: null,
     }
-  }
-
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-
-  const currentItems = useMemo(() => {
-    const sortedData = sortData(budgetItems)
-    return sortedData.slice(indexOfFirstItem, indexOfLastItem)
-  }, [budgetItems, currentPage, sortColumn, sortDirection])
-
-  const totalPages = Math.ceil(budgetItems.length / itemsPerPage)
-
-  // Open Edit Modal
-  const handleEditClick = (item: BudgetItems) => {
-    setSelectedItem(item)
-    setEditedName(item.name)
-    setEditedAmount(item.budgetAmount)
-    setIsEditModalOpen(true)
-  }
-
-  // Handle Save Changes - Updates only the selected item
-  const handleSave = () => {
-    if (selectedItem) {
-      setBudgetItems((prev) =>
-        prev.map((item) =>
-          // Only update the item if its id matches the selected item's id.
-          item.id === selectedItem.id
-            ? { ...item, name: editedName, budgetAmount: editedAmount }
-            : item
-        )
-      )
+    try {
+      const response = await createBudgetDetails({ token }, [newItem])
+      if (response.data) {
+        setBudgetItems((prev) => [...prev, { id: Date.now(), ...newItem }])
+        setEditedName('')
+        setEditedAmount(0)
+        setOpen(false)
+        toast({
+          title: 'Success',
+          description: 'New budget item added successfully',
+        })
+      } else {
+        throw new Error('Failed to create budget item')
+      }
+    } catch (error) {
       toast({
-        title: 'Success',
-        description: 'Budget item updated successfully',
+        title: 'Error',
+        description: 'Failed to create budget item',
       })
-      // Reset edit states after saving.
-      setIsEditModalOpen(false)
-      setSelectedItem(null)
-      setEditedName('')
-      setEditedAmount(0)
+      console.error('Error creating budget item:', error)
     }
   }
 
   return (
     <div className="p-4 w-max-5xl mx-auto">
-      <h2 className="text-lg font-semibold mb-4">Budget Details</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold mb-4">Budget Details</h2>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <SmallButton variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              New Budget Item
+            </SmallButton>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Budget Item</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAddItem}>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Item Name</Label>
+                  <Input
+                    id="name"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    placeholder="Enter item name"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={editedAmount}
+                    onChange={(e) => setEditedAmount(Number(e.target.value))}
+                    placeholder="Enter amount"
+                    required
+                  />
+                </div>
+              </div>
+              <DialogFooter className="mt-4">
+                <Button type="submit">Add Item</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <Loader />
         </div>
-      ) : budgetItems.length > 0 ? (
-        <>
-          <Table className="border shadow-md">
-            <TableHeader className="bg-gray-200 shadow-sm sticky top-28">
-              <TableRow>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort('name')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Name</span>
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort('budgetAmount')}
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Amount</span>
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.id}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.budgetAmount}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditClick(item)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          <div className="mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className={
-                      currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                    }
-                  />
-                </PaginationItem>
-
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={`page-${index + 1}`}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(index + 1)}
-                      isActive={currentPage === index + 1}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? 'pointer-events-none opacity-50'
-                        : ''
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </>
       ) : (
-        <p className="text-gray-500">No budget items found.</p>
-      )}
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Budget Item</DialogTitle>
-            </DialogHeader>
-            <Label>Name</Label>
-            <Input
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-            />
-            <Label>Amount</Label>
-            <Input
-              type="number"
-              value={editedAmount}
-              onChange={(e) => setEditedAmount(Number(e.target.value))}
-            />
-            <DialogFooter>
-              <Button onClick={handleSave}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Table className="border shadow-md">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {budgetItems.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.budgetAmount}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   )

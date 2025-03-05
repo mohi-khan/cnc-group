@@ -923,6 +923,7 @@ export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
 export interface MasterBudgetType {
   budgetId: number
   name: string
+  companyId: number
   fromDate: string // ISO date string
   toDate: string // ISO date string
 }
