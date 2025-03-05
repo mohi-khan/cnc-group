@@ -82,6 +82,7 @@ const CreateBudget = () => {
       {showForm && token && (
         <CreateBudgetForm
           token={token}
+          company={company}
           refreshBudgetList={() => fetchGetAllMasterBudget(token)}
         />
       )}
