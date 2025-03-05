@@ -22,6 +22,7 @@ import {
 } from '@/api/budget-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { AccountsHead } from '@/utils/type'
+import { CompanyType } from '@/api/company-api'
 
 interface BudgetLine {
   id: number
@@ -29,17 +30,19 @@ interface BudgetLine {
   accountId: number
   amount?: number | null
   createdBy?: number | null
-  actual?: number | null
+  // actual?: number | null
 }
 
 interface CreateBudgetFormProps {
   token: string
   refreshBudgetList: () => void
+  company: CompanyType[]
 }
 
 const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
   token,
   refreshBudgetList,
+  company,
 }) => {
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([
     {
@@ -47,7 +50,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       budgetId: 0,
       accountId: 0,
       amount: 0,
-      actual: 0,
+      // actual: 0,
     },
   ])
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
@@ -82,7 +85,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
         budgetId: 0,
         accountId: 0,
         amount: null,
-        actual: null,
+        // actual: null,
       },
     ])
   }
@@ -133,9 +136,11 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       // 1. Create the master budget.
       const masterPayload = {
         budgetName,
+        companyId: parseInt(companyId),
         fromDate: startDate,
         toDate: endDate,
         active: isActive,
+        locked: false,
         createdBy: 1,
       }
 
@@ -161,7 +166,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
         budgetId,
         accountId: line.accountId,
         amount: parseFloat(line.amount?.toString() || '0'),
-        actual: line.actual ? parseFloat(line.actual.toString()) : null,
+        // actual: line.actual ? parseFloat(line.actual.toString()) : null,
         createdBy: 1,
       }))
 
@@ -193,6 +198,16 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
     }
   }
 
+  const [companyId, setCompanyId] = useState<string>(company[0]?.companyId.toString() || '');
+
+  const handleCompanyIdChange = (id: string): void => {
+    setCompanyId(id);
+    setBudgetLines(budgetLines.map(line => ({
+      ...line,
+      companyId: parseInt(id)
+    })));
+  }
+
   return (
     <Card className="shadow-lg border-2 max-w-7xl mx-auto">
       <CardHeader>
@@ -200,7 +215,8 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div >
             <Label htmlFor="budgetName">Budget Name</Label>
             <Input
               id="budgetName"
@@ -209,6 +225,26 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
               required
             />
           </div>
+         <div >
+            <Label htmlFor="companyName">Company Name</Label>
+            <CustomCombobox
+              items={company.map((companies) => ({
+                id: companies.companyId.toString(),
+                name: companies.companyName,
+              }))}
+              value={
+                company
+                  ? {
+                      id: company[0].companyId.toString(),
+                      name: company[0].companyName,
+                    }
+                  : null
+              }
+              onChange={(value: { id: string; name: string } | null) =>
+                setCompanyId(value ? value.id : '')
+              }
+            />          </div>
+         </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Start Date</Label>

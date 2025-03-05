@@ -908,6 +908,7 @@ export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
 //create budget master schema zod
 export const CreateBudgetMasterSchema = z.object({
   budgetName: z.string().min(1).max(80),
+  companyId: z.number().int(),
   fromDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'Invalid date format',
   }),
@@ -915,6 +916,7 @@ export const CreateBudgetMasterSchema = z.object({
     message: 'Invalid date format',
   }),
   active: z.boolean(),
+  locked: z.boolean(),
   createdBy: z.number().int(),
 })
 export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
