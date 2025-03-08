@@ -20,7 +20,7 @@ import {
   PaginationLink,
 } from '@/components/ui/pagination'
 
-import { ArrowUpDown, Edit } from 'lucide-react'
+import { ArrowUpDown, Edit, Lock, Unlock } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -51,9 +51,10 @@ const formatDate = (isoString: string) => {
   return isoString ? isoString.split('T')[0] : '' // Extracts only 'yyyy-MM-dd'
 }
 
-
-
-const EditBudgetDialog: React.FC<{ item: MasterBudgetType; token: string | null }> = ({ item, token }) => {
+const EditBudgetDialog: React.FC<{
+  item: MasterBudgetType
+  token: string | null
+}> = ({ item, token }) => {
   const [name, setName] = useState(item.name || '')
   const [fromDate, setFromDate] = useState(item.fromDate || '') // Ensure it is never null
   const [toDate, setToDate] = useState(item.toDate || '') // Ensure it is never null
@@ -67,6 +68,7 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType; token: string | null 
         name,
         fromDate,
         toDate,
+        locked: item.locked,
       })
 
       if (response.data) {
@@ -95,7 +97,9 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType; token: string | null 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Budget</DialogTitle>
-          <DialogDescription>Modify the details of your budget below.</DialogDescription>
+          <DialogDescription>
+            Modify the details of your budget below.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4">
           <label className="block mb-2">
@@ -139,8 +143,11 @@ const EditBudgetDialog: React.FC<{ item: MasterBudgetType; token: string | null 
   )
 }
 
-
-const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget, token, company }) => {
+const CreateBudgetList: React.FC<CreateBudgetProps> = ({
+  masterBudget,
+  token,
+  company,
+}) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState<number>(1)
@@ -197,16 +204,47 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget, token, co
     return sortedData.slice(indexOfFirstItem, indexOfLastItem)
   }, [masterBudget, currentPage, sortColumn, sortDirection])
 
+  const [budgets, setBudgets] = useState<MasterBudgetType[]>(masterBudget)
+
+  const handleLockToggle = async (budgetId: number) => {
+    try {
+      if (!token) return
+
+      const budget = budgets.find((b) => b.budgetId === budgetId)
+      if (!budget) return
+
+      const response = await updateBudgetMaster(budgetId, token, {
+        ...budget,
+        locked: !budget.locked,
+      })
+
+      if (response.data) {
+        // Update local state to reflect the change
+        setBudgets(
+          budgets.map((b) =>
+            b.budgetId === budgetId ? { ...b, locked: !b.locked } : b
+          )
+        )
+      } else {
+        console.error('Failed to toggle budget lock status')
+      }
+    } catch (error) {
+      console.error('Error toggling budget lock:', error)
+    }
+  }
+
   return (
     <div>
       <Table className="border shadow-md mt-2 mb-4">
         <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
           <TableRow>
             <SortableTableHead column="name">Budget Name</SortableTableHead>
-            <SortableTableHead column="fromDate">Company Name</SortableTableHead>
+            <SortableTableHead column="fromDate">
+              Company Name
+            </SortableTableHead>
             <SortableTableHead column="fromDate">From Date</SortableTableHead>
             <SortableTableHead column="toDate">End Date</SortableTableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -217,7 +255,12 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget, token, co
                   {item.name}
                 </Link>
               </TableCell>
-              <TableCell>{company.find(c => c.companyId === item.companyId)?.companyName}</TableCell>
+              <TableCell>
+                {
+                  company.find((c) => c.companyId === item.companyId)
+                    ?.companyName
+                }
+              </TableCell>
               <TableCell>
                 {new Date(item.fromDate).toLocaleDateString()}
               </TableCell>
@@ -225,8 +268,20 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({ masterBudget, token, co
                 {' '}
                 {new Date(item.toDate).toLocaleDateString()}
               </TableCell>
-              <TableCell>
+              <TableCell className="flex gap-2">
                 <EditBudgetDialog item={item} token={token} />
+                <Button
+                  variant={item.locked ? 'destructive' : 'default'}
+                  size="sm"
+                  onClick={() => handleLockToggle(item.budgetId)}
+                >
+                  {item.locked ? (
+                    <Unlock className="h-4 w-4 mr-1" />
+                  ) : (
+                    <Lock className="h-4 w-4 mr-1" />
+                  )}
+                  {item.locked ? 'Lock' : 'Unlock'}
+                </Button>
               </TableCell>
             </TableRow>
           ))}
