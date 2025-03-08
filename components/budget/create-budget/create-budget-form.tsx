@@ -30,7 +30,6 @@ interface BudgetLine {
   accountId: number
   amount?: number | null
   createdBy?: number | null
-  // actual?: number | null
 }
 
 interface CreateBudgetFormProps {
@@ -50,7 +49,6 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       budgetId: 0,
       accountId: 0,
       amount: 0,
-      // actual: 0,
     },
   ])
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
@@ -59,6 +57,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [isActive, setIsActive] = useState<boolean>(true)
+  const [isLocked, setIsLocked] = useState<boolean>(false)
 
   useEffect(() => {
     async function fetchAccounts() {
@@ -85,7 +84,6 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
         budgetId: 0,
         accountId: 0,
         amount: null,
-        // actual: null,
       },
     ])
   }
@@ -140,7 +138,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
         fromDate: startDate,
         toDate: endDate,
         active: isActive,
-        locked: false,
+        locked: isLocked,
         createdBy: 1,
       }
 
@@ -152,7 +150,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       }
 
       // Check if the API nests the actual data under a "data" property
-      const masterData = masterResponse.data.data || masterResponse.data
+      const masterData = masterResponse.data || masterResponse
       // Try both keys: "id" or "budgetId"
       const budgetId = masterData.id || masterData.budgetId
       console.log('Master budget response:', masterData)
@@ -198,14 +196,18 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
     }
   }
 
-  const [companyId, setCompanyId] = useState<string>(company[0]?.companyId.toString() || '');
+  const [companyId, setCompanyId] = useState<string>(
+    company[0]?.companyId.toString() || ''
+  )
 
   const handleCompanyIdChange = (id: string): void => {
-    setCompanyId(id);
-    setBudgetLines(budgetLines.map(line => ({
-      ...line,
-      companyId: parseInt(id)
-    })));
+    setCompanyId(id)
+    setBudgetLines(
+      budgetLines.map((line) => ({
+        ...line,
+        companyId: parseInt(id),
+      }))
+    )
   }
 
   return (
@@ -215,37 +217,38 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div >
-            <Label htmlFor="budgetName">Budget Name</Label>
-            <Input
-              id="budgetName"
-              value={budgetName}
-              onChange={(e) => setBudgetName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="budgetName">Budget Name</Label>
+              <Input
+                id="budgetName"
+                value={budgetName}
+                onChange={(e) => setBudgetName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="companyName">Company Name</Label>
+              <CustomCombobox
+                items={company.map((companies) => ({
+                  id: companies.companyId.toString(),
+                  name: companies.companyName,
+                }))}
+                value={
+                  company
+                    ? {
+                        id: company[0].companyId.toString(),
+                        name: company[0].companyName,
+                      }
+                    : null
+                }
+                onChange={(value: { id: string; name: string } | null) =>
+                  setCompanyId(value ? value.id : '')
+                }
+              />{' '}
+            </div>
           </div>
-         <div >
-            <Label htmlFor="companyName">Company Name</Label>
-            <CustomCombobox
-              items={company.map((companies) => ({
-                id: companies.companyId.toString(),
-                name: companies.companyName,
-              }))}
-              value={
-                company
-                  ? {
-                      id: company[0].companyId.toString(),
-                      name: company[0].companyName,
-                    }
-                  : null
-              }
-              onChange={(value: { id: string; name: string } | null) =>
-                setCompanyId(value ? value.id : '')
-              }
-            />          </div>
-         </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Start Date</Label>
               <Input
@@ -271,6 +274,14 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
                 onCheckedChange={(checked) => setIsActive(checked)}
               />
               <Label htmlFor="isActive">Active</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isLocked"
+                checked={isLocked}
+                onCheckedChange={(checked) => setIsLocked(checked)}
+              />
+              <Label htmlFor="isLocked">Locked</Label>
             </div>
           </div>
           <div>

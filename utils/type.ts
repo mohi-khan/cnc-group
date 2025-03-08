@@ -928,6 +928,7 @@ export interface MasterBudgetType {
   companyId: number
   fromDate: string // ISO date string
   toDate: string // ISO date string
+  locked: boolean
 }
 
 // get budget items type
