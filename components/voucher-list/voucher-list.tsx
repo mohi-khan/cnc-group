@@ -31,9 +31,10 @@ interface Voucher {
   currency: string | null
   state: number
   totalamount: number
+  journaltype: string
 }
 
-interface Column {
+export interface Column {
   key: keyof Voucher
   label: string
 }

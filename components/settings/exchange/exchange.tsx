@@ -305,7 +305,7 @@ export default function ExchangePage() {
                           value ? Number.parseInt(value.id, 10) : null
                         )
                       }
-                      placeholder="Select base currency"
+                      placeholder="Select a currency"
                     />
                   </FormControl>
                   <FormMessage />

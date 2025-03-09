@@ -17,39 +17,53 @@ import {
 import { Popup } from '@/utils/popup'
 
 interface JournalVoucherPopupProps {
-  handleSubmit: (data: JournalEntryWithDetails) => void
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  handleSubmit: (data: JournalEntryWithDetails, resetForm: () => void) => void
   isSubmitting: boolean
 }
 
 export function JournalVoucherPopup({
+  isOpen,
+  onOpenChange,
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const defaultValues = {
+    journalEntry: {
+      date: new Date().toISOString().split('T')[0],
+      journalType: VoucherTypes.JournalVoucher,
+      state: 0,
+      companyId: 0,
+      locationId: 0,
+      currencyId: 1,
+      amountTotal: 0,
+      createdBy: 0,
+    },
+    journalDetails: [
+      {
+        accountId: 0,
+        debit: 0,
+        credit: 0,
+        createdBy: 0,
+      },
+    ],
+  }
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
-    defaultValues: {
-      journalEntry: {
-        date: new Date().toISOString().split('T')[0],
-        journalType: VoucherTypes.JournalVoucher,
-        state: 0,
-        companyId: 0,
-        locationId: 0,
-        currencyId: 1,
-        amountTotal: 0,
-        createdBy: 0,
-      },
-      journalDetails: [
-        {
-          accountId: 0,
-          debit: 0,
-          credit: 0,
-          createdBy: 0,
-        },
-      ],
-    },
+    defaultValues,
   })
+
+  const resetForm = () => {
+    form.reset(defaultValues)
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm()
+    }
+  }, [isOpen])
 
   const addEntry = () => {
     const currentEntries = form.getValues('journalDetails')
@@ -79,7 +93,7 @@ export function JournalVoucherPopup({
       if (name?.startsWith('journalDetails')) {
         const totalDebit =
           value.journalDetails?.reduce(
-            (sum, detail) => sum + ((detail?.debit) || 0),
+            (sum, detail) => sum + (detail?.debit || 0),
             0
           ) || 0
         const totalCredit =
@@ -95,33 +109,32 @@ export function JournalVoucherPopup({
     return () => subscription.unsubscribe()
   }, [form])
 
+  const onSubmit = (data: JournalEntryWithDetails) => {
+    handleSubmit(data, resetForm)
+  }
+
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" /> Add Voucher
+      <Button onClick={() => onOpenChange(true)}>
+        <Plus className="mr-2 h-4 w-4" /> Add
       </Button>
       <Popup
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => onOpenChange(false)}
         title="Journal Voucher"
         size="max-w-6xl"
       >
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <JournalVoucherMasterSection form={form} />
-
             <JournalVoucherDetailsSection
               form={form}
               onAddEntry={addEntry}
               onRemoveEntry={removeEntry}
             />
-
             <JournalVoucherSubmit
               form={form}
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={form.handleSubmit(onSubmit)}
               isSubmitting={isSubmitting}
             />
           </form>

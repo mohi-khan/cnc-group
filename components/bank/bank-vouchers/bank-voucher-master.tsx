@@ -1,3 +1,4 @@
+import { getAllCurrency } from '@/api/exchange-api'
 import {
   FormControl,
   FormField,
@@ -6,28 +7,54 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { BankAccount, Company, Location } from '@/utils/type';
+import { BankAccount, Company, CurrencyType, Location } from '@/utils/type'
+import { useEffect, useState } from 'react'
 
-import { Control, FieldValues } from 'react-hook-form';
+import { Control, FieldValues } from 'react-hook-form'
 
 interface FormState {
-  companies: { company: Company }[];
-  locations: { location: Location }[];
-  bankAccounts: BankAccount[];
-  formType: string;
-  selectedBankAccount: { id: number; glCode: number } | null;
+  companies: { company: Company }[]
+  locations: { location: Location }[]
+  bankAccounts: BankAccount[]
+  formType: string
+  selectedBankAccount: { id: number; glCode: number } | null
 }
 
 interface BankVoucherMasterProps {
   form: {
-    control: Control<FieldValues>;
-  };
-  formState: FormState;
-  setFormState: React.Dispatch<React.SetStateAction<FormState>>;
+    control: Control<FieldValues>
+  }
+  formState: FormState
+  setFormState: React.Dispatch<React.SetStateAction<FormState>>
 }
 
-export default function BankVoucherMaster({ form, formState, setFormState }: BankVoucherMasterProps) {
+export default function BankVoucherMaster({
+  form,
+  formState,
+  setFormState,
+}: BankVoucherMasterProps) {
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
+
+  const fetchCurrency = async () => {
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+    }
+  }
+
+  useEffect(() => {
+    fetchCurrency()
+  }, [])
+
   return (
     <div className="grid grid-cols-3 gap-4">
       <FormField
@@ -104,21 +131,23 @@ export default function BankVoucherMaster({ form, formState, setFormState }: Ban
             <FormLabel>Currency</FormLabel>
             <FormControl>
               <CustomCombobox
-                items={[
-                  { id: '1', name: 'BDT' },
-                  { id: '2', name: 'USD' },
-                  { id: '3', name: 'EUR' },
-                  { id: '4', name: 'GBP' },
-                ]}
+                items={currency.map((curr: CurrencyType) => ({
+                  id: curr.currencyId.toString(),
+                  name: curr.currencyCode || 'Unnamed Currency',
+                }))}
                 value={
                   field.value
                     ? {
                         id: field.value.toString(),
-                        name: ['BDT', 'USD', 'EUR', 'GBP'][field.value - 1],
+                        name:
+                          currency.find(
+                            (curr: CurrencyType) =>
+                              curr.currencyId === field.value
+                          )?.currencyCode || 'Unnamed Currency',
                       }
                     : null
                 }
-                onChange={(value) =>
+                onChange={(value: { id: string; name: string } | null) =>
                   field.onChange(value ? Number.parseInt(value.id, 10) : null)
                 }
                 placeholder="Select currency"
@@ -143,11 +172,13 @@ export default function BankVoucherMaster({ form, formState, setFormState }: Ban
         />
       </FormItem>
       <FormItem>
-        <FormLabel>Bank Account</FormLabel>
+        <FormLabel>Bank Account Details</FormLabel>
         <CustomCombobox
           items={formState.bankAccounts.map((account) => ({
             id: account.id.toString(),
-            name: `${account.bankName} - ${account.accountName} - ${account.accountNumber}` || 'Unnamed Account',
+            name:
+              `${account.bankName} - ${account.accountName} - ${account.accountNumber}` ||
+              'Unnamed Account',
           }))}
           value={
             formState.selectedBankAccount
@@ -155,7 +186,9 @@ export default function BankVoucherMaster({ form, formState, setFormState }: Ban
                   id: formState.selectedBankAccount.id.toString(),
                   name:
                     formState.bankAccounts.find(
-                      (a) => formState.selectedBankAccount && a.id === formState.selectedBankAccount.id
+                      (a) =>
+                        formState.selectedBankAccount &&
+                        a.id === formState.selectedBankAccount.id
                     )?.accountName || '',
                 }
               : null
@@ -208,7 +241,11 @@ export default function BankVoucherMaster({ form, formState, setFormState }: Ban
           <FormItem>
             <FormLabel>Date</FormLabel>
             <FormControl>
-              <Input type="date" placeholder="mm/dd/yyyy" {...field} />
+              <Input
+                type="date"
+                {...field}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

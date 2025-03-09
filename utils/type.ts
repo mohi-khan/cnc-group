@@ -1,6 +1,7 @@
 import { isLastDayOfMonth } from 'date-fns'
 import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
+import exp from 'constants'
 
 // export interface User {
 //   userId: number
@@ -327,8 +328,8 @@ export const chartOfAccountSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int().positive('Parent account ID is required'),
-  parentName: z.string().optional(),
+  parentAccountId: z.number().int(),
+  parentName: z.string().min(1, 'Parent account ID is required').optional(),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -337,9 +338,9 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string().min(1, 'Cash tag is required').nullable(),
+  cashTag: z.string(),
   createdBy: z.number().int().positive(),
-  notes: z.string().min(3, 'Note is required, minimum 3 characters'),
+  notes: z.string(),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
@@ -372,7 +373,7 @@ export interface Voucher {
   companyname: string
   location: string
   currency: string
-  type: string
+  journaltype: string
   accountName: string
   costCenter: string
   department: string
@@ -462,7 +463,7 @@ export const JournalQuerySchema = z.object({
   date: z.string(),
   companyId: z.array(z.number()),
   locationId: z.array(z.number()),
-  voucherType: z.nativeEnum(VoucherTypes),
+  voucherType: z.nativeEnum(VoucherTypes).optional(),
 })
 export type JournalQuery = z.infer<typeof JournalQuerySchema>
 
@@ -525,6 +526,7 @@ const costCenterSchema = z.object({
   actual: z.string().optional(),
   currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
   isActive: z.boolean(),
+  isVehicle: z.boolean(),
   createdBy: z.number().optional(),
 })
 
@@ -891,3 +893,258 @@ export const currencySchema = z.object({
 })
 
 export type CurrencyType = z.infer<typeof currencySchema>
+
+// create budget items schema zod
+const CreateBudgetItemsSchema = z.object({
+  budgetId: z.number().int(),
+  accountId: z.number().int(),
+  amount: z.number().nullable().optional(),
+  createdBy: z.number().int().nullable().optional(),
+  actual: z.number().int().nullable().optional(),
+})
+
+export type CreateBudgetItemsType = z.infer<typeof CreateBudgetItemsSchema>
+
+//create budget master schema zod
+export const CreateBudgetMasterSchema = z.object({
+  budgetName: z.string().min(1).max(80),
+  companyId: z.number().int(),
+  fromDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format',
+  }),
+  toDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format',
+  }),
+  active: z.boolean(),
+  locked: z.boolean(),
+  createdBy: z.number().int(),
+})
+export type CreateBudgetMasterType = z.infer<typeof CreateBudgetMasterSchema>
+
+//get master budget type
+export interface MasterBudgetType {
+  budgetId: number
+  name: string
+  companyId: number
+  fromDate: string // ISO date string
+  toDate: string // ISO date string
+  locked: boolean
+}
+
+// get budget items type
+export interface BudgetItems {
+  id: number
+  budgetId: number
+  name: string
+  budgetAmount: number
+  accountId: number
+}
+
+//payment requisition
+export enum PurchaseOrderStatus {
+  PurchaseOrder = 'Purchase Order',
+  GRNCompleted = 'GRN Completed',
+  InvoiceCreated = 'Invoice Created',
+  PaymentMade = 'Payment Made',
+}
+
+export const purchaseOrderMasterSchema = z.object({
+  attn: z.string().nullable().optional(),
+  poNo: z.string(),
+  poDate: z.coerce.date(),
+  termsAndConditions: z.string().nullable().optional(),
+  totalAmount: z.number(),
+  preparedBy: z.string().nullable().optional(),
+  checkedBy: z.string().nullable().optional(),
+  authorizedBy: z.string().nullable().optional(),
+  reqNo: z.string().nullable().optional(),
+  status: z.nativeEnum(PurchaseOrderStatus),
+  companyId: z.number().int(),
+  vendorCode: z.string(),
+  createdBy: z.number(),
+})
+
+// Zod schema for PurchaseOrderDetails
+export const purchaseOrderDetailsSchema = z.object({
+  itemCode: z.string(),
+  unit: z.string().nullable().optional(),
+  quantity: z.number(),
+  rate: z.number(),
+})
+
+// Zod schema for PurchaseEntryWithDetailsSchema
+export const purchaseEntrySchema = z.object({
+  purchaseMaster: purchaseOrderMasterSchema,
+  purchaseDetails: z.array(purchaseOrderDetailsSchema),
+})
+
+export type PurchaseEntryType = z.infer<typeof purchaseEntrySchema>
+
+export interface GetPaymentOrder {
+  id: number
+  poNo: string
+  PurDate: string
+  purAttn: string
+  reqNo: string
+  vendorName: string
+  amount: string
+  preparedBy: string
+  checkedBy: string
+  authorizedBy: string
+  companyName: string
+  status: string
+}
+
+//approve invoice
+export const approveInvoiceSchema = z.object({
+  invoiceId: z.string(),
+  approvalStatus: z.string(),
+  approvedBy: z.string(),
+  poId: z.string(),
+})
+
+export type ApproveInvoiceType = z.infer<typeof approveInvoiceSchema>
+
+//create invoice
+export const createInvoiceSchema = z.object({
+  poId: z.number().int().positive(),
+  vendorId: z.number().int().positive(),
+  invoiceNumber: z.string().max(50),
+  invoiceDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .nullable(),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .nullable(),
+  currency: z.string().max(10),
+  totalAmount: z.number().nonnegative(),
+  vatAmount: z.number().nonnegative().optional(),
+  taxAmount: z.number().nonnegative().optional(),
+  tdsAmount: z.number().nonnegative().optional(),
+  discountAmount: z.number().nonnegative().optional(),
+  paymentStatus: z.enum(['Pending', 'Partially Paid', 'Paid', 'Cancelled']),
+  paymentDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .nullable(),
+  approvalStatus: z.enum(['Pending', 'Approved', 'Rejected']),
+  approvedBy: z.number().int().positive().optional().nullable(),
+  attachmentUrl: z.string().url().optional(),
+  createdBy: z.number(),
+})
+
+export type CreateInvoiceType = z.infer<typeof createInvoiceSchema>
+
+export const requisitionAdvanceSchema = z.object({
+  requisitionNo: z.string().max(50), // Max length of 50
+  poId: z.number().int().positive(), // Must be a positive integer
+  vendorId: z.number().int().positive(), // Must be a positive integer
+  requestedBy: z.number().int().positive(), // Must be a positive integer
+  createdBy: z.number().int().positive(), // Must be a positive integer
+  checkName: z.string().max(255).optional(), // Optional string with max length 255
+  requestedDate: z.coerce.date().optional(), // Auto-defaults to current date if missing
+  advanceAmount: z.number().positive(), // Must be a positive number
+  approvedAmount: z.number().min(0).optional(), // Cannot be negative, defaults to 0
+  currency: z.string().max(10), // Currency as string (ISO code like "USD", "BDT")
+  paymentStatus: z.enum(['PENDING', 'PAID', 'REJECTED']).default('PENDING'), // Enum validation
+  approvalStatus: z
+    .enum(['PENDING', 'APPROVED', 'REJECTED'])
+    .default('PENDING'), // Enum validation
+  approvedBy: z.number().int().positive().nullable().optional(), // Can be null if not yet approved
+  approvedDate: z.coerce.date().nullable().optional(), // Can be null if not yet approved
+  remarks: z.string().optional(), // Optional text
+})
+
+export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
+
+//Get All Vehicle Type
+export interface GetAllVehicleType {
+  vehicleNo: number
+  costCenterId: number
+  vehicleDescription: string
+  purchaseDate: string
+  assetId: number
+}
+
+//Create Vehicle zod schema
+export const createVehicleSchema = z.object({
+  costCenterId: z.number().int().nullable(),
+  vehicleDescription: z.string().max(45).nullable(),
+  purchaseDate: z.coerce.date().nullable(),
+  assetId: z.number().int().nullable(),
+})
+export type CreateVehicleType = z.infer<typeof createVehicleSchema>
+
+// Get GetVehicleConsumptionType
+
+export interface GetVehicleConsumptionType {
+  id: number
+  vehicleId: number
+  octConsumption: number
+  gasConsumption: number
+  totalConsumption: number
+  kmrsPerLitr: number
+  transDate: string // ISO date string
+  createdBy: number
+  createdAt: string // ISO date string
+}
+
+//Create createVehicleFuelConsumptionSchema
+export const createVehicleFuelConsumptionSchema = z.object({
+  vehicleId: z.number().int(),
+  octConsumption: z.number().nullable(),
+  gasConsumption: z.number().nullable(),
+  totalConsumption: z.number().nullable(),
+  kmrsPerLitr: z.number().nullable(),
+  transDate: z.coerce.date(),
+  createdBy: z.number().int(),
+})
+
+export type createVehicleFuelConsumptionType = z.infer<
+  typeof createVehicleFuelConsumptionSchema
+>
+
+//bank reconciliation
+export const bankReconciliationSchema = z.object({
+  bankId: z.number().int(),
+  voucherId: z.number().int().nullable(),
+  checkNo: z.string().max(45).nullable(),
+  amount: z.number().nullable(),
+  type: z.string().max(45).nullable(),
+  reconciled: z.number().int().min(0).max(1).nullable(),
+  comments: z.string().max(45).nullable(),
+  date: z.string().max(45).nullable(),
+})
+
+export type BankReconciliationType = z.infer<
+  typeof bankReconciliationSchema
+> & { id: number }
+
+//fund position
+const BalanceEntrySchema = z.object({
+  date: z.string(),
+  accountNumber: z.string().nullable(),
+  accountHead: z.null(),
+  balance: z.string().nullable(),
+  companyName: z.string().nullable(),
+})
+
+// Define the schema for cash balance
+const CashBalanceSchema = z.array(BalanceEntrySchema)
+
+// Define the schema for bank balance
+const BankBalanceSchema = z.array(z.array(BalanceEntrySchema))
+
+// Define the main response schema
+export const FundPositionSchema = z.object({
+  cashBalance: CashBalanceSchema,
+  BankBalance: BankBalanceSchema,
+})
+
+// Infer the TypeScript type from the schema
+export type FundPositionType = z.infer<typeof FundPositionSchema>

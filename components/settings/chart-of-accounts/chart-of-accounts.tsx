@@ -64,6 +64,7 @@ import {
   type CodeGroup,
   type ChartOfAccount,
   chartOfAccountSchema,
+  CurrencyType,
 } from '@/utils/type'
 import {
   createChartOfAccounts,
@@ -81,6 +82,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllCurrency } from '@/api/exchange-api'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
@@ -192,6 +195,7 @@ export default function ChartOfAccountsTable() {
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
   const [userId, setUserId] = React.useState<number | null>(null)
+  const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -317,7 +321,23 @@ export default function ChartOfAccountsTable() {
   React.useEffect(() => {
     fetchCoaAccounts()
     fetchParentCodes()
+    fetchCurrency()
   }, [])
+
+  // get all currency api
+  const fetchCurrency = async () => {
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+    }
+  }
 
   async function fetchCoaAccounts() {
     const fetchedAccounts = await getAllCoa()
@@ -564,7 +584,7 @@ export default function ChartOfAccountsTable() {
                 ADD
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Account</DialogTitle>
               </DialogHeader>
@@ -620,6 +640,8 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Cash Tag</FormLabel>
+
+                        
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value ?? undefined}
@@ -648,7 +670,33 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Parent Account Name</FormLabel>
-                        <Select
+                        <CustomCombobox
+                          items={parentCodes.map((account: ChartOfAccount) => ({
+                            id: account.code.toString(),
+                            name: account.name || 'Unnamed Account',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    parentCodes.find(
+                                      (id: ChartOfAccount) =>
+                                        Number(id.code) === field.value
+                                    )?.name || 'Select Parent Account',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
+                        {/* <Select
                           onValueChange={(value) =>
                             field.onChange(Number(value))
                           } // Convert to number before updating the field
@@ -666,7 +714,7 @@ export default function ChartOfAccountsTable() {
                               </SelectItem>
                             ))}
                           </SelectContent>
-                        </Select>
+                        </Select> */}
 
                         <FormMessage />
                       </FormItem>
@@ -679,28 +727,33 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          } // Ensure currencyId is saved as a number
-                          defaultValue={field.value?.toString()} // Convert to string for Select compatibility
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select currency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {currencyItems.map((currency) => (
-                              <SelectItem
-                                key={currency.currencyId}
-                                value={currency.currencyId.toString()}
-                              >
-                                {currency.currency}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <CustomCombobox
+                          items={currency.map((curr: CurrencyType) => ({
+                            id: curr.currencyId.toString(),
+                            name: curr.currencyCode || 'Unnamed Currency',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    currency.find(
+                                      (curr: CurrencyType) =>
+                                        curr.currencyId === field.value
+                                    )?.currencyCode || 'Unnamed Currency',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1033,14 +1086,21 @@ export default function ChartOfAccountsTable() {
                 <div className="flex justify-center mt-4">
                   <Pagination>
                     <PaginationContent>
+                      {/* Previous Button */}
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() =>
                             setCurrentPage((prev) => Math.max(1, prev - 1))
                           }
-                          className={currentPage === 1 ? 'disabled-class' : ''}
+                          className={
+                            currentPage === 1
+                              ? 'pointer-events-none opacity-30' // Disabled styles (no cursor-not-allowed)
+                              : 'hover:bg-gray-100' // Default styles
+                          }
                         />
                       </PaginationItem>
+
+                      {/* Page Numbers */}
                       {[
                         ...Array(
                           Math.ceil(filteredAccounts.length / itemsPerPage)
@@ -1050,11 +1110,18 @@ export default function ChartOfAccountsTable() {
                           <PaginationLink
                             onClick={() => setCurrentPage(i + 1)}
                             isActive={currentPage === i + 1}
+                            className={
+                              currentPage === i + 1
+                                ? 'bg-blue-500 text-white' // Active page styles
+                                : 'hover:bg-gray-100' // Default styles
+                            }
                           >
                             {i + 1}
                           </PaginationLink>
                         </PaginationItem>
                       ))}
+
+                      {/* Next Button */}
                       <PaginationItem>
                         <PaginationNext
                           onClick={() =>
@@ -1070,8 +1137,8 @@ export default function ChartOfAccountsTable() {
                           className={
                             currentPage ===
                             Math.ceil(filteredAccounts.length / itemsPerPage)
-                              ? 'disabled-class'
-                              : ''
+                              ? 'pointer-events-none opacity-30' // Disabled styles (no cursor-not-allowed)
+                              : 'hover:bg-gray-100' // Default styles
                           }
                         />
                       </PaginationItem>

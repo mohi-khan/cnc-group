@@ -26,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import {
   updateCostCenter,
@@ -80,6 +79,7 @@ export default function CostCenterManagement() {
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get cost centers',
+        variant: 'destructive',
       })
     } else {
       setCostCenters(data.data)
@@ -181,6 +181,7 @@ export default function CostCenterManagement() {
           currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
           budget: formData.get('budget')?.toString() || '0',
           isActive: formData.get('isActive') === 'on',
+          isVehicle: formData.get('isVehicle') === 'on',
           actual: formData.get('actual')?.toString() || '0',
           createdBy: userId,
           updatedBy: userId,
@@ -322,6 +323,16 @@ export default function CostCenterManagement() {
             defaultChecked={isEdit ? selectedCostCenter?.isActive : true}
           />
         </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="isVehicle" className="text-right">
+            Vehide
+          </Label>
+          <Switch
+            id="isVehicle"
+            name="isVehicle"
+            defaultChecked={isEdit ? selectedCostCenter?.isVehicle : false}
+          />
+        </div>
         <div className="flex justify-end space-x-2">
           <Button
             variant="outline"
@@ -352,6 +363,19 @@ export default function CostCenterManagement() {
     return [...costCenters].sort((a, b) => {
       const aValue = a[sortColumn] ?? ''
       const bValue = b[sortColumn] ?? ''
+      if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+        return sortDirection === 'asc'
+          ? aValue === bValue
+            ? 0
+            : aValue
+              ? -1
+              : 1
+          : aValue === bValue
+            ? 0
+            : aValue
+              ? 1
+              : -1
+      }
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
       return 0
@@ -423,6 +447,12 @@ export default function CostCenterManagement() {
                   Active <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
                 <TableHead
+                  onClick={() => handleSort('isVehicle')}
+                  className="cursor-pointer"
+                >
+                  Vehide <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
                   onClick={() => handleSort('budget')}
                   className="cursor-pointer"
                 >
@@ -444,6 +474,7 @@ export default function CostCenterManagement() {
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
                   <TableCell>{center.isActive ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{center.isVehicle ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
                     {Number(center.budget).toLocaleString()}
                   </TableCell>

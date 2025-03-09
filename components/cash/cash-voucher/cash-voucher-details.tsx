@@ -15,6 +15,7 @@ import type {
   AccountsHead,
   CostCenter,
   Department,
+  GetDepartment,
   ResPartner,
 } from '@/utils/type'
 import type { UseFormReturn } from 'react-hook-form'
@@ -24,7 +25,7 @@ interface CashVoucherDetailsProps {
   fields: any[]
   filteredChartOfAccounts: AccountsHead[]
   costCenters: CostCenter[]
-  departments: Department[]
+  departments: GetDepartment[]
   partners: ResPartner[]
   addDetailRow: () => void
   onSubmit: (values: any, status: 'Draft' | 'Posted') => void

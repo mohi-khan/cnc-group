@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import type * as z from 'zod'
@@ -16,7 +17,7 @@ import {
   type JournalResult,
   type JournalQuery,
   VoucherTypes,
-  User,
+  type User,
 } from '@/utils/type'
 import {
   getAllBankAccounts,
@@ -41,13 +42,14 @@ export default function BankVoucher() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [dataLoaded, setDataLoaded] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const router = useRouter()
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         journalType: '',
         companyId: 0,
         locationId: 0,
@@ -137,12 +139,14 @@ export default function BankVoucher() {
         getAllResPartners(),
         getAllDepartments(),
       ])
-
+      const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
+        return account.isGroup === false
+      })
       setFormState((prevState) => ({
         ...prevState,
         bankAccounts: bankAccountsResponse.data || [],
         chartOfAccounts: chartOfAccountsResponse.data || [],
-        filteredChartOfAccounts: chartOfAccountsResponse.data || [],
+        filteredChartOfAccounts: filteredCoa || [],
         costCenters: costCentersResponse.data || [],
         partners: partnersResponse.data || [],
         departments: departmentsResponse.data || [],
@@ -231,10 +235,21 @@ export default function BankVoucher() {
       const userData = JSON.parse(userStr)
       console.log('Current userId from localStorage:', userData.userId)
     }
-    const totalAmount = values.journalDetails.reduce(
+
+    const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
       0
     )
+
+    if (Math.abs(values.journalEntry.amountTotal - totalDetailsAmount) > 0.01) {
+      setValidationError(
+        "The total amount in journal details doesn't match the journal entry amount total."
+      )
+      return
+    }
+
+    setValidationError(null)
+
     const updatedValues = {
       ...values,
       journalEntry: {
@@ -242,7 +257,7 @@ export default function BankVoucher() {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
-        amountTotal: totalAmount,
+        amountTotal: totalDetailsAmount,
         createdBy: user?.userId ?? 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
@@ -251,7 +266,9 @@ export default function BankVoucher() {
         createdBy: user?.userId ?? 0,
       })),
     }
+
     console.log('After Adding created by', updatedValues)
+
     const updateValueswithBank = {
       ...updatedValues,
       journalDetails: [
@@ -282,6 +299,7 @@ export default function BankVoucher() {
       'Submitted values:',
       JSON.stringify(updateValueswithBank, null, 2)
     )
+
     const response = await createJournalEntryWithDetails(updateValueswithBank)
     if (response.error || !response.data) {
       toast({
@@ -293,10 +311,21 @@ export default function BankVoucher() {
       const mycompanies = getCompanyIds(formState.companies)
       const mylocations = getLocationIds(formState.locations)
       getallVoucher(mycompanies, mylocations)
+
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
+      })
+
+      // Close popup and reset form
+      setIsDialogOpen(false)
+      form.reset()
+      setFormState({
+        ...formState,
+        selectedBankAccount: null,
+        formType: 'Credit',
+        status: 'Draft',
       })
     }
   }
@@ -324,7 +353,7 @@ export default function BankVoucher() {
             setIsDialogOpen(true)
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add Voucher
+          <Plus className="mr-2 h-4 w-4" /> Add
         </Button>
         <Popup
           isOpen={isDialogOpen}
@@ -333,8 +362,8 @@ export default function BankVoucher() {
           size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
-            Enter the details for the bank voucher here. Click save when you're
-            done.
+            Enter the details for the bank voucher here. Click save when
+            you&apos;re done.
           </p>
           <Form {...form}>
             <form
@@ -343,6 +372,11 @@ export default function BankVoucher() {
               )}
               className="space-y-8"
             >
+              {validationError && (
+                <div className="text-red-500 text-sm mb-4">
+                  {validationError}
+                </div>
+              )}
               <BankVoucherMaster
                 form={form}
                 formState={formState}

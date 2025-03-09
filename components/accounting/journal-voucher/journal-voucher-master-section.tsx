@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import {
   CompanyFromLocalstorage,
+  CurrencyType,
   JournalEntryWithDetails,
   JournalQuery,
   JournalResult,
@@ -24,11 +25,12 @@ import {
   User,
   VoucherTypes,
 } from '@/utils/type'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CURRENCY_ITEMS } from '@/utils/constants'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllCurrency } from '@/api/exchange-api'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -45,6 +47,7 @@ export function JournalVoucherMasterSection({
   )
   const [user, setUser] = React.useState<User | null>(null)
   const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -90,6 +93,24 @@ export function JournalVoucherMasterSection({
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
+
+  const fetchCurrency = async () => {
+    const data = await getAllCurrency()
+    if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+    }
+  }
+
+  useEffect(() => {
+    fetchCurrency()
+  }, [])
 
   // React.useEffect(() => {
   //   const mycompanies = getCompanyIds(companies)
@@ -183,22 +204,26 @@ export function JournalVoucherMasterSection({
             render={({ field }) => (
               <FormControl>
                 <CustomCombobox
-                  items={CURRENCY_ITEMS.map((c) => ({
-                    id: c.currencyId,
-                    name: c.currency,
+                  items={currency.map((curr: CurrencyType) => ({
+                    id: curr.currencyId.toString(),
+                    name: curr.currencyCode || 'Unnamed Currency',
                   }))}
                   value={
                     field.value
                       ? {
-                          id: field.value,
+                          id: field.value.toString(),
                           name:
-                            CURRENCY_ITEMS.find(
-                              (c) => c.currencyId === field.value
-                            )?.currency || '',
+                            currency.find(
+                              (curr: CurrencyType) =>
+                                curr.currencyId === field.value
+                            )?.currencyCode || 'Unnamed Currency',
                         }
                       : null
                   }
-                  onChange={(value) => field.onChange(value?.id || null)}
+                  onChange={(value: { id: string; name: string } | null) =>
+                    field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                  }
+                  placeholder="Select currency"
                 />
               </FormControl>
             )}
