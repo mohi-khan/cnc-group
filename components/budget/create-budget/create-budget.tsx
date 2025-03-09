@@ -6,16 +6,18 @@ import CreateBudgetHeading from './create-budget-heading'
 import CreateBudgetForm from './create-budget-form'
 
 import { toast } from '@/hooks/use-toast'
-import { MasterBudgetType } from '@/utils/type'
+import { AccountsHead, ChartOfAccount, MasterBudgetType } from '@/utils/type'
 import CreateBudgetList from './create-budget-list'
 import { getAllMasterBudget } from '@/api/budget-api'
 import { CompanyType, getAllCompany } from '@/api/company-api'
+import { getAllCoa } from '@/api/chart-of-accounts-api'
 
 const CreateBudget = () => {
   const [showForm, setShowForm] = useState<boolean>(false)
   const [masterBudget, setMasterBudget] = useState<MasterBudgetType[]>([])
   const [token, setToken] = useState<string | null>(null)
   const [company, setCompany] = useState<CompanyType[]>([])
+
 
   // Retrieve token from localStorage safely
   useEffect(() => {
@@ -67,10 +69,16 @@ const CreateBudget = () => {
     }
   }
 
+
+  
+  
+   
+
   useEffect(() => {
     if (token) {
       fetchGetAllMasterBudget(token)
       fetchGetAllCompany()
+     
     }
   }, [token])
 

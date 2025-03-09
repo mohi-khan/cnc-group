@@ -937,6 +937,7 @@ export interface BudgetItems {
   budgetId: number
   name: string
   budgetAmount: number
+  accountId: number
 }
 
 //payment requisition

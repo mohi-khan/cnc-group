@@ -1,8 +1,8 @@
 'use client'
 
-import { getAllBudgetDetails, createBudgetDetails } from '@/api/budget-api'
+import { getAllBudgetDetails, createBudgetDetails, updateBudgetDetails } from '@/api/budget-api'
 import { toast } from '@/hooks/use-toast'
-import { BudgetItems } from '@/utils/type'
+import { AccountsHead, BudgetItems, ChartOfAccount } from '@/utils/type'
 import React, { useEffect, useState, useMemo } from 'react'
 import {
   Table,
@@ -13,12 +13,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useParams } from 'next/navigation'
-import { Edit, ArrowUpDown, Plus } from 'lucide-react'
+import { Edit, ArrowUpDown, Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Loader from '@/utils/loader'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -27,6 +28,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SmallButton } from '@/components/custom-ui/small-button'
+import { ChartOfAccounts, getAllCoa } from '@/api/chart-of-accounts-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 const SingleBudgetItemsDetails = () => {
   const [budgetItems, setBudgetItems] = useState<BudgetItems[]>([])
@@ -38,12 +41,27 @@ const SingleBudgetItemsDetails = () => {
   const [editedName, setEditedName] = useState<string>('')
   const [editedAmount, setEditedAmount] = useState<number>(0)
   const [open, setOpen] = useState(false)
+  const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   const { id } = useParams()
   const budgetId = Number(id)
 
   const mainToken = localStorage.getItem('authToken')
   const token = `Bearer ${mainToken}`
+
+  // async function fetchAccounts() {
+  //   const response = await getAllCoa()
+  //   if (response.error) {
+  //     console.error('Error fetching accounts:', response.error)
+  //     toast({
+  //       variant: 'destructive',
+  //       title: 'Error',
+  //       description: 'Failed to fetch chart of accounts',
+  //     })
+  //   } else {
+  //     setAccounts(response.data)
+  //   }
+  // }
 
   const fetchGetAllBudgetItems = React.useCallback(async () => {
     setLoading(true)
@@ -65,6 +83,7 @@ const SingleBudgetItemsDetails = () => {
 
   useEffect(() => {
     fetchGetAllBudgetItems()
+    // fetchAccounts()
   }, [fetchGetAllBudgetItems])
 
   const handleAddItem = async (e: React.FormEvent) => {
@@ -101,6 +120,70 @@ const SingleBudgetItemsDetails = () => {
     }
   }
 
+  const handleEditClick = (item: BudgetItems) => {
+    setSelectedItem(item)
+    setEditedName(item.name)
+    setEditedAmount(item.budgetAmount)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedItem) return
+
+    const updatedBudgetItem = {
+      budgetId: 64,
+      name: editedName,
+      budgetAmount: editedAmount,
+      accountId: 5,
+      id: selectedItem.id
+    }
+
+    console.log('Updated Budget Item:', updatedBudgetItem)
+
+    try {
+      const response = await updateBudgetDetails(budgetId, token)
+      console.log('Update Response:', response)
+      if (response.data) {
+        setBudgetItems((prev) =>
+          prev.map((item) =>
+            item.id === selectedItem.id ? { ...item, name: editedName, budgetAmount: editedAmount } : item
+          )
+        )
+        toast({
+          title: 'Success',
+          description: 'Budget item updated successfully',
+        })
+      } else {
+        throw new Error('Failed to update budget item')
+      }
+    } catch (error) {
+      console.log('Update Error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update budget item',
+      })
+      console.error('Error updating budget item:', error)
+    }
+
+    setIsEditModalOpen(false)
+    setSelectedItem(null)
+    setEditedName('')
+    setEditedAmount(0)
+  }  // const handleAccountChange = (currentId: number, newAccountId: number) => {
+  //   if (newAccountId) {
+  //     const selectedAccount = accounts.find(
+  //       (account) => account.accountId === newAccountId
+  //     )
+  //     if (selectedAccount) {
+  //       setEditedName(selectedAccount.name)
+  //       setSelectedItem((prev) =>
+  //         prev ? { ...prev, accountId: newAccountId } : null
+  //       )
+  //     }
+  //   }
+  // }
+
   return (
     <div className="p-4 w-max-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -115,6 +198,9 @@ const SingleBudgetItemsDetails = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Budget Item</DialogTitle>
+              <DialogDescription>
+                Add a new item to your budget.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddItem}>
               <div className="space-y-4">
@@ -127,6 +213,31 @@ const SingleBudgetItemsDetails = () => {
                     placeholder="Enter item name"
                     required
                   />
+                  {/* <CustomCombobox
+                    items={accounts.map((account) => ({
+                      id: account.accountId.toString(),
+                      name: account.name,
+                    }))}
+                    value={
+                      selectedItem?.id
+                        ? {
+                            id: selectedItem.id.toString(),
+                            name:
+                              accounts.find(
+                                (account) =>
+                                  account.accountId === selectedItem.id
+                              )?.name || 'Unnamed Account Head',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      handleAccountChange(
+                        selectedItem?.id || 0,
+                        value ? parseInt(value.id) : 0
+                      )
+                    }
+                    placeholder="Select account head"
+                  /> */}
                 </div>
                 <div>
                   <Label htmlFor="amount">Amount</Label>
@@ -158,6 +269,7 @@ const SingleBudgetItemsDetails = () => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Amount</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -165,11 +277,60 @@ const SingleBudgetItemsDetails = () => {
               <TableRow key={item.id}>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.budgetAmount}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditClick(item)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
+
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Budget Item</DialogTitle>
+            <DialogDescription>
+              Make changes to your budget item.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Item Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Enter item name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-amount">Amount</Label>
+                <Input
+                  id="edit-amount"
+                  type="number"
+                  value={editedAmount}
+                  onChange={(e) => setEditedAmount(Number(e.target.value))}
+                  placeholder="Enter amount"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
