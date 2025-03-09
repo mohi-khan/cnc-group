@@ -251,9 +251,13 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
           {currentItems.map((item, budgetId) => (
             <TableRow key={budgetId}>
               <TableCell>
-                <Link href={`/budget/create-budget/${item.budgetId}`}>
-                  {item.name}
-                </Link>
+                {item.locked ? (
+                  <span className="text-gray-500">{item.name}</span>
+                ) : (
+                  <Link href={`/budget/create-budget/${item.budgetId}`}>
+                    {item.name}
+                  </Link>
+                )}
               </TableCell>
               <TableCell>
                 {
@@ -269,7 +273,9 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
                 {new Date(item.toDate).toLocaleDateString()}
               </TableCell>
               <TableCell className="flex gap-2">
-                <EditBudgetDialog item={item} token={token} />
+                <div className={item.locked ? 'opacity-50 pointer-events-none' : ''}>
+                  <EditBudgetDialog item={item} token={token} />
+                </div>
                 <Button
                   variant={item.locked ? 'destructive' : 'default'}
                   size="sm"
@@ -280,7 +286,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
                   ) : (
                     <Lock className="h-4 w-4 mr-1" />
                   )}
-                  {item.locked ? 'Lock' : 'Unlock'}
+                  {item.locked ? 'Locked' : 'Unlocked'}
                 </Button>
               </TableCell>
             </TableRow>
