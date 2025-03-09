@@ -1153,3 +1153,16 @@ export const FundPositionSchema = z.object({
 
 // Infer the TypeScript type from the schema
 export type FundPositionType = z.infer<typeof FundPositionSchema>
+
+export const createBankTransactionSchema = z.object({
+  bankId: z.string().optional(),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Invalid date format",
+  }),
+  description: z.string().optional(),
+  amount: z.string(),
+  currency: z.string(),
+  status: z.enum(["Matched", "Unmatched", "Pending"]).default("Pending"),
+});
+
+export type createBankTransactionType = z.infer<typeof createBankTransactionSchema>
