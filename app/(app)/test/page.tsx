@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import FileInput from '@/utils/file-input';
+import FileInput from '@/utils/excel-file-input';
 
 const TestingPage = () => {
   return (

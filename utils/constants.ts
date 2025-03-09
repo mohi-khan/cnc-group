@@ -124,6 +124,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',
           },
+          {
+            name: 'Bank Transactions',
+            source: '/bank/bank-transactions',
+          },
           { name: 'Check Print', source: '/bank/check-print' },
           { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
