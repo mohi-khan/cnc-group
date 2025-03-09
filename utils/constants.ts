@@ -68,7 +68,10 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Vendor Management',
         items: [
           { name: 'Bills', source: '/vendors/bills' },
-          { name: 'Payment Requisition', source: '/vendors/payment-requisition' },
+          {
+            name: 'Payment Requisition',
+            source: '/vendors/payment-requisition',
+          },
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
@@ -76,8 +79,10 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Vechile',
         items: [
           { name: 'Vehicle', source: '/vendors/vehicle' },
-          { name: 'Vehicle Fuel Consumption', source: '/vendors/vehicle-fuel-consumption' },
-         
+          {
+            name: 'Vehicle Fuel Consumption',
+            source: '/vendors/vehicle-fuel-consumption',
+          },
         ],
       },
     ],
@@ -105,6 +110,15 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/assets/configure-asset-accounting',
           },
           { name: 'Run Depreciation', source: '/assets/run-depreciation' },
+        ],
+      },
+      {
+        name: 'Vehicle',
+        items: [
+          {
+            name: 'Vehicle Performance Report',
+            source: '/assets/vehicle-performance-report',
+          },
         ],
       },
     ],

@@ -1065,10 +1065,14 @@ export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
 //Get All Vehicle Type
 export interface GetAllVehicleType {
   vehicleNo: number
-  costCenterId: number
-  vehicleDescription: string
+  costCenter: number
+  costCenterName: string
+  description: string
   purchaseDate: string
   assetId: number
+  employeeId: number
+  employeeName: string
+  user: number
 }
 
 //Create Vehicle zod schema
@@ -1077,6 +1081,7 @@ export const createVehicleSchema = z.object({
   vehicleDescription: z.string().max(45).nullable(),
   purchaseDate: z.coerce.date().nullable(),
   assetId: z.number().int().nullable(),
+  employeeId: z.number().int().nullable(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
 
