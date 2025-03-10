@@ -85,7 +85,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
                 <CustomCombobox
                   items={vehicles.map((vehicle) => ({
                     id: vehicle.vehicleNo.toString(), // Ensure ids are string for consistency
-                    name: vehicle.vehicleDescription || 'Unnamed Vehicle',
+                    name: vehicle.description || 'Unnamed Vehicle',
                   }))}
                   value={
                     field.value
@@ -93,7 +93,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
                           id: field.value.toString(), // Convert value to string for matching
                           name:
                             vehicles.find((v) => v.vehicleNo === field.value)
-                              ?.vehicleDescription || '',
+                              ?.description || '',
                         }
                       : null
                   }

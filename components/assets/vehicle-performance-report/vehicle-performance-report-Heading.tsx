@@ -18,12 +18,27 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
+import { Employee, GetAllVehicleType } from '@/utils/type'
+interface VehiclePerformanceReportHeadingProps {
+  vehicles: GetAllVehicleType[]
+}
 
-const VehiclePerformanceReportHeading = () => {
+const VehiclePerformanceReportHeading: React.FC<
+  VehiclePerformanceReportHeadingProps
+> = ({ vehicles }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
+
+  const handleShowData = () => {
+    if (startDate && endDate && selectedVehicleId) {
+      // Add your filtering logic here using the selected values
+      console.log('Date Range:', startDate, endDate)
+      console.log('Vehicle:', selectedVehicleId)
+    }
+  }
+
   return (
     <div className="mt-4">
       <div className="flex items-center gap-4 flex-1 justify-center">
@@ -107,25 +122,45 @@ const VehiclePerformanceReportHeading = () => {
             </div>
           </PopoverContent>
         </Popover>
-
         <Select
-          value={selectedCompanyId}
-          onValueChange={(value) => setSelectedCompanyId(value)}
+          value={selectedVehicleId}
+          onValueChange={(value) => setSelectedVehicleId(value)}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select a Vehicle" />
           </SelectTrigger>
           <SelectContent>
-            {/* {companies.map((company) => (
+            {vehicles.map((vehicle) => (
               <SelectItem
-                key={company.companyId}
-                value={company.companyId.toString()}
+                key={vehicle.vehicleNo}
+                value={vehicle.vehicleNo.toString()}
               >
-                {company.companyName}
+                {vehicle.description}
               </SelectItem>
-            ))} */}
+            ))}
           </SelectContent>
         </Select>
+        <Button
+          onClick={handleShowData}
+          disabled={!startDate || !endDate || !selectedVehicleId}
+          variant="default"
+        >
+          Show
+        </Button>
+        
+                {selectedVehicleId && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">Employee Name:</span>
+                      <span>{vehicles.find(v => v.vehicleNo.toString() === selectedVehicleId)?.employeeName || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">Vehicle Name:</span>
+                      <span>{vehicles.find((v) => v.vehicleNo.toString() === selectedVehicleId)?.description || 'N/A'}</span>
+                    </div>
+                  </div>
+                )}
+        
       </div>
     </div>
   )
