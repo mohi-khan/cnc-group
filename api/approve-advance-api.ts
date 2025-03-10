@@ -13,3 +13,16 @@ export async function getAllAdvance(
     },
   })
 }
+
+export async function approveAdvance(
+  token: string
+) {
+  return fetchApi({
+    url: 'api/advance/updateApproval',
+    method: 'POST',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
