@@ -1,5 +1,5 @@
-import { fetchApi } from "@/utils/http";
-import { CreateVehicleType, GetAllVehicleType } from "@/utils/type";
+import { fetchApi } from '@/utils/http'
+import { CreateVehicleType, GetAllVehicleType } from '@/utils/type'
 
 export async function getAllVehicles() {
   return fetchApi<GetAllVehicleType[]>({
@@ -22,15 +22,15 @@ export async function createVehicle(data: CreateVehicleType) {
   })
 }
 
-
-export async function updateVehicleEmployee(vehicleId: number, employeeId: number | null) {
+export async function updateVehicleEmployee(
+  vehicleId: number,
+  vehicleUser: number | null
+) {
   return fetchApi({
-    url: 'api/vehicle/udpate-Vehicle',
+    url: `api/vehicle/update-Vehicle/${vehicleId}/${vehicleUser}`,
     method: 'POST',
-    body: { vehicleId, employeeId },
     headers: {
       'Content-Type': 'application/json',
     },
   })
 }
-
