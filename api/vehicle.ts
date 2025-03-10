@@ -21,3 +21,16 @@ export async function createVehicle(data: CreateVehicleType) {
     },
   })
 }
+
+
+export async function updateVehicleEmployee(vehicleId: number, employeeId: number | null) {
+  return fetchApi({
+    url: 'api/vehicle/udpate-Vehicle',
+    method: 'POST',
+    body: { vehicleId, employeeId },
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+

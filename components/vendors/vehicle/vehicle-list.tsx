@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -26,6 +26,7 @@ import {
   GetAllVehicleType,
   GetAssetData,
 } from '@/utils/type'
+import { updateVehicleEmployee } from '@/api/vehicle'
 
 interface VehicleListProps {
   AllVehicles: GetAllVehicleType[]
@@ -45,6 +46,34 @@ type SortColumn =
   | 'assetId'
   | 'employeeId'
   | 'employeeName'
+
+
+  interface VehicleAssignmentResponse {
+    success: boolean;
+    message: string;
+    data?: any;
+  }
+
+  export async function editVehicleAssignment(
+    vehicleId: number,
+    employeeId: number | null
+  ): Promise<VehicleAssignmentResponse> {
+    try {
+      const apiResponse = await updateVehicleEmployee(vehicleId, employeeId);
+      return {
+        success: true,
+        message: "Vehicle assignment updated successfully",
+        data: apiResponse
+      };
+    } catch (error) {
+      console.error('Failed to update vehicle assignment:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Unknown error occurred",
+        data: null
+      };
+    }
+  }  
 
 export const VehicleList: React.FC<VehicleListProps> = ({
   AllVehicles,
@@ -130,10 +159,15 @@ export const VehicleList: React.FC<VehicleListProps> = ({
     }
   }
 
-  function handleSaveEmployee(vehicleNo: number) {
-    // Implement save logic here
-    setEditingVehicle(null)
-    setSelectedEmployee(null)
+  async function handleSaveEmployee(vehicleNo: number) {
+    try {
+      await updateVehicleEmployee(vehicleNo, selectedEmployee)
+      // Optionally refresh the data here
+      setEditingVehicle(null)
+      setSelectedEmployee(null)
+    } catch (error) {
+      console.error('Failed to update vehicle employee:', error)
+    }
   }
 
   function handleCancelEdit() {
