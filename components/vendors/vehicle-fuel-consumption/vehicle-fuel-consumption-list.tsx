@@ -49,7 +49,7 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
   const getVehicleName = useCallback(
     (vehicleNo: number) => {
       const vehicle = vehicles.find((v) => v.vehicleNo === vehicleNo)
-      return vehicle?.vehicleDescription || 'Unknown Vehicle'
+      return vehicle ? vehicle.description : ''
     },
     [vehicles]
   )
