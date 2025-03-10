@@ -47,6 +47,7 @@ export async function createAdvance(
   data: RequisitionAdvanceType,
   token: string
 ) {
+  console.log('🚀 ~ createAdvance ~ data', data)
   return fetchApi({
     url: 'api/Advance/createAdvance',
     method: 'POST',
