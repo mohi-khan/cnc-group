@@ -1062,6 +1062,30 @@ export const requisitionAdvanceSchema = z.object({
 
 export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
 
+//approve advance
+const approveAdvanceSchema = z.object({
+  id: z.number(),
+  requisitionNo: z.string(),
+  poId: z.number(),
+  vendorId: z.number(),
+  requestedBy: z.number(),
+  createdBy: z.number(),
+  checkName: z.string(),
+  requestedDate: z.string().datetime(),
+  advanceAmount: z.string(),
+  approvedAmount: z.string(),
+  currency: z.string(),
+  paymentStatus: z.enum(["PENDING", "PAID", "FAILED"]),
+  approvalStatus: z.enum(["APPROVED", "REJECTED", "PENDING"]),
+  approvedBy: z.number(),
+  approvedDate: z.string().datetime(),
+  remarks: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
+export type ApproveAdvanceType = z.infer<typeof approveAdvanceSchema>
+
 //Get All Vehicle Type
 export interface GetAllVehicleType {
   vehicleNo: number
@@ -1154,6 +1178,7 @@ export const FundPositionSchema = z.object({
 // Infer the TypeScript type from the schema
 export type FundPositionType = z.infer<typeof FundPositionSchema>
 
+//bank-transactions
 export const createBankTransactionSchema = z.object({
   bankId: z.string().optional(),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), {

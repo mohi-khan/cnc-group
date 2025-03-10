@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
-  User,
+  type User,
   VoucherTypes,
 } from '@/utils/type'
 import BankVoucherMaster from '@/components/bank/bank-vouchers/bank-voucher-master'
@@ -22,8 +22,9 @@ import {
   getAllDepartments,
   getAllResPartners,
 } from '@/api/bank-vouchers-api'
-import { z } from 'zod'
-import { createJournalEntryWithDetails, getAllVoucher } from '@/api/vouchers-api'
+import type { z } from 'zod'
+import { createJournalEntryWithDetails } from '@/api/vouchers-api'
+import PaymentRequisitionAdvanceForm from './payment-requisition-advance-form'
 
 interface PaymentRequisitionPopupProps {
   isOpen: boolean
@@ -49,12 +50,12 @@ export function PaymentRequisitionPopup({
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const getCompanyIds = useCallback((data: any[]): number[] => {
-      return data.map((company) => company.company.companyId)
-    }, [])
-  
-    const getLocationIds = useCallback((data: any[]): number[] => {
-      return data.map((location) => location.location.locationId)
-    }, [])
+    return data.map((company) => company.company.companyId)
+  }, [])
+
+  const getLocationIds = useCallback((data: any[]): number[] => {
+    return data.map((location) => location.location.locationId)
+  }, [])
 
   interface FormState {
     companies: any[]
@@ -222,7 +223,6 @@ export function PaymentRequisitionPopup({
       return
     }
 
-
     const updatedValues = {
       ...values,
       journalEntry: {
@@ -280,7 +280,6 @@ export function PaymentRequisitionPopup({
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
-
       console.log('Voucher is created successfully', response.data)
       toast({
         title: 'Success',
@@ -340,7 +339,18 @@ export function PaymentRequisitionPopup({
       case 'GRN Completed':
         return <div>Create Invoice Form</div>
       case 'Purchase Order':
-        return <div>Create Advance Form</div>
+        return (
+          <div className="w-full">
+            <PaymentRequisitionAdvanceForm
+              requisition={requisition}
+              token={token}
+              onSuccess={() => {
+                onSuccess()
+                onOpenChange(false)
+              }}
+            />
+          </div>
+        )
       default:
         return <div>No form available for this status</div>
     }
@@ -366,16 +376,20 @@ export function PaymentRequisitionPopup({
       title={getPopupTitle()}
       size="max-w-6xl"
     >
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((values) =>
-            onSubmit(values, formState.status)
-          )}
-          className="space-y-6"
-        >
-          {renderFormContent()}
-        </form>
-      </Form>
+      {status === 'Purchase Order' ? (
+        renderFormContent()
+      ) : (
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((values) =>
+              onSubmit(values, formState.status)
+            )}
+            className="space-y-6"
+          >
+            {renderFormContent()}
+          </form>
+        </Form>
+      )}
     </Popup>
   )
 }
