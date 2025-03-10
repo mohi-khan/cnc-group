@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 
 import VehiclePopUp from './vehicle-popup'
-import { getAllVehicles } from '@/api/vehicle'
+import { getAllVehicles } from '@/api/vehicle.api'
 import {
   CostCenter,
   Employee,
@@ -97,6 +97,7 @@ const Vehicle = () => {
         costCenters={costCenters}
         asset={asset}
         employeeData={employeeData}
+        refreshVehicles={fetchVehicles}
       />
       <VehiclePopUp
         isOpen={isOpen}

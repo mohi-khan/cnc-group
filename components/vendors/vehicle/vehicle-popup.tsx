@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { createVehicle } from '@/api/vehicle'
+import { createVehicle } from '@/api/vehicle.api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface VehicleFormModalProps {
@@ -201,32 +201,37 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               control={control}
               name="employeeId"
               render={({ field }) => (
-              <CustomCombobox
-                items={employeeData.map((a: { id: number; employeeName: string }) => ({
-                id: a.id.toString(),
-                name: a.employeeName || 'Unnamed Employee',
-                }))}
-                value={
-                field.value
-                  ? {
-                    id: field.value.toString(),
-                    name:
-                    employeeData.find(
-                      (a: { id: number; employeeName: string }) => Number(a.id) === Number(field.value)
-                    )?.employeeName || '',
+                <CustomCombobox
+                  items={employeeData.map(
+                    (a: { id: number; employeeName: string }) => ({
+                      id: a.id.toString(),
+                      name: a.employeeName || 'Unnamed Employee',
+                    })
+                  )}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            employeeData.find(
+                              (a: { id: number; employeeName: string }) =>
+                                Number(a.id) === Number(field.value)
+                            )?.employeeName || '',
+                        }
+                      : null
                   }
-                  : null
-                }
-                onChange={(value: { id: string; name: string } | null) =>
-                field.onChange(value ? Number(value.id) : null)
-                }
-                placeholder="Select Employee"
-              />
+                  onChange={(value: { id: string; name: string } | null) =>
+                    field.onChange(value ? Number(value.id) : null)
+                  }
+                  placeholder="Select Employee"
+                />
               )}
             />
 
             {errors.employeeId && (
-              <p className="text-red-500 text-sm">{errors.employeeId.message}</p>
+              <p className="text-red-500 text-sm">
+                {errors.employeeId.message}
+              </p>
             )}
           </div>
 
@@ -250,4 +255,3 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
 }
 
 export default VehicleFormModal
-
