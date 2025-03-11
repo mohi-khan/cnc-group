@@ -22,7 +22,8 @@ const ApproveAdvance = () => {
 
   const mainToken = localStorage.getItem('authToken')
   const token = `Bearer ${mainToken}`
-  const userId = localStorage.getItem('userId') || '1' // Default to '1' if not found
+  const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
+  console.log("🚀 ~ ApproveAdvance ~ user:", user)
 
   useEffect(() => {
     fetchAdvances()
@@ -31,13 +32,14 @@ const ApproveAdvance = () => {
   const fetchAdvances = async () => {
     try {
       setIsLoading(true)
+      setError(null) // Reset error state
+
       const data = await getAllAdvance(token)
-      setAdvances(data.data || [])
-      console.log('🚀 ~ fetchAdvances ~ data:', data)
-      setError(null)
+      setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
     } catch (err) {
+      console.error('Error fetching advances:', err)
       setError('Failed to fetch advance requests')
-      console.error(err)
+      setAdvances([]) // Ensure UI still works
     } finally {
       setIsLoading(false)
     }
@@ -50,19 +52,17 @@ const ApproveAdvance = () => {
       const approvalData = {
         invoiceId: advance.id.toString(),
         approvalStatus: 'APPROVED',
-        approvedBy: userId,
+        approvedBy: user?.employeeId ? String(user.employeeId) : "1",
       }
 
       const response = await approveAdvance(approvalData, token)
 
       if ((response as any).success) {
+        await fetchAdvances() // Fetch new data
         toast({
           title: 'Advance Approved',
           description: `Successfully approved advance request ${advance.requisitionNo}`,
         })
-
-        // Remove the approved advance from the list or refresh the list
-        setAdvances(advances.filter((item) => item.id !== advance.id))
       }
     } catch (err) {
       console.error('Error approving advance:', err)
@@ -89,10 +89,6 @@ const ApproveAdvance = () => {
           <div className="flex justify-center items-center">
             <p>Loading advance requests...</p>
           </div>
-        ) : error ? (
-          <div className="flex justify-center items-center text-red-500">
-            <p>{error}</p>
-          </div>
         ) : (
           <Table className="border shadow-md">
             <TableHeader className="border shadow-md bg-slate-200">
@@ -113,11 +109,13 @@ const ApproveAdvance = () => {
               {advances.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center">
-                    No pending advance requests found
+                    {error
+                      ? 'Failed to fetch advance requests'
+                      : 'No pending advance requests for approval'}
                   </TableCell>
                 </TableRow>
               ) : (
-                advances?.map((advance) => (
+                advances.map((advance) => (
                   <TableRow key={advance.id}>
                     <TableCell>{advance.requisitionNo}</TableCell>
                     <TableCell>{advance.poId}</TableCell>
