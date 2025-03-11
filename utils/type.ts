@@ -1193,3 +1193,19 @@ export const createBankTransactionSchema = z.object({
 export type createBankTransactionType = z.infer<
   typeof createBankTransactionSchema
 >
+
+
+export const CreateElectricityMeterSchema = z.object({
+  idelectricityMeterId: z.number().int().positive(),
+  electricityMeterName: z.string().max(45),
+  companyId: z.number().int(),
+  meterType: z.number().int().default(0),
+  costCenterId: z.number().int(),
+  meterDescription: z.string().max(80),
+  provAccountId: z.number().nonnegative(),
+  accountId: z.number().nonnegative(),
+})
+
+export type CreateElectricityMeterType = z.infer<
+  typeof CreateElectricityMeterSchema
+>
