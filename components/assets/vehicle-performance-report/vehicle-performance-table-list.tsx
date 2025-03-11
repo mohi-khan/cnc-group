@@ -100,9 +100,13 @@ const data = [
     },
   },
 ]
+interface VehiclePerformanceReportListProps {
+  targetRef: React.RefObject<HTMLDivElement>
+} 
 
-const VehiclePerformanceReportList = () => {
+const VehiclePerformanceReportList:React.FC<VehiclePerformanceReportListProps> =({targetRef}) => {
   return (
+    <div ref={targetRef} className="mt-10">
     <Table className="border shadow-md mt-10  ">
       <TableHeader className="bg-slate-200 shadow-md sticky top-28">
         <TableRow>
@@ -143,6 +147,7 @@ const VehiclePerformanceReportList = () => {
         ))}
       </TableBody>
     </Table>
+    </div>
   )
 }
 

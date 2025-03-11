@@ -3,13 +3,21 @@
 import React, { use, useEffect, useState } from 'react'
 import VehiclePerformanceReportHeading from './vehicle-performance-report-Heading'
 import { getAllVehicles } from '@/api/vehicle.api'
-import { Employee, GetAllVehicleType } from '@/utils/type'
-import { getEmployee } from '@/api/iou-api'
+import { GetAllVehicleType } from '@/utils/type'
+
 import VehiclePerformanceReportList from './vehicle-performance-table-list'
+import { usePDF } from 'react-to-pdf'
 
 const VehiclePerformanceReport = () => {
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-  const [employeeData, setEmployeeData] = useState<Employee[]>([])
+  const { toPDF, targetRef } = usePDF({ filename: 'vehicle_performance_report.pdf' })
+  
+
+  const generatePdf = () => {
+    toPDF()
+  }
+
+
 
   // Fetch all vehicles data
   const fetchVehicles = async () => {
@@ -18,25 +26,21 @@ const VehiclePerformanceReport = () => {
     console.log('Show The Vehicle All Data :', vehicleData.data)
   }
 
-  const fetchEmployeeData = async () => {
-    const employees = await getEmployee()
-    if (employees.data) {
-      setEmployeeData(employees.data)
-    } else {
-      setEmployeeData([])
-    }
-    console.log('Show The Employee Data report :', employees.data)
-  }
+  
 
   useEffect(() => {
     fetchVehicles()
-    fetchEmployeeData()
+  
   }, [])
 
   return (
     <div>
-      <VehiclePerformanceReportHeading vehicles={vehicles} />
-      <VehiclePerformanceReportList />
+      <VehiclePerformanceReportHeading vehicles={vehicles}
+       generatePdf={generatePdf}
+      />
+      <VehiclePerformanceReportList 
+      targetRef={targetRef}
+      />
     </div>
   )
 }
