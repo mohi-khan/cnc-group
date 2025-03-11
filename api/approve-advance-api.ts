@@ -1,9 +1,7 @@
-import { fetchApi } from "@/utils/http";
-import { ApproveAdvanceType } from "@/utils/type";
+import { fetchApi } from '@/utils/http'
+import { ApproveAdvanceType } from '@/utils/type'
 
-export async function getAllAdvance(
-  token: string
-) {
+export async function getAllAdvance(token: string) {
   return fetchApi<ApproveAdvanceType[]>({
     url: 'api/advance/getAdvance?approvalStatus=PENDING',
     method: 'GET',
@@ -15,6 +13,11 @@ export async function getAllAdvance(
 }
 
 export async function approveAdvance(
+  data: {
+    invoiceId: string
+    approvalStatus: string
+    approvedBy: string
+  },
   token: string
 ) {
   return fetchApi({
@@ -24,5 +27,6 @@ export async function approveAdvance(
       Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
+    body: data,
   })
 }

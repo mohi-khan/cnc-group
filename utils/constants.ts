@@ -72,6 +72,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Payment Requisition',
             source: '/vendors/payment-requisition',
           },
+          {
+            name: 'Advance Payment Requisition',
+            source: '/vendors/approved-advances',
+          },
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
