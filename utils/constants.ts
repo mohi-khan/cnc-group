@@ -88,6 +88,20 @@ export const MENU_ITEMS: MenuItem[] = [
     ],
   },
   {
+    name: 'Electricity',
+    subItemGroups: [
+      {
+        name: 'Electricity',
+        items: [
+          { name: 'Meter Entry', source: '/electricity/meter-entry' },
+          { name: 'Bill Entry', source: '/electricity/bill-entry' },
+          { name: 'Report', source: '/electricity/report' },
+        ],
+        
+      },
+    ],
+  },
+  {
     name: 'Assets',
     subItemGroups: [
       {
