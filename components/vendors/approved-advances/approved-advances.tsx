@@ -1,22 +1,37 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { ApproveAdvanceType } from "@/utils/type"
-import { Button } from "@/components/ui/button"
-import { toast } from "@/hooks/use-toast"
-import { getAllAdvance } from "@/api/approved-advances-api"
+import { useEffect, useState } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import type { ApproveAdvanceType } from '@/utils/type'
+import { Button } from '@/components/ui/button'
+import { toast } from '@/hooks/use-toast'
+import { PaymentRequisitionPopup } from '../payment-requisition/payment-requisition-popup'
+import { getAllAdvance } from '@/api/approved-advances-api'
 
 const ApprovedAdvances = () => {
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false)
+  const [selectedAdvance, setSelectedAdvance] =
+    useState<ApproveAdvanceType | null>(null)
 
   // Get authentication token from localStorage
-  const mainToken = typeof window !== "undefined" ? localStorage.getItem("authToken") : null
-  const token = mainToken ? `Bearer ${mainToken}` : ""
-  const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("currentUser") || "{}") : {}
+  const mainToken =
+    typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+  const token = mainToken ? `Bearer ${mainToken}` : ''
+  const user =
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('currentUser') || '{}')
+      : {}
 
   useEffect(() => {
     fetchAdvances()
@@ -30,39 +45,17 @@ const ApprovedAdvances = () => {
       const data = await getAllAdvance(token)
       setAdvances(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      console.error("Error fetching approved advances:", err)
-      setError("Failed to fetch approved advances")
+      console.error('Error fetching approved advances:', err)
+      setError('Failed to fetch approved advances')
       setAdvances([])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleCreatePayment = async (advance: ApproveAdvanceType) => {
-    try {
-      setProcessingId(advance.id.toString())
-
-      // Placeholder for create payment API call
-      // Replace with actual implementation
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      toast({
-        title: "Payment Creation Initiated",
-        description: `Payment creation started for advance ${advance.requisitionNo}`,
-      })
-
-      // Optionally refresh the data after payment creation
-      // await fetchAdvances()
-    } catch (err) {
-      console.error("Error creating payment:", err)
-      toast({
-        title: "Payment Creation Failed",
-        description: err instanceof Error ? err.message : "Failed to create payment for advance",
-        variant: "destructive",
-      })
-    } finally {
-      setProcessingId(null)
-    }
+  const handleCreatePayment = (advance: ApproveAdvanceType) => {
+    setSelectedAdvance(advance)
+    setIsPaymentPopupOpen(true)
   }
 
   return (
@@ -95,7 +88,9 @@ const ApprovedAdvances = () => {
               {advances.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center">
-                    {error ? "Failed to fetch approved advances" : "No approved advances found"}
+                    {error
+                      ? 'Failed to fetch approved advances'
+                      : 'No approved advances found'}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -111,7 +106,10 @@ const ApprovedAdvances = () => {
                     <TableCell>
                       {advance.advanceAmount} {advance.currency}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate" title={advance.remarks}>
+                    <TableCell
+                      className="max-w-xs truncate"
+                      title={advance.remarks}
+                    >
                       {advance.remarks}
                     </TableCell>
                     <TableCell>
@@ -121,7 +119,9 @@ const ApprovedAdvances = () => {
                         disabled={processingId === advance.id.toString()}
                         variant="default"
                       >
-                        {processingId === advance.id.toString() ? "Processing..." : "Create Payment"}
+                        {processingId === advance.id.toString()
+                          ? 'Processing...'
+                          : 'Create Payment'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -131,6 +131,22 @@ const ApprovedAdvances = () => {
           </Table>
         )}
       </div>
+      {selectedAdvance && (
+        <PaymentRequisitionPopup
+          isOpen={isPaymentPopupOpen}
+          onOpenChange={setIsPaymentPopupOpen}
+          requisition={selectedAdvance}
+          token={token}
+          onSuccess={() => {
+            fetchAdvances()
+            toast({
+              title: 'Success',
+              description: 'Payment created successfully',
+            })
+          }}
+          status="Invoice Approved"
+        />
+      )}
     </div>
   )
 }
