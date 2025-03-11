@@ -96,7 +96,7 @@ export function PaymentRequisitionPopup({
       currencyId: 1,
       amountTotal: requisition?.amount || 0,
       createdBy: 60,
-      notes: `Payment for PO: ${requisition?.poNo || ''}, Vendor: ${requisition?.vendorName || ''}`,
+      notes: '',
       poId: requisition?.id || null,
     },
     journalDetails: [
@@ -106,13 +106,7 @@ export function PaymentRequisitionPopup({
         credit: 0,
         createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
-      },
-      {
-        accountId: 0, // Bank or cash account
-        debit: 0,
-        credit: requisition?.amount || 0,
-        createdBy: 60,
-        notes: `Payment for PO: ${requisition?.poNo || ''}`,
+        // resPartnerId: requisition.vendorId || 0,
       },
     ],
   }).current
@@ -122,6 +116,22 @@ export function PaymentRequisitionPopup({
     defaultValues,
   })
 
+  // Load user data when component mounts
+  useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+
+      // Load the available companies and locations for dropdown options
+      setFormState((prevState) => ({
+        ...prevState,
+        companies: userData.userCompanies || [],
+        locations: userData.userLocations || [],
+      }))
+    }
+  }, [])
+
   // Reset form when requisition changes or popup opens/closes
   useEffect(() => {
     if (isOpen && requisition) {
@@ -129,25 +139,19 @@ export function PaymentRequisitionPopup({
         ...defaultValues,
         journalEntry: {
           ...defaultValues.journalEntry,
-          companyId: requisition.companyId || 75,
-          locationId: requisition.locationId || 41,
-          amountTotal: requisition.amount || 0,
-          notes: `Payment for PO: ${requisition.poNo || ''}, Vendor: ${requisition.vendorName || ''}`,
+          companyId: requisition.companyId || 0, // Use companyId from requisition
+          locationId: 0, // No default location, user will select
+          amountTotal: Number(requisition.amount) || 0,
+          notes: '',
         },
         journalDetails: [
           {
             accountId: 0, // Account payable
-            debit: requisition.amount || 0,
+            debit: Number(requisition.amount) || 0,
             credit: 0,
             createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
-          },
-          {
-            accountId: 0, // Bank or cash account
-            debit: 0,
-            credit: requisition.amount || 0,
-            createdBy: 60,
-            notes: `Payment for PO: ${requisition.poNo || ''}`,
+            // resPartnerId: requisition.vendorId || 0,
           },
         ],
       })
@@ -155,6 +159,20 @@ export function PaymentRequisitionPopup({
       form.reset(defaultValues)
     }
   }, [isOpen, requisition, form, defaultValues])
+
+  // Load user data when component mounts
+  useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+      setFormState((prevState) => ({
+        ...prevState,
+        companies: userData.userCompanies || [],
+        locations: userData.userLocations || [],
+      }))
+    }
+  }, [])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -230,7 +248,7 @@ export function PaymentRequisitionPopup({
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
-        amountTotal: totalDetailsAmount,
+        amountTotal: Number(totalDetailsAmount),
         createdBy: user?.userId ?? 60,
       },
       journalDetails: values.journalDetails.map((detail) => ({
@@ -252,11 +270,11 @@ export function PaymentRequisitionPopup({
           departmentId: null,
           debit:
             formState.formType === 'Debit'
-              ? updatedValues.journalEntry.amountTotal
+              ? Number(updatedValues.journalEntry.amountTotal)
               : 0,
           credit:
             formState.formType === 'Credit'
-              ? updatedValues.journalEntry.amountTotal
+              ? Number(updatedValues.journalEntry.amountTotal)
               : 0,
           analyticTags: null,
           taxId: null,
