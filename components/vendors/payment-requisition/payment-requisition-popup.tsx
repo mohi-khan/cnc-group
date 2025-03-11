@@ -106,6 +106,7 @@ export function PaymentRequisitionPopup({
         credit: 0,
         createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
+        // resPartnerId: requisition.vendorId || 0,
       },
     ],
   }).current
@@ -140,16 +141,17 @@ export function PaymentRequisitionPopup({
           ...defaultValues.journalEntry,
           companyId: requisition.companyId || 0, // Use companyId from requisition
           locationId: 0, // No default location, user will select
-          amountTotal: requisition.amount || 0,
+          amountTotal: Number(requisition.amount) || 0,
           notes: '',
         },
         journalDetails: [
           {
             accountId: 0, // Account payable
-            debit: requisition.amount || 0,
+            debit: Number(requisition.amount) || 0,
             credit: 0,
             createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
+            // resPartnerId: requisition.vendorId || 0,
           },
         ],
       })
@@ -246,7 +248,7 @@ export function PaymentRequisitionPopup({
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
-        amountTotal: totalDetailsAmount,
+        amountTotal: Number(totalDetailsAmount),
         createdBy: user?.userId ?? 60,
       },
       journalDetails: values.journalDetails.map((detail) => ({
@@ -268,11 +270,11 @@ export function PaymentRequisitionPopup({
           departmentId: null,
           debit:
             formState.formType === 'Debit'
-              ? updatedValues.journalEntry.amountTotal
+              ? Number(updatedValues.journalEntry.amountTotal)
               : 0,
           credit:
             formState.formType === 'Credit'
-              ? updatedValues.journalEntry.amountTotal
+              ? Number(updatedValues.journalEntry.amountTotal)
               : 0,
           analyticTags: null,
           taxId: null,

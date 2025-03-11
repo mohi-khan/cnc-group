@@ -75,9 +75,8 @@ const ApprovedAdvances = () => {
               <TableRow>
                 <TableHead>Requisition No</TableHead>
                 <TableHead>PO ID</TableHead>
-                <TableHead>Vendor ID</TableHead>
+                <TableHead>Vendor Name</TableHead>
                 <TableHead>Requested By</TableHead>
-                <TableHead>Created By</TableHead>
                 <TableHead>Check Name</TableHead>
                 <TableHead>Requested Date</TableHead>
                 <TableHead>Advance Amount</TableHead>
@@ -97,21 +96,20 @@ const ApprovedAdvances = () => {
               ) : (
                 advances.map((advance) => (
                   <TableRow key={advance.id}>
-                    <TableCell>{advance.requisitionNo}</TableCell>
-                    <TableCell>{advance.poId}</TableCell>
-                    <TableCell>{advance.vendorId}</TableCell>
-                    <TableCell>{advance.requestedBy}</TableCell>
-                    <TableCell>{advance.createdBy}</TableCell>
+                    <TableCell>{advance.reqno}</TableCell>
+                    <TableCell>{advance.poid}</TableCell>
+                    <TableCell>{advance.vendorname}</TableCell>
+                    <TableCell>{advance.requestedby}</TableCell>
                     <TableCell>{advance.checkName}</TableCell>
-                    <TableCell>{advance.requestedDate}</TableCell>
+                    <TableCell>{new Date(advance.requestedDate).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {advance.advanceAmount} {advance.currency}
+                      {advance.advanceamount} {advance.currency}
                     </TableCell>
                     <TableCell
                       className="max-w-xs truncate"
-                      title={advance.remarks}
+                      title={advance.description || undefined}
                     >
-                      {advance.remarks}
+                      {advance.description}
                     </TableCell>
                     <TableCell>
                       <Button

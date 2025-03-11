@@ -1065,23 +1065,23 @@ export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
 //approve advance
 const approveAdvanceSchema = z.object({
   id: z.number(),
-  requisitionNo: z.string(),
-  poId: z.number(),
-  vendorId: z.number(),
-  requestedBy: z.number(),
-  createdBy: z.number(),
-  checkName: z.string(),
+  reqno: z.string(),
+  description: z.string().nullable(),
+  poid: z.number().nullable(),
+  vendorid: z.number().nullable(),
+  vendorname: z.string(),
+  requestedid: z.number(),
+  requestedby: z.string(),
   requestedDate: z.string().datetime(),
-  advanceAmount: z.string(),
-  approvedAmount: z.string(),
-  currency: z.string(),
-  paymentStatus: z.enum(["PENDING", "PAID", "FAILED"]),
-  approvalStatus: z.enum(["APPROVED", "REJECTED", "PENDING"]),
-  approvedBy: z.number(),
-  approvedDate: z.string().datetime(),
-  remarks: z.string(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  checkName: z.string().nullable(),
+  approveamount: z.number().nullable(),
+  advanceamount: z.number().nullable(),
+  currency: z.string().nullable(),
+  approvalStatus: z.string(),
+  paymentStatus: z.string(),
+  approvedid: z.number().nullable(),
+  approvedby: z.string().nullable(),
+  approvaldate: z.string().datetime().nullable(),
 })
 
 export type ApproveAdvanceType = z.infer<typeof approveAdvanceSchema>
@@ -1182,12 +1182,14 @@ export type FundPositionType = z.infer<typeof FundPositionSchema>
 export const createBankTransactionSchema = z.object({
   bankId: z.string().optional(),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: "Invalid date format",
+    message: 'Invalid date format',
   }),
   description: z.string().optional(),
   amount: z.string(),
   currency: z.string(),
-  status: z.enum(["Matched", "Unmatched", "Pending"]).default("Pending"),
-});
+  status: z.enum(['Matched', 'Unmatched', 'Pending']).default('Pending'),
+})
 
-export type createBankTransactionType = z.infer<typeof createBankTransactionSchema>
+export type createBankTransactionType = z.infer<
+  typeof createBankTransactionSchema
+>
