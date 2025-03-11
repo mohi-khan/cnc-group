@@ -9,41 +9,74 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ApproveAdvanceType } from '@/utils/type'
-import { getAllAdvance } from '@/api/approve-advance-api'
+import { getAllAdvance, approveAdvance } from '@/api/approve-advance-api'
 import { Button } from '../ui/button'
+import { toast } from '@/hooks/use-toast'
 
 const ApproveAdvance = () => {
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null)
 
   const mainToken = localStorage.getItem('authToken')
-  console.log('🚀 ~ approve-advance ~ mainToken:', mainToken)
   const token = `Bearer ${mainToken}`
+  const userId = localStorage.getItem('userId') || '1' // Default to '1' if not found
 
   useEffect(() => {
-    const fetchAdvances = async () => {
-      try {
-        setIsLoading(true)
-        const data = await getAllAdvance(token)
-        setAdvances(data.data || [])
-        console.log('🚀 ~ fetchAdvances ~ data:', data)
-        setError(null)
-      } catch (err) {
-        setError('Failed to fetch advance requests')
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchAdvances()
   }, [])
 
-  const handleApproveClick = (advance: ApproveAdvanceType) => {
-    console.log('Approve advance', advance)
+  const fetchAdvances = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getAllAdvance(token)
+      setAdvances(data.data || [])
+      console.log('🚀 ~ fetchAdvances ~ data:', data)
+      setError(null)
+    } catch (err) {
+      setError('Failed to fetch advance requests')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleApproveClick = async (advance: ApproveAdvanceType) => {
+    try {
+      setProcessingId(advance.id.toString())
+
+      const approvalData = {
+        invoiceId: advance.id.toString(),
+        approvalStatus: 'APPROVED',
+        approvedBy: userId,
+      }
+
+      const response = await approveAdvance(approvalData, token)
+
+      if ((response as any).success) {
+        toast({
+          title: 'Advance Approved',
+          description: `Successfully approved advance request ${advance.requisitionNo}`,
+        })
+
+        // Remove the approved advance from the list or refresh the list
+        setAdvances(advances.filter((item) => item.id !== advance.id))
+      }
+    } catch (err) {
+      console.error('Error approving advance:', err)
+      toast({
+        title: 'Approval Failed',
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Failed to approve advance request',
+        variant: 'destructive',
+      })
+    } finally {
+      setProcessingId(null)
+    }
   }
 
   return (
@@ -79,7 +112,7 @@ const ApproveAdvance = () => {
             <TableBody>
               {advances.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center">
+                  <TableCell colSpan={10} className="text-center">
                     No pending advance requests found
                   </TableCell>
                 </TableRow>
@@ -102,15 +135,15 @@ const ApproveAdvance = () => {
                     >
                       {advance.remarks}
                     </TableCell>
-                    <TableCell
-                      className="max-w-xs truncate"
-                      title={advance.remarks}
-                    >
+                    <TableCell>
                       <Button
                         size="sm"
                         onClick={() => handleApproveClick(advance)}
+                        disabled={processingId === advance.id.toString()}
                       >
-                        Approve
+                        {processingId === advance.id.toString()
+                          ? 'Processing...'
+                          : 'Approve'}
                       </Button>
                     </TableCell>
                   </TableRow>
