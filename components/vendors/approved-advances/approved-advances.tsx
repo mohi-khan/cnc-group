@@ -43,6 +43,7 @@ const ApprovedAdvances = () => {
       setError(null)
 
       const data = await getAllAdvance(token)
+      console.log("🚀 ~ fetchAdvances ~ data:", data)
       setAdvances(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
       console.error('Error fetching approved advances:', err)

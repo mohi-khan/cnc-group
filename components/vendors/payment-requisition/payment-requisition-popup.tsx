@@ -96,7 +96,7 @@ export function PaymentRequisitionPopup({
       currencyId: 1,
       amountTotal: requisition?.amount || 0,
       createdBy: 60,
-      notes: `Payment for PO: ${requisition?.poNo || ''}, Vendor: ${requisition?.vendorName || ''}`,
+      notes: '',
       poId: requisition?.id || null,
     },
     journalDetails: [
@@ -104,13 +104,6 @@ export function PaymentRequisitionPopup({
         accountId: 0, // Account payable
         debit: requisition?.amount || 0,
         credit: 0,
-        createdBy: 60,
-        notes: `Payment for PO: ${requisition?.poNo || ''}`,
-      },
-      {
-        accountId: 0, // Bank or cash account
-        debit: 0,
-        credit: requisition?.amount || 0,
         createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
       },
@@ -122,6 +115,22 @@ export function PaymentRequisitionPopup({
     defaultValues,
   })
 
+  // Load user data when component mounts
+  useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+
+      // Load the available companies and locations for dropdown options
+      setFormState((prevState) => ({
+        ...prevState,
+        companies: userData.userCompanies || [],
+        locations: userData.userLocations || [],
+      }))
+    }
+  }, [])
+
   // Reset form when requisition changes or popup opens/closes
   useEffect(() => {
     if (isOpen && requisition) {
@@ -129,10 +138,10 @@ export function PaymentRequisitionPopup({
         ...defaultValues,
         journalEntry: {
           ...defaultValues.journalEntry,
-          companyId: requisition.companyId || 75,
-          locationId: requisition.locationId || 41,
+          companyId: requisition.companyId || 0, // Use companyId from requisition
+          locationId: 0, // No default location, user will select
           amountTotal: requisition.amount || 0,
-          notes: `Payment for PO: ${requisition.poNo || ''}, Vendor: ${requisition.vendorName || ''}`,
+          notes: '',
         },
         journalDetails: [
           {
@@ -142,19 +151,26 @@ export function PaymentRequisitionPopup({
             createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
           },
-          {
-            accountId: 0, // Bank or cash account
-            debit: 0,
-            credit: requisition.amount || 0,
-            createdBy: 60,
-            notes: `Payment for PO: ${requisition.poNo || ''}`,
-          },
         ],
       })
     } else if (!isOpen) {
       form.reset(defaultValues)
     }
   }, [isOpen, requisition, form, defaultValues])
+
+  // Load user data when component mounts
+  useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUser(userData)
+      setFormState((prevState) => ({
+        ...prevState,
+        companies: userData.userCompanies || [],
+        locations: userData.userLocations || [],
+      }))
+    }
+  }, [])
 
   useEffect(() => {
     const fetchInitialData = async () => {
