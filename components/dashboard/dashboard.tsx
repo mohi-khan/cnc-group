@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -32,8 +32,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getFundPosition } from '@/api/dashboard-api'
-import type { FundPositionType } from '@/utils/type'
+import type { ApproveAdvanceType, FundPositionType, GetPaymentOrder } from '@/utils/type'
 import Link from 'next/link'
+import { getAllPaymentRequisition } from '@/api/payment-requisition-api'
+import { getAllAdvance } from '@/api/approve-advance-api'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -55,6 +57,14 @@ const costBreakdownData = [
 export default function Dashboard() {
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
+  const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
+  const [invoices, setInvoices] = useState<GetPaymentOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const mainToken = localStorage.getItem('authToken')
+  console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  const token = `Bearer ${mainToken}`
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
@@ -66,8 +76,45 @@ export default function Dashboard() {
     }
   }, [])
 
+  const fetchRequisitions = async () => {
+    try {
+      setLoading(true)
+      const data = await getAllPaymentRequisition({
+        companyId: 75,
+        token: token,
+      })
+      const filteredInvoices =
+        data.data?.filter((req) => req.status === 'Invoice Created') || []
+      setInvoices(filteredInvoices)
+      console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+    } catch (err) {
+      setError('Failed to fetch requisitions')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchAdvances = async () => {
+    try {
+      setLoading(true)
+      setError(null) // Reset error state
+
+      const data = await getAllAdvance(token)
+      setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
+      console.log("🚀 ~ fetchAdvances ~ data.data:", data.data)
+    } catch (err) {
+      console.error('Error fetching advances:', err)
+      setError('Failed to fetch advance requests')
+      setAdvances([]) // Ensure UI still works
+    } finally {
+      setLoading(false)
+    }
+  }
+
   React.useEffect(() => {
     fetchFundPosition()
+    fetchRequisitions()
+    fetchAdvances()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -132,15 +179,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className='grid grid-cols-2 gap-5'>
+      <div className="grid grid-cols-2 gap-5">
         <Link href="/approve-advance">
-          <Card className='p-3 text-center'>
-            You have 2 pending advance approvals
+          <Card className="p-3 text-center">
+            You have {advances.length} pending advance approvals
           </Card>
         </Link>
         <Link href="/approve-invoice">
-          <Card className='p-3 text-center'>
-            You have 2 pending invoice approvals
+          <Card className="p-3 text-center">
+            You have {invoices.length} pending invoice approvals
           </Card>
         </Link>
       </div>
