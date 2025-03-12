@@ -30,7 +30,10 @@ const PaymentRequisition = () => {
         companyId: 75,
         token: token,
       })
-      setRequisitions(data.data || [])
+      const filteredRequisitions = data.data?.filter(
+        (req) => req.status !== 'Invoice Created'
+    ) || []; 
+      setRequisitions(filteredRequisitions)
       console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
     } catch (err) {
       setError('Failed to fetch requisitions')
