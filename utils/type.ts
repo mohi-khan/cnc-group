@@ -1062,13 +1062,41 @@ export const requisitionAdvanceSchema = z.object({
 
 export type RequisitionAdvanceType = z.infer<typeof requisitionAdvanceSchema>
 
+//approve advance
+const approveAdvanceSchema = z.object({
+  id: z.number(),
+  reqno: z.string(),
+  description: z.string().nullable(),
+  poid: z.number().nullable(),
+  vendorid: z.number().nullable(),
+  vendorname: z.string(),
+  requestedid: z.number(),
+  requestedby: z.string(),
+  requestedDate: z.string().datetime(),
+  checkName: z.string().nullable(),
+  approveamount: z.number().nullable(),
+  advanceamount: z.number().nullable(),
+  currency: z.string().nullable(),
+  approvalStatus: z.string(),
+  paymentStatus: z.string(),
+  approvedid: z.number().nullable(),
+  approvedby: z.string().nullable(),
+  approvaldate: z.string().datetime().nullable(),
+})
+
+export type ApproveAdvanceType = z.infer<typeof approveAdvanceSchema>
+
 //Get All Vehicle Type
 export interface GetAllVehicleType {
   vehicleNo: number
-  costCenterId: number
-  vehicleDescription: string
+  costCenter: number
+  costCenterName: string
+  description: string
   purchaseDate: string
   assetId: number
+  employeeId: number
+  employeeName: string
+  user: number
 }
 
 //Create Vehicle zod schema
@@ -1077,6 +1105,7 @@ export const createVehicleSchema = z.object({
   vehicleDescription: z.string().max(45).nullable(),
   purchaseDate: z.coerce.date().nullable(),
   assetId: z.number().int().nullable(),
+  employeeId: z.number().int().nullable(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
 
@@ -1148,3 +1177,35 @@ export const FundPositionSchema = z.object({
 
 // Infer the TypeScript type from the schema
 export type FundPositionType = z.infer<typeof FundPositionSchema>
+
+//bank-transactions
+export const createBankTransactionSchema = z.object({
+  bankId: z.string().optional(),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: 'Invalid date format',
+  }),
+  description: z.string().optional(),
+  amount: z.string(),
+  currency: z.string(),
+  status: z.enum(['Matched', 'Unmatched', 'Pending']).default('Pending'),
+})
+
+export type createBankTransactionType = z.infer<
+  typeof createBankTransactionSchema
+>
+
+
+export const CreateElectricityMeterSchema = z.object({
+  idelectricityMeterId: z.number().int().positive(),
+  electricityMeterName: z.string().max(45),
+  companyId: z.number().int(),
+  meterType: z.number().int().default(0),
+  costCenterId: z.number().int(),
+  meterDescription: z.string().max(80),
+  provAccountId: z.number().nonnegative(),
+  accountId: z.number().nonnegative(),
+})
+
+export type CreateElectricityMeterType = z.infer<
+  typeof CreateElectricityMeterSchema
+>

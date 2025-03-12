@@ -64,12 +64,7 @@ const EditBudgetDialog: React.FC<{
 
     try {
       if (!token) return
-      const response = await updateBudgetMaster(item.budgetId, token, {
-        name,
-        fromDate,
-        toDate,
-        locked: item.locked,
-      })
+      const response = await updateBudgetMaster(item.budgetId, token)
 
       if (response.data) {
         console.log('Budget updated successfully:', {
@@ -213,10 +208,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
       const budget = budgets.find((b) => b.budgetId === budgetId)
       if (!budget) return
 
-      const response = await updateBudgetMaster(budgetId, token, {
-        ...budget,
-        locked: !budget.locked,
-      })
+      const response = await updateBudgetMaster(budgetId, token)
 
       if (response.data) {
         // Update local state to reflect the change
@@ -273,7 +265,11 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
                 {new Date(item.toDate).toLocaleDateString()}
               </TableCell>
               <TableCell className="flex gap-2">
-                <div className={item.locked ? 'opacity-50 pointer-events-none' : ''}>
+                <div
+                  className={
+                    item.locked ? 'opacity-50 pointer-events-none' : ''
+                  }
+                >
                   <EditBudgetDialog item={item} token={token} />
                 </div>
                 <Button

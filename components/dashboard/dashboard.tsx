@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { getFundPosition } from '@/api/dashboard-api'
 import type { FundPositionType } from '@/utils/type'
+import Link from 'next/link'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -130,6 +131,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <Link href="/approve-advance">
+        <div className="border p-2 mt-5 rounded-md text-center bg-slate-200 shadow-md">
+          You have 2 pending approvals
+        </div>
+      </Link>
 
       <div className="grid grid-cols-4 gap-4">
         <div className="grid grid-cols-4 gap-4 col-span-3">

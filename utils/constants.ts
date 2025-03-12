@@ -68,7 +68,14 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Vendor Management',
         items: [
           { name: 'Bills', source: '/vendors/bills' },
-          { name: 'Payment Requisition', source: '/vendors/payment-requisition' },
+          {
+            name: 'Payment Requisition',
+            source: '/vendors/payment-requisition',
+          },
+          {
+            name: 'Advance Payment Requisition',
+            source: '/vendors/approved-advances',
+          },
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
@@ -76,9 +83,25 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Vechile',
         items: [
           { name: 'Vehicle', source: '/vendors/vehicle' },
-          { name: 'Vehicle Fuel Consumption', source: '/vendors/vehicle-fuel-consumption' },
-         
+          {
+            name: 'Vehicle Fuel Consumption',
+            source: '/vendors/vehicle-fuel-consumption',
+          },
         ],
+      },
+    ],
+  },
+  {
+    name: 'Electricity',
+    subItemGroups: [
+      {
+        name: 'Electricity',
+        items: [
+          { name: 'Meter Entry', source: '/electricity/meter-entry' },
+          { name: 'Bill Entry', source: '/electricity/bill-entry' },
+          { name: 'Report', source: '/electricity/report' },
+        ],
+        
       },
     ],
   },
@@ -107,6 +130,15 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Run Depreciation', source: '/assets/run-depreciation' },
         ],
       },
+      {
+        name: 'Vehicle',
+        items: [
+          {
+            name: 'Vehicle Performance Report',
+            source: '/assets/vehicle-performance-report',
+          },
+        ],
+      },
     ],
   },
   {
@@ -123,6 +155,10 @@ export const MENU_ITEMS: MenuItem[] = [
           {
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',
+          },
+          {
+            name: 'Bank Transactions',
+            source: '/bank/bank-transactions',
           },
           { name: 'Check Print', source: '/bank/check-print' },
           { name: 'Bank Balances', source: '/bank/bank-balances' },

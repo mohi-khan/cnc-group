@@ -83,6 +83,7 @@ const UserSchema = z.object({
   role: RoleSchema,
   userCompanies: z.array(UserCompanySchema),
   userLocations: z.array(UserLocationSchema),
+  employeeId: z.number(),
 })
 
 // Define the main response schema

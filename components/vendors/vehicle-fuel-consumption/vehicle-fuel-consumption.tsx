@@ -4,7 +4,7 @@ import VehicleFuelConsumptionList from './vehicle-fuel-consumption-list'
 import VehicleFuelConsumptionPopUp from './vehicle-fuel-consumption-popup'
 import { getAllVehicleFuelConsumpiton } from '@/api/vehicle-fuel-consumption-api'
 import { GetAllVehicleType, GetVehicleConsumptionType } from '@/utils/type'
-import { getAllVehicles } from '@/api/vehicle'
+import { getAllVehicles } from '@/api/vehicle.api'
 // Define the type for vehicle data
 export interface Vehicle {
   id: number
@@ -15,9 +15,9 @@ const VehicleFuelConsumption = () => {
   const [vehicleFuel, setVehicleFuel] = useState<GetVehicleConsumptionType[]>(
     []
   )
-    const [isOpen, setIsOpen] = useState(false)
-      const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-      const [loading, setLoading] = useState<boolean>(true)
+  const [isOpen, setIsOpen] = useState(false)
+  const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   const handleAddVehicle = () => {
     setIsOpen(true)
@@ -44,23 +44,20 @@ const VehicleFuelConsumption = () => {
     fetchVehicleFuelConsumptionData()
     fetchVehicles()
   }, [])
-    
-    
-   
-        // Fetch the vehicle data from API
-        const fetchVehicles = async () => {
-          try {
-            const response = await getAllVehicles()
-            const data: GetAllVehicleType[] = response.data ?? []
-            setVehicles(data)
-            setLoading(false)
-          } catch (error) {
-            console.error('Failed to fetch vehicles:', error)
-            setLoading(false)
-          }
-        }
-    
-       
+
+  // Fetch the vehicle data from API
+  const fetchVehicles = async () => {
+    try {
+      const response = await getAllVehicles()
+      const data: GetAllVehicleType[] = response.data ?? []
+      setVehicles(data)
+      setLoading(false)
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error)
+      setLoading(false)
+    }
+  }
+
   return (
     <div>
       <VehicleFuelConsumptionList
@@ -81,5 +78,3 @@ const VehicleFuelConsumption = () => {
 }
 
 export default VehicleFuelConsumption
-
-

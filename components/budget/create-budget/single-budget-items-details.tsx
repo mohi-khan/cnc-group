@@ -1,6 +1,10 @@
 'use client'
 
-import { getAllBudgetDetails, createBudgetDetails, updateBudgetDetails } from '@/api/budget-api'
+import {
+  getAllBudgetDetails,
+  createBudgetDetails,
+  updateBudgetDetails,
+} from '@/api/budget-api'
 import { toast } from '@/hooks/use-toast'
 import { AccountsHead, BudgetItems, ChartOfAccount } from '@/utils/type'
 import React, { useEffect, useState, useMemo } from 'react'
@@ -133,10 +137,9 @@ const SingleBudgetItemsDetails = () => {
 
     const updatedBudgetItem = {
       budgetId: 64,
-      name: editedName,
+
       budgetAmount: editedAmount,
-      accountId: 5,
-      id: selectedItem.id
+      accountId: selectedItem.accountId,
     }
 
     console.log('Updated Budget Item:', updatedBudgetItem)
@@ -147,7 +150,9 @@ const SingleBudgetItemsDetails = () => {
       if (response.data) {
         setBudgetItems((prev) =>
           prev.map((item) =>
-            item.id === selectedItem.id ? { ...item, name: editedName, budgetAmount: editedAmount } : item
+            item.id === selectedItem.id
+              ? { ...item, name: editedName, budgetAmount: editedAmount }
+              : item
           )
         )
         toast({
@@ -170,7 +175,7 @@ const SingleBudgetItemsDetails = () => {
     setSelectedItem(null)
     setEditedName('')
     setEditedAmount(0)
-  }  // const handleAccountChange = (currentId: number, newAccountId: number) => {
+  } // const handleAccountChange = (currentId: number, newAccountId: number) => {
   //   if (newAccountId) {
   //     const selectedAccount = accounts.find(
   //       (account) => account.accountId === newAccountId

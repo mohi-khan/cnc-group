@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import type React from 'react'
@@ -21,48 +19,50 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { ArrowUpDown } from 'lucide-react'
-import { CostCenter, GetAllVehicleType, GetAssetData } from '@/utils/type'
+import { ArrowUpDown, Edit, Check, X } from 'lucide-react'
+import {
+  CostCenter,
+  Employee,
+  GetAllVehicleType,
+  GetAssetData,
+} from '@/utils/type'
+import { updateVehicleEmployee } from '@/api/vehicle.api'
 
 interface VehicleListProps {
   AllVehicles: GetAllVehicleType[]
   onAddVehicle: () => void
   costCenters: CostCenter[]
   asset: GetAssetData[]
+  employeeData: Employee[]
+  refreshVehicles: () => void
 }
 
+type SortDirection = 'asc' | 'desc'
 type SortColumn =
   | 'vehicleNo'
-  | 'costCenterId'
-  | 'vehicleDescription'
+  | 'costCenterName'
+  | 'description'
   | 'purchaseDate'
   | 'assetId'
-type SortDirection = 'asc' | 'desc'
+  | 'employeeId'
+  | 'employeeName'
 
 export const VehicleList: React.FC<VehicleListProps> = ({
   AllVehicles,
   onAddVehicle,
-  costCenters,
   asset,
+  employeeData,
+  refreshVehicles,
 }) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('vehicleNo')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
+  const [editingVehicle, setEditingVehicle] = useState<number | null>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<number | null>(null)
   const itemsPerPage = 10
 
-  // Function to get cost center name by ID
-  const getCostCenterName = (id: number) => {
-    return (
-      costCenters.find((center) => center.costCenterId === id)
-        ?.costCenterName || 'Unknown'
-    )
-  }
-
-  const getAssetName = (id: number) => {
-    return asset.find((data) => Number(data.id) === id)?.name
-  
-
-  }
+  const getAssetName = (id: number) =>
+    asset.find((data) => Number(data.id) === id)?.name || 'Unknown'
 
   const sortedVehicles = useMemo(() => {
     const sorted = [...AllVehicles]
@@ -101,7 +101,6 @@ export const VehicleList: React.FC<VehicleListProps> = ({
     column: SortColumn
     children: React.ReactNode
   }> = ({ column, children }) => {
-    const isActive = column === sortColumn
     return (
       <TableHead
         onClick={() => handleSort(column)}
@@ -115,6 +114,32 @@ export const VehicleList: React.FC<VehicleListProps> = ({
     )
   }
 
+  function onEditEmployee(vehicleId: number): void {
+    setEditingVehicle(vehicleId)
+    const vehicle = AllVehicles.find((v) => v.vehicleNo === vehicleId)
+    setSelectedEmployee(vehicle?.employeeId || null)
+  }
+
+  async function handleSaveEmployee(
+    vehicleId: number,
+    vehicleUser: number | null
+  ) {
+    if (vehicleUser === null) return
+    try {
+      await updateVehicleEmployee(vehicleId, vehicleUser)
+      setEditingVehicle(null)
+      setSelectedEmployee(null)
+      refreshVehicles()
+    } catch (error) {
+      console.error('Failed to update vehicle employee:', error)
+    }
+  }
+
+  function handleCancelEdit() {
+    setEditingVehicle(null)
+    setSelectedEmployee(null)
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4 mx-4 mt-2">
@@ -125,29 +150,82 @@ export const VehicleList: React.FC<VehicleListProps> = ({
         <TableHeader className="sticky top-28 bg-slate-200">
           <TableRow>
             <SortableTableHead column="vehicleNo">Vehicle No</SortableTableHead>
-            <SortableTableHead column="costCenterId">
+            <SortableTableHead column="costCenterName">
               Cost Center
             </SortableTableHead>
-            <SortableTableHead column="vehicleDescription">
+            <SortableTableHead column="description">
               Vehicle Description
             </SortableTableHead>
             <SortableTableHead column="purchaseDate">
               Purchase Date
             </SortableTableHead>
             <SortableTableHead column="assetId">Asset Name</SortableTableHead>
+            <SortableTableHead column="employeeName">
+              Employee Name
+            </SortableTableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {paginatedVehicles.map((vehicle) => (
             <TableRow key={vehicle.vehicleNo}>
               <TableCell>{vehicle.vehicleNo}</TableCell>
-              <TableCell>{getCostCenterName(vehicle.costCenterId)}</TableCell>
-              <TableCell>{vehicle.vehicleDescription}</TableCell>
+              <TableCell>{vehicle.costCenterName}</TableCell>
+              <TableCell>{vehicle.description}</TableCell>
               <TableCell>
                 {new Date(vehicle.purchaseDate).toLocaleDateString()}
-               
               </TableCell>
               <TableCell>{getAssetName(vehicle.assetId)}</TableCell>
+              <TableCell>
+                {editingVehicle === vehicle.vehicleNo ? (
+                  <select
+                    value={selectedEmployee ?? ''}
+                    onChange={(e) =>
+                      setSelectedEmployee(Number(e.target.value))
+                    }
+                    className="border rounded p-1"
+                  >
+                    {employeeData.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.employeeName}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  vehicle.employeeName
+                )}
+              </TableCell>
+              <TableCell>
+                {editingVehicle === vehicle.vehicleNo ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleSaveEmployee(vehicle.vehicleNo, selectedEmployee)
+                      }
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditEmployee(vehicle.vehicleNo)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Change User
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -157,31 +235,20 @@ export const VehicleList: React.FC<VehicleListProps> = ({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={
-                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                }
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               />
             </PaginationItem>
-            {[...Array(totalPages)].map((_, index) => (
-              <PaginationItem key={index}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(index + 1)}
-                  isActive={currentPage === index + 1}
-                >
-                  {index + 1}
+            {Array.from({ length: totalPages }, (_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink onClick={() => setCurrentPage(i + 1)}>
+                  {i + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
               <PaginationNext
                 onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : ''
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
               />
             </PaginationItem>

@@ -2,18 +2,25 @@
 import React, { useEffect, useState } from 'react'
 
 import VehiclePopUp from './vehicle-popup'
-import { getAllVehicles } from '@/api/vehicle'
-import { CostCenter, GetAllVehicleType, GetAssetData } from '@/utils/type'
+import { getAllVehicles } from '@/api/vehicle.api'
+import {
+  CostCenter,
+  Employee,
+  GetAllVehicleType,
+  GetAssetData,
+} from '@/utils/type'
 import { VehicleList } from './vehicle-list'
 import { toast } from '@/hooks/use-toast'
 import { getAllCostCenters } from '@/api/cost-center-summary-api'
 import { getAssets } from '@/api/assets.api'
+import { getEmployee } from '@/api/iou-api'
 
 const Vehicle = () => {
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [asset, setAsset] = useState<GetAssetData[]>([])
+  const [employeeData, setEmployeeData] = useState<Employee[]>([])
 
   const handleAddVehicle = () => {
     setIsOpen(true)
@@ -61,10 +68,25 @@ const Vehicle = () => {
     }
   }
 
+  const fetchEmployeeData = async () => {
+    try {
+      const employees = await getEmployee()
+      if (employees.data) {
+        setEmployeeData(employees.data)
+      } else {
+        setEmployeeData([])
+      }
+      console.log('Show The Employee Data :', employees.data)
+    } catch (error) {
+      console.error('Failed to fetch Employee Data :', error)
+    }
+  }
+
   useEffect(() => {
     fetchgetAllCostCenters()
     fetchVehicles()
     fetchAssets()
+    fetchEmployeeData()
   }, [])
 
   return (
@@ -74,6 +96,8 @@ const Vehicle = () => {
         onAddVehicle={handleAddVehicle}
         costCenters={costCenters}
         asset={asset}
+        employeeData={employeeData}
+        refreshVehicles={fetchVehicles}
       />
       <VehiclePopUp
         isOpen={isOpen}
@@ -81,6 +105,7 @@ const Vehicle = () => {
         refreshVehicles={fetchVehicles} // Pass fetchVehicles as a prop
         costCenters={costCenters}
         asset={asset}
+        employeeData={employeeData}
       />
     </div>
   )
