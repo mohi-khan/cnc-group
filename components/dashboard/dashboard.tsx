@@ -132,11 +132,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <Link href="/approve-advance">
-        <div className="border p-2 mt-5 rounded-md text-center bg-slate-200 shadow-md">
-          You have 2 pending approvals
-        </div>
-      </Link>
+      <div className='grid grid-cols-2 gap-5'>
+        <Link href="/approve-advance">
+          <Card className='p-3 text-center'>
+            You have 2 pending advance approvals
+          </Card>
+        </Link>
+        <Link href="/approve-invoice">
+          <Card className='p-3 text-center'>
+            You have 2 pending invoice approvals
+          </Card>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-4 gap-4">
         <div className="grid grid-cols-4 gap-4 col-span-3">
