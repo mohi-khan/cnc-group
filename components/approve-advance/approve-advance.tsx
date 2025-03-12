@@ -23,7 +23,7 @@ const ApproveAdvance = () => {
   const mainToken = localStorage.getItem('authToken')
   const token = `Bearer ${mainToken}`
   const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
-  console.log("🚀 ~ ApproveAdvance ~ user:", user)
+  console.log('🚀 ~ ApproveAdvance ~ user:', user)
 
   useEffect(() => {
     fetchAdvances()
@@ -52,7 +52,7 @@ const ApproveAdvance = () => {
       const approvalData = {
         invoiceId: advance.id.toString(),
         approvalStatus: 'APPROVED',
-        approvedBy: user?.employeeId ? String(user.employeeId) : "1",
+        approvedBy: user?.employeeId ? String(user.employeeId) : '1',
       }
 
       const response = await approveAdvance(approvalData, token)
@@ -61,7 +61,7 @@ const ApproveAdvance = () => {
         await fetchAdvances() // Fetch new data
         toast({
           title: 'Advance Approved',
-          description: `Successfully approved advance request ${advance.requisitionNo}`,
+          description: `Successfully approved advance request ${advance.reqno}`,
         })
       }
     } catch (err) {
@@ -95,9 +95,8 @@ const ApproveAdvance = () => {
               <TableRow>
                 <TableHead>Requisition No</TableHead>
                 <TableHead>PO ID</TableHead>
-                <TableHead>Vendor ID</TableHead>
+                <TableHead>Vendor Name</TableHead>
                 <TableHead>Requested By</TableHead>
-                <TableHead>Created By</TableHead>
                 <TableHead>Check Name</TableHead>
                 <TableHead>Requested Date</TableHead>
                 <TableHead>Advance Amount</TableHead>
@@ -117,21 +116,20 @@ const ApproveAdvance = () => {
               ) : (
                 advances.map((advance) => (
                   <TableRow key={advance.id}>
-                    <TableCell>{advance.requisitionNo}</TableCell>
-                    <TableCell>{advance.poId}</TableCell>
-                    <TableCell>{advance.vendorId}</TableCell>
-                    <TableCell>{advance.requestedBy}</TableCell>
-                    <TableCell>{advance.createdBy}</TableCell>
+                    <TableCell>{advance.reqno}</TableCell>
+                    <TableCell>{advance.poid}</TableCell>
+                    <TableCell>{advance.vendorname}</TableCell>
+                    <TableCell>{advance.requestedby}</TableCell>
                     <TableCell>{advance.checkName}</TableCell>
                     <TableCell>{advance.requestedDate}</TableCell>
                     <TableCell>
-                      {advance.advanceAmount} {advance.currency}
+                      {advance.advanceamount} {advance.currency}
                     </TableCell>
                     <TableCell
                       className="max-w-xs truncate"
-                      title={advance.remarks}
+                      title={advance.description || undefined}
                     >
-                      {advance.remarks}
+                      {advance.description || undefined}
                     </TableCell>
                     <TableCell>
                       <Button

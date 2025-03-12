@@ -1194,7 +1194,6 @@ export type createBankTransactionType = z.infer<
   typeof createBankTransactionSchema
 >
 
-
 export const CreateElectricityMeterSchema = z.object({
   idelectricityMeterId: z.number().int().positive(),
   electricityMeterName: z.string().max(45),
@@ -1208,4 +1207,43 @@ export const CreateElectricityMeterSchema = z.object({
 
 export type CreateElectricityMeterType = z.infer<
   typeof CreateElectricityMeterSchema
+>
+
+//Get Electricity Meter
+export interface GetElectricityMeterType {
+  meterid: number
+  meterName: string
+  companyId: number
+  companyName: string
+  metertpe: number
+  description: string
+  costCenterid: number
+  costCenterName: string
+  provaccountId: number
+  provaccountName: string
+  accountid: number
+  accountHead: string
+}
+
+//Get Bills get type
+export interface GetElectricityBillType {
+  id: number
+  meterName: string
+  billDate: string // Or Date if you prefer to handle it as a Date object
+  amount: number
+  payment: number
+  description: string
+}
+
+//Create Electricity Bill Schema
+export const CreateElectricityBillSchema = z.object({
+  billId: z.number().int().positive(), // Primary key with auto-increment
+  meterNo: z.number().int(), // Foreign key to electricity_meter
+  billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // Date in YYYY-MM-DD format, // Date in YYYY-MM-DD format
+  amount: z.number(), // Double column for the amount
+  payment: z.number().int().min(0).max(1), // Tinyint column for payment status (0 or 1)
+})
+
+export type CreateElectricityBillType = z.infer<
+  typeof CreateElectricityBillSchema
 >

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -84,6 +84,17 @@ export default function PaymentRequisitionAdvanceForm({
 
   const onSubmit = async (values: RequisitionAdvanceType) => {
     console.log('Form submitted with values:', values)
+
+    // Check if advance amount exceeds the maximum
+    const maxAmount = requisition?.amount || 0
+    if (values.advanceAmount > maxAmount) {
+      form.setError('advanceAmount', {
+        type: 'manual',
+        message: `Amount can't exceed ${maxAmount}`,
+      })
+      return // Prevent submission
+    }
+
     setIsSubmitting(true)
     try {
       const response = await createAdvance(values, token)
@@ -176,23 +187,46 @@ export default function PaymentRequisitionAdvanceForm({
           <FormField
             control={form.control}
             name="advanceAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Advance Amount</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(Number.parseFloat(e.target.value) || 0)
-                    }
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const maxAmount = requisition?.amount || 0
+              const isInvalid = field.value > maxAmount
+
+              // Register the validation error with React Hook Form
+              React.useEffect(() => {
+                if (isInvalid) {
+                  form.setError('advanceAmount', {
+                    type: 'manual',
+                    message: `Amount can't exceed ${maxAmount}`,
+                  })
+                } else {
+                  form.clearErrors('advanceAmount')
+                }
+              }, [field.value, isInvalid, maxAmount, form])
+
+              return (
+                <FormItem>
+                  <FormLabel>Advance Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => {
+                        const amount = Number.parseFloat(e.target.value) || 0
+                        field.onChange(amount)
+                      }}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  {isInvalid && (
+                    <p className="text-red-500 text-sm">
+                      Amount can't exceed {maxAmount}
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
 
           <FormField

@@ -84,18 +84,9 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     resolver: zodResolver(createAssetSchema),
     defaultValues: {
       meter_no: 0,
-      category_id: 0,
-      meter_type: 'prepaid',
       comments: '',
       bill_date: new Date(),
       bill_amount: 0,
-      purchase_value: '0.00',
-      current_value: '0.00',
-      salvage_value: '0.00',
-      depreciation_method: 'Straight Line',
-      useful_life_years: 0,
-      status: 'Active',
-      company_id: 0,
     },
   })
 
@@ -122,8 +113,6 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
-             
-
               <FormField
                 control={form.control}
                 name="bill_date"
@@ -134,7 +123,11 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                       <Input
                         type="date"
                         {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().split('T')[0]
+                            : ''
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -148,7 +141,11 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   <FormItem>
                     <FormLabel>Bill Amount</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" placeholder="Enter bill amount" />
+                      <Input
+                        {...field}
+                        type="number"
+                        placeholder="Enter bill amount"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,20 +153,18 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
               />
 
               <FormField
-                              control={form.control}
-                              name="comments"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Comments</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="Enter comments" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-              
-            
+                control={form.control}
+                name="comments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comments</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter comments" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-end space-x-2">
                 <Button
@@ -180,9 +175,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   Cancel
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting
-                    ? 'Adding...'
-                    : 'Add Bill Entry'}
+                  {form.formState.isSubmitting ? 'Adding...' : 'Add Bill Entry'}
                 </Button>
               </div>
             </form>

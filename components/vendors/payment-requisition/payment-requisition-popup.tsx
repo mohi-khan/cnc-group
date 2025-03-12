@@ -106,7 +106,7 @@ export function PaymentRequisitionPopup({
         credit: 0,
         createdBy: 60,
         notes: `Payment for PO: ${requisition?.poNo || ''}`,
-        // resPartnerId: requisition.vendorId || 0,
+        resPartnerId: requisition?.vendorId || 0,
       },
     ],
   }).current
@@ -151,7 +151,7 @@ export function PaymentRequisitionPopup({
             credit: 0,
             createdBy: 60,
             notes: `Payment for PO: ${requisition.poNo || ''}`,
-            // resPartnerId: requisition.vendorId || 0,
+            resPartnerId: requisition?.vendorId || 0,
           },
         ],
       })
