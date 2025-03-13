@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { createInvoice } from '@/api/payment-requisition-api'
+import { useForm } from 'react-hook-form'
 
 // Define the schema for form validation
 const createInvoiceSchema = z.object({
@@ -70,20 +70,16 @@ interface PaymentRequisitionCreateInvoiceFormProps {
 
 const PaymentRequisitionCreateInvoiceForm = ({
   requisition,
-  token = '',
   onSuccess,
 }: PaymentRequisitionCreateInvoiceFormProps) => {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [userId, setUserId] = useState(null)
 
   // Get current user ID from localStorage
   const getCurrentUserId = (): number => {
     try {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        return userData.userId || 1
-      }
+      
     } catch (error) {
       console.error('Error getting user ID:', error)
     }
@@ -113,6 +109,30 @@ const PaymentRequisitionCreateInvoiceForm = ({
     createdBy: getCurrentUserId(),
   }
 
+  const getAuthToken = () => {
+    const mainToken = localStorage.getItem('authToken')
+    if (!mainToken) {
+      console.error('No auth token found in localStorage')
+      return null
+    }
+
+    // Check if token already has Bearer prefix
+    if (mainToken.startsWith('Bearer ')) {
+      return mainToken
+    } else {
+      return `Bearer ${mainToken}`
+    }
+  }
+
+  const token = getAuthToken()
+  if (!token) {
+    toast({
+      title: 'Authentication Error',
+      description: 'You are not authenticated. Please log in again.',
+      variant: 'destructive',
+    })
+  }
+
   // Initialize form
   const form = useForm<CreateInvoiceFormValues>({
     resolver: zodResolver(createInvoiceSchema),
@@ -123,6 +143,9 @@ const PaymentRequisitionCreateInvoiceForm = ({
   const onSubmit = async (data: CreateInvoiceFormValues) => {
     setIsSubmitting(true)
     try {
+      if (!token) {
+        throw new Error('Authentication token is missing')
+      }
       const response = await createInvoice(data, token)
 
       if (response.error) {
@@ -155,13 +178,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
 
   return (
     <div className="space-y-6 p-4">
-      <div>
-        <h2 className="text-lg font-medium">Create Invoice</h2>
-        <p className="text-sm text-muted-foreground">
-          Fill in the details to create a new invoice
-        </p>
-      </div>
-
       <Form {...form}>
         {/* Note: We're not using a <form> element here since this component is already inside a form */}
         <div className="space-y-6">
@@ -406,36 +422,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
               )}
             />
 
-            {/* Payment Status */}
-            <FormField
-              control={form.control}
-              name="paymentStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Status*</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Partially Paid">
-                        Partially Paid
-                      </SelectItem>
-                      <SelectItem value="Paid">Paid</SelectItem>
-                      <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Payment Date - Using standard HTML date input */}
             <FormField
               control={form.control}
@@ -446,61 +432,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
                   <FormControl>
                     <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Approval Status */}
-            <FormField
-              control={form.control}
-              name="approvalStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Approval Status*</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Approved">Approved</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Approved By */}
-            <FormField
-              control={form.control}
-              name="approvedBy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Approved By</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="User ID"
-                      {...field}
-                      value={field.value || ''}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value
-                            ? Number.parseInt(e.target.value)
-                            : null
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormDescription>User ID of the approver</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
