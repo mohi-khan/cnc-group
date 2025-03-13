@@ -92,6 +92,19 @@ export const MENU_ITEMS: MenuItem[] = [
     ],
   },
   {
+    name: 'Vehicle',
+    subItemGroups: [
+      {
+        name: 'Vehicle Management',
+        items: [
+          { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
+        
+          
+        ],
+      },
+    ],
+  },
+  {
     name: 'Electricity',
     subItemGroups: [
       {
@@ -101,7 +114,6 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Bill Entry', source: '/electricity/bill-entry' },
           { name: 'Report', source: '/electricity/report' },
         ],
-        
       },
     ],
   },
