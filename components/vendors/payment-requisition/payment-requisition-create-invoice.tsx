@@ -180,7 +180,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
   const [vendors, setVendors] = useState<ResPartner[]>([])
 
   async function getVendors() {
-    setIsSubmitting(true)
     try {
       const response = await getAllVendors()
       if (!response.data) {
@@ -194,8 +193,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
         description: 'Failed to load partners',
       })
       setVendors([])
-    } finally {
-      setIsSubmitting(true)
     }
   }
 
