@@ -5,6 +5,7 @@ import {
   GetPaymentOrder,
   PurchaseEntryType,
   RequisitionAdvanceType,
+  ResPartner,
 } from '@/utils/type'
 
 export async function getAllPaymentRequisition(data: {
@@ -43,6 +44,13 @@ export async function createInvoice(data: CreateInvoiceType, token: string) {
       'Content-Type': 'application/json',
     },
     body: data,
+  })
+}
+
+export async function getAllVendors() {
+  return fetchApi<ResPartner[]>({
+    url: 'api/res-partner/get-all-res-partners',
+    method: 'GET',
   })
 }
 

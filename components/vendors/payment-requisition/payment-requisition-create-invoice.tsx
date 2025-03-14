@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
@@ -23,8 +23,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { createInvoice } from '@/api/payment-requisition-api'
+import { createInvoice, getAllVendors } from '@/api/payment-requisition-api'
 import { useForm } from 'react-hook-form'
+import { CustomCombobox } from '@/utils/custom-combobox'
+import { ResPartner } from '@/utils/type'
 
 // Define the schema for form validation
 const createInvoiceSchema = z.object({
@@ -79,7 +81,6 @@ const PaymentRequisitionCreateInvoiceForm = ({
   // Get current user ID from localStorage
   const getCurrentUserId = (): number => {
     try {
-      
     } catch (error) {
       console.error('Error getting user ID:', error)
     }
@@ -176,6 +177,29 @@ const PaymentRequisitionCreateInvoiceForm = ({
     }
   }
 
+  const [vendors, setVendors] = useState<ResPartner[]>([])
+
+  async function getVendors() {
+    try {
+      const response = await getAllVendors()
+      if (!response.data) {
+        throw new Error('No data received')
+      }
+      setVendors(response.data)
+    } catch (error) {
+      console.error('Error getting partners:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load partners',
+      })
+      setVendors([])
+    }
+  }
+
+  useEffect(() => {
+    getVendors()
+  }, [])
+
   return (
     <div className="space-y-6 p-4">
       <Form {...form}>
@@ -208,7 +232,7 @@ const PaymentRequisitionCreateInvoiceForm = ({
             />
 
             {/* Vendor ID */}
-            <FormField
+            {/* <FormField
               control={form.control}
               name="vendorId"
               render={({ field }) => (
@@ -226,6 +250,39 @@ const PaymentRequisitionCreateInvoiceForm = ({
                   </FormControl>
                   <FormDescription>ID of the vendor</FormDescription>
                   <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+
+            <FormField
+              control={form.control}
+              name="vendorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Vendor</FormLabel>
+                  <FormControl>
+                    <CustomCombobox
+                      items={vendors.map((partner) => ({
+                        id: partner.id.toString(),
+                        name: partner.name || 'Unnamed Partner',
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value.toString(),
+                              name:
+                              vendors.find((p) => p.id === field.value)
+                                  ?.name || '',
+                            }
+                          : null
+                      }
+                      onChange={(value) =>
+                        field.onChange(
+                          value ? Number.parseInt(value.id, 10) : null
+                        )
+                      }
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />
