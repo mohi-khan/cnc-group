@@ -53,11 +53,11 @@ const VehicleSummary = () => {
   }
 
   useEffect(() => {
-   
+    if (token) {
       fetchGetVehicleSummary(token)
       fetchVehicles()
-    
-  }, [])
+    }
+  }, [token])
 
   return (
     <div>
