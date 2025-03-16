@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -17,78 +17,101 @@ import {
 import { Input } from '@/components/ui/input'
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 
-import { Checkbox } from '@/components/ui/checkbox'
-
-const createAssetSchema = z.object({
-  asset_name: z.string().nonempty('Asset name is required'),
-  category_id: z.number().min(1, 'Category is required'),
-  purchase_date: z.date(),
-  purchase_value: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid purchase value'),
-  current_value: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Invalid current value'),
-  salvage_value: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Invalid salvage value'),
-  depreciation_method: z.string().nonempty('Depreciation method is required'),
-  useful_life_years: z
-    .number()
-    .min(0, 'Useful life years must be non-negative'),
-  status: z.string().nonempty('Status is required'),
-  company_id: z.number().min(1, 'Company is required'),
-  location_id: z.number().optional(),
-})
-
-interface CreateAssetData {
-  meter_no: number
-  category_id: number
-  purchase_date: Date
-  bill_date: Date
-  bill_amount: number
-  comments: string
-  meter_type: 'prepaid' | 'postpaid'
-  purchase_value: string
-  description: string
-  provision_account_name: string
-  expense_account_name: string
-  current_value: string
-  salvage_value: string
-  depreciation_method: string
-  useful_life_years: number
-  status: string
-  company_id: number
-}
+import {
+  CreateElectricityBillSchema,
+  CreateElectricityBillType,
+  GetElectricityMeterType,
+} from '@/utils/type'
+import { createBillEntry } from '@/api/bill-entry-api'
+import { toast } from '@/hooks/use-toast'
+import { getMeterEntry } from '@/api/meter-entry-api'
 
 interface MeterEntryPopUpProps {
   isOpen: boolean
   onOpenChange: (isOpen: boolean) => void
   onCategoryAdded: () => void
+  fetchBillEntry: () => void
 }
+
 const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   isOpen,
   onOpenChange,
   onCategoryAdded,
+  fetchBillEntry,
 }) => {
-  const form = useForm<CreateAssetData>({
-    resolver: zodResolver(createAssetSchema),
+  const form = useForm<CreateElectricityBillType>({
+    resolver: zodResolver(CreateElectricityBillSchema),
     defaultValues: {
-      meter_no: 0,
-      comments: '',
-      bill_date: new Date(),
-      bill_amount: 0,
+      billId: 0,
+      meterNo: 0,
+      amount: 0,
+      billDate: '',
+      payment: 0,
     },
   })
+
+  const [meterEntry, setMeterEntry] = React.useState<GetElectricityMeterType[]>(
+    []
+  )
+
+  const onSubmit = async (data: CreateElectricityBillType) => {
+    // Log the form data to inspect it before submission
+    console.log('Form Data:', data)
+
+    // Convert fields to proper types
+    const submitData = {
+      ...data,
+      billId: Number(data.billId),
+      meterNo: Number(data.meterNo),
+      amount: Number(data.amount),
+      payment: Number(data.payment),
+    }
+
+    try {
+      const response = await createBillEntry(submitData)
+      console.log('Response:', response.data)
+      if (response.data) {
+        toast({
+          title: 'Success',
+          description: 'Meter entry created successfully',
+        })
+        fetchBillEntry()
+        onCategoryAdded()
+        onOpenChange(false)
+
+        form.reset()
+      }
+    } catch (error: any) {
+      // Check if error has a response from the server
+      if (error.response && error.response.data) {
+        console.error('API Error Details:', error.response.data)
+      } else {
+        console.error('API Error Message:', error.message)
+      }
+      toast({
+        title: 'Error',
+        description:
+          'Failed to create meter entry. Please check the console for details.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const fetchMeterEntry = async () => {
+    const response = await getMeterEntry()
+    setMeterEntry(response.data ?? [])
+    console.log('🚀 ~get meter entry data :', response)
+  }
+
+  useEffect(() => {
+    fetchMeterEntry()
+  }, [])
 
   return (
     <div>
@@ -98,15 +121,20 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
             <DialogTitle>Meter Entry Input</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="meter_no"
-                render={({ field }) => (
+                name="billId"
+                render={({ field: { onChange, ...field } }) => (
                   <FormItem>
-                    <FormLabel>Meter No</FormLabel>
+                    <FormLabel>Bill ID</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter asset name" />
+                      <Input
+                        {...field}
+                        type="number"
+                        onChange={(e) => onChange(Number(e.target.value))}
+                        placeholder="Enter bill ID"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -115,7 +143,32 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
 
               <FormField
                 control={form.control}
-                name="bill_date"
+                name="meterNo"
+                render={({ field: { onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Meter No</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        onChange={(e) => onChange(Number(e.target.value))}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                      >
+                        <option value="">Select Meter</option>
+                        {meterEntry.map((meter) => (
+                          <option key={meter.meterid} value={meter.meterid}>
+                            {meter.meterName}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="billDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Bill Date</FormLabel>
@@ -134,16 +187,18 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="bill_amount"
-                render={({ field }) => (
+                name="amount"
+                render={({ field: { onChange, ...field } }) => (
                   <FormItem>
                     <FormLabel>Bill Amount</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="number"
+                        onChange={(e) => onChange(Number(e.target.value))}
                         placeholder="Enter bill amount"
                       />
                     </FormControl>
@@ -154,12 +209,20 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
 
               <FormField
                 control={form.control}
-                name="comments"
-                render={({ field }) => (
+                name="payment"
+                render={({ field: { onChange, ...field } }) => (
                   <FormItem>
-                    <FormLabel>Comments</FormLabel>
+                    <FormLabel>Payment Type</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter comments" />
+                      <select
+                        {...field}
+                        className="w-full p-2 border rounded"
+                        onChange={(e) => onChange(Number(e.target.value))}
+                        value={field.value}
+                      >
+                        <option value={0}>Prepaid</option>
+                        <option value={1}>Postpaid</option>
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -174,8 +237,8 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Adding...' : 'Add Bill Entry'}
+                <Button type="submit" onClick={() => onOpenChange(false)}>
+                  Submit
                 </Button>
               </div>
             </form>

@@ -1247,3 +1247,16 @@ export const CreateElectricityBillSchema = z.object({
 export type CreateElectricityBillType = z.infer<
   typeof CreateElectricityBillSchema
 >
+
+// vehicle summary zod schema type
+const VehicleSummarySchema = z.object({
+  vehicleNo: z.number(),
+  'Accounts Payable': z.string(), // Assuming it's a string because of the negative sign and decimal format
+  'Barrett Kelley': z.string(),
+  'Hashim England 1': z.string(),
+  total_oct_consumption: z.null(),
+  total_gas_consumption: z.null(),
+  total_km: z.null(),
+})
+
+export type VehicleSummaryType = z.infer<typeof VehicleSummarySchema>

@@ -25,6 +25,7 @@ import {
 import type { z } from 'zod'
 import { createJournalEntryWithDetails } from '@/api/vouchers-api'
 import PaymentRequisitionAdvanceForm from './payment-requisition-advance-form'
+import PaymentRequisitionCreateInvoiceForm from './payment-requisition-create-invoice'
 
 interface PaymentRequisitionPopupProps {
   isOpen: boolean
@@ -355,7 +356,11 @@ export function PaymentRequisitionPopup({
           </>
         )
       case 'GRN Completed':
-        return <div>Create Invoice Form</div>
+        return (
+          <div className='w-full'>
+            <PaymentRequisitionCreateInvoiceForm />
+          </div>
+        )
       case 'Purchase Order':
         return (
           <div className="w-full">
