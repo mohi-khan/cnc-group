@@ -25,7 +25,7 @@ export async function getVehicleSummery({
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0LCJ1c2VybmFtZSI6InJpYWRuIiwiaWF0IjoxNzQxODQ1OTA2LCJleHAiOjE3NDE5MzIzMDZ9.mTAHabh9G1mrl8xxdcZbAhiILZrMLF_OxlYoh8V8zdg`,
+      Authorization: `${token}`,
     },
   })
 }

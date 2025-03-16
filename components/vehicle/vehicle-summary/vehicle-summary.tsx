@@ -11,12 +11,13 @@ const VehicleSummary = () => {
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   const [token, setToken] = useState<string | null>(null)
   const [vehicleSummary, setVehicleSummary] = useState<VehicleSummaryType[]>([])
+
   // Retrieve token from localStorage safely
   useEffect(() => {
     const mainToken = localStorage.getItem('authToken')
     if (mainToken) {
       setToken(`Bearer ${mainToken}`)
-      console.log('🚀 ~ create budget token:', mainToken)
+      console.log('🚀 ~ vehicle summary token:', mainToken)
     }
   }, [])
 
@@ -31,13 +32,13 @@ const VehicleSummary = () => {
     }
   }
 
-  async function fetchGetVehicleSummary(token: string) {
+  async function fetchGetVehicleSummary({ token }: { token: string }) {
     try {
       const response = await getVehicleSummery({
-        startDate: '2023-01-01',
-        endDate: '2023-12-31',
-        vehicleNo: 1,
-        token,
+        startDate: '',
+        endDate: '',
+        vehicleNo: 0,
+        token: token,
       })
       if (!response.data) throw new Error('No data received')
       setVehicleSummary(response.data)
@@ -54,15 +55,25 @@ const VehicleSummary = () => {
 
   useEffect(() => {
     if (token) {
-      fetchGetVehicleSummary(token)
+      fetchGetVehicleSummary({ token })
       fetchVehicles()
     }
   }, [token])
 
   return (
     <div>
-      <VehicleSummaryHeading vehicles={vehicles} />
-      <VehicleSummaryTableList />
+      <VehicleSummaryHeading vehicles={vehicles}
+        
+      />
+      <VehicleSummaryTableList
+        vehicleSummary={
+          vehicleSummary as unknown as {
+            month: number
+            year: number
+            pivotData: VehicleSummaryType[][]
+          }[]
+        }
+      />
     </div>
   )
 }
