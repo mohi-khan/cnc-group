@@ -1,7 +1,7 @@
 import { fetchApi } from '@/utils/http'
 import { VehicleSummaryType } from '@/utils/type'
 
-export async function getVehicleSummery({
+export async function getVehicleSummary({
   vehicleNo,
   startDate,
   endDate,
@@ -20,8 +20,8 @@ export async function getVehicleSummery({
     token
   )
   return fetchApi<VehicleSummaryType[]>({
-    // url: `api/vehicle/getVehicleSummery?vehicleNo=${id}&startDate=${fromdate}&endDate=${enddate}`,
-    url: 'api/vehicle/getVehicleSummery?vehicleNo=1&startDate=2025-01-01&endDate=2025-03-13',
+    url: `api/vehicle/getVehicleSummery?vehicleNo=${vehicleNo}&startDate=${startDate}&endDate=${endDate}`,
+    // url: 'api/vehicle/getVehicleSummery?vehicleNo=1&startDate=2025-01-01&endDate=2025-03-13',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

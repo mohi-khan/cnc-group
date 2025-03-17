@@ -17,14 +17,24 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface VehicleSummaryHeadingProps {
   vehicles: GetAllVehicleType[]
+  startDate: Date | undefined
+  endDate: Date | undefined
+  selectedVehicleNo: number | undefined
+  generatePdf: () => void
+  generateExcel: () => void
 }
 
 const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
   vehicles,
+  startDate,
+  endDate,
+  selectedVehicleNo,
+  generatePdf,
+  generateExcel,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
+  const [start, setStart] = useState<Date | undefined>(startDate)
+  const [end, setEnd] = useState<Date | undefined>(endDate)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
 
   return (
@@ -42,8 +52,8 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                   className="w-[230px] h-10 justify-start text-left truncate"
                 >
                   <CalendarIcon className="mr-2 h-5 w-5" />
-                  {startDate && endDate
-                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                  {start && end
+                    ? `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`
                     : 'Select Date Range'}
                 </Button>
               </PopoverTrigger>
@@ -57,12 +67,12 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                         <Button
                           variant="outline"
                           className={`w-[180px] h-10 justify-start text-left truncate ${
-                            !startDate ? 'text-muted-foreground' : ''
+                            !start ? 'text-muted-foreground' : ''
                           }`}
                         >
                           <CalendarIcon className="mr-2 h-5 w-5" />
-                          {startDate
-                            ? format(startDate, 'dd/MM/yyyy')
+                          {start
+                            ? format(start, 'dd/MM/yyyy')
                             : 'Select Start Date'}
                         </Button>
                       </PopoverTrigger>
@@ -71,7 +81,7 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                           mode="single"
                           selected={startDate}
                           onSelect={(date) => {
-                            setStartDate(date)
+                            setStart(date)
                             setIsDropdownOpen(false)
                           }}
                           className="rounded-md border"
@@ -87,13 +97,11 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                         <Button
                           variant="outline"
                           className={`w-[180px] h-10 justify-start text-left truncate ${
-                            !endDate ? 'text-muted-foreground' : ''
+                            !end ? 'text-muted-foreground' : ''
                           }`}
                         >
                           <CalendarIcon className="mr-2 h-5 w-5" />
-                          {endDate
-                            ? format(endDate, 'dd/MM/yyyy')
-                            : 'Select End Date'}
+                          {end ? format(end, 'dd/MM/yyyy') : 'Select End Date'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -101,7 +109,7 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                           mode="single"
                           selected={endDate}
                           onSelect={(date) => {
-                            setEndDate(date)
+                            setEnd(date)
                             setIsDropdownOpen(false)
                           }}
                           className="rounded-md border"
@@ -137,6 +145,7 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <Button
+              onClick={generatePdf}
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-900 hover:bg-purple-200"
@@ -145,6 +154,7 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
               <span className="font-medium">PDF</span>
             </Button>
             <Button
+              onClick={generateExcel}
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
