@@ -74,7 +74,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expenseData, setExpenseData] = useState<GEtExpenseDataType[]>([])
-  
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -127,15 +126,14 @@ export default function Dashboard() {
 
   //  Get Expected Revenue function
   const getExpectedRevenue = async () => {
-    const companyId = 75; // Example companyId
-    const startDate = '2025-01-01'; // Example startDate
-    const endDate = '2025-12-31'; // Example endDate
-    const mainToken = localStorage.getItem('authToken')
-    const token = `{mainToken}`
+    const companyId = 75 // Example companyId
+    const startDate = '2025-01-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
+    const token = `Bearer ${mainToken}`
 
     const response = await getExpenseData(companyId, startDate, endDate, token)
     if (response.data) {
-      setExpenseData([response.data])
+      setExpenseData(Array.isArray(response.data) ? response.data : [response.data])
     } else {
       setExpenseData([])
     }
@@ -146,7 +144,6 @@ export default function Dashboard() {
     fetchRequisitions()
     fetchAdvances()
     getExpectedRevenue()
-    
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -184,6 +181,25 @@ export default function Dashboard() {
   }, [fundPositionData])
 
   console.log('Processed fund position data:', processedFundPositionData)
+
+  // Calculate total netexpense
+  const totalExpense = expenseData?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+
+
+  // Calculate total lastmonth expense
+  const lastMonthExpense = expenseData?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+  // Calculate total thismonth expense
+  const expensePercentageChange = lastMonthExpense !== 0 
+    ? ((totalExpense - lastMonthExpense) /  100) 
+    : 0
+  
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -226,33 +242,31 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-4 gap-4">
         <div className="grid grid-cols-4 gap-4 col-span-3">
-          
           <HoverCard>
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Month Revenue
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$726,318</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">${totalExpense?.toLocaleString()}</div>
+                  <p className="text-xs text-green-500">{expensePercentageChange}% vs prev</p>
+                  
+                  
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value:</span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-2">
+              <div>
+                {expenseData.map((expense, index) => (
+                  <div key={index} className='text-black text-sm p-2 flex justify-between gap-4 min-w-max bg-slate-300 rounded-lg shadow-xl  '>
+                    <div><span className='font-bold'>GroupName:</span> {expense.groupName}</div>
+                    <div><span className='font-bold'>NetExpense:</span> {expense.netExpense}</div>
+                    <div><span className='font-bold'>LastMonthNetExpense:</span> {expense.lastMonthNetExpense}</div>
+                  </div>
+  ))}
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -466,10 +480,8 @@ export default function Dashboard() {
               </div>
             </HoverCardContent>
           </HoverCard>
-
         </div>
 
-       
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Cost Breakdown</CardTitle>
