@@ -158,10 +158,6 @@ export default function AutomaticReconciliation() {
     )
   }
 
-  const toggleEditMode = (id: number) => {
-    setEditingId(id === editingId ? null : id)
-  }
-
   return (
     <div className="w-[98%] mx-auto p-4">
       <Form {...form}>
@@ -239,138 +235,131 @@ export default function AutomaticReconciliation() {
         </form>
       </Form>
 
-      <Tabs defaultValue="automatic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="automatic">Bank Transactions</TabsTrigger>
-          <TabsTrigger value="manual">Bank Reconciliations</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="automatic">
-          <div>
-            <div>
-              <Table className="shadow-md border">
-                <TableHeader className="bg-slate-200 shadow-md">
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Currency</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Check No.</TableHead>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Bank Transactions Table */}
+        <div className="w-full">
+          <h2 className="text-lg font-semibold mb-2">Bank Transactions</h2>
+          <Table className="shadow-md border">
+            <TableHeader className="bg-slate-200 shadow-md">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Currency</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Check No.</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : transactions.length > 0 ? (
+                transactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>
+                      {new Date(transaction.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell>{transaction.amount}</TableCell>
+                    <TableCell>{transaction.currency}</TableCell>
+                    <TableCell>{transaction.status}</TableCell>
+                    <TableCell>{transaction.checkNo}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : transactions.length > 0 ? (
-                    transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{transaction.description}</TableCell>
-                        <TableCell>{transaction.amount}</TableCell>
-                        <TableCell>{transaction.currency}</TableCell>
-                        <TableCell>{transaction.status}</TableCell>
-                        <TableCell>{transaction.checkNo}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">
-                        No transactions found. Please select a bank account and
-                        date range, then click &quot;Show&quot;
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </TabsContent>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    No transactions found. Please select a bank account and date
+                    range, then click "Show"
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-        <TabsContent value="manual">
-          <div>
-            <div>
-              <Table className="shadow-md border">
-                <TableHeader className="bg-slate-200 shadow-md">
-                  <TableRow>
-                    <TableHead>Voucher ID</TableHead>
-                    <TableHead>Check No</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Reconciled</TableHead>
-                    <TableHead>Comments</TableHead>
-                    <TableHead>Date</TableHead>
+        {/* Bank Reconciliations Table */}
+        <div className="w-full">
+          <h2 className="text-lg font-semibold mb-2">Bank Reconciliations</h2>
+          <Table className="shadow-md border">
+            <TableHeader className="bg-slate-200 shadow-md">
+              <TableRow>
+                <TableHead>Voucher ID</TableHead>
+                <TableHead>Check No</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Reconciled</TableHead>
+                <TableHead>Comments</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : selectedBankAccount && reconciliations.length > 0 ? (
+                reconciliations.map((reconciliation) => (
+                  <TableRow key={reconciliation.id}>
+                    <TableCell>{reconciliation.voucherId}</TableCell>
+                    <TableCell>{reconciliation.checkNo}</TableCell>
+                    <TableCell>{reconciliation.amount}</TableCell>
+                    <TableCell>{reconciliation.type}</TableCell>
+                    <TableCell>
+                      {editingId === reconciliation.id ? (
+                        <Checkbox
+                          checked={reconciliation.reconciled === 1}
+                          onCheckedChange={(checked) =>
+                            updateLocalReconciliation(
+                              reconciliation.id,
+                              'reconciled',
+                              checked ? 1 : 0
+                            )
+                          }
+                        />
+                      ) : reconciliation.reconciled === 1 ? (
+                        'Yes'
+                      ) : (
+                        'No'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === reconciliation.id ? (
+                        <Input
+                          value={reconciliation.comments || ''}
+                          onChange={(e) =>
+                            updateLocalReconciliation(
+                              reconciliation.id,
+                              'comments',
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        reconciliation.comments || ''
+                      )}
+                    </TableCell>
+                    <TableCell>{reconciliation.date}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : selectedBankAccount && reconciliations.length > 0 ? (
-                    reconciliations.map((reconciliation) => (
-                      <TableRow key={reconciliation.id}>
-                        <TableCell>{reconciliation.voucherId}</TableCell>
-                        <TableCell>{reconciliation.checkNo}</TableCell>
-                        <TableCell>{reconciliation.amount}</TableCell>
-                        <TableCell>{reconciliation.type}</TableCell>
-                        <TableCell>
-                          {editingId === reconciliation.id ? (
-                            <Checkbox
-                              checked={reconciliation.reconciled === 1}
-                              onCheckedChange={(checked) =>
-                                updateLocalReconciliation(
-                                  reconciliation.id,
-                                  'reconciled',
-                                  checked ? 1 : 0
-                                )
-                              }
-                            />
-                          ) : reconciliation.reconciled === 1 ? (
-                            'Yes'
-                          ) : (
-                            'No'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingId === reconciliation.id ? (
-                            <Input
-                              value={reconciliation.comments || ''}
-                              onChange={(e) =>
-                                updateLocalReconciliation(
-                                  reconciliation.id,
-                                  'comments',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          ) : (
-                            reconciliation.comments || ''
-                          )}
-                        </TableCell>
-                        <TableCell>{reconciliation.date}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center">
-                        Please select a bank account and date range, then click
-                        "Show"
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    Please select a bank account and date range, then click
+                    "Show"
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   )
 }
