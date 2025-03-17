@@ -1154,6 +1154,20 @@ export type BankReconciliationType = z.infer<
   typeof bankReconciliationSchema
 > & { id: number }
 
+//bank transaction
+export const getBankTransactionSchema = z.object({
+  id: z.number(),
+  bankId: z.number(),
+  date: z.string(),
+  description: z.string(),
+  amount: z.string(),
+  currency: z.string(),
+  status: z.string(),
+  checkNo: z.string(),
+});
+
+export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>;
+
 //fund position
 const BalanceEntrySchema = z.object({
   date: z.string(),
