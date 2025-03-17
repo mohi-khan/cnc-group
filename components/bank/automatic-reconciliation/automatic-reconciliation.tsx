@@ -19,10 +19,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { useForm } from 'react-hook-form'
-import { Check, Edit } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
   GetBankTransactionType,
@@ -158,6 +156,51 @@ export default function AutomaticReconciliation() {
     )
   }
 
+  const getRowColor = (transaction: GetBankTransactionType) => {
+    // Format transaction date to match reconciliation date format
+    const transactionDate = new Date(transaction.date)
+      .toISOString()
+      .split('T')[0]
+
+    // Check if there's a reconciliation with matching checkNo
+    const matchingCheckNo = reconciliations.some(
+      (r) => r.checkNo === transaction.checkNo && transaction.checkNo
+    )
+
+    // Check if there's a reconciliation with matching amount and date
+    const matchingAmountAndDate = reconciliations.some(
+      (r) =>
+        Number(r.amount) === Number(transaction.amount) &&
+        r.date === transactionDate
+    )
+
+    if (matchingCheckNo) return 'bg-green-100'
+    if (matchingAmountAndDate) return 'bg-yellow-100'
+    return 'bg-red-100'
+  }
+
+  const getReconciliationRowColor = (
+    reconciliation: BankReconciliationType
+  ) => {
+    // Check if there's a transaction with matching checkNo
+    const matchingCheckNo = transactions.some(
+      (t) => t.checkNo === reconciliation.checkNo && reconciliation.checkNo
+    )
+
+    // Check if there's a transaction with matching amount and date
+    const matchingAmountAndDate = transactions.some((t) => {
+      const transactionDate = new Date(t.date).toISOString().split('T')[0]
+      return (
+        Number(t.amount) === Number(reconciliation.amount) &&
+        transactionDate === reconciliation.date
+      )
+    })
+
+    if (matchingCheckNo) return 'bg-green-100'
+    if (matchingAmountAndDate) return 'bg-yellow-100'
+    return 'bg-red-100'
+  }
+
   return (
     <div className="w-[98%] mx-auto p-4">
       <Form {...form}>
@@ -259,9 +302,12 @@ export default function AutomaticReconciliation() {
                 </TableRow>
               ) : transactions.length > 0 ? (
                 transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
+                  <TableRow
+                    key={transaction.id}
+                    className={getRowColor(transaction)}
+                  >
                     <TableCell>
-                      {new Date(transaction.date).toLocaleDateString()}
+                      {new Date(transaction.date).toISOString().split('T')[0]}
                     </TableCell>
                     <TableCell>{transaction.description}</TableCell>
                     <TableCell>{transaction.amount}</TableCell>
@@ -306,7 +352,10 @@ export default function AutomaticReconciliation() {
                 </TableRow>
               ) : selectedBankAccount && reconciliations.length > 0 ? (
                 reconciliations.map((reconciliation) => (
-                  <TableRow key={reconciliation.id}>
+                  <TableRow
+                    key={reconciliation.id}
+                    className={getReconciliationRowColor(reconciliation)}
+                  >
                     <TableCell>{reconciliation.voucherId}</TableCell>
                     <TableCell>{reconciliation.checkNo}</TableCell>
                     <TableCell>{reconciliation.amount}</TableCell>
@@ -359,6 +408,9 @@ export default function AutomaticReconciliation() {
             </TableBody>
           </Table>
         </div>
+      </div>
+      <div className='text-center mt-10'>
+        <Button>Automatically Reconcile</Button>
       </div>
     </div>
   )
