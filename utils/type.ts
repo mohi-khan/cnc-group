@@ -1148,6 +1148,7 @@ export const bankReconciliationSchema = z.object({
   reconciled: z.number().int().min(0).max(1).nullable(),
   comments: z.string().max(45).nullable(),
   date: z.string().max(45).nullable(),
+  reconcileId: z.boolean().nullable(),
 })
 
 export type BankReconciliationType = z.infer<
@@ -1164,6 +1165,7 @@ export const getBankTransactionSchema = z.object({
   currency: z.string(),
   status: z.string(),
   checkNo: z.string(),
+  reconcileId: z.boolean().nullable(),
 });
 
 export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>;

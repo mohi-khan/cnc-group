@@ -275,7 +275,7 @@ export default function AutomaticReconciliation() {
             reconcileId: matchingTransactionId,
           }
         })
-        .filter(Boolean)
+        .filter((item): item is { id: number; reconcileId: number } => item !== null)
 
       // Send all reconciliations in a single API call
       await automaticReconciliation(reconciliationsToProcess)
@@ -404,21 +404,30 @@ export default function AutomaticReconciliation() {
                   </TableCell>
                 </TableRow>
               ) : transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <TableRow
-                    key={transaction.id}
-                    className={getRowColor(transaction)}
-                  >
-                    <TableCell>
-                      {new Date(transaction.date).toISOString().split('T')[0]}
-                    </TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell>{transaction.amount}</TableCell>
-                    <TableCell>{transaction.currency}</TableCell>
-                    <TableCell>{transaction.status}</TableCell>
-                    <TableCell>{transaction.checkNo}</TableCell>
-                  </TableRow>
-                ))
+                // Filter out transactions that are already used in reconciliations
+                transactions
+                  .filter(
+                    (transaction) =>
+                      !reconciliations.some(
+                        (r) =>
+                          (r.reconcileId !== null && r.reconcileId === transaction.id) && r.reconciled === 1
+                      )
+                  )
+                  .map((transaction) => (
+                    <TableRow
+                      key={transaction.id}
+                      className={getRowColor(transaction)}
+                    >
+                      <TableCell>
+                        {new Date(transaction.date).toISOString().split('T')[0]}
+                      </TableCell>
+                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell>{transaction.amount}</TableCell>
+                      <TableCell>{transaction.currency}</TableCell>
+                      <TableCell>{transaction.status}</TableCell>
+                      <TableCell>{transaction.checkNo}</TableCell>
+                    </TableRow>
+                  ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center">
@@ -455,69 +464,72 @@ export default function AutomaticReconciliation() {
                   </TableCell>
                 </TableRow>
               ) : selectedBankAccount && reconciliations.length > 0 ? (
-                reconciliations.map((reconciliation) => (
-                  <TableRow
-                    key={reconciliation.id}
-                    className={getReconciliationRowColor(reconciliation)}
-                  >
-                    <TableCell>{reconciliation.voucherId}</TableCell>
-                    <TableCell>{reconciliation.checkNo}</TableCell>
-                    <TableCell>{reconciliation.amount}</TableCell>
-                    <TableCell>{reconciliation.type}</TableCell>
-                    <TableCell>
-                      {editingId === reconciliation.id ? (
-                        <Checkbox
-                          checked={reconciliation.reconciled === 1}
-                          onCheckedChange={(checked) =>
-                            updateLocalReconciliation(
-                              reconciliation.id,
-                              'reconciled',
-                              checked ? 1 : 0
-                            )
-                          }
-                        />
-                      ) : reconciliation.reconciled === 1 ? (
-                        'Yes'
-                      ) : (
-                        'No'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingId === reconciliation.id ? (
-                        <Input
-                          value={reconciliation.comments || ''}
-                          onChange={(e) =>
-                            updateLocalReconciliation(
-                              reconciliation.id,
-                              'comments',
-                              e.target.value
-                            )
-                          }
-                        />
-                      ) : (
-                        reconciliation.comments || ''
-                      )}
-                    </TableCell>
-                    <TableCell>{reconciliation.date}</TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedReconciliations.includes(
-                          reconciliation.id
+                // Filter out already reconciled items
+                reconciliations
+                  .filter((reconciliation) => reconciliation.reconciled !== 1)
+                  .map((reconciliation) => (
+                    <TableRow
+                      key={reconciliation.id}
+                      className={getReconciliationRowColor(reconciliation)}
+                    >
+                      <TableCell>{reconciliation.voucherId}</TableCell>
+                      <TableCell>{reconciliation.checkNo}</TableCell>
+                      <TableCell>{reconciliation.amount}</TableCell>
+                      <TableCell>{reconciliation.type}</TableCell>
+                      <TableCell>
+                        {editingId === reconciliation.id ? (
+                          <Checkbox
+                            checked={reconciliation.reconciled === 1}
+                            onCheckedChange={(checked) =>
+                              updateLocalReconciliation(
+                                reconciliation.id,
+                                'reconciled',
+                                checked ? 1 : 0
+                              )
+                            }
+                          />
+                        ) : reconciliation.reconciled === 1 ? (
+                          'Yes'
+                        ) : (
+                          'No'
                         )}
-                        onCheckedChange={() =>
-                          handleReconciliationSelect(
-                            reconciliation,
-                            getReconciliationRowColor(reconciliation)
-                          )
-                        }
-                        disabled={
-                          getReconciliationRowColor(reconciliation) ===
-                          'bg-red-100'
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                      <TableCell>
+                        {editingId === reconciliation.id ? (
+                          <Input
+                            value={reconciliation.comments || ''}
+                            onChange={(e) =>
+                              updateLocalReconciliation(
+                                reconciliation.id,
+                                'comments',
+                                e.target.value
+                              )
+                            }
+                          />
+                        ) : (
+                          reconciliation.comments || ''
+                        )}
+                      </TableCell>
+                      <TableCell>{reconciliation.date}</TableCell>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedReconciliations.includes(
+                            reconciliation.id
+                          )}
+                          onCheckedChange={() =>
+                            handleReconciliationSelect(
+                              reconciliation,
+                              getReconciliationRowColor(reconciliation)
+                            )
+                          }
+                          disabled={
+                            getReconciliationRowColor(reconciliation) ===
+                            'bg-red-100'
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">
