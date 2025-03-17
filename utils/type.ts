@@ -1260,3 +1260,15 @@ const VehicleSummarySchema = z.object({
 })
 
 export type VehicleSummaryType = z.infer<typeof VehicleSummarySchema>
+
+// Expense Data type 
+export interface GEtExpenseDataType  {
+  name: string
+  groupName: string
+  totalDebit: number
+  totalCredit: number
+  netExpense: number
+  lastMonthDebit: number
+  lastMonthCredit: number
+  lastMonthNetExpense: number
+}
