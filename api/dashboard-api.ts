@@ -20,26 +20,40 @@ export async function getFundPosition(
 }
 
 // Get Expensense Data API
-export async function getExpenseData(
-  companyId: number,
-  startDate: string,
-  endDate: string,
-  token: string
-) {
-  const params = new URLSearchParams({
-    companyId: companyId.toString(),
-    startDate: startDate,
-    endDate: endDate,
-    token: token,
-  })
-  console.log('🚀 ~ params:', params)
-  const url = `api/dashboard/getExpenseData?fromDate=2025-01-01&toDate=2025-12-31&companyId=75`
+// export async function getExpenseData(
+//   companyId: number,
+//   startDate: string,
+//   endDate: string,
+//   token: string
+// ) {
+//   const params = new URLSearchParams({
+//     companyId: companyId.toString(),
+//     startDate: startDate,
+//     endDate: endDate,
+//     token: token,
+//   })
+//   console.log('🚀 ~ params:', params)
+//   const url = `api/dashboard/getExpenseData?fromDate=2025-01-01&toDate=2025-12-31&companyId=75`
+//   return fetchApi<GEtExpenseDataType>({
+//     url,
+//     method: 'GET',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       authentication : `Bearer ${token}`
+//     }
+//   })
+// }
+
+
+export async function getExpenseData(companyId: number, startDate: string, endDate: string, token: string) {
+  
+
   return fetchApi<GEtExpenseDataType>({
-    url,
-    method: 'GET',
+     url : `api/dashboard/getExpenseData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
-      authentication : `${token}`
-    }
+      "Content-Type": "application/json",
+      Authorization: token, // Using the token directly as passed
+    },
   })
 }
