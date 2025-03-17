@@ -31,6 +31,7 @@ import {
   getAllBankAccounts,
   getBankReconciliations,
   getBankTransactions,
+  automaticReconciliation,
 } from '@/api/automatic-reconciliation-api'
 
 export default function AutomaticReconciliation() {
@@ -44,6 +45,9 @@ export default function AutomaticReconciliation() {
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const { toast } = useToast()
+  const [selectedReconciliations, setSelectedReconciliations] = useState<
+    number[]
+  >([])
 
   const form = useForm({
     defaultValues: {
@@ -201,6 +205,105 @@ export default function AutomaticReconciliation() {
     return 'bg-red-100'
   }
 
+  const handleReconciliationSelect = (
+    reconciliation: BankReconciliationType,
+    rowColor: string
+  ) => {
+    // Don't allow selection of red rows
+    if (rowColor === 'bg-red-100') return
+
+    setSelectedReconciliations((prev) => {
+      // If already selected, remove it
+      if (prev.includes(reconciliation.id)) {
+        return prev.filter((item) => item !== reconciliation.id)
+      }
+      // Otherwise add it
+      return [...prev, reconciliation.id]
+    })
+  }
+
+  const handleAutomaticReconcile = async () => {
+    if (selectedReconciliations.length === 0) {
+      toast({
+        title: 'No items selected',
+        description: 'Please select at least one item to reconcile',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      // Create an array of objects with id and reconcileId
+      const reconciliationsToProcess = selectedReconciliations
+        .map((id) => {
+          const reconciliation = reconciliations.find((r) => r.id === id)
+          if (!reconciliation) return null
+
+          let matchingTransactionId = 0
+
+          // For green rows (matching by check number)
+          if (reconciliation.checkNo) {
+            const matchingTransaction = transactions.find(
+              (t) =>
+                t.checkNo === reconciliation.checkNo && reconciliation.checkNo
+            )
+            if (matchingTransaction) {
+              matchingTransactionId = matchingTransaction.id
+            }
+          }
+
+          // For yellow rows (matching by amount and date)
+          if (matchingTransactionId === 0) {
+            const matchingTransaction = transactions.find((t) => {
+              const transactionDate = new Date(t.date)
+                .toISOString()
+                .split('T')[0]
+              return (
+                Number(t.amount) === Number(reconciliation.amount) &&
+                transactionDate === reconciliation.date
+              )
+            })
+            if (matchingTransaction) {
+              matchingTransactionId = matchingTransaction.id
+            }
+          }
+
+          return {
+            id: reconciliation.id,
+            reconcileId: matchingTransactionId,
+          }
+        })
+        .filter(Boolean)
+
+      // Send all reconciliations in a single API call
+      await automaticReconciliation(reconciliationsToProcess)
+
+      toast({
+        title: 'Success',
+        description: 'Reconciliations processed successfully',
+      })
+
+      // Refresh the data
+      const formData = form.getValues()
+      fetchReconciliations(formData)
+      fetchTransactions(formData)
+
+      // Clear selections
+      setSelectedReconciliations([])
+    } catch (error) {
+      console.error('Error during automatic reconciliation:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to process reconciliations',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="w-[98%] mx-auto p-4">
       <Form {...form}>
@@ -341,6 +444,7 @@ export default function AutomaticReconciliation() {
                 <TableHead>Reconciled</TableHead>
                 <TableHead>Comments</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -395,6 +499,23 @@ export default function AutomaticReconciliation() {
                       )}
                     </TableCell>
                     <TableCell>{reconciliation.date}</TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedReconciliations.includes(
+                          reconciliation.id
+                        )}
+                        onCheckedChange={() =>
+                          handleReconciliationSelect(
+                            reconciliation,
+                            getReconciliationRowColor(reconciliation)
+                          )
+                        }
+                        disabled={
+                          getReconciliationRowColor(reconciliation) ===
+                          'bg-red-100'
+                        }
+                      />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -409,8 +530,13 @@ export default function AutomaticReconciliation() {
           </Table>
         </div>
       </div>
-      <div className='text-center mt-10'>
-        <Button>Automatically Reconcile</Button>
+      <div className="text-center mt-10">
+        <Button
+          onClick={handleAutomaticReconcile}
+          disabled={loading || selectedReconciliations.length === 0}
+        >
+          {loading ? 'Processing...' : 'Automatically Reconcile'}
+        </Button>
       </div>
     </div>
   )
