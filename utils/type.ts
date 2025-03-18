@@ -1148,11 +1148,27 @@ export const bankReconciliationSchema = z.object({
   reconciled: z.number().int().min(0).max(1).nullable(),
   comments: z.string().max(45).nullable(),
   date: z.string().max(45).nullable(),
+  reconcileId: z.boolean().nullable(),
 })
 
 export type BankReconciliationType = z.infer<
   typeof bankReconciliationSchema
 > & { id: number }
+
+//bank transaction
+export const getBankTransactionSchema = z.object({
+  id: z.number(),
+  bankId: z.number(),
+  date: z.string(),
+  description: z.string(),
+  amount: z.string(),
+  currency: z.string(),
+  status: z.string(),
+  checkNo: z.string(),
+  reconcileId: z.boolean().nullable(),
+});
+
+export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>;
 
 //fund position
 const BalanceEntrySchema = z.object({
@@ -1260,3 +1276,15 @@ const VehicleSummarySchema = z.object({
 })
 
 export type VehicleSummaryType = z.infer<typeof VehicleSummarySchema>
+
+// Expense Data type 
+export interface GEtExpenseDataType  {
+  name: string
+  groupName: string
+  totalDebit: number
+  totalCredit: number
+  netExpense: number
+  lastMonthDebit: number
+  lastMonthCredit: number
+  lastMonthNetExpense: number
+}

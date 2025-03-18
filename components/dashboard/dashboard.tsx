@@ -19,6 +19,7 @@ import { ChevronDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import {
   ChartContainer,
   ChartTooltip,
@@ -31,11 +32,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getFundPosition } from '@/api/dashboard-api'
-import type { ApproveAdvanceType, FundPositionType, GetPaymentOrder } from '@/utils/type'
+import { getExpenseData, getFundPosition } from '@/api/dashboard-api'
+import type {
+  ApproveAdvanceType,
+  FundPositionType,
+  GEtExpenseDataType,
+  GetPaymentOrder,
+} from '@/utils/type'
 import Link from 'next/link'
 import { getAllPaymentRequisition } from '@/api/payment-requisition-api'
 import { getAllAdvance } from '@/api/approve-advance-api'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@radix-ui/react-hover-card'
+import { set } from 'date-fns'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -61,6 +73,7 @@ export default function Dashboard() {
   const [invoices, setInvoices] = useState<GetPaymentOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [expenseData, setExpenseData] = useState<GEtExpenseDataType[]>([])
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -101,7 +114,7 @@ export default function Dashboard() {
 
       const data = await getAllAdvance(token)
       setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
-      console.log("🚀 ~ fetchAdvances ~ data.data:", data.data)
+      console.log('🚀 ~ fetchAdvances ~ data.data:', data.data)
     } catch (err) {
       console.error('Error fetching advances:', err)
       setError('Failed to fetch advance requests')
@@ -111,10 +124,26 @@ export default function Dashboard() {
     }
   }
 
+  //  Get Expected Revenue function
+  const getExpectedRevenue = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '2025-01-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
+    const token = `Bearer ${mainToken}`
+
+    const response = await getExpenseData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setExpenseData(Array.isArray(response.data) ? response.data : [response.data])
+    } else {
+      setExpenseData([])
+    }
+    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+  }
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
     fetchAdvances()
+    getExpectedRevenue()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -152,6 +181,25 @@ export default function Dashboard() {
   }, [fundPositionData])
 
   console.log('Processed fund position data:', processedFundPositionData)
+
+  // Calculate total netexpense
+  const totalExpense = expenseData?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+
+
+  // Calculate total lastmonth expense
+  const lastMonthExpense = expenseData?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+  // Calculate total thismonth expense
+  const expensePercentageChange = lastMonthExpense !== 0 
+    ? ((totalExpense - lastMonthExpense) /  100) 
+    : 0
+  
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -194,95 +242,246 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-4 gap-4">
         <div className="grid grid-cols-4 gap-4 col-span-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Month Revenue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">726,318</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Month Cost
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$146,723</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Month Gross Margin
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">580,145</div>
-              <p className="text-xs text-red-500">-10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Month Net Margin
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,259</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Financial Year Revenue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,259</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Financial Year Cost
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,259</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Financial Year Gross Margin
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,259</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Current Financial Year Net Margin
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,259</div>
-              <p className="text-xs text-green-500">+10% vs prev</p>
-            </CardContent>
-          </Card>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-serif">
+                    Current Month Revenue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${totalExpense?.toLocaleString()}</div>
+                  <p className="text-xs text-green-500">{expensePercentageChange}% vs prev</p>
+                  
+                  
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-2">
+              <div>
+                {expenseData.map((expense, index) => (
+                  <div key={index} className='text-black text-sm p-2 flex justify-between gap-4 min-w-max bg-slate-300 rounded-lg shadow-xl  '>
+                    <div><span className='font-bold'>GroupName:</span> {expense.groupName}</div>
+                    <div><span className='font-bold'>NetExpense:</span> {expense.netExpense}</div>
+                    <div><span className='font-bold'>LastMonthNetExpense:</span> {expense.lastMonthNetExpense}</div>
+                  </div>
+  ))}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Month Cost
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$146,723</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value:</span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Month Gross Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$580,145</div>
+                  <p className="text-xs text-red-500">-10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value:</span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Month Net Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,259</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value: </span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Financial Year Revenue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,259</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value: </span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Financial Year Cost
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,259</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value: </span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Financial Year Gross Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,259</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value: </span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Card className="cursor-pointer w-72">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Current Financial Year Net Margin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,259</div>
+                  <p className="text-xs text-green-500">+10% vs prev</p>
+                </CardContent>
+              </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
+                <p className="text-sm">
+                  <span className="font-medium">Total Orders:</span> 1,245
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">New Customers:</span> 150
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg. Order Value: </span> $58.33
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
+
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Cost Breakdown</CardTitle>
