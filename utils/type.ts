@@ -441,6 +441,7 @@ const JournalDetailSchema = z.object({
   notes: z.string().optional(),
   type: z.string().optional(),
   createdBy: z.number(),
+  payTo: z.string().nullable().optional(),
 })
 
 export const JournalEntryWithDetailsSchema = z.object({
