@@ -1,4 +1,6 @@
-import { useFieldArray, UseFormReturn } from 'react-hook-form'
+'use client'
+
+import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { FormControl, FormField, FormItem } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -14,19 +16,19 @@ import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface FormState {
-  filteredChartOfAccounts: { accountId: number; name: string }[];
-  costCenters: { costCenterId: number; costCenterName: string }[];
-  departments: { departmentID: number; departmentName: string }[];
-  partners: { id: number; name: string }[];
-  formType: 'Credit' | 'Debit';
+  filteredChartOfAccounts: { accountId: number; name: string }[]
+  costCenters: { costCenterId: number; costCenterName: string }[]
+  departments: { departmentID: number; departmentName: string }[]
+  partners: { id: number; name: string }[]
+  formType: 'Credit' | 'Debit'
 }
 
-export default function BankVoucherDetails({ 
-  form, 
-  formState 
-}: { 
-  form: UseFormReturn<any>;
-  formState: FormState;
+export default function BankVoucherDetails({
+  form,
+  formState,
+}: {
+  form: UseFormReturn<any>
+  formState: FormState
 }) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -36,13 +38,14 @@ export default function BankVoucherDetails({
   return (
     <div>
       <Table className="border shadow-md">
-        <TableHeader className='bg-slate-200 shadow-md'>
+        <TableHeader className="bg-slate-200 shadow-md">
           <TableRow>
             <TableHead>Account Name</TableHead>
             <TableHead>Cost Center</TableHead>
             <TableHead>Department</TableHead>
             <TableHead>Partner Name</TableHead>
             <TableHead>Remarks</TableHead>
+            <TableHead>Pay To</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
@@ -210,6 +213,19 @@ export default function BankVoucherDetails({
               <TableCell>
                 <FormField
                   control={form.control}
+                  name={`journalDetails.${index}.payTo`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter receiver's name" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TableCell>
+              <TableCell>
+                <FormField
+                  control={form.control}
                   name={`journalDetails.${index}.${formState.formType === 'Credit' ? 'debit' : 'credit'}`}
                   render={({ field }) => (
                     <FormItem>
@@ -258,6 +274,7 @@ export default function BankVoucherDetails({
             taxId: null,
             resPartnerId: null,
             notes: '',
+            payTo: '',
             createdBy: 0,
           })
         }

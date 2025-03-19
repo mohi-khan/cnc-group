@@ -562,6 +562,7 @@ const VoucherSchemaById = z.object({
   partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
+  payTo: z.string().nullable(),
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
