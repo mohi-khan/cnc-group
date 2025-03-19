@@ -859,6 +859,7 @@ export default function Dashboard() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Cost Breakdown</CardTitle>
+            
           </CardHeader>
           <CardContent>
             <ChartContainer
