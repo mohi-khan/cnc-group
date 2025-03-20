@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  getAllDepartments,
   getExpenseData,
   getFundPosition,
   getGPData,
@@ -41,6 +42,7 @@ import {
 } from '@/api/dashboard-api'
 import type {
   ApproveAdvanceType,
+  Department,
   FundPositionType,
   GEtExpenseDataType,
   GetPaymentOrder,
@@ -54,6 +56,8 @@ import {
   HoverCardTrigger,
 } from '@radix-ui/react-hover-card'
 import { set } from 'date-fns'
+import { toast } from '@/hooks/use-toast'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -91,6 +95,10 @@ export default function Dashboard() {
   const [gpDataYearly, setGPDataYearly] = useState<GEtExpenseDataType[]>([])
   const [npData, setNPData] = useState<GEtExpenseDataType[]>([])
   const [npDataYearly, setNPDataYearly] = useState<GEtExpenseDataType[]>([])
+  const [department, setDepartments] = useState<Department[]>([])
+  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
+    null
+  )
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -105,6 +113,20 @@ export default function Dashboard() {
       console.error('Error fetching fund position data:', error)
     }
   }, [])
+
+  // Fetch Departments
+  const fetchDepartments = async () => {
+    const data = await getAllDepartments()
+    if (data.error || !data.data) {
+      console.error('Error getting departments:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get departments',
+      })
+    } else {
+      setDepartments(data.data)
+    }
+  }
 
   const fetchRequisitions = async () => {
     try {
@@ -285,6 +307,7 @@ export default function Dashboard() {
     fetchGPDataYearly()
     fetchNPData()
     fetchNPDataYearly()
+    fetchDepartments()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -443,6 +466,11 @@ export default function Dashboard() {
   // Calculate total thismonth NP yearly
   const npPercentageChangeYearly =
     lastMonthExpenseYearly !== 0 ? (totalNPYearly - lastMonthNPYearly) / 100 : 0
+
+  function handleDepartmentChange(departmentId: number | null): void {
+    setSelectedDepartment(departmentId)
+    // You can add more logic here if needed, such as fetching data based on the selected department
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -858,8 +886,40 @@ export default function Dashboard() {
 
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Cost Breakdown</CardTitle>
-            
+            <div className="flex items-center justify-between gap-1">
+              <CardTitle className="text-sm">Cost Breakdown</CardTitle>
+              <Select>
+                <CustomCombobox
+                  items={department.map(
+                    (Departments: {
+                      departmentID: number
+                      departmentName: string
+                    }) => ({
+                      id: Departments.departmentID.toString(),
+                      name: Departments.departmentName || 'Unnamed Department',
+                    })
+                  )}
+                  value={
+                    selectedDepartment
+                      ? {
+                          id: selectedDepartment.toString(),
+                          name:
+                            department.find(
+                              (d: { departmentID: number }) =>
+                                d.departmentID === selectedDepartment
+                            )?.departmentName || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) =>
+                    handleDepartmentChange(
+                      value ? Number.parseInt(value.id, 10) : null
+                    )
+                  }
+                  placeholder="Select department"
+                />
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer

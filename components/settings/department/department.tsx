@@ -397,25 +397,6 @@ export default function DepartmentManagement() {
                 control={form.control}
                 name="companyCode"
                 render={({ field }) => (
-                  // <FormItem>
-                  //   <FormLabel>Compnay Name</FormLabel>
-                  //   <Select
-                  //     onValueChange={(value) => field.onChange(Number(value))}
-                  //     value={field.value?.toString()}
-                  //   >
-                  //     <FormControl>
-                  //       <SelectTrigger>
-                  //         <SelectValue placeholder="Select currency code" />
-                  //       </SelectTrigger>
-                  //     </FormControl>
-                  //     <SelectContent>
-                  //       <SelectItem value="1">BDT</SelectItem>
-                  //       <SelectItem value="2">USD</SelectItem>
-                  //       <SelectItem value="3">EUR</SelectItem>
-                  //     </SelectContent>
-                  //   </Select>
-                  //   <FormMessage />
-                  // </FormItem>
                   <FormControl>
                     <CustomCombobox
                       items={company.map((company) => ({
