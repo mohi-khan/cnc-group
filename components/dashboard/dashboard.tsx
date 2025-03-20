@@ -32,7 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getExpenseData, getFundPosition } from '@/api/dashboard-api'
+import {
+  getExpenseData,
+  getFundPosition,
+  getGPData,
+  getIncomeData,
+  getNPData,
+} from '@/api/dashboard-api'
 import type {
   ApproveAdvanceType,
   FundPositionType,
@@ -74,6 +80,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expenseData, setExpenseData] = useState<GEtExpenseDataType[]>([])
+  const [expenseDataYearly, setExpenseDataYearly] = useState<
+    GEtExpenseDataType[]
+  >([])
+  const [incomeData, setIncomeData] = useState<GEtExpenseDataType[]>([])
+  const [incomeDataYearly, setIncomeDataYearly] = useState<
+    GEtExpenseDataType[]
+  >([])
+  const [gpData, setGPData] = useState<GEtExpenseDataType[]>([])
+  const [gpDataYearly, setGPDataYearly] = useState<GEtExpenseDataType[]>([])
+  const [npData, setNPData] = useState<GEtExpenseDataType[]>([])
+  const [npDataYearly, setNPDataYearly] = useState<GEtExpenseDataType[]>([])
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -124,26 +141,150 @@ export default function Dashboard() {
     }
   }
 
-  //  Get Expected Revenue function
-  const getExpectedRevenue = async () => {
+  //  Get Expense data monthly
+  const fetchExpenseData = async () => {
     const companyId = 75 // Example companyId
-    const startDate = '2025-01-01' // Example startDate
-    const endDate = '2025-12-31' // Example endDate
-    const token = `Bearer ${mainToken}`
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-03-31' // Example endDate
 
     const response = await getExpenseData(companyId, startDate, endDate, token)
     if (response.data) {
-      setExpenseData(Array.isArray(response.data) ? response.data : [response.data])
+      setExpenseData(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
     } else {
       setExpenseData([])
     }
     console.log('🚀 ~ getExpectedRevenue ~ response:', response)
   }
+
+  //  Get Expense data yearly
+  const fetchExpenseDataYearly = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '' // Example startDate
+    const endDate = '' // Example endDate
+
+    const response = await getExpenseData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setExpenseDataYearly(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setExpenseDataYearly([])
+    }
+    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+  }
+
+  // Get Income Data
+  const fetchIncomeData = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-03-31' // Example endDate
+
+    const response = await getIncomeData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setIncomeData(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setIncomeData([])
+    }
+    console.log('🚀 ~ getIncomeData  ~ response:', response)
+  }
+
+  // Get Income Data  yearly
+  const fetchIncomeDataYearly = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '' // Example startDate
+    const endDate = '' // Example endDate
+
+    const response = await getIncomeData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setIncomeDataYearly(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setIncomeDataYearly([])
+    }
+    console.log('🚀 ~ getIncomeData  ~ response:', response)
+  }
+
+  //Get getGPData
+  const fetchGPData = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-03-31' // Example endDate
+
+    const response = await getGPData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setGPData(Array.isArray(response.data) ? response.data : [response.data])
+    } else {
+      setGPData([])
+    }
+    console.log('🚀 ~ GetGPData   ~ response:', response)
+  }
+
+  //Get getGPData yearly
+  const fetchGPDataYearly = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '' // Example startDate
+    const endDate = '' // Example endDate
+
+    const response = await getGPData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setGPDataYearly(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setGPDataYearly([])
+    }
+    console.log('🚀 ~ GetGPData   ~ response:', response)
+  }
+
+  //Get getNPData
+  const fetchNPData = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '2025-01-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
+
+    const response = await getNPData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setNPData(Array.isArray(response.data) ? response.data : [response.data])
+    } else {
+      setNPData([])
+    }
+    console.log('🚀 ~ GetNPData   ~ response:', response)
+  }
+
+  //Get getNPData yearly
+  const fetchNPDataYearly = async () => {
+    const companyId = 75 // Example companyId
+    const startDate = '' // Example startDate
+    const endDate = '' // Example endDate
+
+    const response = await getNPData(companyId, startDate, endDate, token)
+    if (response.data) {
+      setNPDataYearly(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setNPDataYearly([])
+    }
+    console.log('🚀 ~ GetNPData   ~ response:', response)
+  }
+
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
     fetchAdvances()
-    getExpectedRevenue()
+    fetchExpenseData()
+    fetchExpenseDataYearly()
+    fetchIncomeData()
+    fetchIncomeDataYearly()
+    fetchGPData()
+    fetchGPDataYearly()
+    fetchNPData()
+    fetchNPDataYearly()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -187,19 +328,121 @@ export default function Dashboard() {
     (acc, expense) => acc + (expense?.netExpense || 0),
     0
   )
-
+  // calculate total expense yearly
+  const totalExpenseYearly = expenseDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
 
   // Calculate total lastmonth expense
   const lastMonthExpense = expenseData?.reduce(
     (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
     0
   )
+  // calculate total lastmonth expense yearly
+  const lastMonthExpenseYearly = expenseDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+
   // Calculate total thismonth expense
-  const expensePercentageChange = lastMonthExpense !== 0 
-    ? ((totalExpense - lastMonthExpense) /  100) 
-    : 0
-  
-  
+  const expensePercentageChange =
+    lastMonthExpense !== 0 ? (totalExpense - lastMonthExpense) / 100 : 0
+
+  // Calculate total thismonth expense yearly
+  const expensePercentageChangeYearly =
+    lastMonthExpenseYearly !== 0
+      ? (totalExpenseYearly - lastMonthExpenseYearly) / 100
+      : 0
+
+  // Calculate total income
+  const totalIncome = incomeData?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+  // calculate total income yearly
+  const totalIncomeYearly = incomeDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+
+  // Calculate total lastmonth income
+
+  const lastMonthIncome = incomeData?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+  // calculate total lastmonth income yearly
+  const lastMonthIncomeYearly = incomeDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+
+  // Calculate total thismonth income
+  const incomePercentageChange =
+    lastMonthExpense !== 0 ? (totalIncome - lastMonthIncome) / 100 : 0
+
+  // Calculate total thismonth income yearly
+  const incomePercentageChangeYearly =
+    lastMonthExpenseYearly !== 0
+      ? (totalIncomeYearly - lastMonthIncomeYearly) / 100
+      : 0
+
+  // Calculate total GP
+  const totalGP = gpData?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+  // calculate total GP yearly
+  const totalGPYearly = gpDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+  // Calculate total lastmonth GP
+  const lastMonthGP = gpData?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+  // calculate total lastmonth GP yearly
+  const lastMonthGPYearly = gpDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+  // Calculate total thismonth GP
+  const gpPercentageChange =
+    lastMonthExpense !== 0 ? (totalGP - lastMonthGP) / 100 : 0
+  // Calculate total thismonth GP yearly
+  const gpPercentageChangeYearly =
+    lastMonthExpenseYearly !== 0 ? (totalGPYearly - lastMonthGPYearly) / 100 : 0
+
+  // Calculate total NP
+  const totalNP = npData?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+  // calculate total NP yearly
+  const totalNPYearly = npDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.netExpense || 0),
+    0
+  )
+  // Calculate total
+  const lastMonthNP = npData?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+
+  // calculate total lastmonth NP yearly
+  const lastMonthNPYearly = npDataYearly?.reduce(
+    (acc, expense) => acc + (expense?.lastMonthNetExpense || 0),
+    0
+  )
+
+  // Calculate total thismonth NP
+  const npPercentageChange =
+    lastMonthExpense !== 0 ? (totalNP - lastMonthNP) / 100 : 0
+  // Calculate total thismonth NP yearly
+  const npPercentageChangeYearly =
+    lastMonthExpenseYearly !== 0 ? (totalNPYearly - lastMonthNPYearly) / 100 : 0
 
   return (
     <div className="p-6 space-y-6">
@@ -241,7 +484,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="grid grid-cols-4 gap-4 col-span-3">
+        <div className="grid grid-cols-4 gap-4 col-span-3 ">
           <HoverCard>
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
@@ -251,22 +494,40 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${totalExpense?.toLocaleString()}</div>
-                  <p className="text-xs text-green-500">{expensePercentageChange}% vs prev</p>
-                  
-                  
+                  <div className="text-2xl font-bold">
+                    ${totalIncome?.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${incomePercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {incomePercentageChange}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-2">
+
+            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
               <div>
-                {expenseData.map((expense, index) => (
-                  <div key={index} className='text-black text-sm p-2 flex justify-between gap-4 min-w-max bg-slate-300 rounded-lg shadow-xl  '>
-                    <div><span className='font-bold'>GroupName:</span> {expense.groupName}</div>
-                    <div><span className='font-bold'>NetExpense:</span> {expense.netExpense}</div>
-                    <div><span className='font-bold'>LastMonthNetExpense:</span> {expense.lastMonthNetExpense}</div>
-                  </div>
-  ))}
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incomeData.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -275,28 +536,46 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Month Cost
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$146,723</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    {' '}
+                    ${totalExpense?.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${expensePercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {expensePercentageChange}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value:</span> $58.33
-                </p>
+
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenseData.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -305,28 +584,45 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Month Gross Margin
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$580,145</div>
-                  <p className="text-xs text-red-500">-10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    ${totalGP?.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${gpPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {gpPercentageChange}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value:</span> $58.33
-                </p>
+
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gpData.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -335,28 +631,44 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Month Net Margin
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,259</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    ${totalNP.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${npPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {npPercentageChange}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value: </span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {npData.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -365,28 +677,42 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Financial Year Revenue
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,259</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">${totalIncomeYearly}</div>
+                  <p
+                    className={`text-xs ${npPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {incomePercentageChangeYearly}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value: </span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incomeDataYearly.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -395,28 +721,44 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Financial Year Cost
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,259</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    ${totalExpenseYearly.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {expensePercentageChangeYearly}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value: </span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenseDataYearly.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -425,28 +767,44 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Financial Year Gross Margin
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,259</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    ${totalGPYearly.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {gpPercentageChangeYearly}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value: </span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gpDataYearly.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -455,28 +813,44 @@ export default function Dashboard() {
             <HoverCardTrigger asChild>
               <Card className="cursor-pointer w-72">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-base font-serif">
                     Current Financial Year Net Margin
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,259</div>
-                  <p className="text-xs text-green-500">+10% vs prev</p>
+                  <div className="text-2xl font-bold">
+                    ${totalNPYearly.toLocaleString()}
+                  </div>
+                  <p
+                    className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {npPercentageChangeYearly}% vs prev
+                  </p>
                 </CardContent>
               </Card>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 bg-slate-300 p-2 rounded-lg shadow-2xl border">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold">Revenue Breakdown</h3>
-                <p className="text-sm">
-                  <span className="font-medium">Total Orders:</span> 1,245
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">New Customers:</span> 150
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Avg. Order Value: </span> $58.33
-                </p>
+            <HoverCardContent className="w-auto bg-slate-300 p-2 rounded-lg shadow-2xl border flex-auto gap-4 z-10">
+              <div>
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-slate-400">
+                    <tr>
+                      <th className="text-left p-2 text-sm">Group Name</th>
+                      <th className="text-left p-2 text-sm">This Month</th>
+                      <th className="text-left p-2 text-sm">Last Month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {npDataYearly.map((expense, index) => (
+                      <tr key={index} className="bg-slate-300 border-b">
+                        <td className="p-2 text-sm">{expense.groupName}</td>
+                        <td className="p-2 text-sm">{expense.netExpense}</td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -485,6 +859,7 @@ export default function Dashboard() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Cost Breakdown</CardTitle>
+            
           </CardHeader>
           <CardContent>
             <ChartContainer

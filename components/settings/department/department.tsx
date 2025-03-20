@@ -54,6 +54,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { CompanyType, getAllCompany } from '@/api/company-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 type SortColumn =
   | 'departmentName'
@@ -74,6 +76,7 @@ export default function DepartmentManagement() {
     message: string
   } | null>(null)
   const [userId, setUserId] = React.useState<number | undefined>()
+  const [company, setCompany] = useState<CompanyType[]>([])
   const { toast } = useToast()
   const [sortColumn, setSortColumn] = useState<SortColumn>('departmentName')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -85,17 +88,13 @@ export default function DepartmentManagement() {
     defaultValues: {
       departmentName: '',
       budget: 0,
-      currencyCode: 1,
+      companyCode: 1,
       isActive: true,
       actual: 0,
       startDate: null,
       endDate: null,
     },
   })
-
-  useEffect(() => {
-    fetchDepartments()
-  }, [])
 
   const fetchDepartments = async () => {
     setIsLoading(true)
@@ -112,6 +111,20 @@ export default function DepartmentManagement() {
     setIsLoading(false)
   }
 
+  useEffect(() => {
+    fetchDepartments()
+    fetchCompany()
+  }, [])
+
+  const fetchCompany = async () => {
+    const response = await getAllCompany()
+    if (response.data) {
+      setCompany(response.data)
+    } else {
+      setCompany([])
+    }
+    console.log('this is company is fetch by department components', response)
+  }
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -184,8 +197,12 @@ export default function DepartmentManagement() {
         return sortDirection === 'asc' ? dateA - dateB : dateB - dateA
       }
       return sortDirection === 'asc'
-        ? String(a[sortColumn]).localeCompare(String(b[sortColumn]))
-        : String(b[sortColumn]).localeCompare(String(a[sortColumn]))
+        ? String(a[sortColumn as keyof typeof a]).localeCompare(
+            String(b[sortColumn as keyof typeof b])
+          )
+        : String(b[sortColumn as keyof typeof b]).localeCompare(
+            String(a[sortColumn as keyof typeof a])
+          )
     })
     return sorted
   }, [departments, sortColumn, sortDirection])
@@ -257,7 +274,7 @@ export default function DepartmentManagement() {
                 </SortableTableHead>
                 <SortableTableHead column="budget">Budget</SortableTableHead>
                 <SortableTableHead column="currencyCode">
-                  Currency Code
+                  Company Name
                 </SortableTableHead>
                 <SortableTableHead column="isActive">Active</SortableTableHead>
                 <SortableTableHead column="startDate">
@@ -273,11 +290,8 @@ export default function DepartmentManagement() {
                   <TableCell>{department.departmentName}</TableCell>
                   <TableCell>{department.budget}</TableCell>
                   <TableCell>
-                    {department.currencyCode === 1
-                      ? 'BDT'
-                      : department.currencyCode === 2
-                        ? 'USD'
-                        : 'EUR'}
+                    {company.find((c) => c.companyId === department.companyCode)
+                      ?.companyName || 'Unknown Company'}
                   </TableCell>
                   <TableCell>{department.isActive ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
@@ -381,27 +395,51 @@ export default function DepartmentManagement() {
               />
               <FormField
                 control={form.control}
-                name="currencyCode"
+                name="companyCode"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency Code</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(Number(value))}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency code" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">BDT</SelectItem>
-                        <SelectItem value="2">USD</SelectItem>
-                        <SelectItem value="3">EUR</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  // <FormItem>
+                  //   <FormLabel>Compnay Name</FormLabel>
+                  //   <Select
+                  //     onValueChange={(value) => field.onChange(Number(value))}
+                  //     value={field.value?.toString()}
+                  //   >
+                  //     <FormControl>
+                  //       <SelectTrigger>
+                  //         <SelectValue placeholder="Select currency code" />
+                  //       </SelectTrigger>
+                  //     </FormControl>
+                  //     <SelectContent>
+                  //       <SelectItem value="1">BDT</SelectItem>
+                  //       <SelectItem value="2">USD</SelectItem>
+                  //       <SelectItem value="3">EUR</SelectItem>
+                  //     </SelectContent>
+                  //   </Select>
+                  //   <FormMessage />
+                  // </FormItem>
+                  <FormControl>
+                    <CustomCombobox
+                      items={company.map((company) => ({
+                        id: company.companyId.toString(),
+                        name: company.companyName || 'Unnamed Company',
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value.toString(),
+                              name:
+                                company.find((c) => c.companyId === field.value)
+                                  ?.companyName || '',
+                            }
+                          : null
+                      }
+                      onChange={(value) =>
+                        field.onChange(
+                          value ? Number.parseInt(value.id, 10) : null
+                        )
+                      }
+                      placeholder="Select company"
+                    />
+                  </FormControl>
                 )}
               />
               <FormField

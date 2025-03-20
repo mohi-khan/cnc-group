@@ -19,40 +19,72 @@ export async function getFundPosition(
   })
 }
 
-// Get Expensense Data API
-// export async function getExpenseData(
-//   companyId: number,
-//   startDate: string,
-//   endDate: string,
-//   token: string
-// ) {
-//   const params = new URLSearchParams({
-//     companyId: companyId.toString(),
-//     startDate: startDate,
-//     endDate: endDate,
-//     token: token,
-//   })
-//   console.log('🚀 ~ params:', params)
-//   const url = `api/dashboard/getExpenseData?fromDate=2025-01-01&toDate=2025-12-31&companyId=75`
-//   return fetchApi<GEtExpenseDataType>({
-//     url,
-//     method: 'GET',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       authentication : `Bearer ${token}`
-//     }
-//   })
-// }
-
-
-export async function getExpenseData(companyId: number, startDate: string, endDate: string, token: string) {
-  
-
+// Get Expense Data API
+export async function getExpenseData(
+  companyId: number,
+  startDate: string,
+  endDate: string,
+  token: string
+) {
   return fetchApi<GEtExpenseDataType>({
-     url : `api/dashboard/getExpenseData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
-    method: "GET",
+    url: `api/dashboard/getExpenseData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
+      Authorization: token, // Using the token directly as passed
+    },
+  })
+}
+
+//getIncomeData API
+
+export async function getIncomeData(
+  companyId: number,
+  startDate: string,
+  endDate: string,
+  token: string
+) {
+  return fetchApi<GEtExpenseDataType>({
+    url: `api/dashboard/getIncomeData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // Using the token directly as passed
+    },
+  })
+}
+
+//Get getGPData API
+
+export async function getGPData(
+  companyId: number,
+  startDate: string,
+  endDate: string,
+  token: string
+) {
+  return fetchApi<GEtExpenseDataType>({
+    url: `api/dashboard/getGPData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // Using the token directly as passed
+    },
+  })
+}
+
+//Get getNPData API
+
+export async function getNPData(
+  companyId: number,
+  startDate: string,
+  endDate: string,
+  token: string
+) {
+  return fetchApi<GEtExpenseDataType>({
+    url: `api/dashboard/getNPData?fromDate=${startDate}&toDate=${endDate}&companyId=${companyId}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
       Authorization: token, // Using the token directly as passed
     },
   })

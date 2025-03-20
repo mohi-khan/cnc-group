@@ -69,6 +69,7 @@ export default function BankVoucher() {
           taxId: null,
           resPartnerId: null,
           notes: '',
+          payTo: '',
           createdBy: 0,
         },
       ],

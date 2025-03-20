@@ -441,6 +441,7 @@ const JournalDetailSchema = z.object({
   notes: z.string().optional(),
   type: z.string().optional(),
   createdBy: z.number(),
+  payTo: z.string().nullable().optional(),
 })
 
 export const JournalEntryWithDetailsSchema = z.object({
@@ -496,7 +497,7 @@ export const departmentSchema = z.object({
   // departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
-  currencyCode: z.number().optional(),
+  companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
   startDate: z.coerce.date().optional().nullable(),
   endDate: z.coerce.date().optional().nullable(),
@@ -509,7 +510,7 @@ export const getDepartmentSchema = z.object({
   departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
-  currencyCode: z.number().optional(),
+  companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
   startDate: z.coerce.date().optional().nullable(),
   endDate: z.coerce.date().optional().nullable(),
@@ -561,6 +562,7 @@ const VoucherSchemaById = z.object({
   partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
+  payTo: z.string().nullable(),
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
