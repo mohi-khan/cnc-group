@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type React from 'react'
 import type { GetPaymentOrder } from '@/utils/type'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { approveInvoice } from '@/api/payment-requisition-api'
 import { PaymentRequisitionPopup } from './payment-requisition-popup'
+import { useReactToPrint } from 'react-to-print'
+import { toWords } from 'number-to-words'
 
 interface PaymentRequisitionListProps {
   requisitions: GetPaymentOrder[]
@@ -42,6 +44,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false)
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<string>('')
+
+  const checkRef = useRef<HTMLDivElement>(null)
+  const printCheckFn = useReactToPrint({ contentRef: checkRef })
 
   const handleApproveClick = (requisition: GetPaymentOrder) => {
     setSelectedRequisition(requisition)
@@ -159,11 +164,56 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                     Create Advance
                   </Button>
                 )}
+                {(req.status === 'Invoice Approved' ||
+                  req.status === 'Purchase Order') && (
+                  <Button
+                    size="sm"
+                    className="ml-3"
+                    onClick={() => printCheckFn()}
+                  >
+                    Print Check
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {requisitions.map((req, index) => (
+        <div className="hidden" key={index}>
+          <div ref={checkRef} className="p-8 bg-white">
+            <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
+              <div className="relative p-6 border border-gray-300 bg-white">
+                <div className="flex justify-end items-start mb-8">
+                  <div className="text-right">
+                    <div className="flex items-center justify-end">
+                      {/* date */}
+                      <span className="text-sm mr-2">{new Date(req.PurDate).toISOString().split('T')[0]}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-6">
+                  <div className="flex items-center mb-1">
+                    {/* pay to */}
+                    <p className="flex-1 pb-1 pt-2 ">sdfsdf</p>
+                  </div>
+                </div>
+                <div className="flex mb-6">
+                  <div className="flex-1">
+                    {/* amoutn word */}
+                    <p className="flex-1 pb-1 pt-2 ">{toWords(req.amount)} only</p>
+                  </div>
+                  <div className="px-2 py-1 flex items-center whitespace-nowrap ml-5">
+                    {/* amount */}
+                    <span className="font-medium">{req.amount}/-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
 
       {/* Approval Confirmation Dialog */}
       <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
