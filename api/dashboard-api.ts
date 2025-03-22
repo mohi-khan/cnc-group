@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { FundPositionType, GEtExpenseDataType } from '@/utils/type'
+import { Department, FundPositionType, GEtExpenseDataType } from '@/utils/type'
 
 export async function getFundPosition(
   companyId: number,
@@ -87,5 +87,13 @@ export async function getNPData(
       'Content-Type': 'application/json',
       Authorization: token, // Using the token directly as passed
     },
+  })
+}
+
+//Get Department Data API
+export async function getAllDepartments() {
+  return fetchApi<Department[]>({
+    url: 'api/department/get-all-departments',
+    method: 'GET',
   })
 }
