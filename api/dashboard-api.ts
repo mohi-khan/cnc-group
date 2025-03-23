@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Department, FundPositionType, GEtExpenseDataType } from '@/utils/type'
+import { Department, FundPositionType, GetCostBreakdownType, GEtExpenseDataType } from '@/utils/type'
 
 export async function getFundPosition(
   companyId: number,
@@ -95,5 +95,20 @@ export async function getAllDepartments() {
   return fetchApi<Department[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
+  })
+}
+
+//GET cost breakkdown API
+export async function getCostBreakdown() {
+// departmentId: number,
+// fromDate: string,
+// toDate: string,
+// companyId: number
+  return fetchApi<GetCostBreakdownType>({
+    url: 'api/dashboard/getcostBreakdown?departmentId=14&fromDate=2025-01-01&toDate=2025-03-31&companyId=75',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 }

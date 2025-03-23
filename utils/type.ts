@@ -494,7 +494,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-   departmentID: z.number(),
+  departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
@@ -1168,9 +1168,9 @@ export const getBankTransactionSchema = z.object({
   status: z.string(),
   checkNo: z.string(),
   reconcileId: z.boolean().nullable(),
-});
+})
 
-export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>;
+export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>
 
 //fund position
 const BalanceEntrySchema = z.object({
@@ -1279,8 +1279,8 @@ const VehicleSummarySchema = z.object({
 
 export type VehicleSummaryType = z.infer<typeof VehicleSummarySchema>
 
-// Expense Data type 
-export interface GEtExpenseDataType  {
+// Expense Data type
+export interface GEtExpenseDataType {
   name: string
   groupName: string
   totalDebit: number
@@ -1289,4 +1289,10 @@ export interface GEtExpenseDataType  {
   lastMonthDebit: number
   lastMonthCredit: number
   lastMonthNetExpense: number
+}
+
+//Get cost breakdown data type
+export interface GetCostBreakdownType {
+  financialTag: string
+  balance: number
 }
