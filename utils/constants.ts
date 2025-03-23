@@ -161,6 +161,10 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/bank-reconciliation',
           },
           {
+            name: 'Bank Reconciliation Report',
+            source: '/bank/bank-reconciliation-report',
+          },
+          {
             name: 'Bank Transactions',
             source: '/bank/bank-transactions',
           },

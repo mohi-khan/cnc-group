@@ -1290,3 +1290,42 @@ export interface GEtExpenseDataType  {
   lastMonthCredit: number
   lastMonthNetExpense: number
 }
+
+//bank reconciliaton report
+export const bankReconciliationReportSchema = z.object({
+  dateRange: z.object({
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  }),
+  
+  openingBalance: z.object({
+    book: z.number(),
+    bank: z.number(),
+  }),
+  
+  reconciledAmount: z.string(), // String representation of a number
+  
+  unreconciledAmount: z.object({
+    total: z.number(),
+    breakdown: z.object({
+      onlyInBooks: z.array(z.any()), // Empty array in the example
+      onlyInBank: z.array(z.object({
+        id: z.number(),
+        date: z.string().datetime(), // ISO date string
+        description: z.string(),
+        amount: z.string(), // String representation of a number
+        currency: z.string(),
+        status: z.string(),
+        checkNo: z.string(),
+        unreconciledReason: z.string(),
+      })),
+    }),
+  }),
+  
+  closingBalance: z.object({
+    book: z.string(),
+    bank: z.string(),
+  }),
+});
+
+export type BankReconciliationReportType = z.infer<typeof bankReconciliationReportSchema>
