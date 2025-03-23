@@ -99,13 +99,14 @@ export async function getAllDepartments() {
 }
 
 //GET cost breakkdown API
-export async function getCostBreakdown() {
-// departmentId: number,
-// fromDate: string,
-// toDate: string,
-// companyId: number
+export async function getCostBreakdown(
+  departmentId: number,
+  fromDate: string,
+  toDate: string,
+  companyId: number
+) {
   return fetchApi<GetCostBreakdownType>({
-    url: 'api/dashboard/getcostBreakdown?departmentId=14&fromDate=2025-01-01&toDate=2025-03-31&companyId=75',
+    url: `api/dashboard/getcostBreakdown?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}`,
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
