@@ -23,8 +23,11 @@ import { useToast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
-import { BankAccount, BankReconciliationReportType } from '@/utils/type'
-import { getAllBankAccounts, getBankReconciliationReports } from '@/api/bank-reconciliation-report-api'
+import type { BankAccount, BankReconciliationReportType } from '@/utils/type'
+import {
+  getAllBankAccounts,
+  getBankReconciliationReports,
+} from '@/api/bank-reconciliation-report-api'
 
 export default function BankReconciliationReport() {
   const [report, setReport] = useState<BankReconciliationReportType | null>(
@@ -84,6 +87,32 @@ export default function BankReconciliationReport() {
         )
         console.log('Received reconciliations:', response.data) // Debug log
         setReconciliations(response.data || [])
+
+        // Set the report state with the first item from the response
+        if (response.data) {
+          if (Array.isArray(response.data)) {
+            if (response.data.length > 0) {
+              setReport(response.data[0])
+            } else {
+              setReport(null)
+              toast({
+                title: 'No data',
+                description:
+                  'No reconciliation data found for the selected criteria',
+              })
+            }
+          } else {
+            // If it's a single object, use it directly
+            setReport(response.data)
+          }
+        } else {
+          setReport(null)
+          toast({
+            title: 'No data',
+            description:
+              'No reconciliation data found for the selected criteria',
+          })
+        }
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
         toast({
@@ -91,110 +120,14 @@ export default function BankReconciliationReport() {
           description: 'Failed to fetch reconciliations',
           variant: 'destructive',
         })
+        setReport(null)
       } finally {
         setLoading(false)
       }
     } else {
       console.log('Missing required data:', data) // Debug log
       setReconciliations([])
-    }
-  }
-
-  // Mock function to fetch report data
-  const fetchReport = async (data: {
-    bankAccount: string
-    fromDate: string
-    toDate: string
-  }) => {
-    if (!data.bankAccount || !data.fromDate || !data.toDate) {
-      toast({
-        title: 'Missing data',
-        description: 'Please fill all required fields',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    try {
-      setLoading(true)
-
-      // In a real application, this would be an API call
-      // For demo purposes, we're using mock data
-      setTimeout(() => {
-        const mockReport: BankReconciliationReportType = {
-          dateRange: {
-            from: data.fromDate,
-            to: data.toDate,
-          },
-          openingBalance: {
-            book: 4431726.6,
-            bank: 4223863.0,
-          },
-          reconciledAmount: '776593.60',
-          unreconciledAmount: {
-            total: 585320.0,
-            breakdown: {
-              onlyInBooks: [],
-              onlyInBank: [
-                {
-                  id: 1,
-                  date: new Date('2021-12-29T00:00:00.000Z').toISOString(),
-                  description: 'Abul Hashem- Loan',
-                  amount: '25000.00',
-                  currency: 'BDT',
-                  status: 'Pending',
-                  checkNo: '4985651',
-                  unreconciledReason: 'Credited in Tally but not shown in B/S',
-                },
-                {
-                  id: 2,
-                  date: new Date('2021-12-29T00:00:00.000Z').toISOString(),
-                  description: 'Zakat-Shahajalal',
-                  amount: '100000.00',
-                  currency: 'BDT',
-                  status: 'Pending',
-                  checkNo: '4985654',
-                  unreconciledReason: 'Credited in Tally but not shown in B/S',
-                },
-                {
-                  id: 3,
-                  date: new Date('2024-05-28T00:00:00.000Z').toISOString(),
-                  description: '',
-                  amount: '336603.00',
-                  currency: 'BDT',
-                  status: 'Pending',
-                  checkNo: '1323299',
-                  unreconciledReason: 'Credited in Tally but not shown in B/S',
-                },
-                {
-                  id: 4,
-                  date: new Date('2024-08-22T00:00:00.000Z').toISOString(),
-                  description: 'Salim & Sons',
-                  amount: '123717.00',
-                  currency: 'BDT',
-                  status: 'Pending',
-                  checkNo: '',
-                  unreconciledReason: 'Credited in Tally but not shown in B/S',
-                },
-              ],
-            },
-          },
-          closingBalance: {
-            book: '776593.60',
-            bank: '776593.60',
-          },
-        }
-
-        setReport(mockReport)
-        setLoading(false)
-      }, 1000)
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch report data',
-        variant: 'destructive',
-      })
-      setLoading(false)
+      setReport(null)
     }
   }
 
@@ -213,10 +146,23 @@ export default function BankReconciliationReport() {
     return items.reduce((sum, item) => sum + Number.parseFloat(item.amount), 0)
   }
 
+  // Format currency values
+  const formatCurrency = (value: string | number) => {
+    const numValue =
+      typeof value === 'string' ? Number.parseFloat(value) : value
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numValue)
+  }
+
   return (
     <div className="w-[98%] mx-auto p-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(fetchReconciliationsReport)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(fetchReconciliationsReport)}
+          className="space-y-6"
+        >
           <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">
             <FormField
               control={form.control}
@@ -301,7 +247,7 @@ export default function BankReconciliationReport() {
                   {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
                 </div>
                 <div className="text-right font-semibold w-32">
-                  {report.openingBalance.book.toFixed(2)}
+                  {formatCurrency(report.openingBalance.book)}
                 </div>
               </div>
             </div>
@@ -329,10 +275,10 @@ export default function BankReconciliationReport() {
                   {report.unreconciledAmount.breakdown.onlyInBank
                     .filter(
                       (item) =>
+                        item.unreconciledReason === 'Only in Bank' ||
                         item.unreconciledReason ===
-                          'Credited in Tally but not shown in B/S' ||
-                        !item.unreconciledReason
-                    ) // Include items without a specific reason
+                          'Credited in Tally but not shown in B/S'
+                    )
                     .map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{formatDate(item.date)}</TableCell>
@@ -340,59 +286,37 @@ export default function BankReconciliationReport() {
                         <TableCell>{item.checkNo}</TableCell>
                         <TableCell></TableCell>
                         <TableCell className="text-right">
-                          {Number.parseFloat(item.amount).toFixed(2)}
+                          {formatCurrency(item.amount)}
                         </TableCell>
                       </TableRow>
                     ))}
-                  {/* Add hardcoded entries to match the image */}
-                  {report.unreconciledAmount.breakdown.onlyInBank.length ===
-                    0 && (
-                    <>
-                      <TableRow>
-                        <TableCell>29/12/2021</TableCell>
-                        <TableCell>Abul Hashem- Loan</TableCell>
-                        <TableCell>4985651</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right">25,000.00</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>29/12/2021</TableCell>
-                        <TableCell>Zakat-Shahajalal</TableCell>
-                        <TableCell>4985654</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right">100,000.00</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>28.05.24</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell>1323299</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right">336,603.00</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>22.08.24</TableCell>
-                        <TableCell>Salim & Sons</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right">123,717.00</TableCell>
-                      </TableRow>
-                    </>
+                  {report.unreconciledAmount.breakdown.onlyInBank.filter(
+                    (item) =>
+                      item.unreconciledReason === 'Only in Bank' ||
+                      item.unreconciledReason ===
+                        'Credited in Tally but not shown in B/S'
+                  ).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">
+                        No records found
+                      </TableCell>
+                    </TableRow>
                   )}
                   <TableRow>
                     <TableCell colSpan={4} className="text-right font-semibold">
                       Total
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      {report.unreconciledAmount.breakdown.onlyInBank.length > 0
-                        ? calculateTotal(
-                            report.unreconciledAmount.breakdown.onlyInBank.filter(
-                              (item) =>
-                                item.unreconciledReason ===
-                                  'Credited in Tally but not shown in B/S' ||
-                                !item.unreconciledReason
-                            )
-                          ).toFixed(2)
-                        : '585,320.00'}
+                      {formatCurrency(
+                        calculateTotal(
+                          report.unreconciledAmount.breakdown.onlyInBank.filter(
+                            (item) =>
+                              item.unreconciledReason === 'Only in Bank' ||
+                              item.unreconciledReason ===
+                                'Credited in Tally but not shown in B/S'
+                          )
+                        )
+                      )}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -436,17 +360,15 @@ export default function BankReconciliationReport() {
                           <TableCell>{item.checkNo}</TableCell>
                           <TableCell></TableCell>
                           <TableCell className="text-right">
-                            {Number.parseFloat(item.amount).toFixed(2)}
+                            {formatCurrency(item.amount)}
                           </TableCell>
                         </TableRow>
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell>31/12/23</TableCell>
-                      <TableCell>Excise duty for FD</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right">3,500.00</TableCell>
+                      <TableCell colSpan={5} className="text-center">
+                        No records found
+                      </TableCell>
                     </TableRow>
                   )}
                   <TableRow>
@@ -454,7 +376,15 @@ export default function BankReconciliationReport() {
                       Total
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      3,500.00
+                      {formatCurrency(
+                        calculateTotal(
+                          report.unreconciledAmount.breakdown.onlyInBank.filter(
+                            (item) =>
+                              item.unreconciledReason ===
+                              'Debited in B/S but not Shown in Tally'
+                          )
+                        ) || 0
+                      )}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -464,24 +394,24 @@ export default function BankReconciliationReport() {
             {/* Summary */}
             <div className="mt-4 flex flex-col gap-1">
               <div className="flex justify-between">
-                <div>Balance as per B/S</div>
+                <div>Balance as per Books</div>
                 <div className="w-32 text-right font-semibold">
-                  {report.closingBalance.book}
+                  {formatCurrency(report.closingBalance.book)}
                 </div>
               </div>
               <div className="flex justify-between">
-                <div>Balance as per B/S</div>
+                <div>Balance as per Bank Statement</div>
                 <div className="w-32 text-right font-semibold">
-                  {report.closingBalance.bank}
+                  {formatCurrency(report.closingBalance.bank)}
                 </div>
               </div>
               <div className="flex justify-between">
                 <div>Difference</div>
                 <div className="w-32 text-right font-semibold">
-                  {(
+                  {formatCurrency(
                     Number.parseFloat(report.closingBalance.book) -
-                    Number.parseFloat(report.closingBalance.bank)
-                  ).toFixed(2)}
+                      Number.parseFloat(report.closingBalance.bank)
+                  )}
                 </div>
               </div>
             </div>
