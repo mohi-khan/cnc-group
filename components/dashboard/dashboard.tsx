@@ -300,12 +300,12 @@ export default function Dashboard() {
 
   //Get Cost Breakdown Data
   const fetchCostBreakdown = async () => {
-    // const departmentId = 14 // Example departmentId
-    // const startDate = '2025-01-01' // Example startDate
-    // const endDate = '2025-03-31' // Example endDate
-    // const companyId = 75 // Example companyId
+    const departmentId = 14 // Default to 0 if no department is selected
+    const startDate = '2025-01-01' // Example startDate
+    const endDate = '2025-03-31' // Example endDate
+    const companyId = 75 // Example companyId
 
-    const response = await getCostBreakdown()
+    const response = await getCostBreakdown(departmentId, startDate, endDate, companyId)
     if (response.data) {
       setCostBreakdown(
         Array.isArray(response.data) ? response.data : [response.data]
@@ -315,7 +315,6 @@ export default function Dashboard() {
     }
     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
   }
-
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
@@ -966,11 +965,16 @@ export default function Dashboard() {
                     outerRadius={80}
                     fill="hsl(252, 100%, 70%)"
                     label
+                    onClick={(data, index) => {
+                      alert(`Financial Tag: ${data.financialTag}\nBalance: ${data.balance}`)
+                    }}
+                    cursor="pointer"
                   >
                     {costBreakdown.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={`hsl(${index * 60}, 100%, 70%)`}
+                        style={{ cursor: 'pointer' }}
                       />
                     ))}
                   </Pie>
@@ -982,7 +986,7 @@ export default function Dashboard() {
                 </div>
               )}
             </ChartContainer>
-          </CardContent>{' '}
+          </CardContent>
         </Card>
       </div>
 
