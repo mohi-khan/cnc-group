@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select'
 import {
   getAllDepartments,
+  getCostBreakdown,
   getExpenseData,
   getFundPosition,
   getGPData,
@@ -44,6 +45,7 @@ import type {
   ApproveAdvanceType,
   Department,
   FundPositionType,
+  GetCostBreakdownType,
   GEtExpenseDataType,
   GetPaymentOrder,
 } from '@/utils/type'
@@ -70,10 +72,10 @@ const inventoryData = [
 ]
 
 const costBreakdownData = [
-  { name: 'Raw Material Cost', value: 8000000 },
-  { name: 'Labor Cost', value: 5000000 },
-  { name: 'Packaging Cost', value: 3000000 },
-  { name: 'Other Costs', value: 2000000 },
+  { financialTag: 'Raw Material Cost', balance: 8000000 },
+  { financialTag: 'Labor Cost', balance: 5000000 },
+  { financialTag: 'Packaging Cost', balance: 3000000 },
+  { financialTag: 'Other Costs', balance: 2000000 },
 ]
 
 export default function Dashboard() {
@@ -99,6 +101,7 @@ export default function Dashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
     null
   )
+  const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -243,7 +246,7 @@ export default function Dashboard() {
     } else {
       setGPData([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response)
+    console.log('🚀 ~ GetGPData   ~ response:', response.data)
   }
 
   //Get getGPData yearly
@@ -295,6 +298,24 @@ export default function Dashboard() {
     console.log('🚀 ~ GetNPData   ~ response:', response)
   }
 
+  //Get Cost Breakdown Data
+  const fetchCostBreakdown = async () => {
+    // const departmentId = 14 // Example departmentId
+    // const startDate = '2025-01-01' // Example startDate
+    // const endDate = '2025-03-31' // Example endDate
+    // const companyId = 75 // Example companyId
+
+    const response = await getCostBreakdown()
+    if (response.data) {
+      setCostBreakdown(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setCostBreakdown([])
+    }
+    console.log('🚀 ~ GetCostBreakdown ~ response:', response)
+  }
+
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
@@ -308,6 +329,7 @@ export default function Dashboard() {
     fetchNPData()
     fetchNPDataYearly()
     fetchDepartments()
+    fetchCostBreakdown()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -930,28 +952,37 @@ export default function Dashboard() {
                 },
               }}
             >
-              <PieChart width={300} height={300}>
-                <Pie
-                  data={costBreakdownData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="hsl(252, 100%, 70%)"
-                  label
-                >
-                  {costBreakdownData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`hsl(${index * 60}, 100%, 70%)`}
-                    />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
+              {costBreakdown && costBreakdown.length > 0 ? (
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={costBreakdown.map((item) => ({
+                      ...item,
+                      balance: Math.abs(parseFloat(item.balance.toString())),
+                    }))}
+                    dataKey="balance"
+                    nameKey="financialTag"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="hsl(252, 100%, 70%)"
+                    label
+                  >
+                    {costBreakdown.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={`hsl(${index * 60}, 100%, 70%)`}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  No data available
+                </div>
+              )}
             </ChartContainer>
-          </CardContent>
+          </CardContent>{' '}
         </Card>
       </div>
 
