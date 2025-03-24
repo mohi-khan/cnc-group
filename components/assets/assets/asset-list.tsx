@@ -297,6 +297,9 @@ export const AssetList: React.FC<AssetListProps> = ({
             <TableHead>Purchase Value</TableHead>
             <TableHead>Salvage Value</TableHead>
             <TableHead>Useful Life (Year)</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead>Cost Center</TableHead>
+            <TableHead>Depreciation Rate</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -319,6 +322,9 @@ export const AssetList: React.FC<AssetListProps> = ({
                 <TableCell>{assets.purchaseValue}</TableCell>
                 <TableCell>{assets.salvageValue}</TableCell>
                 <TableCell>{assets.usefulLifeYears}</TableCell>
+                <TableCell>{assets.department}</TableCell>
+                <TableCell>{assets.costCenter}</TableCell>
+                <TableCell>{assets.depreciationRate}</TableCell>
               </TableRow>
             )
           })}
