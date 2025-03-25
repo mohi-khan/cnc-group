@@ -108,10 +108,10 @@ export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({
               Depreciation Rate
             </SortableTableHead>
             <SortableTableHead column="account_code">
-              Account Code
+              Account
             </SortableTableHead>
             <SortableTableHead column="depreciation_account_code">
-              Depreciation Account Code
+              Depreciation Account
             </SortableTableHead>
           </TableRow>
         </TableHeader>
@@ -120,8 +120,8 @@ export const AssetCategoryList: React.FC<AssetCategoryListProps> = ({
             <TableRow key={category.category_id}>
               <TableCell>{category.category_name}</TableCell>
               <TableCell>{category.depreciation_rate}%</TableCell>
-              <TableCell>{category.account_code}</TableCell>
-              <TableCell>{category.depreciation_account_code}</TableCell>
+              <TableCell>{category.account}</TableCell>
+              <TableCell>{category.depreciation_account}</TableCell>
             </TableRow>
           ))}
         </TableBody>
