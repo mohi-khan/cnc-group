@@ -1303,6 +1303,12 @@ export interface GetCostBreakdownType {
   balance: number
 }
 
+//Get cost breakdown Details data type
+export interface GetCostBreakdownDetailsType {
+  name: string
+  balance: number
+}
+
 //bank reconciliaton report
 export const bankReconciliationReportSchema = z.object({
   dateRange: z.object({
