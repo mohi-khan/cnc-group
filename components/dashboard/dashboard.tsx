@@ -315,7 +315,7 @@ export default function Dashboard() {
 
   //Get Cost Breakdown Data
   const fetchCostBreakdown = async () => {
-    const departmentId = 14 // Default to 0 if no department is selected
+    const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
     const companyId = 75 // Example companyId
@@ -520,7 +520,13 @@ export default function Dashboard() {
 
   const handlePieClick = (entry: PieEntry) => {
     const financialTag = entry.financialTag
-    window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    if (financialTag === 'Asset') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else if (financialTag === 'Gross Profit') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    }
   }
 
   return (

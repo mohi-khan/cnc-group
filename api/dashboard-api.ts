@@ -124,7 +124,7 @@ export async function getCostBreakdownDetails(
 ) {
   return fetchApi<GetCostBreakdownDetailsType>({
     // url: `api/dashboard/getcostBreakdownDetails?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}&financial_Tag=${financial_Tag}`,
-    url:'api/dashboard/getCostBreakdownDetails?departmentId=15&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',
+    url:'api/dashboard/getCostBreakdownDetails?departmentId=16&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
