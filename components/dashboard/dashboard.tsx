@@ -16,6 +16,7 @@ import {
   Cell,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -102,6 +103,7 @@ export default function Dashboard() {
     null
   )
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
+  const [selectFinancialTag, setSelectFinancialTag] = useState<string>('')
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -116,6 +118,19 @@ export default function Dashboard() {
       console.error('Error fetching fund position data:', error)
     }
   }, [])
+
+  // const router = useRouter()
+
+  // const Revert = (financialTag: string) => {
+  //   router.push('/dashboard/asset')
+  //   if (financialTag === 'Asset') {
+  //     setSelectFinancialTag('Asset')
+  //     router.push({
+  //       pathname: '/dashboard/cost-breakdown-details',
+  //       query: { financialTag: financialTag },
+  //     })
+  //   }
+  // }
 
   // Fetch Departments
   const fetchDepartments = async () => {
@@ -300,12 +315,17 @@ export default function Dashboard() {
 
   //Get Cost Breakdown Data
   const fetchCostBreakdown = async () => {
-    const departmentId = 14 // Default to 0 if no department is selected
+    const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
     const companyId = 75 // Example companyId
 
-    const response = await getCostBreakdown(departmentId, startDate, endDate, companyId)
+    const response = await getCostBreakdown(
+      departmentId,
+      startDate,
+      endDate,
+      companyId
+    )
     if (response.data) {
       setCostBreakdown(
         Array.isArray(response.data) ? response.data : [response.data]
@@ -491,6 +511,22 @@ export default function Dashboard() {
   function handleDepartmentChange(departmentId: number | null): void {
     setSelectedDepartment(departmentId)
     // You can add more logic here if needed, such as fetching data based on the selected department
+  }
+
+  // Function to handle Pie Chart Click
+  interface PieEntry {
+    financialTag: string
+  }
+
+  const handlePieClick = (entry: PieEntry) => {
+    const financialTag = entry.financialTag
+    if (financialTag === 'Asset') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else if (financialTag === 'Gross Profit') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    }
   }
 
   return (
@@ -905,7 +941,7 @@ export default function Dashboard() {
           </HoverCard>
         </div>
 
-        <Card className="lg:col-span-1">
+        {/* <Card className="lg:col-span-1">
           <CardHeader>
             <div className="flex items-center justify-between gap-1">
               <CardTitle className="text-sm">Cost Breakdown</CardTitle>
@@ -965,9 +1001,83 @@ export default function Dashboard() {
                     outerRadius={80}
                     fill="hsl(252, 100%, 70%)"
                     label
-                    onClick={(data, index) => {
-                      alert(`Financial Tag: ${data.financialTag}\nBalance: ${data.balance}`)
-                    }}
+                    // onClick={(data, index) => {
+                    //   alert(`Financial Tag: ${data.financialTag}\nBalance: ${data.balance}`)
+                    // }}
+                    // onClick={(entry) => Revert(entry.financialTag)}
+                    onClick={handlePieClick} // Click event to navigate
+                    cursor="pointer"
+                  >
+                    {costBreakdown.map(
+                      (entry: GetCostBreakdownType, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={`hsl(${index * 60}, 100%, 70%)`}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      )
+                    )}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  No data available
+                </div>
+              )}
+            </ChartContainer>
+          </CardContent>
+        </Card> */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-1">
+              <CardTitle className="text-sm">Cost Breakdown</CardTitle>
+              <CustomCombobox
+                items={department.map((dept) => ({
+                  id: dept.departmentID.toString(),
+                  name: dept.departmentName || 'Unnamed Department',
+                }))}
+                value={
+                  selectedDepartment
+                    ? {
+                        id: selectedDepartment.toString(),
+                        name:
+                          department.find(
+                            (d) => d.departmentID === selectedDepartment
+                          )?.departmentName || '',
+                      }
+                    : null
+                }
+                onChange={(value) =>
+                  handleDepartmentChange(
+                    value ? Number.parseInt(value.id, 10) : null
+                  )
+                }
+                placeholder="Select department"
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                value: { label: 'Cost', color: 'hsl(252, 100%, 70%)' },
+              }}
+            >
+              {costBreakdown && costBreakdown.length > 0 ? (
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={costBreakdown.map((item) => ({
+                      ...item,
+                      balance: Math.abs(parseFloat(item.balance.toString())),
+                    }))}
+                    dataKey="balance"
+                    nameKey="financialTag"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="hsl(252, 100%, 70%)"
+                    label
+                    onClick={handlePieClick} // Click event to navigate
                     cursor="pointer"
                   >
                     {costBreakdown.map((entry, index) => (
@@ -978,7 +1088,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip />
                 </PieChart>
               ) : (
                 <div className="flex h-[300px] items-center justify-center">
