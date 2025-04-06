@@ -2,6 +2,15 @@
 
 import { createBankTransactions } from '@/api/excel-file-input-api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import React from 'react'
 import * as XLSX from 'xlsx'
 
@@ -95,20 +104,22 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
     }
   }
 
+  // Get table headers from the first data item
+  const getTableHeaders = () => {
+    if (!data || data.length === 0) return []
+    return Object.keys(data[0] as Record<string, any>)
+  }
+
   return (
     <div className="space-y-4">
       {/* File Upload */}
-      <div className="flex items-center gap-4">
-        <input
+      <div className="flex items-center justify-center py-5 rounded-md">
+        <Input
           type="file"
           onChange={handleFileUpload}
-          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
+          className="w-20 mr-2 rounded-md file:mr-4 file:py-5 file:font-semibold"
         />
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isLoading}
-        >
+        <Button type="button" onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? 'Submitting...' : 'Submit Data'}
         </Button>
       </div>
@@ -122,13 +133,30 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
         </div>
       )}
 
-      {/* Display Imported Data */}
+      {/* Display Imported Data as Table */}
       {Array.isArray(data) && data.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 pb-10">
           <h2 className="text-lg font-semibold mb-2">Imported Data:</h2>
-          <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-96">
-            <pre>{JSON.stringify(data, null, 2)}</pre>
-          </div>
+          <Table className='border shadow-md mb-20'>
+            <TableHeader className='bg-slate-200 shadow-md'>
+              <TableRow>
+                {getTableHeaders().map((header) => (
+                  <TableHead key={header}>{header}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {getTableHeaders().map((header) => (
+                    <TableCell key={`${rowIndex}-${header}`}>
+                      {(row as Record<string, any>)[header]?.toString() || ''}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

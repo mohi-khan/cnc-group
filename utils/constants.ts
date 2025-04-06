@@ -79,7 +79,6 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
-      
     ],
   },
   {
@@ -98,8 +97,6 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Vehicle Performance Report',
             source: '/vehicle/vehicle-performance-report',
           },
-        
-          
         ],
       },
     ],
@@ -142,7 +139,6 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Run Depreciation', source: '/assets/run-depreciation' },
         ],
       },
-      
     ],
   },
   {
@@ -156,6 +152,13 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/currency',
           },
           { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
+          { name: 'Check Print', source: '/bank/check-print' },
+          { name: 'Bank Balances', source: '/bank/bank-balances' },
+        ],
+      },
+      {
+        name: 'Reconciliation',
+        items: [
           {
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',
@@ -172,8 +175,6 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Automatic Reconciliation',
             source: '/bank/automatic-reconciliation',
           },
-          { name: 'Check Print', source: '/bank/check-print' },
-          { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
       },
     ],
