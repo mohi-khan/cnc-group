@@ -203,6 +203,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/reports/profit-loss',
           },
           { name: 'Balance Sheet', source: '/reports/balance-sheet' },
+          { name: 'Trade Debtors', source: '/reports/trade-debtors' },
         ],
       },
       {
