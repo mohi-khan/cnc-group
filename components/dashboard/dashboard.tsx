@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  getAllCompany,
   getAllDepartments,
   getCostBreakdown,
   getExpenseData,
@@ -61,6 +62,7 @@ import {
 import { set } from 'date-fns'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { CompanyType } from '@/api/company-api'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -104,6 +106,7 @@ export default function Dashboard() {
   )
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
   const [selectFinancialTag, setSelectFinancialTag] = useState<string>('')
+  const [getCompany, setGetCompany] = useState<CompanyType[]>([])
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -179,6 +182,13 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Get All company function
+  const fetchAllCompany = async () => {
+    const response = await getAllCompany()
+    console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
+    setGetCompany(response.data || [])
   }
 
   //  Get Expense data monthly
@@ -349,6 +359,7 @@ export default function Dashboard() {
     fetchNPDataYearly()
     fetchDepartments()
     fetchCostBreakdown()
+    fetchAllCompany()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -543,6 +554,27 @@ export default function Dashboard() {
               <SelectItem value="other">Other Company</SelectItem>
             </SelectContent>
           </Select>
+          {/* <CustomCombobox
+            items={getCompany.map((company) => ({
+              id: company.companyId.toString(),
+              name: company.companyName || 'Unnamed Company',
+            }))}
+            value={
+              field.value
+                ? {
+                    id: field.value.toString(),
+                    name:
+                      getCompany.find(
+                        (company) => company.companyId === field.value
+                      )?.companyName || 'Unnamed Company',
+                  }
+                : null
+            }
+            onChange={(value: { id: string; name: string } | null) =>
+              field.onChange(value ? Number.parseInt(value.id, 10) : null)
+            }
+            placeholder="Select company"
+          /> */}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               31/03/17
@@ -941,93 +973,6 @@ export default function Dashboard() {
           </HoverCard>
         </div>
 
-        {/* <Card className="lg:col-span-1">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-1">
-              <CardTitle className="text-sm">Cost Breakdown</CardTitle>
-              <Select>
-                <CustomCombobox
-                  items={department.map(
-                    (Departments: {
-                      departmentID: number
-                      departmentName: string
-                    }) => ({
-                      id: Departments.departmentID.toString(),
-                      name: Departments.departmentName || 'Unnamed Department',
-                    })
-                  )}
-                  value={
-                    selectedDepartment
-                      ? {
-                          id: selectedDepartment.toString(),
-                          name:
-                            department.find(
-                              (d: { departmentID: number }) =>
-                                d.departmentID === selectedDepartment
-                            )?.departmentName || '',
-                        }
-                      : null
-                  }
-                  onChange={(value) =>
-                    handleDepartmentChange(
-                      value ? Number.parseInt(value.id, 10) : null
-                    )
-                  }
-                  placeholder="Select department"
-                />
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                value: {
-                  label: 'Cost',
-                  color: 'hsl(252, 100%, 70%)',
-                },
-              }}
-            >
-              {costBreakdown && costBreakdown.length > 0 ? (
-                <PieChart width={300} height={300}>
-                  <Pie
-                    data={costBreakdown.map((item) => ({
-                      ...item,
-                      balance: Math.abs(parseFloat(item.balance.toString())),
-                    }))}
-                    dataKey="balance"
-                    nameKey="financialTag"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="hsl(252, 100%, 70%)"
-                    label
-                    // onClick={(data, index) => {
-                    //   alert(`Financial Tag: ${data.financialTag}\nBalance: ${data.balance}`)
-                    // }}
-                    // onClick={(entry) => Revert(entry.financialTag)}
-                    onClick={handlePieClick} // Click event to navigate
-                    cursor="pointer"
-                  >
-                    {costBreakdown.map(
-                      (entry: GetCostBreakdownType, index: number) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={`hsl(${index * 60}, 100%, 70%)`}
-                          style={{ cursor: 'pointer' }}
-                        />
-                      )
-                    )}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              ) : (
-                <div className="flex h-[300px] items-center justify-center">
-                  No data available
-                </div>
-              )}
-            </ChartContainer>
-          </CardContent>
-        </Card> */}
         <Card className="lg:col-span-1">
           <CardHeader>
             <div className="flex items-center justify-between gap-1">

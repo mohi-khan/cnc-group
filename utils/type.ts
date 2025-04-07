@@ -1373,3 +1373,12 @@ export const bankReconciliationReportSchema = z.object({
 export type BankReconciliationReportType = z.infer<
   typeof bankReconciliationReportSchema
 >
+
+//Get Trade Debtors Type
+export interface GetTradeDebtorsType {
+  partnerId: number
+  partnerName: string
+  companyName: string
+  balanceCurrentYear: number
+  balanceLastYear: number
+}
