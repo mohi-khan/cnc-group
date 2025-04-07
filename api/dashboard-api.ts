@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { FundPositionType, GEtExpenseDataType } from '@/utils/type'
+import { Department, FundPositionType, GetCostBreakdownDetailsType, GetCostBreakdownType, GEtExpenseDataType } from '@/utils/type'
 
 export async function getFundPosition(
   companyId: number,
@@ -86,6 +86,48 @@ export async function getNPData(
     headers: {
       'Content-Type': 'application/json',
       Authorization: token, // Using the token directly as passed
+    },
+  })
+}
+
+//Get Department Data API
+export async function getAllDepartments() {
+  return fetchApi<Department[]>({
+    url: 'api/department/get-all-departments',
+    method: 'GET',
+  })
+}
+
+//GET cost breakdown API
+export async function getCostBreakdown(
+  departmentId: number,
+  fromDate: string,
+  toDate: string,
+  companyId: number
+) {
+  return fetchApi<GetCostBreakdownType>({
+    url: `api/dashboard/getcostBreakdown?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//Get cost breakdown details API
+export async function getCostBreakdownDetails(
+  // departmentId: number,
+  // fromDate: string,
+  // toDate: string,
+  // companyId: number,
+  // financialTag:string
+) {
+  return fetchApi<GetCostBreakdownDetailsType>({
+    // url: `api/dashboard/getcostBreakdownDetails?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}&financial_Tag=${financial_Tag}`,
+    url:'api/dashboard/getCostBreakdownDetails?departmentId=16&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
   })
 }

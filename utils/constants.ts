@@ -79,16 +79,6 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
-      {
-        name: 'Vechile',
-        items: [
-          { name: 'Vehicle', source: '/vendors/vehicle' },
-          {
-            name: 'Vehicle Fuel Consumption',
-            source: '/vendors/vehicle-fuel-consumption',
-          },
-        ],
-      },
     ],
   },
   {
@@ -97,9 +87,16 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Vehicle Management',
         items: [
+          { name: 'Vehicle', source: '/vehicle/vehicle' },
+          {
+            name: 'Vehicle Fuel Consumption',
+            source: '/vehicle/vehicle-fuel-consumption',
+          },
           { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
-        
-          
+          {
+            name: 'Vehicle Performance Report',
+            source: '/vehicle/vehicle-performance-report',
+          },
         ],
       },
     ],
@@ -142,15 +139,6 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Run Depreciation', source: '/assets/run-depreciation' },
         ],
       },
-      {
-        name: 'Vehicle',
-        items: [
-          {
-            name: 'Vehicle Performance Report',
-            source: '/assets/vehicle-performance-report',
-          },
-        ],
-      },
     ],
   },
   {
@@ -164,9 +152,20 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/currency',
           },
           { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
+          { name: 'Check Print', source: '/bank/check-print' },
+          { name: 'Bank Balances', source: '/bank/bank-balances' },
+        ],
+      },
+      {
+        name: 'Reconciliation',
+        items: [
           {
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',
+          },
+          {
+            name: 'Bank Reconciliation Report',
+            source: '/bank/bank-reconciliation-report',
           },
           {
             name: 'Bank Transactions',
@@ -176,8 +175,6 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Automatic Reconciliation',
             source: '/bank/automatic-reconciliation',
           },
-          { name: 'Check Print', source: '/bank/check-print' },
-          { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
       },
     ],

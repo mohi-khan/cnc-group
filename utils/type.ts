@@ -2,6 +2,7 @@ import { isLastDayOfMonth } from 'date-fns'
 import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
 import exp from 'constants'
+import { de } from 'date-fns/locale'
 
 // export interface User {
 //   userId: number
@@ -494,7 +495,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  // departmentID: z.number(),
+  departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
@@ -616,6 +617,15 @@ export const createAssetSchema = z.object({
   status: z.enum(['Active', 'Disposed']).default('Active'),
   company_id: z.number().int('Company ID must be an integer.'),
   location_id: z.number().int('Location ID must be an integer.').optional(),
+  department_id: z.number().int('Department ID must be an integer.').optional(),
+  cost_center_id: z
+    .number()
+    .int('Cost Center ID must be an integer.')
+    .optional(),
+  depreciation_rate: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for depreciation rate.')
+    .optional(),
   created_by: z.number().int('Created by must be an integer.'),
 })
 
@@ -645,6 +655,12 @@ export const getAssetSchema = z.object({
   status: z.enum(['Active', 'Disposed']).default('Active'),
   company: z.number().int('Company ID must be an integer.'),
   location: z.number().int('Location ID must be an integer.').optional(),
+  department: z.number().int('Department ID must be an integer.').optional(),
+  costCenter: z.number().int('Cost Center ID must be an integer.').optional(),
+  depreciationRate: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for depreciation rate.')
+    .optional(),
   created_by: z.number().int('Created by must be an integer.'),
 })
 
@@ -671,6 +687,12 @@ export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
   category_name: string
+  account_code: number
+  depreciation_account_code: number
+  created_by: number
+  account: string
+  depreciation_account: string
+  depreciation_rate: string
   created_time: string
   updated_by: number
   updated_time: string
@@ -1168,9 +1190,9 @@ export const getBankTransactionSchema = z.object({
   status: z.string(),
   checkNo: z.string(),
   reconcileId: z.boolean().nullable(),
-});
+})
 
-export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>;
+export type GetBankTransactionType = z.infer<typeof getBankTransactionSchema>
 
 //fund position
 const BalanceEntrySchema = z.object({
@@ -1279,8 +1301,8 @@ const VehicleSummarySchema = z.object({
 
 export type VehicleSummaryType = z.infer<typeof VehicleSummarySchema>
 
-// Expense Data type 
-export interface GEtExpenseDataType  {
+// Expense Data type
+export interface GEtExpenseDataType {
   name: string
   groupName: string
   totalDebit: number
@@ -1290,3 +1312,64 @@ export interface GEtExpenseDataType  {
   lastMonthCredit: number
   lastMonthNetExpense: number
 }
+
+//Get cost breakdown data type
+export interface GetCostBreakdownType {
+  financialTag: string
+  balance: number
+}
+
+//Get cost breakdown data type
+export interface GetCostBreakdownType {
+  financialTag: string
+  balance: number
+}
+
+//Get cost breakdown Details data type
+export interface GetCostBreakdownDetailsType {
+  name: string
+  balance: number
+}
+
+//bank reconciliaton report
+export const bankReconciliationReportSchema = z.object({
+  dateRange: z.object({
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD format
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  }),
+
+  openingBalance: z.object({
+    book: z.number(),
+    bank: z.number(),
+  }),
+
+  reconciledAmount: z.string(), // String representation of a number
+
+  unreconciledAmount: z.object({
+    total: z.number(),
+    breakdown: z.object({
+      onlyInBooks: z.array(z.any()), // Empty array in the example
+      onlyInBank: z.array(
+        z.object({
+          id: z.number(),
+          date: z.string().datetime(), // ISO date string
+          description: z.string(),
+          amount: z.string(), // String representation of a number
+          currency: z.string(),
+          status: z.string(),
+          checkNo: z.string(),
+          unreconciledReason: z.string(),
+        })
+      ),
+    }),
+  }),
+
+  closingBalance: z.object({
+    book: z.string(),
+    bank: z.string(),
+  }),
+})
+
+export type BankReconciliationReportType = z.infer<
+  typeof bankReconciliationReportSchema
+>

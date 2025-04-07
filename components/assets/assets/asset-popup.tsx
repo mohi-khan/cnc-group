@@ -1,6 +1,5 @@
 'use client'
 
-import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -13,9 +12,11 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   type AssetCategoryType,
+  type CostCenter,
   type CreateAssetData,
   createAssetSchema,
-  LocationData,
+  type GetDepartment,
+  type LocationData,
 } from '@/utils/type'
 import {
   Select,
@@ -33,8 +34,12 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useEffect, useState } from 'react'
-import { createAsset } from '@/api/assets.api'
-import { CompanyType, getAllCompany } from '@/api/company-api'
+import {
+  createAsset,
+  getAllCostCenters,
+  getAllDepartments,
+} from '@/api/assets.api'
+import { type CompanyType, getAllCompany } from '@/api/company-api'
 import { getAllLocations } from '@/api/bank-vouchers-api'
 
 interface AssetPopupProps {
@@ -53,6 +58,8 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
   const [getLoaction, setGetLocation] = useState<LocationData[]>([])
+  const [getDepartment, setGetDepartment] = useState<GetDepartment[]>([])
+  const [getCostCenter, setGetCostCenter] = useState<CostCenter[]>([])
   const [userId, setUserId] = React.useState<number | null>(null)
 
   React.useEffect(() => {
@@ -60,6 +67,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUserId(userData.userId)
+      form.setValue('created_by', userData.userId)
       console.log(
         'Current userId from localStorage in everywhere:',
         userData.userId
@@ -82,13 +90,16 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
       useful_life_years: 0,
       status: 'Active',
       company_id: 0,
-      location_id: undefined,
-      created_by: userId ?? undefined,
+      location_id: 0,
+      department_id: 0,
+      cost_center_id: 0,
+      depreciation_rate: '0.00',
+      created_by: 0,
     },
   })
 
-
   const onSubmit = async (data: CreateAssetData) => {
+    console.log('Form data before submission:', data)
     setIsSubmitting(true)
     try {
       // Ensure numeric fields are properly converted
@@ -96,17 +107,23 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
         ...data,
         category_id: Number(data.category_id),
         company_id: Number(data.company_id),
-        location_id: data.location_id ? Number(data.location_id) : undefined,
-        created_by: Number(data.created_by),
+        location_id: data.location_id ? Number(data.location_id) : null,
+        department_id: data.department_id ? Number(data.department_id) : null,
+        cost_center_id: data.cost_center_id
+          ? Number(data.cost_center_id)
+          : null,
+        created_by: Number(data.created_by || userId),
         useful_life_years: data.useful_life_years
           ? Number(data.useful_life_years)
-          : undefined,
+          : null,
         // Ensure decimal values are properly formatted
         purchase_value: data.purchase_value.toString(),
         current_value: data.current_value?.toString(),
         salvage_value: data.salvage_value?.toString(),
+        depreciation_rate: data.depreciation_rate?.toString(),
       }
 
+      console.log('Formatted data for submission:', formattedData)
       await createAsset(formattedData)
       onCategoryAdded()
       onOpenChange(false)
@@ -145,10 +162,35 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     }
   }
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await getAllDepartments()
+
+      setGetDepartment(response.data)
+      console.log('dept data', response.data)
+    } catch (error) {
+      console.error('Failed to fetch asset categories:', error)
+    }
+  }
+
+  const fetchCostCenters = async () => {
+    try {
+      const response = await getAllCostCenters()
+
+      setGetCostCenter(response.data)
+      console.log('cost center data', response.data)
+    } catch (error) {
+      console.error('Failed to fetch asset categories:', error)
+    }
+  }
+
   useEffect(() => {
     fetchCompnay()
     fetchLocation()
+    fetchDepartments()
+    fetchCostCenters()
   }, [])
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
@@ -193,6 +235,67 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                           value={category.category_id.toString()}
                         >
                           {category.category_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="department_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getDepartment?.map((department) => (
+                        <SelectItem
+                          key={department.departmentID}
+                          value={department.departmentID.toString()}
+                        >
+                          {department.departmentName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cost_center_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cost Center</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Cost Center" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getCostCenter?.map((costCenter) => (
+                        <SelectItem
+                          key={costCenter.costCenterId}
+                          value={costCenter.costCenterId.toString()}
+                        >
+                          {costCenter.costCenterName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -333,6 +436,25 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
             <FormField
               control={form.control}
+              name="depreciation_rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Depreciation Rate</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="0.00"
+                      pattern="^\d+(\.\d{1,2})?$"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="company_id"
               render={({ field }) => (
                 <FormItem>
@@ -414,26 +536,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
-            {/* <FormField
-              control={form.control}
-              name="created_by"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Created By</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
 
             <div className="flex justify-end space-x-2">
               <Button

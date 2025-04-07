@@ -16,6 +16,7 @@ import {
   Cell,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,6 +34,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  getAllDepartments,
+  getCostBreakdown,
   getExpenseData,
   getFundPosition,
   getGPData,
@@ -41,7 +44,9 @@ import {
 } from '@/api/dashboard-api'
 import type {
   ApproveAdvanceType,
+  Department,
   FundPositionType,
+  GetCostBreakdownType,
   GEtExpenseDataType,
   GetPaymentOrder,
 } from '@/utils/type'
@@ -54,6 +59,8 @@ import {
   HoverCardTrigger,
 } from '@radix-ui/react-hover-card'
 import { set } from 'date-fns'
+import { toast } from '@/hooks/use-toast'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -66,10 +73,10 @@ const inventoryData = [
 ]
 
 const costBreakdownData = [
-  { name: 'Raw Material Cost', value: 8000000 },
-  { name: 'Labor Cost', value: 5000000 },
-  { name: 'Packaging Cost', value: 3000000 },
-  { name: 'Other Costs', value: 2000000 },
+  { financialTag: 'Raw Material Cost', balance: 8000000 },
+  { financialTag: 'Labor Cost', balance: 5000000 },
+  { financialTag: 'Packaging Cost', balance: 3000000 },
+  { financialTag: 'Other Costs', balance: 2000000 },
 ]
 
 export default function Dashboard() {
@@ -91,6 +98,12 @@ export default function Dashboard() {
   const [gpDataYearly, setGPDataYearly] = useState<GEtExpenseDataType[]>([])
   const [npData, setNPData] = useState<GEtExpenseDataType[]>([])
   const [npDataYearly, setNPDataYearly] = useState<GEtExpenseDataType[]>([])
+  const [department, setDepartments] = useState<Department[]>([])
+  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
+    null
+  )
+  const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
+  const [selectFinancialTag, setSelectFinancialTag] = useState<string>('')
 
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
@@ -105,6 +118,33 @@ export default function Dashboard() {
       console.error('Error fetching fund position data:', error)
     }
   }, [])
+
+  // const router = useRouter()
+
+  // const Revert = (financialTag: string) => {
+  //   router.push('/dashboard/asset')
+  //   if (financialTag === 'Asset') {
+  //     setSelectFinancialTag('Asset')
+  //     router.push({
+  //       pathname: '/dashboard/cost-breakdown-details',
+  //       query: { financialTag: financialTag },
+  //     })
+  //   }
+  // }
+
+  // Fetch Departments
+  const fetchDepartments = async () => {
+    const data = await getAllDepartments()
+    if (data.error || !data.data) {
+      console.error('Error getting departments:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get departments',
+      })
+    } else {
+      setDepartments(data.data)
+    }
+  }
 
   const fetchRequisitions = async () => {
     try {
@@ -221,7 +261,7 @@ export default function Dashboard() {
     } else {
       setGPData([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response)
+    console.log('🚀 ~ GetGPData   ~ response:', response.data)
   }
 
   //Get getGPData yearly
@@ -273,6 +313,28 @@ export default function Dashboard() {
     console.log('🚀 ~ GetNPData   ~ response:', response)
   }
 
+  //Get Cost Breakdown Data
+  const fetchCostBreakdown = async () => {
+    const departmentId = 16 // Default to 0 if no department is selected
+    const startDate = '2025-01-01' // Example startDate
+    const endDate = '2025-03-31' // Example endDate
+    const companyId = 75 // Example companyId
+
+    const response = await getCostBreakdown(
+      departmentId,
+      startDate,
+      endDate,
+      companyId
+    )
+    if (response.data) {
+      setCostBreakdown(
+        Array.isArray(response.data) ? response.data : [response.data]
+      )
+    } else {
+      setCostBreakdown([])
+    }
+    console.log('🚀 ~ GetCostBreakdown ~ response:', response)
+  }
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
@@ -285,6 +347,8 @@ export default function Dashboard() {
     fetchGPDataYearly()
     fetchNPData()
     fetchNPDataYearly()
+    fetchDepartments()
+    fetchCostBreakdown()
   }, [fetchFundPosition])
 
   const processedFundPositionData = React.useMemo(() => {
@@ -443,6 +507,27 @@ export default function Dashboard() {
   // Calculate total thismonth NP yearly
   const npPercentageChangeYearly =
     lastMonthExpenseYearly !== 0 ? (totalNPYearly - lastMonthNPYearly) / 100 : 0
+
+  function handleDepartmentChange(departmentId: number | null): void {
+    setSelectedDepartment(departmentId)
+    // You can add more logic here if needed, such as fetching data based on the selected department
+  }
+
+  // Function to handle Pie Chart Click
+  interface PieEntry {
+    financialTag: string
+  }
+
+  const handlePieClick = (entry: PieEntry) => {
+    const financialTag = entry.financialTag
+    if (financialTag === 'Asset') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else if (financialTag === 'Gross Profit') {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    } else {
+      window.location.href = `dashboard/cost-breakdown-details/${financialTag}`
+    }
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -856,10 +941,42 @@ export default function Dashboard() {
           </HoverCard>
         </div>
 
-        <Card className="lg:col-span-1">
+        {/* <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Cost Breakdown</CardTitle>
-            
+            <div className="flex items-center justify-between gap-1">
+              <CardTitle className="text-sm">Cost Breakdown</CardTitle>
+              <Select>
+                <CustomCombobox
+                  items={department.map(
+                    (Departments: {
+                      departmentID: number
+                      departmentName: string
+                    }) => ({
+                      id: Departments.departmentID.toString(),
+                      name: Departments.departmentName || 'Unnamed Department',
+                    })
+                  )}
+                  value={
+                    selectedDepartment
+                      ? {
+                          id: selectedDepartment.toString(),
+                          name:
+                            department.find(
+                              (d: { departmentID: number }) =>
+                                d.departmentID === selectedDepartment
+                            )?.departmentName || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) =>
+                    handleDepartmentChange(
+                      value ? Number.parseInt(value.id, 10) : null
+                    )
+                  }
+                  placeholder="Select department"
+                />
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -870,26 +987,114 @@ export default function Dashboard() {
                 },
               }}
             >
-              <PieChart width={300} height={300}>
-                <Pie
-                  data={costBreakdownData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="hsl(252, 100%, 70%)"
-                  label
-                >
-                  {costBreakdownData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`hsl(${index * 60}, 100%, 70%)`}
-                    />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
+              {costBreakdown && costBreakdown.length > 0 ? (
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={costBreakdown.map((item) => ({
+                      ...item,
+                      balance: Math.abs(parseFloat(item.balance.toString())),
+                    }))}
+                    dataKey="balance"
+                    nameKey="financialTag"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="hsl(252, 100%, 70%)"
+                    label
+                    // onClick={(data, index) => {
+                    //   alert(`Financial Tag: ${data.financialTag}\nBalance: ${data.balance}`)
+                    // }}
+                    // onClick={(entry) => Revert(entry.financialTag)}
+                    onClick={handlePieClick} // Click event to navigate
+                    cursor="pointer"
+                  >
+                    {costBreakdown.map(
+                      (entry: GetCostBreakdownType, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={`hsl(${index * 60}, 100%, 70%)`}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      )
+                    )}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  No data available
+                </div>
+              )}
+            </ChartContainer>
+          </CardContent>
+        </Card> */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-1">
+              <CardTitle className="text-sm">Cost Breakdown</CardTitle>
+              <CustomCombobox
+                items={department.map((dept) => ({
+                  id: dept.departmentID.toString(),
+                  name: dept.departmentName || 'Unnamed Department',
+                }))}
+                value={
+                  selectedDepartment
+                    ? {
+                        id: selectedDepartment.toString(),
+                        name:
+                          department.find(
+                            (d) => d.departmentID === selectedDepartment
+                          )?.departmentName || '',
+                      }
+                    : null
+                }
+                onChange={(value) =>
+                  handleDepartmentChange(
+                    value ? Number.parseInt(value.id, 10) : null
+                  )
+                }
+                placeholder="Select department"
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                value: { label: 'Cost', color: 'hsl(252, 100%, 70%)' },
+              }}
+            >
+              {costBreakdown && costBreakdown.length > 0 ? (
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={costBreakdown.map((item) => ({
+                      ...item,
+                      balance: Math.abs(parseFloat(item.balance.toString())),
+                    }))}
+                    dataKey="balance"
+                    nameKey="financialTag"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="hsl(252, 100%, 70%)"
+                    label
+                    onClick={handlePieClick} // Click event to navigate
+                    cursor="pointer"
+                  >
+                    {costBreakdown.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={`hsl(${index * 60}, 100%, 70%)`}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  No data available
+                </div>
+              )}
             </ChartContainer>
           </CardContent>
         </Card>
