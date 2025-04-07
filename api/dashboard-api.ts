@@ -1,5 +1,6 @@
 import { fetchApi } from '@/utils/http'
 import { Department, FundPositionType, GetCostBreakdownDetailsType, GetCostBreakdownType, GEtExpenseDataType } from '@/utils/type'
+import { CompanyType } from './company-api'
 
 export async function getFundPosition(
   companyId: number,
@@ -129,5 +130,13 @@ export async function getCostBreakdownDetails(
     headers: {
       'Content-Type': 'application/json',
     },
+  })
+}
+
+//get all companies api
+export async function getAllCompany() {
+  return fetchApi<CompanyType[]>({
+    url: 'api/company/get-all-companies',
+    method: 'GET',
   })
 }
