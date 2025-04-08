@@ -684,6 +684,13 @@ export const createAssetCategorySchema = z.object({
 
 export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
 
+export const createAssetDepreciationSchema = z.object({
+  company_id: z.number().int('Company ID must be an integer.'),
+  depreciation_date: z.string(),
+})
+
+export type CreateAssetDepreciationData = z.infer<typeof createAssetDepreciationSchema>
+
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
   category_name: string

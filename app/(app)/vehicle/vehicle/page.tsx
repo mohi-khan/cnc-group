@@ -1,4 +1,4 @@
-import Vehicle from '@/components/vendors/vehicle/vehicle'
+import Vehicle from '@/components/vehicle/vehicle/vehicle'
 import React from 'react'
 
 const VehiclePage = () => {
