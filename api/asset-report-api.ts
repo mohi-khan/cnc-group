@@ -1,5 +1,6 @@
 import { fetchApi } from "@/utils/http"
 import { AssetDepreciationReportType } from "@/utils/type"
+import { CompanyType } from "./company-api"
 
 export async function getAssetReport(
   companyId: number,
@@ -14,5 +15,12 @@ export async function getAssetReport(
       'Content-Type': 'application/json',
       Authorization: token,
     },
+  })
+}
+
+export async function getAllCompanies() {
+  return fetchApi<CompanyType[]>({
+    url: 'api/company/get-all-companies',
+    method: 'GET',
   })
 }
