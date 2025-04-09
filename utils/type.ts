@@ -691,6 +691,20 @@ export const createAssetDepreciationSchema = z.object({
 
 export type CreateAssetDepreciationData = z.infer<typeof createAssetDepreciationSchema>
 
+const assetDepreciationReportSchema = z.object({
+  category_name: z.string(),
+  rate: z.string(),
+  opening_balance: z.string(),
+  addition_during_period: z.string(),
+  closing_balance: z.string(),
+  dep_opening: z.string(),
+  dep_during_period: z.string(),
+  dep_closing: z.string(),
+  written_down_value: z.string(),
+});
+
+export type AssetDepreciationReportType = z.infer<typeof assetDepreciationReportSchema>
+
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number
   category_name: string

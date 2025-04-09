@@ -25,10 +25,6 @@ const ApproveAdvance = () => {
   const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
   console.log('🚀 ~ ApproveAdvance ~ user:', user)
 
-  useEffect(() => {
-    fetchAdvances()
-  }, [])
-
   const fetchAdvances = async () => {
     try {
       setIsLoading(true)
@@ -44,6 +40,10 @@ const ApproveAdvance = () => {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchAdvances()
+  }, [fetchAdvances])
 
   const handleApproveClick = async (advance: ApproveAdvanceType) => {
     try {

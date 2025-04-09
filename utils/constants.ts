@@ -137,6 +137,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/assets/configure-asset-accounting',
           },
           { name: 'Asset Depreciation', source: '/assets/asset-depreciation' },
+          { name: 'Asset Report', source: '/assets/asset-report' },
         ],
       },
     ],
