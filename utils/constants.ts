@@ -205,6 +205,7 @@ export const MENU_ITEMS: MenuItem[] = [
           },
           { name: 'Balance Sheet', source: '/reports/balance-sheet' },
           { name: 'Trade Debtors', source: '/reports/trade-debtors' },
+          { name: 'Cash Report', source: '/reports/cash-report' },
         ],
       },
       {
