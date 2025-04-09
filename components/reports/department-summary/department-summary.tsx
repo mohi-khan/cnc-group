@@ -23,6 +23,7 @@ const DepartmentSummary = () => {
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
   const [department, setDepartment] = useState<Department[]>([])
+  const [departmentId, setDepartmentId] = useState<string>('')
 
   const generatePdf = () => {
     toPDF()
@@ -58,11 +59,13 @@ const DepartmentSummary = () => {
   const handleFilterChange = (
     newStartDate: Date | undefined,
     newEndDate: Date | undefined,
-    newCompanyId: string
+    newCompanyId: string,
+    newDepartmentId: string
   ) => {
     setStartDate(newStartDate)
     setEndDate(newEndDate)
     setCompanyId(newCompanyId)
+    setDepartmentId(newDepartmentId)
   }
 
   async function fetchAllCostCenter() {
@@ -72,13 +75,12 @@ const DepartmentSummary = () => {
   }
 
   useEffect(() => {
-    if (startDate && endDate && companyId) {
+    if (startDate && endDate && companyId && departmentId) {
       const fetchData = async () => {
         const response = await getDepartmentSummary({
           fromdate: startDate.toISOString().split('T')[0],
           enddate: endDate.toISOString().split('T')[0],
-          departmentId: '1,2,3,4,5,6,7,8,9,10',
-          // costCenterIds: costCenterIds.join(','),
+          departmentId: departmentId,
           companyid: companyId,
         })
         if (response.data) {
@@ -101,7 +103,7 @@ const DepartmentSummary = () => {
       fetchData()
       fetchAllCostCenter()
     }
-  }, [startDate, endDate, companyId])
+  }, [startDate, endDate, companyId, departmentId])
 
   return (
     <div>
