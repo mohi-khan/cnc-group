@@ -63,7 +63,7 @@ export function JournalVoucherPopup({
     if (!isOpen) {
       resetForm()
     }
-  }, [isOpen])
+  }, [isOpen, resetForm])
 
   const addEntry = () => {
     const currentEntries = form.getValues('journalDetails')

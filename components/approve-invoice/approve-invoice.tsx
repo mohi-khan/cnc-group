@@ -35,10 +35,6 @@ const ApproveInvoice = () => {
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
   const token = `Bearer ${mainToken}`
 
-  useEffect(() => {
-    fetchInvoices()
-  }, [])
-
   const handleApproveClick = (requisition: GetPaymentOrder) => {
     setSelectedRequisition(requisition)
     setApprovalDialogOpen(true)
@@ -102,6 +98,10 @@ const ApproveInvoice = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [fetchInvoices])
 
   if (!requisitions || requisitions.length === 0) {
     return (
