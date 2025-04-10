@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ const ApproveAdvance = () => {
   const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
   console.log('🚀 ~ ApproveAdvance ~ user:', user)
 
-  const fetchAdvances = async () => {
+  const fetchAdvances = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null) // Reset error state
@@ -39,11 +39,12 @@ const ApproveAdvance = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [token]); // Include 'token' or anything else used inside
+  
 
   useEffect(() => {
     fetchAdvances()
-  }, [])
+  }, [fetchAdvances])
 
   const handleApproveClick = async (advance: ApproveAdvanceType) => {
     try {
