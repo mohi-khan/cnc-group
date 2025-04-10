@@ -293,7 +293,7 @@ const AssetReport = () => {
           </div>
         ) : (
           <div className="text-center py-10 text-gray-500">
-            Please select a date range and click "Generate Report" to view data
+            Please select a date range and click &quot;Generate Report&quot; to view data
           </div>
         )}
       </div>

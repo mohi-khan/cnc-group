@@ -110,7 +110,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
 
   useEffect(() => {
     fetchChartOfAccounts()
-  }, [fetchChartOfAccounts])
+  }, [])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

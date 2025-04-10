@@ -43,7 +43,7 @@ const ApproveAdvance = () => {
 
   useEffect(() => {
     fetchAdvances()
-  }, [fetchAdvances])
+  }, [])
 
   const handleApproveClick = async (advance: ApproveAdvanceType) => {
     try {

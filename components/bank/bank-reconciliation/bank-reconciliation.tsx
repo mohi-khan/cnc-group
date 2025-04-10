@@ -325,7 +325,7 @@ export const BankReconciliation = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
-                  Please select a bank account and date range, then click "Show"
+                  Please select a bank account and date range, then click &quot;Show&quot;
                 </TableCell>
               </TableRow>
             )}

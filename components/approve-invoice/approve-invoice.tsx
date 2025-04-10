@@ -101,7 +101,7 @@ const ApproveInvoice = () => {
 
   useEffect(() => {
     fetchInvoices()
-  }, [fetchInvoices])
+  }, [])
 
   if (!requisitions || requisitions.length === 0) {
     return (

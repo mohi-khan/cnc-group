@@ -432,7 +432,7 @@ export default function AutomaticReconciliation() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center">
                     No transactions found. Please select a bank account and date
-                    range, then click "Show"
+                    range, then click &quot;Show&quot;
                   </TableCell>
                 </TableRow>
               )}
@@ -534,7 +534,7 @@ export default function AutomaticReconciliation() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">
                     Please select a bank account and date range, then click
-                    "Show"
+                    &quot;Show&quot;
                   </TableCell>
                 </TableRow>
               )}
