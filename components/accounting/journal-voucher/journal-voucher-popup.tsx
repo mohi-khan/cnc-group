@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ export function JournalVoucherPopup({
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const defaultValues = {
+  const defaultValues =  useMemo(() => ({
     journalEntry: {
       date: new Date().toISOString().split('T')[0],
       journalType: VoucherTypes.JournalVoucher,
@@ -48,16 +48,21 @@ export function JournalVoucherPopup({
         createdBy: 0,
       },
     ],
-  }
+  }), [])
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues,
   })
 
-  const resetForm = () => {
-    form.reset(defaultValues)
-  }
+  // const resetForm = () => {
+  //   form.reset(defaultValues)
+  // }
+
+  const resetForm = useCallback(() => {
+    form.reset(defaultValues);
+  }, [form, defaultValues]);
+  
 
   useEffect(() => {
     if (!isOpen) {

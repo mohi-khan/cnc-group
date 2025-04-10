@@ -220,7 +220,7 @@ export default function PaymentRequisitionAdvanceForm({
                   </FormControl>
                   {isInvalid && (
                     <p className="text-red-500 text-sm">
-                      Amount can't exceed {maxAmount}
+                      Amount can&apos;t exceed {maxAmount}
                     </p>
                   )}
                   <FormMessage />
