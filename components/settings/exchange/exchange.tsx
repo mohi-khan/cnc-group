@@ -126,8 +126,8 @@ export default function ExchangePage() {
 
   async function handleUpdate(exchangeDate: string, baseCurrency: number) {
     setIsLoading(true)
-    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0] // Ensure correct format
-    const rate = parseFloat(editRate) // Convert to number
+    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0]
+    const rate = parseFloat(editRate)
 
     if (isNaN(rate)) {
       toast({
@@ -139,7 +139,7 @@ export default function ExchangePage() {
       return
     }
 
-    const result = await editExchange(formattedDate, baseCurrency, rate) // Pass rate
+    const result = await editExchange(formattedDate, baseCurrency, rate)
 
     if (result.error || !result.data) {
       toast({
@@ -148,7 +148,7 @@ export default function ExchangePage() {
         variant: 'destructive',
       })
     } else {
-      fetchExchanges() // Refresh data
+      fetchExchanges()
       setEditingId(null)
       toast({
         title: 'Success',
@@ -183,7 +183,9 @@ export default function ExchangePage() {
               <TableCell>
                 {new Date(exchange.exchangeDate).toLocaleDateString()}
               </TableCell>
-              <TableCell>{exchange.baseCurrency == 1 && 'BDT'}</TableCell>
+              <TableCell>
+                {currency.find((c) => c.currencyId === exchange.baseCurrency)?.currencyCode || exchange.baseCurrency}
+              </TableCell>
               <TableCell>
                 {editingId ===
                 `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (
