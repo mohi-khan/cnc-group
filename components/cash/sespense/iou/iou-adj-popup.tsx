@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -53,7 +53,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [currentLoanAmount, setCurrentLoanAmount] = useState(0)
 
-  const fetchLoanData = async () => {
+  const fetchLoanData = useCallback(async () => {
     try {
       const loansdata = await getLoanData()
       if (loansdata.data) {
@@ -68,11 +68,11 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
     } catch (error) {
       console.error('Failed to fetch Loan Data :', error)
     }
-  }
+  },[iouId])
 
   useEffect(() => {
     fetchLoanData()
-  }, [iouId])
+  }, [iouId, fetchLoanData])
 
   const form = useForm<IouAdjustmentCreateType>({
     resolver: zodResolver(IouAdjustmentCreateSchema),
@@ -91,7 +91,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
     if (currentLoanAmount > 0) {
       form.setValue('amountAdjusted', currentLoanAmount)
     }
-  }, [iouId, currentLoanAmount, form])
+  }, [iouId, currentLoanAmount, form, fetchLoanData])
 
   const validateAdjustmentAmount = (amount: number) => {
     if (amount > currentLoanAmount) {

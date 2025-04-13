@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -54,7 +54,7 @@ export default function ExchangePage() {
   useEffect(() => {
     fetchExchanges()
     fetchCurrency()
-  }, [])
+  }, [fetchCurrency, fetchExchanges])
 
   useEffect(() => {
     if (!isPopupOpen) {
@@ -62,7 +62,7 @@ export default function ExchangePage() {
     }
   }, [isPopupOpen, form])
 
-  const fetchExchanges = async () => {
+  const fetchExchanges = useCallback (async () => {
     setIsLoading(true)
     const data = await getAllExchange()
     if (data.error || !data.data) {
@@ -76,9 +76,9 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
-  const fetchCurrency = async () => {
+  const fetchCurrency = useCallback (async () => {
     setIsLoading(true)
     const data = await getAllCurrency()
     if (data.error || !data.data) {
@@ -92,7 +92,7 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
   async function onSubmit(data: ExchangeType) {
     setIsLoading(true)

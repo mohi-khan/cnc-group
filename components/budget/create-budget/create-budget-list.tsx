@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { MasterBudgetType } from '@/utils/type'
 
 import {
@@ -151,13 +151,13 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
   const totalPages = Math.ceil(masterBudget.length / itemsPerPage)
 
   // Sorting Function
-  const sortData = (data: MasterBudgetType[]) => {
+  const sortData = useCallback((data: MasterBudgetType[]) => {
     return [...data].sort((a, b) => {
       if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
       if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
-  }
+  }, [sortColumn, sortDirection])
 
   // Handle Sorting
   const handleSort = (column: SortColumn) => {
@@ -197,7 +197,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
   const currentItems = useMemo(() => {
     const sortedData = sortData(masterBudget)
     return sortedData.slice(indexOfFirstItem, indexOfLastItem)
-  }, [masterBudget, currentPage, sortColumn, sortDirection])
+  }, [masterBudget, indexOfFirstItem, indexOfLastItem, sortData])
 
   const [budgets, setBudgets] = useState<MasterBudgetType[]>(masterBudget)
 

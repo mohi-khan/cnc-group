@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -33,17 +33,13 @@ const ApprovedAdvances = () => {
       ? JSON.parse(localStorage.getItem('currentUser') || '{}')
       : {}
 
-  useEffect(() => {
-    fetchAdvances()
-  }, [])
-
-  const fetchAdvances = async () => {
+  const fetchAdvances = useCallback (async () => {
     try {
       setIsLoading(true)
       setError(null)
 
       const data = await getAllAdvance(token)
-      console.log("🚀 ~ fetchAdvances ~ data:", data)
+      console.log('🚀 ~ fetchAdvances ~ data:', data)
       setAdvances(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
       console.error('Error fetching approved advances:', err)
@@ -52,7 +48,11 @@ const ApprovedAdvances = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    fetchAdvances()
+  }, [fetchAdvances])
 
   const handleCreatePayment = (advance: ApproveAdvanceType) => {
     setSelectedAdvance(advance)
@@ -101,7 +101,9 @@ const ApprovedAdvances = () => {
                     <TableCell>{advance.vendorname}</TableCell>
                     <TableCell>{advance.requestedby}</TableCell>
                     <TableCell>{advance.checkName}</TableCell>
-                    <TableCell>{new Date(advance.requestedDate).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(advance.requestedDate).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>
                       {advance.advanceamount} {advance.currency}
                     </TableCell>

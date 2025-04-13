@@ -224,7 +224,7 @@ export default function BankVoucher() {
     }
 
     fetchVoucherData()
-  }, [formState.companies, formState.locations, getCompanyIds, getLocationIds])
+  }, [formState.companies, formState.locations, getCompanyIds, getLocationIds, dataLoaded])
 
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,

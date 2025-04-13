@@ -69,7 +69,7 @@ export default function SingleTrialBalanceFind({
     if (initialFromDate && initialToDate && initialAccountCode) {
       onSearch(Number(initialAccountCode), initialFromDate, initialToDate)
     }
-  }, [initialFromDate, initialToDate, initialAccountCode])
+  }, [initialFromDate, initialToDate, initialAccountCode, onSearch])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {

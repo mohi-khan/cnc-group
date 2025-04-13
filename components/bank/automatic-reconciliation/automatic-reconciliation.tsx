@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   TableBody,
@@ -57,7 +57,7 @@ export default function AutomaticReconciliation() {
     },
   })
 
-  const fetchBankAccounts = async () => {
+  const fetchBankAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const accounts = await getAllBankAccounts()
@@ -73,7 +73,7 @@ export default function AutomaticReconciliation() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   const fetchReconciliations = async (data: {
     bankAccount: string
@@ -141,7 +141,7 @@ export default function AutomaticReconciliation() {
 
   useEffect(() => {
     fetchBankAccounts()
-  }, [])
+  }, [fetchBankAccounts])
 
   const updateLocalReconciliation = (
     id: number,

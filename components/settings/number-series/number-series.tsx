@@ -107,13 +107,7 @@ export function NumberSeries() {
     resolver: zodResolver(numberSeriesSchema),
   })
 
-  React.useEffect(() => {
-    fetchNumberSeries()
-    fetchCompanies()
-    fetchAllLocations()
-  }, [])
-
-  const fetchNumberSeries = async () => {
+  const fetchNumberSeries = React.useCallback (async () => {
     setIsLoading(true)
     setIsError(false)
     const response = await getAllNumberSeries()
@@ -129,9 +123,9 @@ export function NumberSeries() {
       setSeries(response.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = React.useCallback (async () => {
     const data = await getAllCompanies()
     console.log('Fetched companies:', data.data)
     if (data.error || !data.data) {
@@ -143,9 +137,9 @@ export function NumberSeries() {
     } else {
       setCompanies(data.data)
     }
-  }
+  }, [toast])
 
-  async function fetchAllLocations() {
+  const fetchAllLocations = React.useCallback (async() => {
     const response = await getAllLocations()
     console.log('Fetched locations:', response.data)
 
@@ -158,7 +152,13 @@ export function NumberSeries() {
     } else {
       setLocations(response.data)
     }
-  }
+  }, [toast])
+
+  React.useEffect(() => {
+    fetchNumberSeries()
+    fetchCompanies()
+    fetchAllLocations()
+  }, [fetchAllLocations, fetchCompanies, fetchNumberSeries])
 
   const onSubmit = async (values: NumberSeriesType) => {
     console.log('Form values before formatting:', values)

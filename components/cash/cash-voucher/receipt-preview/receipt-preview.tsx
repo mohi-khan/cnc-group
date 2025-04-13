@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label'
 import { getAllVoucherById } from '@/api/vouchers-api'
 import { useParams } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { VoucherById } from '@/utils/type'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
@@ -12,6 +12,7 @@ import { useReactToPrint } from 'react-to-print'
 import { useRef } from 'react'
 import { toWords } from 'number-to-words'
 import Loader from '@/utils/loader'
+import Image from 'next/image'
 
 export default function Voucher() {
   const { voucherid } = useParams() // Extract voucherId from the URL
@@ -20,7 +21,7 @@ export default function Voucher() {
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
 
-  async function getVoucherDetailsById() {
+  const getVoucherDetailsById = useCallback(async () => {
     if (!voucherid) {
       throw new Error('Voucher ID is missing')
     }
@@ -45,12 +46,12 @@ export default function Voucher() {
     setVoucherData(filteredData)
 
     console.log('Filtered data (without cash in hand):', filteredData)
-  }
+  }, [voucherid])
 
   useEffect(() => {
     getVoucherDetailsById()
     // getAllCompanyData()
-  }, [voucherid])
+  }, [voucherid, getVoucherDetailsById])
 
   if (!voucherData) {
     return (
@@ -101,7 +102,7 @@ export default function Voucher() {
 
               {/* Right Column */}
               <div className="flex flex-col items-end space-y-2">
-                <img
+                <Image
                   src="/logo.webp"
                   alt="Company Logo"
                   className="w-24 h-24 object-contain"
