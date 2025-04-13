@@ -1,8 +1,9 @@
 import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
 
+//Create Company Schema
 export const companySchema = z.object({
-  // companyId: z.number(),
+   //companyId: z.number(),
   companyName: z.string().min(1, 'Company name is required'),
   address: z.string().min(1, 'Address is required'),
   city: z.string(),
@@ -19,6 +20,28 @@ export const companySchema = z.object({
   locationId: z.number().optional(),
 })
 
+// //Get company type
+
+export interface CompanyType {
+  companyId: number
+  companyName: string
+  address: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  phone: string
+  email?: string // optional or empty string
+  website?: string // optional or empty string
+  taxId?: string
+  currencyId: number
+  logo?: string
+  parentCompanyId: number | null
+  locationId?: number
+}
+
+
+
 export const locationSchema = z.object({
   // locationId: z.number(),
   companyId: z.number(),
@@ -26,7 +49,7 @@ export const locationSchema = z.object({
   address: z.string().min(1, 'Address is required'),
 })
 
-export type CompanyType = z.infer<typeof companySchema>
+// export type CompanyType = z.infer<typeof companySchema>
 
 export async function createCompany(
   companyData: z.infer<typeof companySchema>,

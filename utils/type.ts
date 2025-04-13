@@ -495,14 +495,14 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentID: z.number(),
   departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
-  startDate: z.coerce.date().optional().nullable(),
-  endDate: z.coerce.date().optional().nullable(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
   actual: z.number().optional(),
+  createdBy: z.number(),
 })
 export type Department = z.infer<typeof departmentSchema>
 export const departmentsArraySchema = z.array(departmentSchema)
@@ -689,7 +689,9 @@ export const createAssetDepreciationSchema = z.object({
   depreciation_date: z.string(),
 })
 
-export type CreateAssetDepreciationData = z.infer<typeof createAssetDepreciationSchema>
+export type CreateAssetDepreciationData = z.infer<
+  typeof createAssetDepreciationSchema
+>
 
 const assetDepreciationReportSchema = z.object({
   category_name: z.string(),
@@ -701,9 +703,11 @@ const assetDepreciationReportSchema = z.object({
   dep_during_period: z.string(),
   dep_closing: z.string(),
   written_down_value: z.string(),
-});
+})
 
-export type AssetDepreciationReportType = z.infer<typeof assetDepreciationReportSchema>
+export type AssetDepreciationReportType = z.infer<
+  typeof assetDepreciationReportSchema
+>
 
 export interface AssetCategoryType extends CreateAssetCategoryData {
   category_id: number

@@ -1,9 +1,9 @@
 import { fetchApi } from '@/utils/http'
-import { Department } from '@/utils/type'
+import { Department, GetDepartment } from '@/utils/type'
 import { CompanyType } from './company-api'
 
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })
@@ -25,4 +25,3 @@ export async function getAllCompany() {
     method: 'GET',
   })
 }
-

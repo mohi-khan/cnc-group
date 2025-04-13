@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -36,6 +36,7 @@ import {
   type Department,
   departmentsArraySchema,
   departmentSchema,
+  GetDepartment,
 } from '@/utils/type'
 import {
   Form,
@@ -68,7 +69,7 @@ type SortColumn =
 type SortDirection = 'asc' | 'desc'
 
 export default function DepartmentManagement() {
-  const [departments, setDepartments] = useState<Department[]>([])
+  const [departments, setDepartments] = useState<GetDepartment[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<{
@@ -88,15 +89,15 @@ export default function DepartmentManagement() {
     defaultValues: {
       departmentName: '',
       budget: 0,
-      companyCode: 1,
+      companyCode: 0,
       isActive: true,
       actual: 0,
-      startDate: null,
-      endDate: null,
+      startDate: undefined,
+      endDate: undefined,
     },
   })
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     setIsLoading(true)
     const data = await getAllDepartments()
     if (data.error || !data.data) {
@@ -109,12 +110,12 @@ export default function DepartmentManagement() {
       setDepartments(data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
   useEffect(() => {
     fetchDepartments()
     fetchCompany()
-  }, [])
+  }, [fetchDepartments])
 
   const fetchCompany = async () => {
     const response = await getAllCompany()
@@ -143,46 +144,60 @@ export default function DepartmentManagement() {
     const newDepartment = {
       ...values,
       createdBy: userId,
-      startDate: values.startDate ? new Date(values.startDate) : null,
-      endDate: values.endDate ? new Date(values.endDate) : null,
+      startDate: values.startDate ? new Date(values.startDate) : undefined,
+      endDate: values.endDate ? new Date(values.endDate) : undefined,
     }
 
     try {
       const departmentSchema = departmentsArraySchema.element
       departmentSchema.parse(newDepartment)
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors)
-        toast({
-          title: 'Error',
-          description: 'Invalid form data. Please check your inputs.',
-        })
-        setIsLoading(false)
-        return
-      }
-    }
 
-    const response = await createDepartment(newDepartment)
-    if (response.error || !response.data) {
-      console.error('Error creating department:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to create department',
+      if (!userId) {
+        throw new Error('User ID is required to create a department')
+      }
+
+      if (!values.departmentName || !values.companyCode) {
+        throw new Error('Department name and company code are required')
+      }
+
+      const response = await createDepartment({
+        departmentName: values.departmentName,
+        createdBy: userId,
+        budget: values.budget || 0,
+        companyCode: values.companyCode,
+        isActive: values.isActive,
+        startDate: values.startDate ? new Date(values.startDate) : undefined,
+        endDate: values.endDate ? new Date(values.endDate) : undefined,
+        actual: values.actual || 0,
       })
-    } else {
-      console.log('Department created successfully')
+
+      if (response.error || !response.data) {
+        throw new Error(
+          response.error?.message || 'Failed to create department'
+        )
+      }
+
+      console.log('Department created successfully:', response.data)
       toast({
         title: 'Success',
         description: 'Department created successfully',
       })
       form.reset()
       await fetchDepartments()
+      setIsAddDialogOpen(false)
+    } catch (error) {
+      console.error('Error:', error)
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Invalid form data. Please check your inputs.',
+      })
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsAddDialogOpen(false)
-    setIsLoading(false)
   }
-
   const sortedDepartments = useMemo(() => {
     const sorted = [...departments]
     sorted.sort((a, b) => {
@@ -249,7 +264,6 @@ export default function DepartmentManagement() {
           <PlusIcon className="mr-2 h-4 w-4" /> Add Department
         </Button>
       </div>
-
       {feedback && (
         <Alert
           variant={feedback.type === 'success' ? 'default' : 'destructive'}
@@ -261,7 +275,6 @@ export default function DepartmentManagement() {
           <AlertDescription>{feedback.message}</AlertDescription>
         </Alert>
       )}
-
       {isLoading ? (
         <div>Loading departments...</div>
       ) : (
@@ -353,14 +366,21 @@ export default function DepartmentManagement() {
           </div>
         </div>
       )}
-
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[525px] h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Department</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                console.log('Form Data:', form.getValues())
+                console.log('Submit button clicked')
+                form.handleSubmit(onSubmit)(e)
+              }}
+              className="space-y-2"
+            >
               <FormField
                 control={form.control}
                 name="departmentName"
@@ -518,7 +538,11 @@ export default function DepartmentManagement() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={() => console.log('Add Department button clicked')}
+                >
                   {isLoading ? 'Saving...' : 'Add Department'}
                 </Button>
               </div>
@@ -529,3 +553,5 @@ export default function DepartmentManagement() {
     </div>
   )
 }
+
+
