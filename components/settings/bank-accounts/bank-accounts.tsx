@@ -114,13 +114,41 @@ export default function BankAccounts() {
     },
   })
 
-  React.useEffect(() => {
-    fetchBankAccounts()
-  }, [])
+  const fetchBankAccounts = React.useCallback (async() => {
+    const fetchedAccounts = await getAllBankAccounts()
+    console.log('Fetched accounts:', fetchedAccounts)
+    if (fetchedAccounts.error || !fetchedAccounts.data) {
+      console.error('Error getting bank account:', fetchedAccounts.error)
+      toast({
+        title: 'Error',
+        description:
+          fetchedAccounts.error?.message || 'Failed to get bank accounts',
+      })
+    } else {
+      setAccounts(fetchedAccounts.data)
+    }
+  }, [toast])
+
+  const fetchGlAccounts = React.useCallback (async () => {
+    const fetchedGlAccounts = await getAllGlAccounts()
+    console.log('Fetched gl accounts:', fetchedGlAccounts)
+
+    if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
+      console.error('Error getting gl bank account:', fetchedGlAccounts.error)
+      toast({
+        title: 'Error',
+        description:
+          fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
+      })
+    } else {
+      setGlAccounts(fetchedGlAccounts.data)
+    }
+  }, [toast])
 
   React.useEffect(() => {
     fetchGlAccounts()
-  }, [])
+    fetchBankAccounts()
+  }, [fetchBankAccounts, fetchGlAccounts])
 
   React.useEffect(() => {
     if (editingAccount) {
@@ -145,37 +173,6 @@ export default function BankAccounts() {
       })
     }
   }, [editingAccount, form, userId])
-
-  async function fetchBankAccounts() {
-    const fetchedAccounts = await getAllBankAccounts()
-    console.log('Fetched accounts:', fetchedAccounts)
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
-      console.error('Error getting bank account:', fetchedAccounts.error)
-      toast({
-        title: 'Error',
-        description:
-          fetchedAccounts.error?.message || 'Failed to get bank accounts',
-      })
-    } else {
-      setAccounts(fetchedAccounts.data)
-    }
-  }
-
-  async function fetchGlAccounts() {
-    const fetchedGlAccounts = await getAllGlAccounts()
-    console.log('Fetched gl accounts:', fetchedGlAccounts)
-
-    if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
-      console.error('Error getting gl bank account:', fetchedGlAccounts.error)
-      toast({
-        title: 'Error',
-        description:
-          fetchedGlAccounts.error?.message || 'Failed to get gl bank accounts',
-      })
-    } else {
-      setGlAccounts(fetchedGlAccounts.data)
-    }
-  }
 
   async function onSubmit(values: CreateBankAccount) {
     console.log('Form submitted:', values)

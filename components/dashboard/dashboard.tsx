@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -136,7 +136,7 @@ export default function Dashboard() {
   // }
 
   // Fetch Departments
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback (async () => {
     const data = await getAllDepartments()
     if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
@@ -147,9 +147,9 @@ export default function Dashboard() {
     } else {
       setDepartments(data.data)
     }
-  }
+  }, [])
 
-  const fetchRequisitions = async () => {
+  const fetchRequisitions = useCallback(async () => {
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
@@ -165,9 +165,9 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
-  const fetchAdvances = async () => {
+  const fetchAdvances = useCallback (async () => {
     try {
       setLoading(true)
       setError(null) // Reset error state
@@ -182,7 +182,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
   // Get All company function
   const fetchAllCompany = async () => {
@@ -192,7 +192,7 @@ export default function Dashboard() {
   }
 
   //  Get Expense data monthly
-  const fetchExpenseData = async () => {
+  const fetchExpenseData = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -206,10 +206,10 @@ export default function Dashboard() {
       setExpenseData([])
     }
     console.log('🚀 ~ getExpectedRevenue ~ response:', response)
-  }
+  }, [token])
 
   //  Get Expense data yearly
-  const fetchExpenseDataYearly = async () => {
+  const fetchExpenseDataYearly = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -223,10 +223,10 @@ export default function Dashboard() {
       setExpenseDataYearly([])
     }
     console.log('🚀 ~ getExpectedRevenue ~ response:', response)
-  }
+  }, [token])
 
   // Get Income Data
-  const fetchIncomeData = async () => {
+  const fetchIncomeData = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -240,10 +240,10 @@ export default function Dashboard() {
       setIncomeData([])
     }
     console.log('🚀 ~ getIncomeData  ~ response:', response)
-  }
+  }, [token])
 
   // Get Income Data  yearly
-  const fetchIncomeDataYearly = async () => {
+  const fetchIncomeDataYearly = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -257,10 +257,10 @@ export default function Dashboard() {
       setIncomeDataYearly([])
     }
     console.log('🚀 ~ getIncomeData  ~ response:', response)
-  }
+  }, [token])
 
   //Get getGPData
-  const fetchGPData = async () => {
+  const fetchGPData = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -272,10 +272,10 @@ export default function Dashboard() {
       setGPData([])
     }
     console.log('🚀 ~ GetGPData   ~ response:', response.data)
-  }
+  }, [token])
 
   //Get getGPData yearly
-  const fetchGPDataYearly = async () => {
+  const fetchGPDataYearly = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -289,10 +289,10 @@ export default function Dashboard() {
       setGPDataYearly([])
     }
     console.log('🚀 ~ GetGPData   ~ response:', response)
-  }
+  }, [token])
 
   //Get getNPData
-  const fetchNPData = async () => {
+  const fetchNPData = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -304,10 +304,10 @@ export default function Dashboard() {
       setNPData([])
     }
     console.log('🚀 ~ GetNPData   ~ response:', response)
-  }
+  }, [token])
 
   //Get getNPData yearly
-  const fetchNPDataYearly = async () => {
+  const fetchNPDataYearly = useCallback (async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -321,10 +321,10 @@ export default function Dashboard() {
       setNPDataYearly([])
     }
     console.log('🚀 ~ GetNPData   ~ response:', response)
-  }
+  }, [token])
 
   //Get Cost Breakdown Data
-  const fetchCostBreakdown = async () => {
+  const fetchCostBreakdown = useCallback (async () => {
     const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -344,7 +344,8 @@ export default function Dashboard() {
       setCostBreakdown([])
     }
     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
-  }
+  }, [])
+  
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
@@ -360,7 +361,7 @@ export default function Dashboard() {
     fetchDepartments()
     fetchCostBreakdown()
     fetchAllCompany()
-  }, [fetchFundPosition])
+  }, [fetchFundPosition, fetchRequisitions, fetchAdvances, fetchExpenseData, fetchExpenseDataYearly, fetchIncomeData, fetchIncomeDataYearly, fetchGPData, fetchGPDataYearly, fetchNPData, fetchNPDataYearly, fetchDepartments, fetchCostBreakdown])
 
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []

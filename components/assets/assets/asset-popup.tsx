@@ -62,21 +62,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   const [getCostCenter, setGetCostCenter] = useState<CostCenter[]>([])
   const [userId, setUserId] = React.useState<number | null>(null)
 
-  React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      setUserId(userData.userId)
-      form.setValue('created_by', userData.userId)
-      console.log(
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
-    } else {
-      console.log('No user data found in localStorage')
-    }
-  }, [])
-
   const form = useForm<CreateAssetData>({
     resolver: zodResolver(createAssetSchema),
     defaultValues: {
@@ -97,6 +82,21 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
       created_by: 0,
     },
   })
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData.userId)
+      form.setValue('created_by', userData.userId)
+      console.log(
+        'Current userId from localStorage in everywhere:',
+        userData.userId
+      )
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [form])
 
   const onSubmit = async (data: CreateAssetData) => {
     console.log('Form data before submission:', data)

@@ -29,7 +29,7 @@ import { User } from '@/utils/type'
 import { createFinancialYear, financialYear } from '@/api/financial-year.api'
 import { toast } from '@/hooks/use-toast'
 
-const financial_year = () => {
+const FinancialYear = () => {
   const [userId, setUserId] = useState(0)
   const [error, setError] = useState('')
   useEffect(() => {
@@ -43,7 +43,7 @@ const financial_year = () => {
       console.log('No user data found in localStorage')
       setError('User not authenticated. Please log in.')
     }
-  }, [])
+  }, [userId])
 
   const form = useForm<financialYear>({
     /*  resolver: zodResolver(createFinancialYearSchema),
@@ -52,6 +52,7 @@ const financial_year = () => {
       createdby: userId,
     },*/
   })
+  
   useEffect(() => {
     if (userId !== 0) {
       console.log('UserId after set:', userId)
@@ -193,4 +194,4 @@ const financial_year = () => {
     </Card>
   )
 }
-export default financial_year
+export default FinancialYear
