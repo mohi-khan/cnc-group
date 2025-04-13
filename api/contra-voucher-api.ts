@@ -6,6 +6,7 @@ import {
   Company,
   CostCenter,
   Department,
+  ExchangeType,
   JournalEntryWithDetails,
   JournalQuery,
   LocationData,
@@ -69,12 +70,20 @@ export async function editJournalVoucher(voucherid: number, createid: number) {
 }
 
 export async function getAllVoucher(data: JournalQuery) {
-  const queryParams = new URLSearchParams({
-    date: data.date,
-    companyId: JSON.stringify(data.companyId), // Convert array to JSON string
-    locationId: JSON.stringify(data.locationId), // Convert array to JSON string
-    voucherType: data.voucherType,
-  }).toString()
+  const queryParams = new URLSearchParams(
+    Object.entries({
+      date: data.date,
+      companyId: JSON.stringify(data.companyId), // Convert array to JSON string
+      locationId: JSON.stringify(data.locationId), // Convert array to JSON string
+      voucherType: data.voucherType || '', // Ensure undefined is handled
+    }).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined) acc[key] = String(value) // Convert all values to strings
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  ).toString()
   console.log(queryParams)
   return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
@@ -98,5 +107,15 @@ export async function getAllBankAccounts() {
   return fetchApi<BankAccount[]>({
     url: 'api/bank-accounts/get-all-bank-accounts',
     method: 'GET',
+  })
+}
+
+export async function getAllExchange() {
+  return fetchApi<ExchangeType[]>({
+    url: 'api/exchange/get-all-exchange',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 }

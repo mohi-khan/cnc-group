@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   CompanyFromLocalstorage,
   CurrencyType,
+  ExchangeType,
   JournalEntryWithDetails,
   JournalQuery,
   LocationFromLocalstorage,
@@ -27,6 +28,17 @@ import { CURRENCY_ITEMS } from '@/utils/constants'
 import { Button } from '@/components/ui/button'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllCurrency } from '@/api/exchange-api'
+import { getAllExchange } from '@/api/contra-voucher-api'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Pencil } from 'lucide-react'
+import { Label } from '@/components/ui/label'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -45,6 +57,8 @@ export function ContraVoucherMasterSection({
   const value = watch('journalEntry.companyId')
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   // const [isLoading, setIsLoading] = useState(false)
+  const [exchanges, setExchanges] = useState<ExchangeType[]>([])
+  const [exchangeRate, setExchangeRate] = useState<number>(1)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -104,8 +118,23 @@ export function ContraVoucherMasterSection({
     }
   }
 
+  const fetchExchanges = async () => {
+    const data = await getAllExchange()
+    if (data.error || !data.data) {
+      console.error('Error getting exchanges:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get exchanges',
+      })
+    } else {
+      setExchanges(data.data)
+      console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
+    }
+  }
+
   useEffect(() => {
     fetchCurrency()
+    fetchExchanges()
   }, [])
 
   return (
@@ -197,32 +226,94 @@ export function ContraVoucherMasterSection({
             name="journalEntry.currencyId"
             render={({ field }) => (
               <FormControl>
-                <CustomCombobox
-                  items={currency.map((curr: CurrencyType) => ({
-                    id: curr.currencyId.toString(),
-                    name: curr.currencyCode || 'Unnamed Currency',
-                  }))}
-                  value={
-                    field.value
-                      ? {
-                          id: field.value.toString(),
-                          name:
-                            currency.find(
-                              (curr: CurrencyType) =>
-                                curr.currencyId === field.value
-                            )?.currencyCode || 'Unnamed Currency',
-                        }
-                      : null
-                  }
-                  onChange={(value: { id: string; name: string } | null) =>
-                    field.onChange(value ? Number.parseInt(value.id, 10) : null)
-                  }
-                  placeholder="Select currency"
-                />
+                <div className="flex gap-2">
+                  <CustomCombobox
+                    items={currency.map((curr: CurrencyType) => ({
+                      id: curr.currencyId.toString(),
+                      name: curr.currencyCode || 'Unnamed Currency',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              currency.find(
+                                (curr: CurrencyType) =>
+                                  curr.currencyId === field.value
+                              )?.currencyCode || 'Unnamed Currency',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) => {
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                      const selectedCurrencyId = value
+                        ? Number.parseInt(value.id, 10)
+                        : null
+                      const exchange = exchanges.find(
+                        (e) => e.baseCurrency === selectedCurrencyId
+                      )
+                      setExchangeRate(exchange?.rate ?? 1)
+                    }}
+                    placeholder="Select currency"
+                  />
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="px-3">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Exchange Rate</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="rate" className="text-right">
+                            Rate
+                          </Label>
+                          <Input
+                            id="rate"
+                            type="number"
+                            step="0.0001"
+                            className="col-span-3"
+                            value={exchangeRate}
+                            onChange={(e) =>
+                              setExchangeRate(parseFloat(e.target.value))
+                            }
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="date" className="text-right">
+                            Date
+                          </Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            className="col-span-3"
+                            defaultValue={
+                              new Date().toISOString().split('T')[0]
+                            }
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          type="submit"
+                          onClick={() => {
+                            // Add your rate update logic here
+                          }}
+                        >
+                          Save Changes
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </FormControl>
             )}
           />
-
           <FormMessage />
         </div>
 
