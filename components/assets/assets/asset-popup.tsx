@@ -56,7 +56,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   categories,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [getCompany, setGetCompany] = useState<CompanyType[]>([])
+  const [getCompany, setGetCompany] = useState<CompanyType[] | null>([])
   const [getLoaction, setGetLocation] = useState<LocationData[]>([])
   const [getDepartment, setGetDepartment] = useState<GetDepartment[]>([])
   const [getCostCenter, setGetCostCenter] = useState<CostCenter[]>([])
@@ -105,6 +105,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
       // Ensure numeric fields are properly converted
       const formattedData = {
         ...data,
+        asset_name: data.asset_name,
         category_id: Number(data.category_id),
         company_id: Number(data.company_id),
         location_id: data.location_id ? Number(data.location_id) : null,
@@ -152,7 +153,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     try {
       const response = await getAllLocations()
 
-      setGetLocation(response.data)
+      setGetLocation(response.data ?? [])
       console.log(
         'fetchAssetCategories category names asset tsx file:',
         response.data
@@ -166,7 +167,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     try {
       const response = await getAllDepartments()
 
-      setGetDepartment(response.data)
+      setGetDepartment(response.data?? [])
       console.log('dept data', response.data)
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
@@ -177,7 +178,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     try {
       const response = await getAllCostCenters()
 
-      setGetCostCenter(response.data)
+      setGetCostCenter(response.data?? [])
       console.log('cost center data', response.data)
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
@@ -555,3 +556,4 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     </Dialog>
   )
 }
+``
