@@ -41,6 +41,7 @@ import {
 } from '@/api/assets.api'
 import { type CompanyType, getAllCompany } from '@/api/company-api'
 import { getAllLocations } from '@/api/bank-vouchers-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface AssetPopupProps {
   isOpen: boolean
@@ -167,7 +168,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     try {
       const response = await getAllDepartments()
 
-      setGetDepartment(response.data?? [])
+      setGetDepartment(response.data ?? [])
       console.log('dept data', response.data)
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
@@ -178,7 +179,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     try {
       const response = await getAllCostCenters()
 
-      setGetCostCenter(response.data?? [])
+      setGetCostCenter(response.data ?? [])
       console.log('cost center data', response.data)
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
@@ -213,33 +214,36 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="category_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem
-                          key={category.category_id}
-                          value={category.category_id.toString()}
-                        >
-                          {category.category_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomCombobox
+                    items={categories.map((category) => ({
+                      id: category.category_id.toString(),
+                      name: category.category_name || 'Unnamed Category',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              categories.find(
+                                (category) =>
+                                  category.category_id === field.value
+                              )?.category_name || 'Unnamed Category',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select category"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -250,84 +254,97 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Department</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Department" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getDepartment?.map((department) => (
-                        <SelectItem
-                          key={department.departmentID}
-                          value={department.departmentID.toString()}
-                        >
-                          {department.departmentName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomCombobox
+                    items={getDepartment.map((department) => ({
+                      id: department.departmentID.toString(),
+                      name: department.departmentName || 'Unnamed Department',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getDepartment.find(
+                                (department) =>
+                                  department.departmentID === field.value
+                              )?.departmentName || 'Unnamed Department',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select department"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="cost_center_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cost Center</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Cost Center" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getCostCenter?.map((costCenter) => (
-                        <SelectItem
-                          key={costCenter.costCenterId}
-                          value={costCenter.costCenterId.toString()}
-                        >
-                          {costCenter.costCenterName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomCombobox
+                    items={getCostCenter.map((costCenter) => ({
+                      id: costCenter.costCenterId.toString(),
+                      name: costCenter.costCenterName || 'Unnamed Cost Center',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getCostCenter.find(
+                                (costCenter) =>
+                                  costCenter.costCenterId === field.value
+                              )?.costCenterName || 'Unnamed Cost Center',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select cost center"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
-            />
-
+            />{' '}
             <FormField
               control={form.control}
               name="purchase_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purchase Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      value={
-                        field.value instanceof Date
-                          ? field.value.toISOString().split('T')[0]
-                          : ''
-                      }
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              render={({ field }) => {
+                const dateValue =
+                  field.value instanceof Date && !isNaN(field.value.getTime())
+                    ? field.value.toISOString().split('T')[0]
+                    : ''
 
+                return (
+                  <FormItem>
+                    <FormLabel>Purchase Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={dateValue}
+                        onChange={(e) => {
+                          const selectedDate = new Date(e.target.value)
+                          field.onChange(
+                            isNaN(selectedDate.getTime()) ? null : selectedDate
+                          )
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
+            />
             <FormField
               control={form.control}
               name="purchase_value"
@@ -346,7 +363,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="current_value"
@@ -365,7 +381,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="salvage_value"
@@ -384,7 +399,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="useful_life_years"
@@ -408,33 +422,38 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="depreciation_method"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Depreciation Method</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select depreciation method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Straight Line">
-                        Straight Line
-                      </SelectItem>
-                      <SelectItem value="Diminishing Balance">
-                        Diminishing Balance
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                  <CustomCombobox
+                    items={[
+                      { id: 'Straight Line', name: 'Straight Line' },
+                      {
+                        id: 'Diminishing Balance',
+                        name: 'Diminishing Balance',
+                      },
+                    ]}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value,
+                            name: field.value,
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(value ? value.id : null)
+                    }
+                    placeholder="Select depreciation method"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="depreciation_rate"
@@ -453,69 +472,73 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="company_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Company</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getCompany?.map((company) => (
-                        <SelectItem
-                          key={company.companyId}
-                          value={company.companyId.toString()}
-                        >
-                          {company.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomCombobox
+                    items={(getCompany ?? []).map((company) => ({
+                      id: company.companyId.toString(),
+                      name: company.companyName || 'Unnamed Company',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getCompany?.find(
+                                (company) => company.companyId === field.value
+                              )?.companyName || 'Unnamed Company',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select company"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="location_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location ID</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select loactions" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getLoaction?.map((location) => (
-                        <SelectItem
-                          key={location.locationId}
-                          value={location.locationId.toString()}
-                        >
-                          {location.branchName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Location</FormLabel>
+                  <CustomCombobox
+                    items={getLoaction?.map((location) => ({
+                      id: location.locationId.toString(),
+                      name: location.branchName || 'Unnamed Location',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getLoaction?.find(
+                                (location) =>
+                                  location.locationId === field.value
+                              )?.branchName || 'Unnamed Location',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select location"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="status"
@@ -537,7 +560,6 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                 </FormItem>
               )}
             />
-
             <div className="flex justify-end space-x-2">
               <Button
                 type="button"
@@ -556,4 +578,4 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     </Dialog>
   )
 }
-``
+;``
