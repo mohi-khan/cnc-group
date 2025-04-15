@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import PaymentRequisitionList from './payment-requisition-list'
 import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
 import {
@@ -19,20 +19,15 @@ const PaymentRequisition = () => {
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
   const token = `Bearer ${mainToken}`
 
-  useEffect(() => {
-    fetchRequisitions()
-  }, [])
-
-  const fetchRequisitions = async () => {
+  const fetchRequisitions = useCallback (async () => {
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
         companyId: 75,
         token: token,
       })
-      const filteredRequisitions = data.data?.filter(
-        (req) => req.status !== 'Invoice Created'
-    ) || []; 
+      const filteredRequisitions =
+        data.data?.filter((req) => req.status !== 'Invoice Created') || []
       setRequisitions(filteredRequisitions)
       console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
     } catch (err) {
@@ -40,7 +35,11 @@ const PaymentRequisition = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    fetchRequisitions()
+  }, [fetchRequisitions])
 
   const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
     try {
@@ -62,7 +61,11 @@ const PaymentRequisition = () => {
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <PaymentRequisitionList requisitions={requisitions} token={token} onRefresh={fetchRequisitions} />
+        <PaymentRequisitionList
+          requisitions={requisitions}
+          token={token}
+          onRefresh={fetchRequisitions}
+        />
       )}
       <PaymentRequisitionPopup
         status={requisitions[0]?.status}

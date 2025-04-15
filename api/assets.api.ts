@@ -1,9 +1,9 @@
 import { fetchApi } from '@/utils/http'
-import { AssetType, CostCenter, CreateAssetData, Department, GetDepartment } from '@/utils/type'
+import { CostCenter, CreateAssetData, Department, GetAssetData, GetDepartment } from '@/utils/type'
 
 //get all assets api from database
 export async function getAssets() {
-  return fetchApi<AssetType[]>({
+  return fetchApi<GetAssetData[]>({
     url: 'api/asset/get-all-asset',
     method: 'GET',
     headers: {

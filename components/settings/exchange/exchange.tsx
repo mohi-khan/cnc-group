@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -54,7 +54,7 @@ export default function ExchangePage() {
   useEffect(() => {
     fetchExchanges()
     fetchCurrency()
-  }, [])
+  }, [fetchCurrency, fetchExchanges])
 
   useEffect(() => {
     if (!isPopupOpen) {
@@ -62,7 +62,7 @@ export default function ExchangePage() {
     }
   }, [isPopupOpen, form])
 
-  const fetchExchanges = async () => {
+  const fetchExchanges = useCallback (async () => {
     setIsLoading(true)
     const data = await getAllExchange()
     if (data.error || !data.data) {
@@ -76,9 +76,9 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
-  const fetchCurrency = async () => {
+  const fetchCurrency = useCallback (async () => {
     setIsLoading(true)
     const data = await getAllCurrency()
     if (data.error || !data.data) {
@@ -92,7 +92,7 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
 
   async function onSubmit(data: ExchangeType) {
     setIsLoading(true)
@@ -126,8 +126,8 @@ export default function ExchangePage() {
 
   async function handleUpdate(exchangeDate: string, baseCurrency: number) {
     setIsLoading(true)
-    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0] // Ensure correct format
-    const rate = parseFloat(editRate) // Convert to number
+    const formattedDate = new Date(exchangeDate).toISOString().split('T')[0]
+    const rate = parseFloat(editRate)
 
     if (isNaN(rate)) {
       toast({
@@ -139,7 +139,7 @@ export default function ExchangePage() {
       return
     }
 
-    const result = await editExchange(formattedDate, baseCurrency, rate) // Pass rate
+    const result = await editExchange(formattedDate, baseCurrency, rate)
 
     if (result.error || !result.data) {
       toast({
@@ -148,7 +148,7 @@ export default function ExchangePage() {
         variant: 'destructive',
       })
     } else {
-      fetchExchanges() // Refresh data
+      fetchExchanges()
       setEditingId(null)
       toast({
         title: 'Success',
@@ -183,7 +183,9 @@ export default function ExchangePage() {
               <TableCell>
                 {new Date(exchange.exchangeDate).toLocaleDateString()}
               </TableCell>
-              <TableCell>{exchange.baseCurrency == 1 && 'BDT'}</TableCell>
+              <TableCell>
+                {currency.find((c) => c.currencyId === exchange.baseCurrency)?.currencyCode || exchange.baseCurrency}
+              </TableCell>
               <TableCell>
                 {editingId ===
                 `${exchange.exchangeDate}-${exchange.baseCurrency}` ? (

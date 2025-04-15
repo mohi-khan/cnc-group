@@ -117,11 +117,38 @@ export default function ResPartners() {
     }
   }, [])
 
+  const fetchResPartners = React.useCallback (async () => {
+    // setIsLoading(true)
+    const data = await getAllResPartners()
+    console.log('🚀 ~ fetchrespartners ~ data:', data)
+    if (data.error || !data.data || !data.data) {
+      console.error('Error getting res partners:', data.error)
+    } else {
+      console.log('partner', data)
+      setPartners(data.data)
+    }
+    console.log('companies here', companies)
+    // setIsLoading(false)
+  }, [companies])
+
+  const fetchCompanies = React.useCallback (async () => {
+    // setIsLoading(true)
+    const data = await getAllCompanies()
+    console.log('🚀 ~ fetchCompanies ~ data:', data)
+    if (data.error || !data.data) {
+      console.error('Error getting companies:', data.error)
+    } else {
+      console.log('company', data.data)
+      setCompanies(data.data)
+    }
+    console.log('companies here', companies)
+    // setIsLoading(false)
+  }, [companies])
+
   React.useEffect(() => {
-    console.log('Fetching res partners and companies')
     fetchResPartners()
     fetchCompanies()
-  }, [])
+  }, [fetchResPartners, fetchCompanies])
 
   React.useEffect(() => {
     console.log('Resetting form', { editingPartner })
@@ -154,38 +181,6 @@ export default function ResPartners() {
       })
     }
   }, [editingPartner, form, userId])
-
-  const fetchResPartners = async () => {
-    // setIsLoading(true)
-    const data = await getAllResPartners()
-    console.log('🚀 ~ fetchrespartners ~ data:', data)
-    if (data.error || !data.data || !data.data) {
-      console.error('Error getting res partners:', data.error)
-    } else {
-      console.log('partner', data)
-      setPartners(data.data)
-    }
-    console.log('companies here', companies)
-    // setIsLoading(false)
-  }
-
-  const fetchCompanies = async () => {
-    // setIsLoading(true)
-    const data = await getAllCompanies()
-    console.log('🚀 ~ fetchCompanies ~ data:', data)
-    if (data.error || !data.data) {
-      console.error('Error getting companies:', data.error)
-    } else {
-      console.log('company', data.data)
-      setCompanies(data.data)
-    }
-    console.log('companies here', companies)
-    // setIsLoading(false)
-  }
-
-  // React.useEffect(() => {
-  //   fetchCompanies();
-  // }, [companies])
 
   async function onSubmit(values: ResPartner) {
     console.log('Form submitted:', values)

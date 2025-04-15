@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 import { TrialBalanceData } from '@/utils/type'
@@ -26,7 +26,7 @@ export default function TrialBalanceTable({
   >([])
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
 
-  async function fetchTrialBalanceTableData() {
+  const fetchTrialBalanceTableData = useCallback (async () => {
     if (!startDate || !endDate || !companyId) {
       console.error('Missing required filter parameters')
       return
@@ -51,13 +51,13 @@ export default function TrialBalanceTable({
     } catch (error) {
       console.error('Error fetching trial balance data:', error)
     }
-  }
+  }, [startDate, endDate, companyId, setTrialBalanceData])
 
   useEffect(() => {
     if (startDate && endDate && companyId) {
       fetchTrialBalanceTableData()
     }
-  }, [startDate, endDate, companyId])
+  }, [startDate, endDate, companyId, fetchTrialBalanceTableData])
 
   const toggleRowExpansion = (id: number) => {
     const newExpandedRows = new Set(expandedRows)

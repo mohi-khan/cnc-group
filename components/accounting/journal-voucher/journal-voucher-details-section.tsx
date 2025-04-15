@@ -118,7 +118,7 @@ export function JournalVoucherDetailsSection({
         },
       ])
     }
-  }, [])
+  }, [entries.length, form])
 
   const addEntry = () => {
     form.setValue('journalDetails', [

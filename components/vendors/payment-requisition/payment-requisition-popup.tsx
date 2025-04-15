@@ -217,7 +217,7 @@ export function PaymentRequisitionPopup({
     if (isOpen) {
       fetchInitialData()
     }
-  }, [isOpen])
+  }, [isOpen, toast])
 
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,

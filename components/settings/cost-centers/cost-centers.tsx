@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, ArrowUpDown } from 'lucide-react'
 import {
@@ -66,11 +66,7 @@ export default function CostCenterManagement() {
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  useEffect(() => {
-    fetchCostCenters()
-  }, [])
-
-  const fetchCostCenters = async () => {
+  const fetchCostCenters = useCallback (async () => {
     setIsLoading(true)
     const data = await getAllCostCenters()
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
@@ -85,7 +81,11 @@ export default function CostCenterManagement() {
       setCostCenters(data.data)
     }
     setIsLoading(false)
-  }
+  }, [toast])
+
+  useEffect(() => {
+    fetchCostCenters()
+  }, [fetchCostCenters])
 
   const handleActivateDeactivate = async (id: number, isActive: boolean) => {
     try {
@@ -165,7 +165,7 @@ export default function CostCenterManagement() {
       } else {
         setCurrencyCode('BDT')
       }
-    }, [isEdit, selectedCostCenter])
+    }, [isEdit])
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
@@ -404,7 +404,7 @@ export default function CostCenterManagement() {
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [feedback])
+  }, [feedback, fetchCostCenters])
 
   return (
     <div className="container mx-auto py-10">

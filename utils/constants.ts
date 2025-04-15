@@ -136,7 +136,8 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Configure Asset Accounting',
             source: '/assets/configure-asset-accounting',
           },
-          { name: 'Run Depreciation', source: '/assets/run-depreciation' },
+          { name: 'Asset Depreciation', source: '/assets/asset-depreciation' },
+          { name: 'Asset Report', source: '/assets/asset-report' },
         ],
       },
     ],
@@ -205,6 +206,7 @@ export const MENU_ITEMS: MenuItem[] = [
           },
           { name: 'Balance Sheet', source: '/reports/balance-sheet' },
           { name: 'Trade Debtors', source: '/reports/trade-debtors' },
+          { name: 'Cash Report', source: '/reports/cash-report' },
         ],
       },
       {

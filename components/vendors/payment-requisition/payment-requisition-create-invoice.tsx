@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
@@ -27,6 +27,7 @@ import { createInvoice, getAllVendors } from '@/api/payment-requisition-api'
 import { useForm } from 'react-hook-form'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { ResPartner } from '@/utils/type'
+import { get } from 'http'
 
 // Define the schema for form validation
 const createInvoiceSchema = z.object({
@@ -179,7 +180,7 @@ const PaymentRequisitionCreateInvoiceForm = ({
 
   const [vendors, setVendors] = useState<ResPartner[]>([])
 
-  async function getVendors() {
+  const getVendors = useCallback (async () => {
     try {
       const response = await getAllVendors()
       if (!response.data) {
@@ -194,11 +195,11 @@ const PaymentRequisitionCreateInvoiceForm = ({
       })
       setVendors([])
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     getVendors()
-  }, [])
+  }, [getVendors])
 
   return (
     <div className="space-y-6 p-4">

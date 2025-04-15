@@ -2,7 +2,7 @@
 
 import { approveInvoice, getAllInvoices } from '@/api/approve-invoice-api'
 import { GetPaymentOrder } from '@/utils/type'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -34,10 +34,6 @@ const ApproveInvoice = () => {
   const mainToken = localStorage.getItem('authToken')
   console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
   const token = `Bearer ${mainToken}`
-
-  useEffect(() => {
-    fetchInvoices()
-  }, [])
 
   const handleApproveClick = (requisition: GetPaymentOrder) => {
     setSelectedRequisition(requisition)
@@ -82,7 +78,7 @@ const ApproveInvoice = () => {
     }
   }
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       setLoading(true)
       const data = await getAllInvoices({
@@ -101,7 +97,11 @@ const ApproveInvoice = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [fetchInvoices])
 
   if (!requisitions || requisitions.length === 0) {
     return (

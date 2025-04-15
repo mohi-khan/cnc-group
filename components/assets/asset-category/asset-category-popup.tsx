@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -76,7 +76,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     }
   }, [userId, form])
 
-  async function fetchChartOfAccounts() {
+    const fetchChartOfAccounts = useCallback(async () => {
     const response = await getAllChartOfAccounts()
     console.log('Fetched chart of accounts:', response.data)
 
@@ -91,9 +91,9 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       setChartOfAccounts(response.data)
       console.log('coa', chartOfAccounts)
     }
-  }
+  }, [chartOfAccounts])
 
-  const onSubmit = async (data: CreateAssetCategoryData) => {
+  const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (data) => {
     console.log('Form submitted:', data)
     setIsSubmitting(true)
     try {
@@ -109,9 +109,8 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   }
 
   useEffect(() => {
-    // console.log(form);
     fetchChartOfAccounts()
-  }, [])
+  }, [fetchChartOfAccounts])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
