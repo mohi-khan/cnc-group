@@ -43,10 +43,11 @@ export interface CompanyType {
 
 
 export const locationSchema = z.object({
-  // locationId: z.number(),
+  locationId: z.number(),
   companyId: z.number(),
   branchName: z.string().min(1, 'Branch name is required'),
   address: z.string().min(1, 'Address is required'),
+  
 })
 
 // export type CompanyType = z.infer<typeof companySchema>

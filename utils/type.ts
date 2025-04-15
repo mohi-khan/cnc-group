@@ -424,6 +424,7 @@ const JournalEntrySchema = z.object({
   currencyId: z.number(),
   amountTotal: z.number(),
   notes: z.string().optional(),
+  payTo: z.string().nullable().optional(),
   periodid: z.number().nullable().optional(), // Will calcualte automatically on backend
   createdBy: z.number(),
 })

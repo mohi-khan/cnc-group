@@ -45,7 +45,6 @@ export default function BankVoucherDetails({
             <TableHead>Department</TableHead>
             <TableHead>Partner Name</TableHead>
             <TableHead>Remarks</TableHead>
-            <TableHead>Pay To</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
@@ -210,19 +209,7 @@ export default function BankVoucherDetails({
                   )}
                 />
               </TableCell>
-              <TableCell>
-                <FormField
-                  control={form.control}
-                  name={`journalDetails.${index}.payTo`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter receiver's name" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </TableCell>
+             
               <TableCell>
                 <FormField
                   control={form.control}
@@ -274,7 +261,7 @@ export default function BankVoucherDetails({
             taxId: null,
             resPartnerId: null,
             notes: '',
-            payTo: '',
+            // payTo: '',
             createdBy: 0,
           })
         }

@@ -58,7 +58,7 @@ export function ContraVoucherMasterSection({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   // const [isLoading, setIsLoading] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
-  const [exchangeRate, setExchangeRate] = useState<number>(1)
+  const [exchangeRate, setExchangeRate] = useState<number>(0)
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -230,17 +230,16 @@ export function ContraVoucherMasterSection({
                   <CustomCombobox
                     items={currency.map((curr: CurrencyType) => ({
                       id: curr.currencyId.toString(),
-                      name: curr.currencyCode || 'Unnamed Currency',
+                      name: `${curr.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === curr.currencyId)?.rate ?? 1}` || 'Unnamed Currency',
                     }))}
                     value={
                       field.value
                         ? {
                             id: field.value.toString(),
-                            name:
-                              currency.find(
+                            name: `${currency.find(
                                 (curr: CurrencyType) =>
                                   curr.currencyId === field.value
-                              )?.currencyCode || 'Unnamed Currency',
+                              )?.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === field.value)?.rate ?? 1}` || 'Unnamed Currency',
                           }
                         : null
                     }
@@ -257,9 +256,7 @@ export function ContraVoucherMasterSection({
                       setExchangeRate(exchange?.rate ?? 1)
                     }}
                     placeholder="Select currency"
-                  />
-                  <Dialog>
-                    <DialogTrigger asChild>
+                  />                  <Dialog>                    <DialogTrigger asChild>
                       <Button variant="outline" className="px-3">
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -318,7 +315,7 @@ export function ContraVoucherMasterSection({
         </div>
 
         {/* Analysis Tags Input */}
-        <div className="flex flex-col">
+        {/* <div className="flex flex-col">
           <FormLabel className="mb-2">Analysis Tags</FormLabel>
           <FormField
             control={form.control}
@@ -330,8 +327,10 @@ export function ContraVoucherMasterSection({
             )}
           />
           <FormMessage />
-        </div>
+        </div> */}
       </div>
+
+
 
       {/* Notes Textarea */}
       <FormField
