@@ -53,9 +53,7 @@ export default function SignIn() {
         // Log the current user information
 
         // Store token if remember me is checked
-        if (rememberMe) {
-          localStorage.setItem('authToken', response.data.data.token)
-        }
+        localStorage.setItem('authToken', response.data.data.token)
         console.log(response.data.data.user)
         // Store user information in localStorage
         const { userId, roleId, userCompanies, userLocations, voucherTypes, employeeId } =
@@ -119,7 +117,7 @@ export default function SignIn() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pb-3">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
@@ -144,7 +142,7 @@ export default function SignIn() {
                 </Button>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <Checkbox
                 id="remember-me"
                 checked={rememberMe}
@@ -156,7 +154,7 @@ export default function SignIn() {
               >
                 Remember me
               </Label>
-            </div>
+            </div> */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
