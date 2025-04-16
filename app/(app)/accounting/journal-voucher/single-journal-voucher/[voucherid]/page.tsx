@@ -1,10 +1,10 @@
-import SingleJournalVoucher from '@/components/accounting/journal-voucher/single-journal-voucher'
+// import SingleJournalVoucher from '@/components/accounting/journal-voucher/single-journal-voucher'
 import React from 'react'
 
 const SingleJournalVoucherPage = () => {
   return (
     <div>
-      <SingleJournalVoucher />
+      {/* <SingleJournalVoucher /> */}
     </div>
   )
 }

@@ -65,6 +65,7 @@ import {
   type ChartOfAccount,
   chartOfAccountSchema,
   CurrencyType,
+  AccountsHead,
 } from '@/utils/type'
 import {
   createChartOfAccounts,
@@ -181,16 +182,16 @@ export default function ChartOfAccountsTable() {
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
-  const [accounts, setAccounts] = React.useState<ChartOfAccount[]>([])
+  const [accounts, setAccounts] = React.useState<AccountsHead[]>([])
   const [filteredAccounts, setFilteredAccounts] = React.useState<
-    ChartOfAccount[]
+  AccountsHead[]
   >([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
   const [isAddAccountOpen, setIsAddAccountOpen] = React.useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = React.useState(false)
   const [editingAccount, setEditingAccount] =
-    React.useState<ChartOfAccount | null>(null)
+    React.useState<AccountsHead | null>(null)
   const [parentCodes, setParentCodes] = React.useState<ChartOfAccount[]>([])
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
@@ -443,7 +444,7 @@ export default function ChartOfAccountsTable() {
   }
 
   // Edit accounts function open dialog box
-  const handleEditAccount = (account: ChartOfAccount) => {
+  const handleEditAccount = (account: AccountsHead) => {
     setEditingAccount({
       ...account,
       name: account.name,
