@@ -70,7 +70,7 @@ export default function AssetDepreciation() {
       console.error("Error previewing asset depreciation:", error)
       toast({
         title: "Error",
-        description: "Failed to preview asset depreciation schedule",
+        description: `${typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error)}`,
         variant: "destructive",
       })
     } finally {
