@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { CreateAssetDepreciationData } from '@/utils/type'
+import { CreateAssetDepreciationData, JournalEntryWithDetails } from '@/utils/type'
 import { CompanyType } from './company-api'
 
 const mainToken = localStorage.getItem('authToken')
@@ -37,5 +37,16 @@ export async function getAllCompanies() {
   return fetchApi<CompanyType[]>({
     url: 'api/company/get-all-companies',
     method: 'GET',
+  })
+}
+
+export async function createJournalEntryWithDetails(
+  data: JournalEntryWithDetails
+) {
+  console.log('journal', data)
+  return fetchApi<JournalEntryWithDetails>({
+    url: 'api/journal/entry',
+    method: 'POST',
+    body: data,
   })
 }
