@@ -9,8 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createAssetDepreciationSchema } from "@/utils/type"
-import { createAssetDepreciation, getAllCompanies, previewAssetDepreciation } from "@/api/asset-depreciation-api"
+import { createAssetDepreciationSchema, VoucherTypes } from "@/utils/type"
+import {
+  createAssetDepreciation,
+  createJournalEntryWithDetails,
+  getAllCompanies,
+  previewAssetDepreciation,
+} from "@/api/asset-depreciation-api"
 import { toast } from "@/hooks/use-toast"
 import { CustomCombobox } from "@/utils/custom-combobox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -49,7 +54,7 @@ export default function AssetDepreciation() {
         depreciation_date: data.depreciation_date,
       })
 
-    //   console.log("Preview API response:", response.data.data.schedules)
+      //   console.log("Preview API response:", response.data.data.schedules)
 
       if (response.error || !response.data) {
         throw new Error(response.error?.message || "Failed to preview depreciation schedule")
@@ -84,14 +89,67 @@ export default function AssetDepreciation() {
 
     setIsSubmitting(true)
     try {
+      // Step 1: Create asset depreciation
       const response = await createAssetDepreciation({
         company_id: formData.company_id,
         depreciation_date: formData.depreciation_date,
       })
+      console.log('"Asset depreciation created successfully:", response.data)')
 
       if (response.error) {
         throw new Error(response.error.message || "Failed to create depreciation schedule")
       }
+
+      // Step 2: Create journal voucher in the background
+      console.log("Starting journal voucher creation...")
+      try {
+        const journalVoucherData = {
+          journalEntry: {
+            date: "2025-04-17",
+            journalType: VoucherTypes.JournalVoucher,
+            state: 0,
+            companyId: formData.company_id,
+            locationId: 41,
+            currencyId: 1,
+            amountTotal: 800,
+            notes: `Auto-generated for Asset Depreciation on ${formData.depreciation_date}`,
+            createdBy: 60,
+          },
+          journalDetails: [
+            {
+              accountId: 6,
+              costCenterId: 14,
+              departmentId: 18,
+              notes: "Depreciation Expense",
+              debit: 400,
+              credit: 0,
+              createdBy: 60,
+            },
+            {
+              accountId: 6,
+              costCenterId: 15,
+              departmentId: 19,
+              notes: "Accumulated Depreciation",
+              debit: 0,
+              credit: 400,
+              createdBy: 60,
+            },
+          ],
+        }
+      
+        console.log("Calling journal voucher API with:", JSON.stringify(journalVoucherData, null, 2))
+      
+        const journalResponse = await createJournalEntryWithDetails(journalVoucherData)
+      
+        if (!journalResponse || journalResponse.error || !journalResponse.data) {
+          console.error("Journal voucher creation failed or no data:", journalResponse)
+        } else {
+          console.log("Journal voucher created successfully:", journalResponse.data)
+        }
+      } catch (journalError) {
+        console.error("Exception during journal voucher creation:", journalError)
+      }
+      
 
       toast({
         title: "Success",
