@@ -23,6 +23,7 @@ export const locationSchema = z.object({
   companyId: z.number(),
   branchName: z.string().min(1, 'Branch name is required'),
   address: z.string().min(1, 'Address is required'),
+  
 })
 
 export type CompanyType = z.infer<typeof companySchema>

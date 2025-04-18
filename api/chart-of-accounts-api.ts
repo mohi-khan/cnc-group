@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { ChartOfAccount } from '@/utils/type'
+import { AccountsHead, ChartOfAccount } from '@/utils/type'
 
 export type ChartOfAccounts = Omit<
   ChartOfAccount,
@@ -18,7 +18,7 @@ export async function createChartOfAccounts(data: ChartOfAccounts) {
 
 //get all data coa
 export async function getAllCoa() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
@@ -33,8 +33,8 @@ export async function getParentCodes() {
 }
 
 // Update Data Api
-export async function updateChartOfAccounts(data: ChartOfAccounts) {
-  return fetchApi<ChartOfAccount[]>({
+export async function updateChartOfAccounts(data: AccountsHead) {
+  return fetchApi<AccountsHead[]>({
     url: `api/chart-of-accounts/update-coa/${data.accountId}`,
     method: 'PATCH',
     body: data,

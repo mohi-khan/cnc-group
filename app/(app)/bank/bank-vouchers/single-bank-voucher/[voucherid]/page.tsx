@@ -1,10 +1,10 @@
-import SingleBankVoucher from '@/components/bank/bank-vouchers/single-bank-voucher'
+// import SingleBankVoucher from '@/components/bank/bank-vouchers/single-bank-voucher'
 import React from 'react'
 
 const SingleBankVoucherPage = () => {
   return (
     <div>
-      <SingleBankVoucher />
+      {/* <SingleBankVoucher /> */}
     </div>
   )
 }

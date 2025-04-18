@@ -285,7 +285,9 @@ export default function CashVoucher() {
         locationId: 0,
         currencyId: 0,
         amountTotal: 0,
+        payTo: '',
         notes: '',
+
         createdBy: 0,
       },
       journalDetails: [

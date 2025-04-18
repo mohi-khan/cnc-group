@@ -84,12 +84,20 @@ export async function editJournalDetail(data: JournalNotes) {
 // }
 
 export async function getAllVoucher(data: JournalQuery) {
-  const queryParams = new URLSearchParams({
-    date: data.date,
-    companyId: JSON.stringify(data.companyId), // Convert array to JSON string
-    locationId: JSON.stringify(data.locationId), // Convert array to JSON string
-    voucherType: data.voucherType,
-  }).toString()
+  const queryParams = new URLSearchParams(
+    Object.entries({
+      date: data.date,
+      companyId: JSON.stringify(data.companyId),
+      locationId: JSON.stringify(data.locationId),
+      voucherType: data.voucherType ?? '', // Ensure undefined is handled
+    }).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined) acc[key] = String(value)
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  ).toString()
   console.log(queryParams)
   return fetchApi<JournalResult[]>({
     url: `api/journal/getJournalLists/?${queryParams}`,

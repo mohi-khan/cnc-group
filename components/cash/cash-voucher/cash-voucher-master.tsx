@@ -167,6 +167,20 @@ export default function CashVoucherMaster({
         )}
       />
 
+       <FormField
+              control={form.control}
+              name="journalEntry.payTo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pay To</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ''} placeholder="Enter payee name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
       <div className='col-span-4'>
         <FormField
           control={form.control}

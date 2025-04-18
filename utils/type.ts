@@ -348,15 +348,37 @@ export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
 export const AccountsHeadSchema = z.object({
   accountId: z.number().int().positive(),
-  code: z.string(),
-  name: z.string(),
-  accountType: z.string(),
-  parentCode: z.string().nullable(),
-  parentName: z.string().nullable(),
-  isReconcilable: z.boolean(),
+  // code: z.string(),
+  // name: z.string(),
+  // accountType: z.string(),
+  // parentCode: z.string().nullable(),
+  // parentName: z.string().nullable(),
+  // isReconcilable: z.boolean(),
+  // notes: z.string(),
+  // isGroup: z.boolean(),
+  // isCash: z.boolean(),
+  name: z.string().max(255).min(1, 'Account type is required'),
+  code: z
+    .string()
+    .min(1, 'Code is required')
+    .max(64, 'Maximum 64 characters allowed'),
+  accountType: z
+    .string()
+    .min(1, 'Account type is required')
+    .max(64, 'Maximum 64 characters allowed'),
+  parentAccountId: z.number().int(),
+  parentName: z.string().min(1, 'Parent account ID is required').optional(),
+  currencyId: z.number().int().positive('Currency is required'),
+  isReconcilable: z.boolean().default(false),
+  withholdingTax: z.boolean().default(false),
+  budgetTracking: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  isGroup: z.boolean().default(false),
+  isCash: z.boolean().default(true),
+  isBank: z.boolean().default(false),
+  cashTag: z.string(),
+  createdBy: z.number().int().positive(),
   notes: z.string(),
-  isGroup: z.boolean(),
-  isCash: z.boolean(),
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
@@ -424,6 +446,7 @@ const JournalEntrySchema = z.object({
   currencyId: z.number(),
   amountTotal: z.number(),
   notes: z.string().optional(),
+  payTo: z.string().nullable().optional(),
   periodid: z.number().nullable().optional(), // Will calcualte automatically on backend
   createdBy: z.number(),
 })
