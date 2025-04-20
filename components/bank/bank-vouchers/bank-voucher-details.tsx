@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { FormStateType } from '@/utils/type'
 
 interface FormState {
   filteredChartOfAccounts: { accountId: number; name: string }[]
@@ -28,7 +29,7 @@ export default function BankVoucherDetails({
   formState,
 }: {
   form: UseFormReturn<any>
-  formState: FormState
+  formState: FormStateType
 }) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,

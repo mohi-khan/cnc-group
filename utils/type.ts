@@ -435,6 +435,20 @@ export interface Location {
   companyId: number
 }
 
+export interface FormStateType {
+  companies: any[]
+  locations: any[]
+  bankAccounts: any[]
+  chartOfAccounts: any[]
+  filteredChartOfAccounts: any[]
+  costCenters: any[]
+  partners: any[]
+  departments: any[]
+  formType: 'Credit' | 'Debit'
+  selectedBankAccount: any | null
+  status: 'Draft' | 'Posted'
+}
+
 //journal entry
 const JournalEntrySchema = z.object({
   voucherNo: z.string().nullable().optional(), // Will calcualte automatically on backend
