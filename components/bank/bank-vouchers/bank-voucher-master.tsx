@@ -9,7 +9,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { BankAccount, Company, CurrencyType, Location } from '@/utils/type'
+import { BankAccount, Company, CurrencyType, FormStateType, Location } from '@/utils/type'
 import { useEffect, useState } from 'react'
 
 import { Control, FieldValues } from 'react-hook-form'
@@ -24,10 +24,10 @@ interface FormState {
 
 interface BankVoucherMasterProps {
   form: {
-    control: Control<FieldValues>
+    control: any
   }
-  formState: FormState
-  setFormState: React.Dispatch<React.SetStateAction<FormState>>
+  formState: FormStateType
+  setFormState: React.Dispatch<React.SetStateAction<FormStateType>>
 }
 
 export default function BankVoucherMaster({
@@ -164,9 +164,9 @@ export default function BankVoucherMaster({
             { id: 'Credit', name: 'Credit' },
             { id: 'Debit', name: 'Debit' },
           ]}
-          value={{ id: formState.formType, name: formState.formType }}
+          value={{ id: String(formState.formType), name: String(formState.formType) }}
           onChange={(value) =>
-            setFormState({ ...formState, formType: value?.id || 'Credit' })
+            setFormState({ ...formState, formType: (value?.id as 'Credit' | 'Debit') || 'Credit' })
           }
           placeholder="Select type"
         />

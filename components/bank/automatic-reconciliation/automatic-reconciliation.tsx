@@ -275,7 +275,9 @@ export default function AutomaticReconciliation() {
             reconcileId: matchingTransactionId,
           }
         })
-        .filter((item): item is { id: number; reconcileId: number } => item !== null)
+        .filter(
+          (item): item is { id: number; reconcileId: number } => item !== null
+        )
 
       // Send all reconciliations in a single API call
       await automaticReconciliation(reconciliationsToProcess)
@@ -410,7 +412,9 @@ export default function AutomaticReconciliation() {
                     (transaction) =>
                       !reconciliations.some(
                         (r) =>
-                          (r.reconcileId !== null && r.reconcileId === transaction.id) && r.reconciled === 1
+                          r.reconcileId !== null &&
+                          Number(r.reconcileId) === transaction.id &&
+                          r.reconciled === 1
                       )
                   )
                   .map((transaction) => (

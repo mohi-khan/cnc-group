@@ -3,7 +3,6 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
 import type * as z from 'zod'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -18,6 +17,7 @@ import {
   type JournalQuery,
   VoucherTypes,
   type User,
+  FormStateType,
 } from '@/utils/type'
 import {
   getAllBankAccounts,
@@ -35,6 +35,7 @@ import { Popup } from '@/utils/popup'
 import BankVoucherMaster from './bank-voucher-master'
 import BankVoucherDetails from './bank-voucher-details'
 import BankVoucherSubmit from './bank-voucher-submit'
+import { useForm } from 'react-hook-form'
 
 export default function BankVoucher() {
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
@@ -77,20 +78,6 @@ export default function BankVoucher() {
     },
   })
 
-  interface FormStateType {
-    companies: any[]
-    locations: any[]
-    bankAccounts: any[]
-    chartOfAccounts: any[]
-    filteredChartOfAccounts: any[]
-    costCenters: any[]
-    partners: any[]
-    departments: any[]
-    formType: 'Credit' | 'Debit'
-    selectedBankAccount: any | null
-    status: 'Draft' | 'Posted'
-  }
-
   const [formState, setFormState] = React.useState<FormStateType>({
     companies: [],
     locations: [],
@@ -100,8 +87,8 @@ export default function BankVoucher() {
     costCenters: [],
     partners: [],
     departments: [],
-    formType: 'Credit',
     selectedBankAccount: null,
+    formType: 'Credit',
     status: 'Draft',
   })
 

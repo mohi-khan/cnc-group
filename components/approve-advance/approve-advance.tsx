@@ -19,34 +19,45 @@ const ApproveAdvance = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
 
-  const mainToken = localStorage.getItem('authToken')
-  const token = `Bearer ${mainToken}`
-  const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
-  console.log('🚀 ~ ApproveAdvance ~ user:', user)
+  useEffect(() => {
+    // This ensures it's only run on client side
+    const mainToken = localStorage.getItem('authToken')
+    const parsedUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+
+    setToken(`Bearer ${mainToken}`)
+    setUser(parsedUser)
+  }, [])
 
   const fetchAdvances = useCallback(async () => {
+    if (!token) return
+
     try {
       setIsLoading(true)
-      setError(null) // Reset error state
+      setError(null)
 
       const data = await getAllAdvance(token)
-      setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
+      setAdvances(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
       console.error('Error fetching advances:', err)
       setError('Failed to fetch advance requests')
-      setAdvances([]) // Ensure UI still works
+      setAdvances([])
     } finally {
       setIsLoading(false)
     }
-  }, [token]); // Include 'token' or anything else used inside
-  
+  }, [token])
 
   useEffect(() => {
-    fetchAdvances()
-  }, [fetchAdvances])
+    if (token) {
+      fetchAdvances()
+    }
+  }, [fetchAdvances, token])
 
   const handleApproveClick = async (advance: ApproveAdvanceType) => {
+    if (!token || !user) return
+
     try {
       setProcessingId(advance.id.toString())
 
@@ -59,7 +70,7 @@ const ApproveAdvance = () => {
       const response = await approveAdvance(approvalData, token)
 
       if ((response as any).success) {
-        await fetchAdvances() // Fetch new data
+        await fetchAdvances()
         toast({
           title: 'Advance Approved',
           description: `Successfully approved advance request ${advance.reqno}`,
