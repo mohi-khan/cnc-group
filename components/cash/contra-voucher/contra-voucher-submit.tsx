@@ -24,7 +24,7 @@ export function ContraVoucherSubmit({
 }: ContraVoucherSubmitProps) {
   return (
     <div className="space-y-4">
-      <FormField
+      {/* <FormField
         control={form.control}
         name="attachment"
         render={({ field: { value, ...field } }) => (
@@ -51,7 +51,7 @@ export function ContraVoucherSubmit({
             </div>
           </FormItem>
         )}
-      />
+      /> */}
 
       <FormField
         control={form.control}
