@@ -18,7 +18,7 @@ export interface UserCompany {
 }
 
 export interface Company {
-  companyId: number
+  companyId?: number
   address: string
   companyName: string
 }
@@ -537,12 +537,13 @@ export const departmentSchema = z.object({
   budget: z.number().optional(),
   companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
   actual: z.number().optional(),
   createdBy: z.number(),
 })
 export type Department = z.infer<typeof departmentSchema>
+
 export const departmentsArraySchema = z.array(departmentSchema)
 
 export const getDepartmentSchema = z.object({
@@ -554,6 +555,7 @@ export const getDepartmentSchema = z.object({
   startDate: z.coerce.date().optional().nullable(),
   endDate: z.coerce.date().optional().nullable(),
   actual: z.number().optional(),
+  createdBy: z.number(),
 })
 export type GetDepartment = z.infer<typeof getDepartmentSchema>
 
@@ -567,7 +569,7 @@ const costCenterSchema = z.object({
   currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
   isActive: z.boolean(),
   isVehicle: z.boolean(),
-  createdBy: z.number().optional(),
+  createdBy: z.number(),
 })
 
 export const activateDeactivateCostCenterSchema = z.object({

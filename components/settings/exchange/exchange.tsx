@@ -51,10 +51,7 @@ export default function ExchangePage() {
     },
   })
 
-  useEffect(() => {
-    fetchExchanges()
-    fetchCurrency()
-  }, [fetchCurrency, fetchExchanges])
+  
 
   useEffect(() => {
     if (!isPopupOpen) {
@@ -157,6 +154,11 @@ export default function ExchangePage() {
     }
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    fetchExchanges()
+    fetchCurrency()
+  }, [fetchCurrency, fetchExchanges])
 
   return (
     <div className="w-[98%] mx-auto p-4">

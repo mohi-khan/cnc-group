@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Department, FundPositionType, GetCostBreakdownDetailsType, GetCostBreakdownType, GEtExpenseDataType } from '@/utils/type'
+import { Department, FundPositionType, GetCostBreakdownDetailsType, GetCostBreakdownType, GetDepartment, GEtExpenseDataType } from '@/utils/type'
 import { CompanyType } from './company-api'
 
 export async function getFundPosition(
@@ -93,7 +93,7 @@ export async function getNPData(
 
 //Get Department Data API
 export async function getAllDepartments() {
-  return fetchApi<Department[]>({
+  return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
   })

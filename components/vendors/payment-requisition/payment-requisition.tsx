@@ -41,15 +41,15 @@ const PaymentRequisition = () => {
     fetchRequisitions()
   }, [fetchRequisitions])
 
-  const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
-    try {
-      await createPaymentRequisition(newRequisition, token)
-      await fetchRequisitions()
-      setIsPopupOpen(false)
-    } catch (err) {
-      setError('Failed to create requisition')
-    }
-  }
+  // const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
+  //   try {
+  //     await createPaymentRequisition(newRequisition, token)
+  //     await fetchRequisitions()
+  //     setIsPopupOpen(false)
+  //   } catch (err) {
+  //     setError('Failed to create requisition')
+  //   }
+  // // }  Commented out as Requistion creation function is not required in the business logic
 
   return (
     <div className="p-6">
@@ -70,8 +70,10 @@ const PaymentRequisition = () => {
       <PaymentRequisitionPopup
         status={requisitions[0]?.status}
         isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        onSubmit={handleCreateRequisition}
+        onOpenChange={setIsPopupOpen}
+        requisition={requisitions[0] || null}
+        token={token}
+        onSuccess={fetchRequisitions}
       />
     </div>
   )

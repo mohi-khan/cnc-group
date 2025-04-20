@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
+  PurchaseEntryType,
   type User,
   VoucherTypes,
 } from '@/utils/type'
@@ -33,7 +34,9 @@ interface PaymentRequisitionPopupProps {
   requisition: any // Replace with proper type
   token: string
   onSuccess: () => void
-  status: string
+  status: string,
+
+ 
 }
 
 export function PaymentRequisitionPopup({

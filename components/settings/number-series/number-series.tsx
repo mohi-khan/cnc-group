@@ -300,7 +300,7 @@ export function NumberSeries() {
                     {options.map((option) => (
                       <SelectItem
                         key={option.companyId}
-                        value={option.companyId.toString()}
+                        value={option.companyId?.toString()??""}
                       >
                         {option.address}
                       </SelectItem>
@@ -492,7 +492,7 @@ export function NumberSeries() {
                               {companies.map((company) => (
                                 <SelectItem
                                   key={company.companyId}
-                                  value={company.companyId.toString()}
+                                  value={company.companyId?.toString()??""}
                                 >
                                   {company.companyName}
                                 </SelectItem>
