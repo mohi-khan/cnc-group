@@ -439,7 +439,7 @@ export default function LevelEntry() {
                           {getAvailableAccounts(row.position).map((account) => (
                             <SelectItem
                               key={account.accountId}
-                              value={account.accountId.toString()}
+                              value={account.accountId?.toString() ?? ""}
                             >
                               {account.name}
                             </SelectItem>
@@ -627,7 +627,7 @@ export default function LevelEntry() {
                           {getAvailableAccounts(level.position).map((account) => (
                             <SelectItem
                               key={account.accountId}
-                              value={account.accountId.toString()}
+                              value={account.accountId?.toString() ?? ""}
                             >
                               {account.name}
                             </SelectItem>

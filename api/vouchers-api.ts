@@ -76,7 +76,6 @@ export async function getAllVoucherById(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
-    method: 'GET',
-    schema:  JournalEntryWithDetailsSchema 
+    method: 'GET'
   })
 }

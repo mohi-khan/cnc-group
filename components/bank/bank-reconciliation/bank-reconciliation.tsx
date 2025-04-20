@@ -104,7 +104,7 @@ export const BankReconciliation = () => {
   // Update the handleReconciliationUpdate function
   const handleReconciliationUpdate = async (
     id: number,
-    reconciled: number, // Changed from boolean to number
+    reconciled: boolean, 
     comments: string
   ) => {
     try {
@@ -265,7 +265,7 @@ export const BankReconciliation = () => {
                   <TableCell>
                     {editingId === reconciliation.id ? (
                       <Checkbox
-                        checked={reconciliation.reconciled === 1}
+                        checked={reconciliation.reconciled === true}
                         onCheckedChange={(checked) =>
                           updateLocalReconciliation(
                             reconciliation.id,
@@ -274,7 +274,7 @@ export const BankReconciliation = () => {
                           )
                         }
                       />
-                    ) : reconciliation.reconciled === 1 ? (
+                    ) : reconciliation.reconciled === true ? (
                       'Yes'
                     ) : (
                       'No'
@@ -304,7 +304,7 @@ export const BankReconciliation = () => {
                         onClick={() =>
                           handleReconciliationUpdate(
                             reconciliation.id,
-                            reconciliation.reconciled ?? 0,
+                            reconciliation.reconciled ?? false,
                             reconciliation.comments || ''
                           )
                         }

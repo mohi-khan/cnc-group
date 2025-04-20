@@ -410,7 +410,7 @@ export default function AutomaticReconciliation() {
                     (transaction) =>
                       !reconciliations.some(
                         (r) =>
-                          (r.reconcileId !== null && r.reconcileId === transaction.id) && r.reconciled === 1
+                          (r.reconcileId !== null && r.reconcileId === transaction.id) && r.reconciled === true
                       )
                   )
                   .map((transaction) => (
@@ -466,7 +466,7 @@ export default function AutomaticReconciliation() {
               ) : selectedBankAccount && reconciliations.length > 0 ? (
                 // Filter out already reconciled items
                 reconciliations
-                  .filter((reconciliation) => reconciliation.reconciled !== 1)
+                  .filter((reconciliation) => reconciliation.reconciled !== true)
                   .map((reconciliation) => (
                     <TableRow
                       key={reconciliation.id}
@@ -479,7 +479,7 @@ export default function AutomaticReconciliation() {
                       <TableCell>
                         {editingId === reconciliation.id ? (
                           <Checkbox
-                            checked={reconciliation.reconciled === 1}
+                            checked={reconciliation.reconciled === true}
                             onCheckedChange={(checked) =>
                               updateLocalReconciliation(
                                 reconciliation.id,
@@ -488,7 +488,7 @@ export default function AutomaticReconciliation() {
                               )
                             }
                           />
-                        ) : reconciliation.reconciled === 1 ? (
+                        ) : reconciliation.reconciled === true ? (
                           'Yes'
                         ) : (
                           'No'

@@ -28,7 +28,7 @@ export async function getBankReconciliations(
 
 export async function updateBankReconciliation(
   id: number,
-  reconciled: number,
+  reconciled: boolean,
   comments: string,
 ) {
   console.log("Updating bank reconciliation:", id, reconciled, comments)

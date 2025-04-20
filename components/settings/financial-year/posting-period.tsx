@@ -132,7 +132,7 @@ const PostingPeriodManager = () => {
                   <Switch
                     checked={period.isOpen}
                     onChange={(checked) =>
-                      handleStatusChange(period.periodId, checked)
+                      handleStatusChange(period.periodId, period.isOpen)
                     }
                   />
                 </TableCell>

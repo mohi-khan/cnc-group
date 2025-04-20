@@ -420,7 +420,7 @@ export default function DepartmentManagement() {
                   <FormControl>
                     <CustomCombobox
                       items={company.map((company) => ({
-                        id: company.companyId.toString(),
+                        id: company.companyId?.toString() ?? "",
                         name: company.companyName || 'Unnamed Company',
                       }))}
                       value={

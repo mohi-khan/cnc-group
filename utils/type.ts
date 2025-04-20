@@ -320,6 +320,7 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
+  accountId:z.number(),
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()
@@ -1222,10 +1223,10 @@ export const bankReconciliationSchema = z.object({
   checkNo: z.string().max(45).nullable(),
   amount: z.number().nullable(),
   type: z.string().max(45).nullable(),
-  reconciled: z.number().int().min(0).max(1).nullable(),
+  reconciled: z.boolean().nullable(),
   comments: z.string().max(45).nullable(),
   date: z.string().max(45).nullable(),
-  reconcileId: z.boolean().nullable(),
+  reconcileId: z.number().int().min(0).max(1).nullable(),
 })
 
 export type BankReconciliationType = z.infer<

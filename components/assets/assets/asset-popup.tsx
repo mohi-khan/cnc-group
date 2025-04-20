@@ -476,7 +476,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                   <FormLabel>Company</FormLabel>
                   <CustomCombobox
                     items={(getCompany ?? []).map((company) => ({
-                      id: company.companyId.toString(),
+                      id: company?.companyId?.toString() ?? "",
                       name: company.companyName || 'Unnamed Company',
                     }))}
                     value={

@@ -5,8 +5,14 @@ export type ChartOfAccounts = Omit<
   ChartOfAccount,
   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
 >
-
+//For updating chart of Accounts
+export type UpdateChartOfAccounts = Omit<
+  AccountsHead,
+   'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
 //create chart of accounts
+
+
 export async function createChartOfAccounts(data: ChartOfAccounts) {
   console.log('Created Chart Of Account:', data)
   return fetchApi<ChartOfAccount[]>({
@@ -18,7 +24,7 @@ export async function createChartOfAccounts(data: ChartOfAccounts) {
 
 //get all data coa
 export async function getAllCoa() {
-  return fetchApi<AccountsHead[]>({
+  return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })
@@ -33,8 +39,8 @@ export async function getParentCodes() {
 }
 
 // Update Data Api
-export async function updateChartOfAccounts(data: AccountsHead) {
-  return fetchApi<AccountsHead[]>({
+export async function updateChartOfAccounts(data: UpdateChartOfAccounts) {
+  return fetchApi<ChartOfAccount[]>({
     url: `api/chart-of-accounts/update-coa/${data.accountId}`,
     method: 'PATCH',
     body: data,
