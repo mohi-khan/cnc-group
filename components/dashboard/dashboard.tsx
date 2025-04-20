@@ -48,6 +48,7 @@ import type {
   Department,
   FundPositionType,
   GetCostBreakdownType,
+  GetDepartment,
   GEtExpenseDataType,
   GetPaymentOrder,
 } from '@/utils/type'
@@ -100,7 +101,7 @@ export default function Dashboard() {
   const [gpDataYearly, setGPDataYearly] = useState<GEtExpenseDataType[]>([])
   const [npData, setNPData] = useState<GEtExpenseDataType[]>([])
   const [npDataYearly, setNPDataYearly] = useState<GEtExpenseDataType[]>([])
-  const [department, setDepartments] = useState<Department[]>([])
+  const [department, setDepartments] = useState<GetDepartment[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
     null
   )

@@ -57,7 +57,7 @@ import {
   getAllCompanies,
 } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
-import { resPartnerSchema, type ResPartner } from '@/utils/type'
+import { Company, resPartnerSchema, type ResPartner } from '@/utils/type'
 import {
   Pagination,
   PaginationContent,
@@ -70,7 +70,7 @@ import {
 export default function ResPartners() {
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [companies, setCompanies] = React.useState<
-    { companyId: number; companyName: string }[]
+    Company[]
   >([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingPartner, setEditingPartner] = React.useState<ResPartner | null>(

@@ -23,7 +23,7 @@ export default function SingleGenralLedger() {
   >(null)
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
-  const [userId, setUserId] = React.useState<number>()
+  const [userId, setUserId] = React.useState<number>(0)
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -152,7 +152,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       // Check if the API nests the actual data under a "data" property
       const masterData = masterResponse.data || masterResponse
       // Try both keys: "id" or "budgetId"
-      const budgetId = masterData.id || masterData.budgetId
+      const budgetId = masterData.id
       console.log('Master budget response:', masterData)
 
       if (!budgetId) {
@@ -197,7 +197,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
   }
 
   const [companyId, setCompanyId] = useState<string>(
-    company[0]?.companyId.toString() || ''
+    company[0].companyId?.toString() ?? ""
   )
 
   const handleCompanyIdChange = (id: string): void => {
@@ -231,13 +231,13 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
               <Label htmlFor="companyName">Company Name</Label>
               <CustomCombobox
                 items={company.map((companies) => ({
-                  id: companies.companyId.toString(),
+                  id: company[0].companyId?.toString() ?? "",
                   name: companies.companyName,
                 }))}
                 value={
                   company
                     ? {
-                        id: company[0].companyId.toString(),
+                        id: company[0].companyId?.toString() ?? "",
                         name: company[0].companyName,
                       }
                     : null

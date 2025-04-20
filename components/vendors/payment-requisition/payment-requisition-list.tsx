@@ -231,7 +231,7 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
               onClick={() => setApprovalDialogOpen(false)}
               disabled={isApproving}
             >
-              Cancel
+              Cancelstatus
             </Button>
             <Button onClick={handleApproveInvoice} disabled={isApproving}>
               {isApproving ? 'Approving...' : 'Approve'}

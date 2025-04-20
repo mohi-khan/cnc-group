@@ -56,7 +56,7 @@ export default function CostCenterManagement() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
-  const [userId, setUserId] = React.useState<number | undefined>()
+  const [userId, setUserId] = React.useState<number >(0)
   const { toast } = useToast()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)

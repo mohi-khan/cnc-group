@@ -177,7 +177,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                       {getCompany?.map((company) => (
                         <SelectItem
                           key={company.companyId}
-                          value={company.companyId.toString()}
+                          value={company?.companyId?.toString() ?? ""}
                         >
                           {company.companyName}
                         </SelectItem>
