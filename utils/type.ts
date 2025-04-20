@@ -677,9 +677,14 @@ export const getAssetSchema = z.object({
   usefulLifeYears: z.number().int('Useful life must be an integer.').optional(),
   status: z.enum(['Active', 'Disposed']).default('Active'),
   company: z.number().int('Company ID must be an integer.'),
+  companyId: z.number().int('Company ID must be an integer.'),
+  locationId: z.number().int('Location ID must be an integer.').optional(),
   location: z.number().int('Location ID must be an integer.').optional(),
   department: z.number().int('Department ID must be an integer.').optional(),
   costCenter: z.number().int('Cost Center ID must be an integer.').optional(),
+  departmentId: z.number().int('Department ID must be an integer.').optional(),
+  costCenterId: z.number().int('Cost Center ID must be an integer.').optional(),
+  accountId: z.number().int('Account ID must be an integer.'),
   depreciationRate: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Invalid decimal format for depreciation rate.')

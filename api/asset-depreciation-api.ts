@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { CreateAssetDepreciationData, JournalEntryWithDetails } from '@/utils/type'
+import { CreateAssetDepreciationData, GetAssetData, JournalEntryWithDetails } from '@/utils/type'
 import { CompanyType } from './company-api'
 
 const mainToken = localStorage.getItem('authToken')
@@ -37,6 +37,16 @@ export async function getAllCompanies() {
   return fetchApi<CompanyType[]>({
     url: 'api/company/get-all-companies',
     method: 'GET',
+  })
+}
+
+export async function getAssets() {
+  return fetchApi<GetAssetData[]>({
+    url: 'api/asset/get-all-asset',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   })
 }
 
