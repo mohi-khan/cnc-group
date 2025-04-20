@@ -69,15 +69,15 @@ export default function AssetDepreciation() {
   })
 
   useEffect(() => {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUserId(userData?.userId)
-        console.log('Current userId from localStorage:', userData.userId)
-      } else {
-        console.log('No user data found in localStorage')
-      }
-    }, [])
+    const userStr = localStorage.getItem('currentUser')
+    if (userStr) {
+      const userData = JSON.parse(userStr)
+      setUserId(userData?.userId)
+      console.log('Current userId from localStorage:', userData.userId)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [])
 
   // Handle preview request
   const onPreview = async (data: FormValues) => {
@@ -93,7 +93,7 @@ export default function AssetDepreciation() {
         depreciation_date: data.depreciation_date,
       })
 
-      //   console.log("Preview API response:", response.data.data.schedules)
+      console.log('Preview API response:', response.data)
 
       if (response.error || !response.data) {
         throw new Error(
@@ -101,8 +101,8 @@ export default function AssetDepreciation() {
         )
       }
 
-      // Extract the schedules array from the response based on the structure you provided
-      const schedules = response.data.data.schedules || []
+      // The response is already an array of depreciation items
+      const schedules = response.data || []
       console.log('Setting preview data:', schedules)
 
       setPreviewData(schedules)
@@ -113,7 +113,7 @@ export default function AssetDepreciation() {
         description: 'Review the depreciation schedule below before submitting',
       })
     } catch (error) {
-      console.error('Error previewing asset depreciation:', error)
+      // console.error('Error previewing asset depreciation:', error)
       toast({
         title: 'Error',
         description: `${typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error)}`,
@@ -189,17 +189,25 @@ export default function AssetDepreciation() {
             depreciationItem.depreciation_amount
           )
 
+          // Type guard: Check if locationId is defined
+          if (assetData.locationId === undefined) {
+            return
+          }
+          if (userId === undefined) {
+            return
+          }
+
           const journalVoucherData = {
             journalEntry: {
               date: new Date().toISOString().split('T')[0],
               journalType: VoucherTypes.JournalVoucher,
               state: 0,
               companyId: assetData.companyId,
-              locationId: assetData.locationId,
+              locationId: assetData.locationId, // Now we know this is defined
               currencyId: 1,
               amountTotal: depreciationAmount,
               notes: `Auto-generated for Asset Depreciation: ${assetData.name} on ${formData.depreciation_date}`,
-              createdBy: userId,
+              createdBy: userId, // Now we know userId is defined from the type guard above
             },
             journalDetails: [
               {
@@ -209,7 +217,7 @@ export default function AssetDepreciation() {
                 notes: `Depreciation Expense for ${assetData.name}`,
                 debit: depreciationAmount,
                 credit: 0,
-                createdBy: userId,
+                createdBy: userId, // Now we know userId is defined
               },
               {
                 accountId: assetData.accountId, // Accumulated Depreciation account
@@ -218,7 +226,7 @@ export default function AssetDepreciation() {
                 notes: `Accumulated Depreciation for ${assetData.name}`,
                 debit: 0,
                 credit: depreciationAmount,
-                createdBy: userId,
+                createdBy: userId, // Now we know userId is defined
               },
             ],
           }
@@ -454,21 +462,21 @@ export default function AssetDepreciation() {
                           ? formatCurrency(
                               Number.parseFloat(item.depreciation_amount)
                             )
-                          : `$${Number.parseFloat(item.depreciation_amount).toFixed(2)}`}
+                          : `${Number.parseFloat(item.depreciation_amount).toFixed(2)}`}
                       </TableCell>
                       <TableCell className="text-right">
                         {typeof formatCurrency === 'function'
                           ? formatCurrency(
                               Number.parseFloat(item.accumulated_depreciation)
                             )
-                          : `$${Number.parseFloat(item.accumulated_depreciation).toFixed(2)}`}
+                          : `${Number.parseFloat(item.accumulated_depreciation).toFixed(2)}`}
                       </TableCell>
                       <TableCell className="text-right">
                         {typeof formatCurrency === 'function'
                           ? formatCurrency(
                               Number.parseFloat(item.remaining_value)
                             )
-                          : `$${Number.parseFloat(item.remaining_value).toFixed(2)}`}
+                          : `${Number.parseFloat(item.remaining_value).toFixed(2)}`}
                       </TableCell>
                     </TableRow>
                   ))}

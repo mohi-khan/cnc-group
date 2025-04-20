@@ -109,15 +109,11 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
         asset_name: data.asset_name,
         category_id: Number(data.category_id),
         company_id: Number(data.company_id),
-        location_id: data.location_id ? Number(data.location_id) : null,
-        department_id: data.department_id ? Number(data.department_id) : null,
-        cost_center_id: data.cost_center_id
-          ? Number(data.cost_center_id)
-          : null,
+        location_id: Number(data.location_id),
+        department_id: Number(data.department_id),
+        cost_center_id: Number(data.cost_center_id),
         created_by: Number(data.created_by || userId),
-        useful_life_years: data.useful_life_years
-          ? Number(data.useful_life_years)
-          : null,
+        useful_life_years: Number(data.useful_life_years),
         // Ensure decimal values are properly formatted
         purchase_value: data.purchase_value.toString(),
         current_value: data.current_value?.toString(),
