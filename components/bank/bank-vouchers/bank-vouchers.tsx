@@ -38,12 +38,14 @@ import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
 
 export default function BankVoucher() {
+  //State Variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [dataLoaded, setDataLoaded] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  //State Variables
   const router = useRouter()
 
   const form = useForm<JournalEntryWithDetails>({
@@ -91,7 +93,7 @@ export default function BankVoucher() {
     formType: 'Credit',
     status: 'Draft',
   })
-
+  // Retrivin user data and set companies and locations based on user Data
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -101,8 +103,8 @@ export default function BankVoucher() {
         companies: userData.userCompanies,
         locations: userData.userLocations,
       }))
-      console.log('Current user from localStorage:', userData)
-
+      // Retrivin user data and set companies and locations based on user Data
+      //Check If user have the previlage
       if (!userData.voucherTypes.includes('Bank Voucher')) {
         console.log('User does not have access to Bank Voucher')
         router.push('/unauthorized-access')
@@ -112,7 +114,8 @@ export default function BankVoucher() {
       router.push('/unauthorized-access')
     }
   }, [router])
-
+   //Check If user have the previlage
+   // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
       const [
@@ -144,7 +147,7 @@ export default function BankVoucher() {
 
     fetchInitialData()
   }, [])
-
+// Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
   }, [])
@@ -152,7 +155,7 @@ export default function BankVoucher() {
   const getLocationIds = React.useCallback((data: any[]): number[] => {
     return data.map((location) => location.location.locationId)
   }, [])
-
+ // fetch today's Voucher List from Database and populate the grid
   async function getallVoucher(company: number[], location: number[]) {
     let localVoucherGrid: JournalResult[] = []
     try {
@@ -174,6 +177,7 @@ export default function BankVoucher() {
     }
     setVoucherGrid(localVoucherGrid)
   }
+   // fetch today's Voucher List from Database and populate the grid
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
@@ -185,7 +189,7 @@ export default function BankVoucher() {
       console.log('No user data found in localStorage')
     }
   }, [])
-
+  //Calling function for fetching voucherlist to populate the form state variables
   React.useEffect(() => {
     const fetchVoucherData = async () => {
       if (
@@ -213,7 +217,12 @@ export default function BankVoucher() {
 
     fetchVoucherData()
   }, [formState.companies, formState.locations, getCompanyIds, getLocationIds, dataLoaded])
+   //Calling function for fetching voucherlist to populate the form state variables
 
+   //Submission Data Logic:
+   // 1. Validate Data
+   // 2. Check Toal Amount and ensure both debit and credit are same
+   // 3. Save Data
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
@@ -222,7 +231,6 @@ export default function BankVoucher() {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
       const userData = JSON.parse(userStr)
-      console.log('Current userId from localStorage:', userData.userId)
     }
 
     const totalDetailsAmount = values.journalDetails.reduce(
@@ -318,6 +326,11 @@ export default function BankVoucher() {
       })
     }
   }
+ //Submission Data Logic:
+   // 1. Validate Data
+   // 2. Check Toal Amount and ensure both debit and credit are same
+   // 3. Save Data
+
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -328,7 +341,7 @@ export default function BankVoucher() {
     { key: 'totalamount' as const, label: 'Amount' },
     { key: 'state' as const, label: 'Status' },
   ]
-
+  //Creating Link for grid 
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.BankVoucher}`
 

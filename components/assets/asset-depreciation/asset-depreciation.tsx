@@ -69,7 +69,8 @@ export default function AssetDepreciation() {
   })
 
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('currentUser');
     if (userStr) {
       const userData = JSON.parse(userStr)
       setUserId(userData?.userId)
@@ -77,6 +78,7 @@ export default function AssetDepreciation() {
     } else {
       console.log('No user data found in localStorage')
     }
+  }
   }, [])
 
   // Handle preview request
