@@ -1,11 +1,9 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 
 export default function PaymentPreview() {
-  const searchParams = useSearchParams()
 
   const paymentData = {
     voucherNo: '001',

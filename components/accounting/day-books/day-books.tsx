@@ -57,26 +57,28 @@ const DayBooks = () => {
 
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
-    try {
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
-        setCompanies(userData.userCompanies || [])
-        setLocations(userData.userLocations || [])
-        if (!userData.voucherTypes.includes('Cash Voucher')) {
+    if (typeof window !== 'undefined') {
+      try {
+        if (userStr) {
+          const userData = JSON.parse(userStr)
+          setUser(userData)
+          setCompanies(userData.userCompanies || [])
+          setLocations(userData.userLocations || [])
+          if (!userData.voucherTypes.includes('Cash Voucher')) {
+            router.push('/unauthorized-access')
+          }
+        } else {
           router.push('/unauthorized-access')
         }
-      } else {
-        router.push('/unauthorized-access')
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load user data',
+        })
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Error parsing user data:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load user data',
-      })
-    } finally {
-      setIsLoading(false)
     }
   }, [router, toast])
 

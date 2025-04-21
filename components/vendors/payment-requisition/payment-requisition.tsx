@@ -14,10 +14,18 @@ const PaymentRequisition = () => {
   const [requisitions, setRequisitions] = useState<GetPaymentOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mainToken, setMainToken] = useState<string | null>(null)
 
-  const mainToken = localStorage.getItem('authToken')
-  console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken')
+      setMainToken(token)
+    }
+  }, [])
+
   const token = `Bearer ${mainToken}`
+
+  console.log("🚀 ~ AssetDepreciation ~ token:", token)
 
   const fetchRequisitions = useCallback (async () => {
     try {

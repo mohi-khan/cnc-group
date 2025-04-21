@@ -32,14 +32,19 @@ const ApproveInvoice = () => {
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false)
 
   const [mainToken, setMainToken] = useState<string | null>(null);
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('authToken');
       setMainToken(token);
     }
   }, []);
-  console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+
   const token = `Bearer ${mainToken}`
+
+  // const mainToken = localStorage.getItem('authToken')
+  // console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  // const token = `Bearer ${mainToken}`
 
   const handleApproveClick = (requisition: GetPaymentOrder) => {
     setSelectedRequisition(requisition)
