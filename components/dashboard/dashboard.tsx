@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -108,10 +108,18 @@ export default function Dashboard() {
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
   const [selectFinancialTag, setSelectFinancialTag] = useState<string>('')
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
+  const [mainToken, setMainToken] = useState<string | null>(null)
 
-  const mainToken = localStorage.getItem('authToken')
-  console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken')
+      setMainToken(token)
+    }
+  }, [])
+
   const token = `Bearer ${mainToken}`
+
+  console.log('🚀 ~ AssetDepreciation ~ token:', token)
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
@@ -137,7 +145,7 @@ export default function Dashboard() {
   // }
 
   // Fetch Departments
-  const fetchDepartments = useCallback (async () => {
+  const fetchDepartments = useCallback(async () => {
     const data = await getAllDepartments()
     if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
@@ -168,7 +176,7 @@ export default function Dashboard() {
     }
   }, [token])
 
-  const fetchAdvances = useCallback (async () => {
+  const fetchAdvances = useCallback(async () => {
     try {
       setLoading(true)
       setError(null) // Reset error state
@@ -193,7 +201,7 @@ export default function Dashboard() {
   }
 
   //  Get Expense data monthly
-  const fetchExpenseData = useCallback (async () => {
+  const fetchExpenseData = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -210,7 +218,7 @@ export default function Dashboard() {
   }, [token])
 
   //  Get Expense data yearly
-  const fetchExpenseDataYearly = useCallback (async () => {
+  const fetchExpenseDataYearly = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -227,7 +235,7 @@ export default function Dashboard() {
   }, [token])
 
   // Get Income Data
-  const fetchIncomeData = useCallback (async () => {
+  const fetchIncomeData = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -244,7 +252,7 @@ export default function Dashboard() {
   }, [token])
 
   // Get Income Data  yearly
-  const fetchIncomeDataYearly = useCallback (async () => {
+  const fetchIncomeDataYearly = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -261,7 +269,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getGPData
-  const fetchGPData = useCallback (async () => {
+  const fetchGPData = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -276,7 +284,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getGPData yearly
-  const fetchGPDataYearly = useCallback (async () => {
+  const fetchGPDataYearly = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -293,7 +301,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getNPData
-  const fetchNPData = useCallback (async () => {
+  const fetchNPData = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -308,7 +316,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getNPData yearly
-  const fetchNPDataYearly = useCallback (async () => {
+  const fetchNPDataYearly = useCallback(async () => {
     const companyId = 75 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -325,7 +333,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get Cost Breakdown Data
-  const fetchCostBreakdown = useCallback (async () => {
+  const fetchCostBreakdown = useCallback(async () => {
     const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -346,7 +354,7 @@ export default function Dashboard() {
     }
     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
   }, [])
-  
+
   React.useEffect(() => {
     fetchFundPosition()
     fetchRequisitions()
@@ -362,7 +370,21 @@ export default function Dashboard() {
     fetchDepartments()
     fetchCostBreakdown()
     fetchAllCompany()
-  }, [fetchFundPosition, fetchRequisitions, fetchAdvances, fetchExpenseData, fetchExpenseDataYearly, fetchIncomeData, fetchIncomeDataYearly, fetchGPData, fetchGPDataYearly, fetchNPData, fetchNPDataYearly, fetchDepartments, fetchCostBreakdown])
+  }, [
+    fetchFundPosition,
+    fetchRequisitions,
+    fetchAdvances,
+    fetchExpenseData,
+    fetchExpenseDataYearly,
+    fetchIncomeData,
+    fetchIncomeDataYearly,
+    fetchGPData,
+    fetchGPDataYearly,
+    fetchNPData,
+    fetchNPDataYearly,
+    fetchDepartments,
+    fetchCostBreakdown,
+  ])
 
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []
