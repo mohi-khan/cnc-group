@@ -2,12 +2,9 @@ import { fetchApi } from '@/utils/http'
 import { CreateAssetDepreciationData, GetAssetData, JournalEntryWithDetails } from '@/utils/type'
 import { CompanyType } from './company-api'
 
-const mainToken = localStorage.getItem('authToken')
-console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
-const token = `Bearer ${mainToken}`
-
 export async function createAssetDepreciation(
-  data: CreateAssetDepreciationData
+  data: CreateAssetDepreciationData,
+  token: string
 ) {
   return fetchApi<CreateAssetDepreciationData[]>({
     url: 'api/depreciation-schedules/create-depreciation-schedule',

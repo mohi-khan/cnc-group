@@ -58,6 +58,7 @@ export default function AssetDepreciation() {
   const [formData, setFormData] = useState<FormValues | null>(null)
   const [asset, setAsset] = useState<GetAssetData[]>([])
   const [userId, setUserId] = useState<number | undefined>()
+  const [mainToken, setMainToken] = useState<string | null>(null)
 
   // Initialize the form with react-hook-form
   const form = useForm<FormValues>({
@@ -69,13 +70,27 @@ export default function AssetDepreciation() {
   })
 
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      setUserId(userData?.userId)
-      console.log('Current userId from localStorage:', userData.userId)
-    } else {
-      console.log('No user data found in localStorage')
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken')
+      setMainToken(token)
+    }
+  }, [])
+
+  const token = `Bearer ${mainToken}`
+
+  console.log("🚀 ~ AssetDepreciation ~ token:", token)
+
+  useEffect(() => {
+    // Ensure we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('currentUser')
+      if (userStr) {
+        const userData = JSON.parse(userStr)
+        setUserId(userData?.userId)
+        console.log('Current userId from localStorage:', userData.userId)
+      } else {
+        console.log('No user data found in localStorage')
+      }
     }
   }, [])
 
@@ -149,10 +164,13 @@ export default function AssetDepreciation() {
     setIsSubmitting(true)
     try {
       // Step 1: Create asset depreciation
-      const response = await createAssetDepreciation({
-        company_id: formData.company_id,
-        depreciation_date: formData.depreciation_date,
-      })
+      const response = await createAssetDepreciation(
+        {
+          company_id: formData.company_id,
+          depreciation_date: formData.depreciation_date,
+        },
+        token
+      )
       console.log('"Asset depreciation created successfully:", response.data)')
 
       if (response.error) {
