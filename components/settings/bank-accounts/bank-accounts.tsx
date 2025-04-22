@@ -52,8 +52,8 @@ import {
 import {
   createBankAccount,
   editBankAccount,
-  getAllBankAccounts,
-  getAllGlAccounts,
+  
+  
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
@@ -63,6 +63,7 @@ import {
   type BankAccount,
   type CreateBankAccount,
 } from '@/utils/type'
+import { getAllBankAccounts, getAllChartOfAccounts } from '@/api/common-shared-api'
 
 type SortColumn =
   | 'accountName'
@@ -130,7 +131,7 @@ export default function BankAccounts() {
   }, [toast])
 
   const fetchGlAccounts = React.useCallback (async () => {
-    const fetchedGlAccounts = await getAllGlAccounts()
+    const fetchedGlAccounts = await getAllChartOfAccounts()
     console.log('Fetched gl accounts:', fetchedGlAccounts)
 
     if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {

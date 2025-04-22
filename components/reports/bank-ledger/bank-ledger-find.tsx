@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { BankAccount } from '@/utils/type'
-import { getAllBankAccounts } from '@/api/bank-accounts-api'
+import { getAllBankAccounts } from '@/api/common-shared-api'
 
 interface BankLedgerFindProps {
   onSearch: (bankaccount: number, fromdate: string, todate: string) => void

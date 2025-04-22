@@ -19,17 +19,17 @@ export async function editBankAccount(id: number, data: BankAccountUpdate) {
   })
 }
 
-export async function getAllBankAccounts() {
-  return fetchApi<BankAccount[]>({
-    url: 'api/bank-accounts/get-all-bank-accounts',
-    method: 'GET',
-  })
-}
+// export async function getAllBankAccounts() {
+//   return fetchApi<BankAccount[]>({
+//     url: 'api/bank-accounts/get-all-bank-accounts',
+//     method: 'GET',
+//   })
+// }
 
-//need to change the type. it should be chartOfAccount type. not BankAccount type.
-export async function getAllGlAccounts() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
+// //need to change the type. it should be chartOfAccount type. not BankAccount type.
+// export async function getAllGlAccounts() {
+//   return fetchApi<AccountsHead[]>({
+//     url: 'api/chart-of-accounts/get-all-coa',
+//     method: 'GET',
+//   })
+// }

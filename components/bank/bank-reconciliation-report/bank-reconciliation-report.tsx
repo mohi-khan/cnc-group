@@ -25,9 +25,10 @@ import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
 import type { BankAccount, BankReconciliationReportType } from '@/utils/type'
 import {
-  getAllBankAccounts,
+ 
   getBankReconciliationReports,
 } from '@/api/bank-reconciliation-report-api'
+import { getAllBankAccounts } from '@/api/common-shared-api'
 
 export default function BankReconciliationReport() {
   const [report, setReport] = useState<BankReconciliationReportType | null>(

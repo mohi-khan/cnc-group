@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import Loader from '@/utils/loader'
 
 interface User {
   id: number
@@ -255,165 +254,167 @@ export default function UsersList() {
     <div className="container mx-auto p-4 ">
       <h1 className="text-2xl font-bold mb-4">User List</h1>
 
-      
-        <Table className="border shadow-md">
-          <TableHeader>
-            <TableRow className="bg-slate-200 shadow-sm">
-              <TableHead className="w-[100px]">Serial Number</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentUsers.map((user, index) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">
-                  {startIndex + index + 1}
-                </TableCell>
-                <TableCell className="capitalize">{user.username}</TableCell>
-                <TableCell>{user.roleName || 'N/A'}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Dialog key={`view-${user.id}`}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          <span className="ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize">
-                            {user.username}
-                          </span>
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <p>
-                          <strong>Voucher Types:</strong>{' '}
-                          {user.voucherTypes && user.voucherTypes.length > 0
-                            ? user.voucherTypes.join(', ')
-                            : 'None'}
-                        </p>
-                        <p>
-                          <strong>Role:</strong> {user.roleName || 'N/A'}
-                        </p>
-                        <p>
-                          <strong>Active:</strong> {user.active ? 'Yes' : 'No'}
-                        </p>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog
-                    key={`edit-${user.id}`}
-                    open={isEditDialogOpen}
-                    onOpenChange={setIsEditDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        Edit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit User</DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <Label htmlFor="username">Username</Label>
-                        <Input
-                          id="username"
-                          name="username"
-                          value={editingUser?.username ?? ''}
-                          onChange={handleInputChange}
-                          className="mb-2"
-                        />
-                        <Label htmlFor="roleId">Role</Label>
-                        <Select
-                          value={editingUser?.roleId?.toString() ?? 'no-role'}
-                          onValueChange={(value) =>
-                            setEditingUser((prev) =>
-                              prev
-                                ? {
-                                    ...prev,
-                                    roleId:
-                                      value !== 'no-role'
-                                        ? parseInt(value)
-                                        : null,
-                                  }
-                                : null
-                            )
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="no-role">
-                              {editingUser?.roleName || 'No Role'}
-                            </SelectItem>
-                            {roles.map((role) => (
-                              <SelectItem
-                                key={role.roleId}
-                                value={role.roleId.toString()}
-                              >
-                                {role.roleName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Label htmlFor="voucherTypes" className="mt-4 block">
-                          Voucher Types
-                        </Label>
-                        <div className="space-y-2">
-                          {VOUCHER_TYPES.map((voucherType) => (
-                            <div
-                              key={voucherType}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`voucherType-${voucherType}`}
-                                checked={editingUser?.voucherTypes.includes(
-                                  voucherType
-                                )}
-                                onCheckedChange={(checked) =>
-                                  handleVoucherTypeChange(
-                                    voucherType,
-                                    checked as boolean
-                                  )
+      <Table className="border shadow-md">
+        <TableHeader className="bg-slate-200 shadow-sm sticky top-28 z-10">
+          <TableRow>
+            <TableHead className="w-[100px]">Serial Number</TableHead>
+            <TableHead>Username</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentUsers.map((user, index) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">
+                {startIndex + index + 1}
+              </TableCell>
+              <TableCell className="capitalize">{user.username}</TableCell>
+              <TableCell>{user.roleName || 'N/A'}</TableCell>
+              <TableCell className="text-right space-x-2">
+                <Dialog key={`view-${user.id}`}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      View Details
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        <span className="ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize">
+                          {user.username}
+                        </span>
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <p>
+                        <strong>Voucher Types:</strong>{' '}
+                        {user.voucherTypes && user.voucherTypes.length > 0
+                          ? user.voucherTypes.join(', ')
+                          : 'None'}
+                      </p>
+                      <p>
+                        <strong>Role:</strong> {user.roleName || 'N/A'}
+                      </p>
+                      <p>
+                        <strong>Active:</strong> {user.active ? 'Yes' : 'No'}
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog
+                  key={`edit-${user.id}`}
+                  open={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      Edit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit User</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        value={editingUser?.username || ''}
+                        onChange={handleInputChange}
+                        className="mb-2"
+                      />
+                      <Label htmlFor="roleId">Role</Label>
+                      <Select
+                        value={
+                          editingUser?.roleId?.toString() ||
+                          'no-role'
+                        }
+                        onValueChange={(value) =>
+                          setEditingUser((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  roleId:
+                                    value !== 'no-role'
+                                      ? parseInt(value)
+                                      : null,
                                 }
-                              />
-                              <Label
-                                htmlFor={`voucherType-${voucherType}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {voucherType}
-                              </Label>
-                            </div>
+                              : null
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="no-role">
+                            {editingUser?.roleName || 'No Role'}
+                          </SelectItem>
+                          {roles.map((role) => (
+                            <SelectItem
+                              key={role.roleId}
+                              value={role.roleId.toString()}
+                            >
+                              {role.roleName}
+                            </SelectItem>
                           ))}
-                        </div>
+                        </SelectContent>
+                      </Select>
+                      <Label htmlFor="voucherTypes" className="mt-4 block">
+                        Voucher Types
+                      </Label>
+                      <div className="space-y-2">
+                        {VOUCHER_TYPES.map((voucherType) => (
+                          <div
+                            key={voucherType}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`voucherType-${voucherType}`}
+                              checked={editingUser?.voucherTypes?.includes(
+                                voucherType
+                              ) || false}
+                              onCheckedChange={(checked) =>
+                                handleVoucherTypeChange(
+                                  voucherType,
+                                  checked as boolean
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`voucherType-${voucherType}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {voucherType}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
-                      <DialogFooter>
-                        <Button onClick={handleSaveEdit}>Submit</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    variant={user.active ? 'ghost' : 'destructive'}
-                    size="sm"
-                    onClick={() => handleToggleActive(user.id, user.active)}
-                  >
-                    {user.active ? 'Deactivate' : 'Activate'}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleSaveEdit}>Submit</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  variant={user.active ? 'ghost' : 'destructive'}
+                  size="sm"
+                  onClick={() => handleToggleActive(user.id, user.active)}
+                >
+                  {user.active ? 'Deactivate' : 'Activate'}
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <div className="mt-4">
         <Pagination>
