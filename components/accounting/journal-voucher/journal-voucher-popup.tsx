@@ -16,6 +16,7 @@ import {
 } from '@/utils/type'
 import { Popup } from '@/utils/popup'
 
+//JournalVoucherPopup types is here to define the props for the JournalVoucherPopup component
 interface JournalVoucherPopupProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
@@ -29,50 +30,55 @@ export function JournalVoucherPopup({
   handleSubmit,
   isSubmitting,
 }: JournalVoucherPopupProps) {
-  const defaultValues =  useMemo(() => ({
-    journalEntry: {
-      date: new Date().toISOString().split('T')[0],
-      journalType: VoucherTypes.JournalVoucher,
-      state: 0,
-      companyId: 0,
-      locationId: 0,
-      currencyId: 1,
-      amountTotal: 0,
-      createdBy: 0,
-    },
-    journalDetails: [
-      {
-        accountId: 0,
-        debit: 0,
-        credit: 0,
+  //defaultValues is used to set the default values for the form fields
+  const defaultValues = useMemo(
+    () => ({
+      journalEntry: {
+        date: new Date().toISOString().split('T')[0],
+        journalType: VoucherTypes.JournalVoucher,
+        state: 0,
+        companyId: 0,
+        locationId: 0,
+        currencyId: 1,
+        amountTotal: 0,
         createdBy: 0,
       },
-    ],
-  }), [])
-
+      journalDetails: [
+        {
+          accountId: 0,
+          debit: 0,
+          credit: 0,
+          createdBy: 0,
+        },
+      ],
+    }),
+    []
+  )
+  //useForm is used to create a form instance with the default values and validation schema.
+  //zodResolver is used to validate the form data using the JournalEntryWithDetailsSchema
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues,
   })
 
-  // const resetForm = () => {
-  //   form.reset(defaultValues)
-  // }
-
+  //resetForm is a function that resets the form to its default values
   const resetForm = useCallback(() => {
-    form.reset(defaultValues);
-  }, [form, defaultValues]);
-  
+    form.reset(defaultValues)
+  }, [form, defaultValues])
 
+  //isOpen is a boolean that indicates whether the popup is open or not
   useEffect(() => {
     if (!isOpen) {
       resetForm()
     }
   }, [isOpen, resetForm])
 
+  // addEntry is a function that adds a new entry to the journalDetails array in the form state
   const addEntry = () => {
     const currentEntries = form.getValues('journalDetails')
     form.setValue('journalDetails', [
+      //...currentEntries is used to spread the current entries in the journalDetails array
+      //the new entry is added to the end of the array
       ...currentEntries,
       {
         accountId: 0,
@@ -83,6 +89,7 @@ export function JournalVoucherPopup({
     ])
   }
 
+  // removeEntry is a function that removes an entry from the journalDetails array in the form state
   const removeEntry = (index: number) => {
     const currentEntries = form.getValues('journalDetails')
     if (currentEntries.length > 1) {
@@ -93,6 +100,8 @@ export function JournalVoucherPopup({
     }
   }
 
+  // useEffect is used to watch the journalDetails array in the form state.
+  // so that when the user changes the debit or credit values, the total amount is updated in the journalEntry object.
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
       if (name?.startsWith('journalDetails')) {
@@ -114,6 +123,7 @@ export function JournalVoucherPopup({
     return () => subscription.unsubscribe()
   }, [form])
 
+  // onSubmit is a function that is called when the user submits the form.
   const onSubmit = (data: JournalEntryWithDetails) => {
     handleSubmit(data, resetForm)
   }

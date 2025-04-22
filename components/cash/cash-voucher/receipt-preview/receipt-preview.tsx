@@ -16,18 +16,19 @@ import Image from 'next/image'
 
 export default function Voucher() {
   const { voucherid } = useParams() // Extract voucherId from the URL
-  console.log(voucherid)
+  //state variables
   const [voucherData, setVoucherData] = useState<VoucherById[]>()
   const contentRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
 
+  // Function to fetch voucher details by ID
   const getVoucherDetailsById = useCallback(async () => {
     if (!voucherid) {
       throw new Error('Voucher ID is missing')
     }
-
+    // Fetch voucher details using the API
     const response = await getAllVoucherById(voucherid as string)
-
+    // Check for errors in the response. if no errors, set the voucher data
     if (response.error || !response.data) {
       console.error('Error getting voucher details:', response.error)
       toast({
@@ -53,6 +54,7 @@ export default function Voucher() {
     // getAllCompanyData()
   }, [voucherid, getVoucherDetailsById])
 
+  // Check if voucherData is empty or undefined. If it is, show a loading spinner
   if (!voucherData) {
     return (
       <div>

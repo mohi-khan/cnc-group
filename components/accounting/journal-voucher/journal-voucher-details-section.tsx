@@ -23,6 +23,7 @@ import {
 } from '@/api/journal-voucher-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
+// Define the props for the JournalVoucherDetailsSection component
 interface JournalVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onAddEntry: () => void
@@ -33,6 +34,7 @@ export function JournalVoucherDetailsSection({
   form,
   onRemoveEntry,
 }: JournalVoucherDetailsSectionProps) {
+  //state variables
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
@@ -41,6 +43,7 @@ export function JournalVoucherDetailsSection({
   const newRowRef = useRef<HTMLButtonElement>(null)
   const entries = form.watch('journalDetails')
 
+  // Fetching chart of accounts data
   async function fetchChartOfAccounts() {
     const response = await getAllChartOfAccounts()
     if (response.error || !response.data) {
@@ -58,6 +61,7 @@ export function JournalVoucherDetailsSection({
     }
   }
 
+  // Fetching cost centers data
   const fetchCostCenters = async () => {
     const data = await getAllCostCenters()
     if (data.error || !data.data) {
@@ -71,6 +75,7 @@ export function JournalVoucherDetailsSection({
     }
   }
 
+  // Fetching departments data
   async function fetchDepartments() {
     const response = await getAllDepartments()
     if (response.error || !response.data) {
@@ -91,7 +96,7 @@ export function JournalVoucherDetailsSection({
   }, [])
 
   useEffect(() => {
-    // Initialize with two rows
+    // to initialize with two rows
     if (entries.length === 0) {
       form.setValue('journalDetails', [
         {
@@ -120,6 +125,7 @@ export function JournalVoucherDetailsSection({
     }
   }, [entries.length, form])
 
+  // Function to add a new entry to the journal details
   const addEntry = () => {
     form.setValue('journalDetails', [
       ...entries,
@@ -141,6 +147,7 @@ export function JournalVoucherDetailsSection({
     }, 0)
   }
 
+  // Function to change the debit value of an entry
   const handleDebitChange = (index: number, value: number) => {
     const updatedEntries = [...entries]
     updatedEntries[index].debit = value
@@ -148,6 +155,7 @@ export function JournalVoucherDetailsSection({
     form.setValue('journalDetails', updatedEntries)
   }
 
+  // Function to change the credit value of an entry
   const handleCreditChange = (index: number, value: number) => {
     const updatedEntries = [...entries]
     updatedEntries[index].credit = value
@@ -155,6 +163,7 @@ export function JournalVoucherDetailsSection({
     form.setValue('journalDetails', updatedEntries)
   }
 
+  // Function to calculate the total debit and credit values
   const calculateTotals = () => {
     return entries.reduce(
       (totals, entry) => {

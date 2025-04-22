@@ -16,14 +16,6 @@ import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { FormStateType } from '@/utils/type'
 
-interface FormState {
-  filteredChartOfAccounts: { accountId: number; name: string }[]
-  costCenters: { costCenterId: number; costCenterName: string }[]
-  departments: { departmentID: number; departmentName: string }[]
-  partners: { id: number; name: string }[]
-  formType: 'Credit' | 'Debit'
-}
-
 export default function BankVoucherDetails({
   form,
   formState,
@@ -31,6 +23,7 @@ export default function BankVoucherDetails({
   form: UseFormReturn<any>
   formState: FormStateType
 }) {
+  // Destructure the formState to get the filteredChartOfAccounts, costCenters, departments, and partners
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'journalDetails',

@@ -14,12 +14,14 @@ import { ContraVoucherPopup } from './contra-voucher-popup'
 import VoucherList from '@/components/voucher-list/voucher-list'
 
 export default function ContraVoucherTable() {
+  // State variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  //getting user data from localStorage and setting it to state
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -38,6 +40,7 @@ export default function ContraVoucherTable() {
     }
   }, [])
 
+  // Function to fetch all vouchers based on company and location IDs
   async function fetchAllVoucher(company: number[], location: number[]) {
     setIsLoading(true)
     const voucherQuery: JournalQuery = {
@@ -61,14 +64,17 @@ export default function ContraVoucherTable() {
     setIsLoading(false)
   }
 
+  // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
 
+  // Function to extract location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
 
+  // Column definitions for the voucher list
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'date' as const, label: 'Voucher Date' },
@@ -80,6 +86,7 @@ export default function ContraVoucherTable() {
     { key: 'totalamount' as const, label: 'Amount' },
   ]
 
+  // Function to generate the link for voucher details page
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.ContraVoucher}`
 

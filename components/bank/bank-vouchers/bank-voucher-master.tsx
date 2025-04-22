@@ -9,19 +9,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { BankAccount, Company, CurrencyType, FormStateType, Location } from '@/utils/type'
+import { CurrencyType, FormStateType } from '@/utils/type'
 import { useEffect, useState } from 'react'
 
-import { Control, FieldValues } from 'react-hook-form'
-
-interface FormState {
-  companies: { company: Company }[]
-  locations: { location: Location }[]
-  bankAccounts: BankAccount[]
-  formType: string
-  selectedBankAccount: { id: number; glCode: number } | null
-}
-
+// Define the props for the BankVoucherMaster component
 interface BankVoucherMasterProps {
   form: {
     control: any
@@ -35,8 +26,10 @@ export default function BankVoucherMaster({
   formState,
   setFormState,
 }: BankVoucherMasterProps) {
+  // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
+  // Function to fetch currency data
   const fetchCurrency = async () => {
     const data = await getAllCurrency()
     if (data.error || !data.data) {

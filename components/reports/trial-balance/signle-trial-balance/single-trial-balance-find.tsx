@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { ChartOfAccount } from '@/utils/type'
+import type { AccountsHead, ChartOfAccount } from '@/utils/type'
 import { getAllCoa } from '@/api/general-ledger-api'
 import { FileText } from 'lucide-react'
 
@@ -35,7 +35,7 @@ export default function SingleTrialBalanceFind({
   const [toDate, setToDate] = useState<string>(initialToDate)
   const [selectedAccountCode, setSelectedAccountCode] =
     useState<string>(initialAccountCode)
-  const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   async function fetchChartOfAccounts() {
     const fetchedAccounts = await getAllCoa()

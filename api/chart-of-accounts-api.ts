@@ -24,7 +24,7 @@ export async function createChartOfAccounts(data: ChartOfAccounts) {
 
 //get all data coa
 export async function getAllCoa() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })

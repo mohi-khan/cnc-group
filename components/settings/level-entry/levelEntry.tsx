@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ChartOfAccount, LevelType } from '@/utils/type'
+import { AccountsHead, ChartOfAccount, LevelType } from '@/utils/type'
 import { createLevel, editLevel, getAllCoa, getAllLevel } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -54,7 +54,7 @@ function convertFormulaToDisplay(formula: string, levels: LevelType[]): string {
 }
 
 export default function LevelEntry() {
-  const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [accounts, setAccounts] = useState<AccountsHead[]>([])
   const [levels, setLevels] = useState<LevelType[]>([])
   const [displayFormula, setDisplayFormula] = useState<string>('')
   const [levelFormulas, setLevelFormulas] = useState<{ [key: number]: string }>({});
