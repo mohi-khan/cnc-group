@@ -28,11 +28,12 @@ import type {
   BankReconciliationType,
 } from '@/utils/type'
 import {
-  getAllBankAccounts,
+ 
   getBankReconciliations,
   getBankTransactions,
   automaticReconciliation,
 } from '@/api/automatic-reconciliation-api'
+import { getAllBankAccounts } from '@/api/common-shared-api'
 
 export default function AutomaticReconciliation() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])

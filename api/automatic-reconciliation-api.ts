@@ -5,12 +5,12 @@ import type {
   GetBankTransactionType,
 } from '@/utils/type'
 
-export async function getAllBankAccounts() {
-  return fetchApi<BankAccount[]>({
-    url: 'api/bank-accounts/get-all-bank-accounts',
-    method: 'GET',
-  })
-}
+// export async function getAllBankAccounts() {
+//   return fetchApi<BankAccount[]>({
+//     url: 'api/bank-accounts/get-all-bank-accounts',
+//     method: 'GET',
+//   })
+// }
 
 export async function getBankReconciliations(
   bankId: number,

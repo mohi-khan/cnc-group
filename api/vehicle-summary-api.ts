@@ -21,7 +21,6 @@ export async function getVehicleSummary({
   )
   return fetchApi<VehicleSummaryType[]>({
     url: `api/vehicle/getVehicleSummery?vehicleNo=${vehicleNo}&startDate=${startDate}&endDate=${endDate}`,
-    // url: 'api/vehicle/getVehicleSummery?vehicleNo=1&startDate=2025-01-01&endDate=2025-03-13',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

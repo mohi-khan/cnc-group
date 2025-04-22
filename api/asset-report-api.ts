@@ -18,9 +18,9 @@ export async function getAssetReport(
   })
 }
 
-export async function getAllCompanies() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
+// export async function getAllCompanies() {
+//   return fetchApi<CompanyType[]>({
+//     url: 'api/company/get-all-companies',
+//     method: 'GET',
+//   })
+// }

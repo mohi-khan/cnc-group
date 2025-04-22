@@ -1,10 +1,11 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { AssetList } from '@/components/assets/assets/asset-list'
-import { getAssets } from '@/api/assets.api'
+
 import { AssetCategoryType, CreateAssetData, GetAssetData } from '@/utils/type'
 import { AssetPopUp } from './asset-popup'
 import { getAllAssetCategories } from '@/api/asset-category-api'
+import { getAssets } from '@/api/common-shared-api'
 
 const Asset = () => {
   const [asset, setAsset] = useState<GetAssetData[]>([])

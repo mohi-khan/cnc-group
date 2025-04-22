@@ -36,12 +36,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useEffect, useState } from 'react'
 import {
   createAsset,
-  getAllCostCenters,
-  getAllDepartments,
+  
+  
 } from '@/api/assets.api'
 import { type CompanyType, getAllCompany } from '@/api/company-api'
 import { getAllLocations } from '@/api/bank-vouchers-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllCostCenters, getAllDepartments } from '@/api/common-shared-api'
 
 interface AssetPopupProps {
   isOpen: boolean
