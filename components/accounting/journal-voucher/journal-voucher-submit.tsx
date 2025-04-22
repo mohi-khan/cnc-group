@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, Upload } from 'lucide-react'
 import { JournalEntryWithDetails } from '@/utils/type'
 
+//JournalVoucherSubmit types is here to define the props for the JournalVoucherSubmit component
 interface JournalVoucherSubmitProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onSubmit: () => void

@@ -341,7 +341,7 @@ export default function BankVoucher() {
     { key: 'totalamount' as const, label: 'Amount' },
     { key: 'state' as const, label: 'Status' },
   ]
-  //Creating Link for grid 
+  //Creating Link for showing voucher details
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.BankVoucher}`
 

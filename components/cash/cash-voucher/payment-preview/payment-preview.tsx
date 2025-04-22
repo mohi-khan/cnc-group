@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 
 export default function PaymentPreview() {
 
+  // Sample data for the payment preview
   const paymentData = {
     voucherNo: '001',
     companyName: 'Ward and Holman Co',

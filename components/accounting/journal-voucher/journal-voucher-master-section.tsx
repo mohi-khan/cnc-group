@@ -39,6 +39,7 @@ interface JournalVoucherMasterSectionProps {
 export function JournalVoucherMasterSection({
   form,
 }: JournalVoucherMasterSectionProps) {
+  // State variables
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
   )
@@ -49,6 +50,7 @@ export function JournalVoucherMasterSection({
   const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
+  // Fetching user data from localStorage and setting it to state
   React.useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -67,6 +69,7 @@ export function JournalVoucherMasterSection({
     }
   }, [])
 
+  // Fetching all vouchers based on company and location IDs
   async function fetchAllVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
       date: '2024-12-18',
@@ -75,6 +78,7 @@ export function JournalVoucherMasterSection({
       voucherType: VoucherTypes.JournalVoucher,
     }
     const response = await getAllVoucher(voucherQuery)
+    // Check for errors in the response. if no errors, set the voucher grid data
     if (response.error || !response.data) {
       console.error('Error getting Voucher Data:', response.error)
       toast({
@@ -87,13 +91,16 @@ export function JournalVoucherMasterSection({
     }
   }
 
+  // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+  // Function to extract location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
 
+  // Function to fetch currency data
   const fetchCurrency = async () => {
     const data = await getAllCurrency()
     if (data.error || !data.data) {

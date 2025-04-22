@@ -88,21 +88,6 @@ import { getAllCurrency } from '@/api/exchange-api'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
-const currencyItems = [
-  {
-    currencyId: 1,
-    currency: 'BDT',
-  },
-  {
-    currencyId: 2,
-    currency: 'USD',
-  },
-  {
-    currencyId: 3,
-    currency: 'EUR',
-  },
-]
-
 const cashTags = [
   'Advance Payments received from customers',
   'Cash received from operating activities',

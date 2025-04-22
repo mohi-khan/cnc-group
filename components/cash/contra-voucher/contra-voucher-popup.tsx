@@ -20,6 +20,7 @@ import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 import { Popup } from '@/utils/popup'
 
+//child component props interface to define the props for the ContraVoucherPopup component
 interface ChildComponentProps {
   fetchAllVoucher: (company: number[], location: number[]) => void
 }
@@ -27,10 +28,12 @@ interface ChildComponentProps {
 export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   fetchAllVoucher,
 }) => {
+  //state variables
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
 
+  //getting user data from localStorage and setting it to state
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -45,7 +48,9 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
     }
   }, [])
 
+  //defaultValues is used to set the default values for the form fields
   const form = useForm<JournalEntryWithDetails>({
+    //zodResolver is used to validate the form data using the JournalEntryWithDetailsSchema
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {

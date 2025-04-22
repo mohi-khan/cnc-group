@@ -18,6 +18,7 @@ import {
 import VoucherList from '@/components/voucher-list/voucher-list'
 
 export default function VoucherTable() {
+  //state variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
@@ -26,6 +27,7 @@ export default function VoucherTable() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
 
+  // Columns for the voucher list table
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'date' as const, label: 'Voucher Date' },
@@ -37,9 +39,11 @@ export default function VoucherTable() {
     { key: 'totalamount' as const, label: 'Amount' },
   ]
 
+  // Function to generate the link for voucher details
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.JournalVoucher}`
 
+  // Function to fetch all vouchers based on company and location IDs
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
       setIsLoading(true)
@@ -71,6 +75,7 @@ export default function VoucherTable() {
     []
   )
 
+  // Effect to fetch user data from localStorage and fetch vouchers
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     if (userStr) {
@@ -91,14 +96,18 @@ export default function VoucherTable() {
     }
   }, [fetchAllVoucher])
 
+  // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
 
+  // Function to extract location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
 
+  // Function to handle form submission
+  // It takes the form data and a reset function as arguments
   const handleSubmit = async (
     data: JournalEntryWithDetails,
     resetForm: () => void
@@ -106,6 +115,7 @@ export default function VoucherTable() {
     setIsSubmitting(true)
     console.log('Submitting voucher:', data)
 
+    //stringify the form data to send to the API
     const submissionData = {
       ...data,
       journalEntry: {
@@ -123,8 +133,10 @@ export default function VoucherTable() {
 
     console.log('Submission data:', submissionData)
 
+    // Call the API to create the journal entry with details
     const response = await createJournalEntryWithDetails(submissionData)
 
+    // Check for errors in the response. if no error, show success message and reset the form
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -141,6 +153,7 @@ export default function VoucherTable() {
     }
 
     setIsSubmitting(false)
+    // Refetch the vouchers after submission. so that we don't have to refresh the page after submission
     fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
   }
 

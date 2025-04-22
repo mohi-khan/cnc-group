@@ -37,6 +37,7 @@ import VoucherList from '@/components/voucher-list/voucher-list'
 
 export default function CashVoucher() {
   const router = useRouter()
+  // State variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
@@ -70,9 +71,11 @@ export default function CashVoucher() {
   const [isLoadingPartners, setIsLoadingPartners] = useState(true)
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [isLoadingCostCenters, setIsLoadingCostCenters] = useState(true)
+  //linkGenerator is used to generate the link for the voucher details page
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.CashVoucher}`
 
+  //Function to get user data from localStorage and set it to state
   useEffect(() => {
     const userStr = localStorage.getItem('currentUser')
     setIsLoadingCompanies(true)
@@ -102,13 +105,16 @@ export default function CashVoucher() {
     }
   }, [router]) // Added router to dependencies
 
+  //Function to get company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+  //Function to get location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
 
+  //Function to get all vouchers based on company and location IDs
   async function getallVoucher(company: number[], location: number[]) {
     try {
       const voucherQuery: JournalQuery = {
@@ -117,7 +123,9 @@ export default function CashVoucher() {
         locationId: location,
         voucherType: VoucherTypes.CashVoucher,
       }
+      //sending the voucherQuery to the API to get all vouchers
       const response = await getAllVoucher(voucherQuery)
+      // Check for errors in the response. if no errors, set the voucher grid data
       if (!response.data) {
         throw new Error('No data received from server')
       }
@@ -129,6 +137,9 @@ export default function CashVoucher() {
       throw error
     }
   }
+
+  //Function to fetch all vouchers when companies and locations change
+  // useEffect is used to fetch all vouchers when companies and locations change
   React.useEffect(() => {
     const fetchVoucherData = async () => {
       setIsLoading(true)
@@ -151,6 +162,9 @@ export default function CashVoucher() {
       fetchVoucherData()
     }
   }, [companies, locations])
+
+  //Function to filter chart of accounts based on isGroup and isCash properties
+  //useEffect is used to filter the chart of accounts when it changes
   React.useEffect(() => {
     const filteredCoa = chartOfAccounts?.filter((account) => {
       return account.isGroup === false
@@ -191,6 +205,7 @@ export default function CashVoucher() {
     fetchDepartments()
   }, [])
 
+  //Function to fetch chart of accounts from the API
   async function fetchChartOfAccounts() {
     setIsLoadingAccounts(true)
     try {
@@ -212,6 +227,7 @@ export default function CashVoucher() {
     }
   }
 
+  //Function to fetch departments from the API
   async function fetchDepartments() {
     setIsLoadingAccounts(true)
     try {
@@ -232,9 +248,7 @@ export default function CashVoucher() {
     }
   }
 
-  //res partner
-
-  //res partner
+  //Function to fetch cost centers from the API
   async function fetchgetAllCostCenters() {
     setIsLoadingCostCenters(true)
     try {
@@ -255,6 +269,7 @@ export default function CashVoucher() {
     }
   }
 
+  //Function to fetch partners from the API
   async function fetchgetResPartner() {
     setIsLoadingPartners(true)
     try {
@@ -275,7 +290,9 @@ export default function CashVoucher() {
     }
   }
 
+  //Function to handle form submission. It takes the form data and a reset function as arguments
   const form = useForm<JournalEntryWithDetails>({
+    //zodResolver is used to validate the form data against the JournalEntryWithDetailsSchema
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
@@ -287,7 +304,6 @@ export default function CashVoucher() {
         amountTotal: 0,
         payTo: '',
         notes: '',
-
         createdBy: 0,
       },
       journalDetails: [
@@ -307,6 +323,8 @@ export default function CashVoucher() {
       ],
     },
   })
+
+  //Function to handle form submission. It takes the form data and a reset function as arguments
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
@@ -374,7 +392,9 @@ export default function CashVoucher() {
       'Submitted values:',
       JSON.stringify(updateValueswithCash, null, 2)
     )
-    const response = await createJournalEntryWithDetails(updateValueswithCash) // Calling API to Enter at Generate
+    // Call the API to create the journal entry with details
+    const response = await createJournalEntryWithDetails(updateValueswithCash)
+    // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -389,6 +409,7 @@ export default function CashVoucher() {
         title: 'Success',
         description: 'Voucher is created successfully',
       })
+      // Reset the form after successful submission
       form.reset({
         journalEntry: {
           date: new Date().toISOString().split('T')[0],
@@ -416,7 +437,9 @@ export default function CashVoucher() {
           },
         ],
       })
+      // remove all the rows from journalDetails
       remove()
+      // set the default value for journalDetails to the first row
       append({
         accountId: cashCoa[0]?.accountId,
         costCenterId: null,
@@ -432,11 +455,14 @@ export default function CashVoucher() {
       })
     }
   }
+  //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'journalDetails',
   })
 
+  //Function to add a new row to the journalDetails array
+  //append is used to add a new entry to the journalDetails array in the form state
   const addDetailRow = () => {
     append({
       accountId: cashCoa[0].accountId,
@@ -473,6 +499,7 @@ export default function CashVoucher() {
     )
   }
 
+  //columns is used to define the columns for the voucher list table
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'companyname' as const, label: 'Company Name' },

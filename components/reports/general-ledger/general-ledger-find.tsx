@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ChartOfAccount, GeneralLedgerType } from '@/utils/type'
+import { AccountsHead, ChartOfAccount, GeneralLedgerType } from '@/utils/type'
 import { getAllCoa } from '@/api/general-ledger-api'
 import { FileText } from 'lucide-react'
 
@@ -28,7 +28,7 @@ export default function GeneralLedgerFind({
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
-  const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   async function fetchChartOfAccounts() {
     const fetchedAccounts = await getAllCoa()

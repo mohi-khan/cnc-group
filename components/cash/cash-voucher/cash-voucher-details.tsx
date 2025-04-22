@@ -20,6 +20,7 @@ import type {
 } from '@/utils/type'
 import type { UseFormReturn } from 'react-hook-form'
 
+// Defines the props for the CashVoucherDetails component
 interface CashVoucherDetailsProps {
   form: UseFormReturn<any>
   fields: any[]

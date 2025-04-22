@@ -1,8 +1,8 @@
 import { fetchApi } from '@/utils/http'
-import { ChartOfAccount, LevelType } from '@/utils/type'
+import { AccountsHead, ChartOfAccount, LevelType } from '@/utils/type'
 
 export async function getAllCoa() {
-  return fetchApi<ChartOfAccount[]>({
+  return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
   })

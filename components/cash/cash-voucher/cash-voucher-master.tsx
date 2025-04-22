@@ -18,6 +18,7 @@ import type {
 } from '@/utils/type'
 import { useEffect, useState } from 'react'
 
+// Defines the props for the CashVoucherMaster component
 interface CashVoucherMasterProps {
   form: any
   companies: CompanyFromLocalstorage[]
@@ -29,8 +30,10 @@ export default function CashVoucherMaster({
   companies,
   locations,
 }: CashVoucherMasterProps) {
+  // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
+  // Function to fetch currency data
   const fetchCurrency = async () => {
     const data = await getAllCurrency()
     if (data.error || !data.data) {

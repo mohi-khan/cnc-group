@@ -3,6 +3,8 @@ import { JournalEntryWithDetailsSchema } from '@/utils/type'
 import { UseFormReturn } from 'react-hook-form'
 import { z } from 'zod'
 
+// This component is used to submit the bank voucher form.
+// It takes the form and onSubmit function as props and calls the onSubmit function with the form values and status when the button is clicked.
 interface BankVoucherSubmitProps {
   form: UseFormReturn<any>
   onSubmit: (
