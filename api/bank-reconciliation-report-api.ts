@@ -1,12 +1,5 @@
-import { fetchApi } from "@/utils/http"
-import { BankAccount, BankReconciliationReportType } from "@/utils/type"
-
-// export async function getAllBankAccounts() {
-//   return fetchApi<BankAccount[]>({
-//     url: 'api/bank-accounts/get-all-bank-accounts',
-//     method: 'GET',
-//   })
-// }
+import { fetchApi } from '@/utils/http'
+import { BankAccount, BankReconciliationReportType } from '@/utils/type'
 
 export async function getBankReconciliationReports(
   bankId: number,

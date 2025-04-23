@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/select'
 import {  ResPartner } from '@/utils/type'
 import { FileText } from 'lucide-react'
-import { getAllPartners } from '@/api/partner-ledger-api'
+import { getAllResPartners } from '@/api/common-shared-api'
+
 
 interface PartnerLedgerFindProps {
   onSearch: (partnercode: number, fromdate: string, todate: string) => void
@@ -31,7 +32,7 @@ export default function PartneredgerFind({
   const [partners, setPartners] = useState<ResPartner[]>([])
 
   async function fetchChartOfAccounts() {
-    const fetchedPartners = await getAllPartners()
+    const fetchedPartners = await getAllResPartners()
     if (fetchedPartners.error || !fetchedPartners.data) {
       console.error('Error getting chart of accounts:', fetchedPartners.error)
       toast({

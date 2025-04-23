@@ -16,8 +16,8 @@ import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { CalendarIcon, FileText } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { getAllCompany } from '@/api/company-api'
 import { Company, User } from '@/utils/type'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface CashPositonHeadingProps {
   generatePdf: () => void
@@ -44,7 +44,7 @@ const CashPositonHeading = ({
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>('')
 
   async function fetchCompanies() {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     const data: Company[] = response.data || []
 
     const userStr = localStorage.getItem('currentUser')

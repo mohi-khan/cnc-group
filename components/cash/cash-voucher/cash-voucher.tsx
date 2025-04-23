@@ -5,9 +5,7 @@ import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
 import {
   createJournalEntryWithDetails,
-  getAllChartOfAccounts,
-  getAllDepartments,
-  getAllResPartners,
+  
   getAllVoucher,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
@@ -27,13 +25,14 @@ import {
   type Voucher,
   VoucherTypes,
 } from '@/utils/type'
-import { getAllCostCenters } from '@/api/cost-centers-api'
+
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import CashVoucherMaster from './cash-voucher-master'
 import CashVoucherDetails from './cash-voucher-details'
 import VoucherList from '@/components/voucher-list/voucher-list'
+import { getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 export default function CashVoucher() {
   const router = useRouter()

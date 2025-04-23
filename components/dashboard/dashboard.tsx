@@ -16,7 +16,6 @@ import {
   Cell,
 } from 'recharts'
 import { ChevronDown } from 'lucide-react'
-import { useRouter } from 'next/router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,7 +33,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  getAllCompany,
   getAllDepartments,
   getCostBreakdown,
   getExpenseData,
@@ -45,7 +43,6 @@ import {
 } from '@/api/dashboard-api'
 import type {
   ApproveAdvanceType,
-  Department,
   FundPositionType,
   GetCostBreakdownType,
   GetDepartment,
@@ -60,10 +57,10 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@radix-ui/react-hover-card'
-import { set } from 'date-fns'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CompanyType } from '@/api/company-api'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -195,7 +192,7 @@ export default function Dashboard() {
 
   // Get All company function
   const fetchAllCompany = async () => {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
     setGetCompany(response.data || [])
   }

@@ -6,10 +6,6 @@ import { CostCenter, CostCenterSummaryType, Department, DepartmentSummaryType } 
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import {
-  getAllCostCenters,
-  getCostCenterSummary,
-} from '@/api/cost-center-summary-api'
 import DeparmentSummaryHeading from './department-summary-heading'
 import DepartmentSummaryTableData from './department-summary-table-data'
 import { getAllDepartments, getDepartmentSummary } from '@/api/department-summary-api'

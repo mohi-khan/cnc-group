@@ -32,8 +32,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SmallButton } from '@/components/custom-ui/small-button'
-import { ChartOfAccounts, getAllCoa } from '@/api/chart-of-accounts-api'
-import { CustomCombobox } from '@/utils/custom-combobox'
 
 const SingleBudgetItemsDetails = () => {
   const [budgetItems, setBudgetItems] = useState<BudgetItems[]>([])

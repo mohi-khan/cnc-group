@@ -1,12 +1,7 @@
 import { fetchApi } from '@/utils/http'
 import { CostCenter, CostCenterActivateDeactivate } from '@/utils/type'
 
-export async function getAllCostCenters() {
-  return fetchApi<CostCenter[]>({
-    url: 'api/cost-centers/get-all-cost-centers',
-    method: 'GET',
-  })
-}
+
 
 export async function createCostCenter(data: Omit<CostCenter, 'costCenterId'>) {
   console.log('Creating cost center:', data)

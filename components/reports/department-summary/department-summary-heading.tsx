@@ -16,10 +16,11 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { getAllCompany } from '@/api/company-api'
+
 import { Company, Department, GetDepartment, User } from '@/utils/type'
 
 import { getAllDepartments } from '@/api/department-summary-api'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface CostCenterSummaryHeadingProps {
   generatePdf: () => void
@@ -52,7 +53,7 @@ const DeparmentSummaryHeading = ({
 
   // Fetch company data
   async function fetchCompanies() {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     const data: Company[] = response.data || []
 
     const userStr = localStorage.getItem('currentUser')

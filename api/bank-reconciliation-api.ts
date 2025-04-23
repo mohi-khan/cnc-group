@@ -1,13 +1,6 @@
 import { fetchApi } from '@/utils/http'
 import type { BankAccount, BankReconciliationType } from '@/utils/type'
 
-// export async function getAllBankAccounts() {
-//   return fetchApi<BankAccount[]>({
-//     url: 'api/bank-accounts/get-all-bank-accounts',
-//     method: 'GET',
-//   })
-// }
-
 export async function getBankReconciliations(
   bankId: number,
   fromDate: string,
@@ -29,12 +22,12 @@ export async function getBankReconciliations(
 export async function updateBankReconciliation(
   id: number,
   reconciled: boolean,
-  comments: string,
+  comments: string
 ) {
-  console.log("Updating bank reconciliation:", id, reconciled, comments)
+  console.log('Updating bank reconciliation:', id, reconciled, comments)
   return fetchApi<BankReconciliationType>({
     url: `api/bank-reconciliation/edit-bank-reconciliation/${id}`,
-    method: "PATCH",
+    method: 'PATCH',
     body: { reconciled, comments },
   })
 }

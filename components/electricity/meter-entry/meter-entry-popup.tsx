@@ -27,9 +27,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useEffect, useState } from 'react'
-import { CompanyType, getAllCompany } from '@/api/company-api'
-import { getAllCostCenters } from '@/api/cost-center-summary-api'
-import { createMeterEntry, getAllCoa } from '@/api/meter-entry-api'
+import { CompanyType } from '@/api/company-api'
+
+import { createMeterEntry } from '@/api/meter-entry-api'
 import { toast } from '@/hooks/use-toast'
 import {
   AccountsHead,
@@ -38,6 +38,7 @@ import {
   CreateElectricityMeterSchema,
   CreateElectricityMeterType,
 } from '@/utils/type'
+import { getAllChartOfAccounts, getAllCompanies, getAllCostCenters } from '@/api/common-shared-api'
 
 
 interface MeterEntryPopUpProps {
@@ -73,7 +74,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
 
   useEffect(() => {
     const fetchCompany = async () => {
-      const response = await getAllCompany()
+      const response = await getAllCompanies()
       setGetCompany(response.data ?? [])
     }
 
@@ -83,7 +84,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     }
 
     const fetchChartOfAccounts = async () => {
-      const response = await getAllCoa()
+      const response = await getAllChartOfAccounts()
       setGetChartOfAccounts(response.data ?? [])
     }
 

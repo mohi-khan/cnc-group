@@ -22,7 +22,7 @@ import {
 import { AccountsHead, CreateAssetCategoryData, createAssetCategorySchema, User } from '@/utils/type'
 import {
   createAssetCategory,
-  getAllChartOfAccounts,
+
 } from '@/api/asset-category-api'
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface AssetCategoryPopupProps {
   isOpen: boolean

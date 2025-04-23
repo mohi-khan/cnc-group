@@ -3,6 +3,8 @@ import {
   AccountsHead,
   BankAccount,
   CostCenter,
+  CurrencyType,
+  Employee,
   ExchangeType,
   GetAssetData,
   GetDepartment,
@@ -82,6 +84,28 @@ export async function getAllCostCenters() {
 export async function getAllExchange() {
   return fetchApi<ExchangeType[]>({
     url: 'api/exchange/get-all-exchange',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//get all currency api
+export async function getAllCurrency() {
+  return fetchApi<CurrencyType[]>({
+    url: 'api/exchange/get-all-currency',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//Fetch All Employee Data
+export async function getEmployee() {
+  return fetchApi<Employee[]>({
+    url: 'api/employee/getEmployees',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Department, DepartmentSummaryType, GetDepartment } from '@/utils/type'
+import { DepartmentSummaryType, GetDepartment } from '@/utils/type'
 
 export async function getDepartmentSummary({
   fromdate,

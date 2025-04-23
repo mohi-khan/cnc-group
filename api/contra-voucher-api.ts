@@ -1,38 +1,9 @@
 import { fetchApi } from '@/utils/http'
 import {
-  AccountsHead,
-  BankAccount,
-  ChartOfAccount,
-  Company,
-  CostCenter,
-  Department,
-  ExchangeType,
   JournalEntryWithDetails,
   JournalQuery,
-  LocationData,
   VoucherById,
 } from '@/utils/type'
-
-export async function getAllCompanies() {
-  return fetchApi<Company[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
-
-export async function getAllLocations() {
-  return fetchApi<LocationData[]>({
-    url: 'api/location/get-all-locations',
-    method: 'GET',
-  })
-}
-
-export async function getAllChartOfAccounts() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
 
 export async function getSingleVoucher(voucherid: string) {
   console.log(voucherid)
@@ -100,22 +71,5 @@ export async function createJournalEntryWithDetails(
     url: 'api/journal/entry',
     method: 'POST',
     body: data,
-  })
-}
-
-export async function getAllBankAccounts() {
-  return fetchApi<BankAccount[]>({
-    url: 'api/bank-accounts/get-all-bank-accounts',
-    method: 'GET',
-  })
-}
-
-export async function getAllExchange() {
-  return fetchApi<ExchangeType[]>({
-    url: 'api/exchange/get-all-exchange',
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   })
 }

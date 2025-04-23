@@ -15,14 +15,11 @@ import {
 } from '@/components/ui/table'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import {
-  getAllCoa,
-  createBudgetMaster,
-  createBudgetDetails,
-} from '@/api/budget-api'
+import { createBudgetMaster, createBudgetDetails } from '@/api/budget-api'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { AccountsHead } from '@/utils/type'
 import { CompanyType } from '@/api/company-api'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface BudgetLine {
   id: number
@@ -61,7 +58,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
 
   useEffect(() => {
     async function fetchAccounts() {
-      const response = await getAllCoa()
+      const response = await getAllChartOfAccounts()
       if (response.error) {
         console.error('Error fetching accounts:', response.error)
         toast({
@@ -197,7 +194,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
   }
 
   const [companyId, setCompanyId] = useState<string>(
-    company[0].companyId?.toString() ?? ""
+    company[0].companyId?.toString() ?? ''
   )
 
   const handleCompanyIdChange = (id: string): void => {
@@ -231,13 +228,13 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
               <Label htmlFor="companyName">Company Name</Label>
               <CustomCombobox
                 items={company.map((companies) => ({
-                  id: company[0].companyId?.toString() ?? "",
+                  id: company[0].companyId?.toString() ?? '',
                   name: companies.companyName,
                 }))}
                 value={
                   company
                     ? {
-                        id: company[0].companyId?.toString() ?? "",
+                        id: company[0].companyId?.toString() ?? '',
                         name: company[0].companyName,
                       }
                     : null
