@@ -1,19 +1,12 @@
 import { fetchApi } from '@/utils/http'
 import {
-  AccountsHead,
   BudgetItems,
   CreateBudgetItemsType,
   CreateBudgetMasterType,
   MasterBudgetType,
 } from '@/utils/type'
 
-//get all data coa
-export async function getAllCoa() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
+
 
 //Create Budget Master API
 export async function createBudgetMaster(
@@ -76,11 +69,7 @@ export async function getAllBudgetDetails(id: number, token: string) {
 }
 
 //update budget master api
-export async function updateBudgetMaster(
-  budgetId: number,
-  token: string,
- 
-) {
+export async function updateBudgetMaster(budgetId: number, token: string) {
   return fetchApi<MasterBudgetType[]>({
     url: `api/budget/updateBudget/${budgetId}`,
     method: 'POST',

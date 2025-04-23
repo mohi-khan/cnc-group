@@ -6,9 +6,9 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Upload } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { JournalEntryWithDetails } from '@/utils/type'
 
 //JournalVoucherSubmit types is here to define the props for the JournalVoucherSubmit component

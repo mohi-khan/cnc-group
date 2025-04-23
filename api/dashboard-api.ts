@@ -1,5 +1,12 @@
 import { fetchApi } from '@/utils/http'
-import { Department, FundPositionType, GetCostBreakdownDetailsType, GetCostBreakdownType, GetDepartment, GEtExpenseDataType } from '@/utils/type'
+import {
+  Department,
+  FundPositionType,
+  GetCostBreakdownDetailsType,
+  GetCostBreakdownType,
+  GetDepartment,
+  GEtExpenseDataType,
+} from '@/utils/type'
 import { CompanyType } from './company-api'
 
 export async function getFundPosition(
@@ -116,27 +123,18 @@ export async function getCostBreakdown(
 }
 
 //Get cost breakdown details API
-export async function getCostBreakdownDetails(
-  // departmentId: number,
-  // fromDate: string,
-  // toDate: string,
-  // companyId: number,
-  // financialTag:string
-) {
+export async function getCostBreakdownDetails() {
+// departmentId: number,
+// fromDate: string,
+// toDate: string,
+// companyId: number,
+// financialTag:string
   return fetchApi<GetCostBreakdownDetailsType>({
     // url: `api/dashboard/getcostBreakdownDetails?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}&financial_Tag=${financial_Tag}`,
-    url:'api/dashboard/getCostBreakdownDetails?departmentId=16&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',
+    url: 'api/dashboard/getCostBreakdownDetails?departmentId=16&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-  })
-}
-
-//get all companies api
-export async function getAllCompany() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
   })
 }

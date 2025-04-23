@@ -29,7 +29,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import {
   updateCostCenter,
-  getAllCostCenters,
+ 
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
@@ -44,6 +44,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { getAllCostCenters } from '@/api/common-shared-api'
 
 export default function CostCenterManagement() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])

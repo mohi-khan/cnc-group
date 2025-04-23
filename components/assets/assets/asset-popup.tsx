@@ -39,10 +39,9 @@ import {
   
   
 } from '@/api/assets.api'
-import { type CompanyType, getAllCompany } from '@/api/company-api'
-import { getAllLocations } from '@/api/bank-vouchers-api'
+import { type CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllCostCenters, getAllDepartments } from '@/api/common-shared-api'
+import { getAllCompanies, getAllCostCenters, getAllDepartments, getAllLocations } from '@/api/common-shared-api'
 
 interface AssetPopupProps {
   isOpen: boolean
@@ -136,7 +135,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
   const fetchCompnay = async () => {
     try {
-      const response = await getAllCompany()
+      const response = await getAllCompanies()
 
       setGetCompany(response.data)
       console.log(

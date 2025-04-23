@@ -66,16 +66,4 @@ export async function deleteNumberSeries(id: number) {
   })
 }
 
-export async function getAllCompanies() {
-  return fetchApi<Company[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
 
-export async function getAllLocations() {
-  return fetchApi<LocationData[]>({
-    url: 'api/location/get-all-locations',
-    method: 'GET',
-  })
-}

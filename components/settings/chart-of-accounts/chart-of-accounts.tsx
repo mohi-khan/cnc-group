@@ -69,7 +69,6 @@ import {
 } from '@/utils/type'
 import {
   createChartOfAccounts,
-  getAllCoa,
   getParentCodes,
   updateChartOfAccounts,
 } from '@/api/chart-of-accounts-api'
@@ -84,7 +83,8 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllCurrency } from '@/api/exchange-api'
+
+import { getAllChartOfAccounts, getAllCurrency } from '@/api/common-shared-api'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
@@ -169,7 +169,7 @@ export default function ChartOfAccountsTable() {
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
   const [accounts, setAccounts] = React.useState<AccountsHead[]>([])
   const [filteredAccounts, setFilteredAccounts] = React.useState<
-  AccountsHead[]
+    AccountsHead[]
   >([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState(codeGroups)
@@ -326,7 +326,7 @@ export default function ChartOfAccountsTable() {
   }
 
   async function fetchCoaAccounts() {
-    const fetchedAccounts = await getAllCoa()
+    const fetchedAccounts = await getAllChartOfAccounts()
     console.log('Fetched chart of accounts:', fetchedAccounts)
 
     if (fetchedAccounts.error || !fetchedAccounts.data) {
@@ -627,7 +627,6 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Account Cash Tag</FormLabel>
 
-                        
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value ?? undefined}

@@ -61,21 +61,6 @@ export async function createCompany(
   return data
 }
 
-//get all companies api
-export async function getAllCompany() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
 
-// export async function createCompany(
-//   companyData: z.infer<typeof companySchema>,
-//   locations: string[]
-// ) {
-//   return fetchApi({
-//     url: 'api/company/create-company-location',
-//     method: 'POST',
-//     body: { companyData, locations },
-//   })
-// }
+
+

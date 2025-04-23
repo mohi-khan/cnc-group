@@ -1,5 +1,6 @@
 'use client'
-import { getAllCurrency } from '@/api/currency-api'
+
+import { getAllCurrency } from '@/api/common-shared-api'
 import {
   Table,
   TableBody,

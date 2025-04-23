@@ -19,13 +19,7 @@ import {
   type User,
   FormStateType,
 } from '@/utils/type'
-import {
-  getAllBankAccounts,
-  getAllChartOfAccounts,
-  getAllCostCenters,
-  getAllDepartments,
-  getAllResPartners,
-} from '@/api/bank-vouchers-api'
+
 import {
   createJournalEntryWithDetails,
   getAllVoucher,
@@ -36,6 +30,7 @@ import BankVoucherMaster from './bank-voucher-master'
 import BankVoucherDetails from './bank-voucher-details'
 import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
+import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 export default function BankVoucher() {
   //State Variables

@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { AccountsHead, ChartOfAccount, LevelType } from '@/utils/type'
-import { createLevel, editLevel, getAllCoa, getAllLevel } from '@/api/level-api'
+import { createLevel, editLevel, getAllLevel } from '@/api/level-api'
 import { toast } from '@/hooks/use-toast'
 import {
   Popover,
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/popover'
 import { Plus, SkipBackIcon as Backspace } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 
 // Define operators
@@ -123,7 +124,7 @@ export default function LevelEntry() {
   }
 
   async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllCoa()
+    const fetchedAccounts = await getAllChartOfAccounts()
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({

@@ -1,51 +1,11 @@
 import { fetchApi } from '@/utils/http'
 import {
-  AccountsHead,
-  Company,
-  CostCenter,
-  GetDepartment,
   JournalEntryWithDetails,
   JournalNotes,
   JournalQuery,
   JournalResult,
-  LocationData,
   VoucherById,
 } from '@/utils/type'
-
-export async function getAllCompanies() {
-  return fetchApi<Company[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
-
-export async function getAllLocations() {
-  return fetchApi<LocationData[]>({
-    url: 'api/location/get-all-locations',
-    method: 'GET',
-  })
-}
-
-export async function getAllChartOfAccounts() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
-
-export async function getAllCostCenters() {
-  return fetchApi<CostCenter[]>({
-    url: 'api/cost-centers/get-all-cost-centers',
-    method: 'GET',
-  })
-}
-
-export async function getAllDepartments() {
-  return fetchApi<GetDepartment[]>({
-    url: 'api/department/get-all-departments',
-    method: 'GET',
-  })
-}
 
 export async function getSingleVoucher(voucherid: number) {
   console.log(voucherid)
@@ -55,8 +15,15 @@ export async function getSingleVoucher(voucherid: number) {
   })
 }
 
-export async function reverseJournalVoucher(voucherNo: number, createdId: number) {
-  console.log("🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:", voucherNo, createdId)
+export async function reverseJournalVoucher(
+  voucherNo: number,
+  createdId: number
+) {
+  console.log(
+    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
+    voucherNo,
+    createdId
+  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
@@ -71,17 +38,9 @@ export async function editJournalDetail(data: JournalNotes) {
   return fetchApi<JournalNotes>({
     url: `api/journal/edit-notes`,
     method: 'PATCH',
-    body: data
+    body: data,
   })
 }
-
-// export async function editJournalVoucher(voucherid: number, createid: number) {
-//   console.log(voucherid, createid)
-//   return fetchApi<VoucherById[]>({
-//     url: `api/journal/postJournal/${voucherid}/${createid}`,
-//     method: 'POST',
-//   })
-// }
 
 export async function getAllVoucher(data: JournalQuery) {
   const queryParams = new URLSearchParams(

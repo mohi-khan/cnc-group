@@ -1,5 +1,5 @@
 'use client'
-import { getAllCompany, getAllTradeDebtors } from '@/api/trade-debtors-api'
+import {  getAllTradeDebtors } from '@/api/trade-debtors-api'
 import { GetTradeDebtorsType } from '@/utils/type'
 import React, { useEffect } from 'react'
 import {
@@ -17,6 +17,7 @@ import { usePDF } from 'react-to-pdf'
 import { FileText } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 const TradeDebtors = () => {
   const [tradeDebtors, setTradeDebtors] = React.useState<GetTradeDebtorsType[]>(
@@ -40,7 +41,7 @@ const TradeDebtors = () => {
 
   // fetch ALl companys data from API
   const fetchCompanies = async () => {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     console.log('This is from companies:', response.data)
     setCompanies(response.data || [])
   }

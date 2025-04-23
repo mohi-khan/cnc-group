@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { getAllCompany } from '@/api/company-api'
 import { Company, User } from '@/utils/type'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface TrialBalanceHeadingProps {
   generatePdf: () => void
@@ -43,7 +43,7 @@ export default function TrialBalanceHeading({
   const [user, setUser] = useState<User | null>(null)
 
   async function fetchCompanies() {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     const data: Company[] = response.data || []
 
     const userStr = localStorage.getItem('currentUser')

@@ -41,41 +41,11 @@ export async function getAllVoucher(data: JournalQuery) {
     method: 'GET',
   })
 }
-// chart of accouts get all data
-export async function getAllChartOfAccounts() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
-
-//cost center get all data
-export async function getAllCostCenters() {
-  return fetchApi<CostCenter[]>({
-    url: 'api/cost-centers/get-all-cost-centers',
-    method: 'GET',
-  })
-}
-
-// get all res partner data
-export async function getAllResPartners() {
-  return fetchApi<ResPartner[]>({
-    url: 'api/res-partner/get-all-res-partners',
-    method: 'GET',
-  })
-}
-
-export async function getAllDepartments() {
-  return fetchApi<GetDepartment[]>({
-    url: 'api/department/get-all-departments',
-    method: 'GET',
-  })
-}
 
 export async function getAllVoucherById(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
-    method: 'GET'
+    method: 'GET',
   })
 }

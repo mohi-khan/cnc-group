@@ -11,8 +11,8 @@ import {
   updateNumberSeries,
   deleteNumberSeries,
   NumberSeries as NumberSeriesType,
-  getAllCompanies,
-  getAllLocations,
+  
+ 
 } from '../../../api/number-series-api'
 
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Company, Location } from '@/utils/type'
+import { getAllCompanies, getAllLocations } from '@/api/common-shared-api'
 
 const numberSeriesSchema = z
   .object({

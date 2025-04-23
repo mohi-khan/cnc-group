@@ -25,12 +25,6 @@ export async function getCostCenterSummary({
   })
 }
 
-//get all cost center api
-export async function getAllCostCenters() {
-  return fetchApi<CostCenter[]>({
-    url: 'api/cost-centers/get-all-cost-centers',
-    method: 'GET',
-  })
-}
+
 
 //http://localhost:4000/api/ledgerreport/costcetersummery?fromDate=2024-01-01&endDate=2025-12-31&costCenterIds=1,2,3&companyId=75 //static api
