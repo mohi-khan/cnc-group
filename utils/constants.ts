@@ -200,10 +200,6 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Financial Reports',
         items: [
           { name: 'Trial Balance', source: '/reports/trial-balance' },
-          {
-            name: 'Profit and Loss Accounts',
-            source: '/reports/profit-loss',
-          },
           { name: 'Balance Sheet', source: '/reports/balance-sheet' },
           { name: 'Trade Debtors', source: '/reports/trade-debtors' },
           { name: 'Cash Report', source: '/reports/cash-report' },

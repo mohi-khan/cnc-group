@@ -36,6 +36,8 @@ import {
   type IouRecordCreateType,
 } from '@/utils/type'
 import { createIou, getEmployee } from '@/api/iou-api'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface LoanPopUpProps {
   isOpen: boolean
@@ -51,20 +53,23 @@ export default function IouPopUp({
   onCategoryAdded,
   fetchLoanData,
 }: LoanPopUpProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
   const [userId, setUserId] = useState<number | null>(null) // set to null initially
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log('Current user from localStorage:', userData)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const form = useForm<IouRecordCreateType>({
     resolver: zodResolver(IouRecordCreateSchema),

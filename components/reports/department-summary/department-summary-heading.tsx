@@ -17,9 +17,11 @@ import {
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 
-import { Company, Department, GetDepartment, User } from '@/utils/type'
+import { Company, CompanyFromLocalstorage, Department, GetDepartment, User } from '@/utils/type'
 
 import { getAllDepartments } from '@/api/department-summary-api'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllCompanies } from '@/api/common-shared-api'
 
 interface CostCenterSummaryHeadingProps {
@@ -38,13 +40,18 @@ const DeparmentSummaryHeading = ({
   generateExcel,
   onFilterChange,
 }: CostCenterSummaryHeadingProps) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [selectedCostCenterIds, setSelectedCostCenterIds] = useState<string[]>(
     []
   )
-  const [companies, setCompanies] = useState<Company[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [departmentSummary, setDepartmentSummary] = useState<GetDepartment[]>(
@@ -52,22 +59,15 @@ const DeparmentSummaryHeading = ({
   )
 
   // Fetch company data
-  async function fetchCompanies() {
-    const response = await getAllCompanies()
-    const data: Company[] = response.data || []
-
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData: User = JSON.parse(userStr)
+  // getting userData from local storage
+  useEffect(() => {
+    if (userData) {
       setUser(userData)
-
-      const userCompanyIds = userData.userCompanies.map((uc) => uc.companyId)
-      const filteredCompanies = data.filter((company) =>
-        userCompanyIds.includes(company.companyId)
-      )
-      setCompanies(filteredCompanies)
+      setCompanies(userData.userCompanies)
+    } else {
+      console.log('No user data found in localStorage')
     }
-  }
+  }, [userData])
 
   // Fetch all department  data
   async function fetchAllCostCenter() {
@@ -77,7 +77,6 @@ const DeparmentSummaryHeading = ({
   }
 
   useEffect(() => {
-    fetchCompanies()
     fetchAllCostCenter()
   }, [])
 
@@ -264,10 +263,10 @@ const DeparmentSummaryHeading = ({
             <SelectContent>
               {companies.map((company) => (
                 <SelectItem
-                  key={company.companyId}
-                  value={company.companyId?.toString()??""}
+                  key={company.company.companyId}
+                  value={company.company.companyId?.toString()??""}
                 >
-                  {company.companyName}
+                  {company.company.companyName}
                 </SelectItem>
               ))}
             </SelectContent>

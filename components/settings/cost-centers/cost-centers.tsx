@@ -44,9 +44,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllCostCenters } from '@/api/common-shared-api'
 
 export default function CostCenterManagement() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -145,15 +152,13 @@ export default function CostCenterManagement() {
   }
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const CostCenterForm: React.FC<{ isEdit: boolean }> = ({ isEdit }) => {
     const [currencyCode, setCurrencyCode] = useState<

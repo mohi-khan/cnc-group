@@ -10,8 +10,15 @@ import { changePassword } from '@/api/change-password-api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { User } from '@/utils/type'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const ChangePassword = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -25,16 +32,14 @@ const ChangePassword = () => {
   const { toast } = useToast()
 
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData: User = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log('Current user from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
       setError('User not authenticated. Please log in.')
     }
-  }, [])
+  }, [userData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

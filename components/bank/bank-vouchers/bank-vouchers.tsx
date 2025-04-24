@@ -30,9 +30,16 @@ import BankVoucherMaster from './bank-voucher-master'
 import BankVoucherDetails from './bank-voucher-details'
 import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 export default function BankVoucher() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
+
   //State Variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
@@ -40,8 +47,6 @@ export default function BankVoucher() {
   const [dataLoaded, setDataLoaded] = React.useState(false)
   const [user, setUser] = React.useState<User | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
-  //State Variables
-  const router = useRouter()
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -90,9 +95,7 @@ export default function BankVoucher() {
   })
   // Retrivin user data and set companies and locations based on user Data
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setFormState((prevState) => ({
         ...prevState,
         companies: userData.userCompanies,
@@ -108,9 +111,9 @@ export default function BankVoucher() {
       console.log('No user data found in localStorage')
       router.push('/unauthorized-access')
     }
-  }, [router])
-   //Check If user have the previlage
-   // Initialze all the Combo Box in the system
+  }, [router, userData])
+  //Check If user have the previlage
+  // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
       const [
@@ -142,7 +145,7 @@ export default function BankVoucher() {
 
     fetchInitialData()
   }, [])
-// Initialze all the Combo Box in the system
+  // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
   }, [])
@@ -150,7 +153,7 @@ export default function BankVoucher() {
   const getLocationIds = React.useCallback((data: any[]): number[] => {
     return data.map((location) => location.location.locationId)
   }, [])
- // fetch today's Voucher List from Database and populate the grid
+  // fetch today's Voucher List from Database and populate the grid
   async function getallVoucher(company: number[], location: number[]) {
     let localVoucherGrid: JournalResult[] = []
     try {
@@ -172,18 +175,17 @@ export default function BankVoucher() {
     }
     setVoucherGrid(localVoucherGrid)
   }
-   // fetch today's Voucher List from Database and populate the grid
+  // fetch today's Voucher List from Database and populate the grid
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
+
   //Calling function for fetching voucherlist to populate the form state variables
   React.useEffect(() => {
     const fetchVoucherData = async () => {
@@ -211,22 +213,24 @@ export default function BankVoucher() {
     }
 
     fetchVoucherData()
-  }, [formState.companies, formState.locations, getCompanyIds, getLocationIds, dataLoaded])
-   //Calling function for fetching voucherlist to populate the form state variables
+  }, [
+    formState.companies,
+    formState.locations,
+    getCompanyIds,
+    getLocationIds,
+    dataLoaded,
+  ])
+  //Calling function for fetching voucherlist to populate the form state variables
 
-   //Submission Data Logic:
-   // 1. Validate Data
-   // 2. Check Toal Amount and ensure both debit and credit are same
-   // 3. Save Data
+  //Submission Data Logic:
+  // 1. Validate Data
+  // 2. Check Toal Amount and ensure both debit and credit are same
+  // 3. Save Data
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
     console.log('Before Any edit', values)
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-    }
 
     const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
@@ -321,11 +325,10 @@ export default function BankVoucher() {
       })
     }
   }
- //Submission Data Logic:
-   // 1. Validate Data
-   // 2. Check Toal Amount and ensure both debit and credit are same
-   // 3. Save Data
-
+  //Submission Data Logic:
+  // 1. Validate Data
+  // 2. Check Toal Amount and ensure both debit and credit are same
+  // 3. Save Data
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },

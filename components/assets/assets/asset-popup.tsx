@@ -41,6 +41,8 @@ import {
 } from '@/api/assets.api'
 import { type CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllCompanies, getAllCostCenters, getAllDepartments, getAllLocations } from '@/api/common-shared-api'
 
 interface AssetPopupProps {
@@ -56,6 +58,11 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   onCategoryAdded,
   categories,
 }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [getCompany, setGetCompany] = useState<CompanyType[] | null>([])
   const [getLoaction, setGetLocation] = useState<LocationData[]>([])
@@ -85,9 +92,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   })
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       form.setValue('created_by', userData.userId)
       console.log(
@@ -97,7 +102,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [form])
+  }, [form, userData])
 
   const onSubmit = async (data: CreateAssetData) => {
     console.log('Form data before submission:', data)
@@ -476,7 +481,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                   <FormLabel>Company</FormLabel>
                   <CustomCombobox
                     items={(getCompany ?? []).map((company) => ({
-                      id: company?.companyId?.toString() ?? "",
+                      id: company?.companyId?.toString() ?? '',
                       name: company.companyName || 'Unnamed Company',
                     }))}
                     value={

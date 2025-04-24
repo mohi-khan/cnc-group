@@ -66,9 +66,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
 
 export default function ResPartners() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [companies, setCompanies] = React.useState<
     Company[]
@@ -108,15 +115,13 @@ export default function ResPartners() {
   })
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const fetchResPartners = React.useCallback (async () => {
     // setIsLoading(true)

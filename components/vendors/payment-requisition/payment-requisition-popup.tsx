@@ -21,6 +21,8 @@ import type { z } from 'zod'
 import { createJournalEntryWithDetails } from '@/api/vouchers-api'
 import PaymentRequisitionAdvanceForm from './payment-requisition-advance-form'
 import PaymentRequisitionCreateInvoiceForm from './payment-requisition-create-invoice'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 interface PaymentRequisitionPopupProps {
@@ -29,9 +31,7 @@ interface PaymentRequisitionPopupProps {
   requisition: any // Replace with proper type
   token: string
   onSuccess: () => void
-  status: string,
-
- 
+  status: string
 }
 
 export function PaymentRequisitionPopup({
@@ -42,19 +42,23 @@ export function PaymentRequisitionPopup({
   onSuccess,
   status,
 }: PaymentRequisitionPopupProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const { toast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const getCompanyIds = useCallback((data: any[]): number[] => {
-    return data.map((company) => company.company.companyId)
-  }, [])
+  // const getCompanyIds = useCallback((data: any[]): number[] => {
+  //   return data.map((company) => company.company.companyId)
+  // }, [])
 
-  const getLocationIds = useCallback((data: any[]): number[] => {
-    return data.map((location) => location.location.locationId)
-  }, [])
+  // const getLocationIds = useCallback((data: any[]): number[] => {
+  //   return data.map((location) => location.location.locationId)
+  // }, [])
 
   interface FormState {
     companies: any[]
@@ -117,9 +121,7 @@ export function PaymentRequisitionPopup({
 
   // Load user data when component mounts
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
 
       // Load the available companies and locations for dropdown options
@@ -129,7 +131,7 @@ export function PaymentRequisitionPopup({
         locations: userData.userLocations || [],
       }))
     }
-  }, [])
+  }, [userData])
 
   // Reset form when requisition changes or popup opens/closes
   useEffect(() => {
@@ -161,9 +163,7 @@ export function PaymentRequisitionPopup({
 
   // Load user data when component mounts
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
       setFormState((prevState) => ({
         ...prevState,
@@ -171,7 +171,7 @@ export function PaymentRequisitionPopup({
         locations: userData.userLocations || [],
       }))
     }
-  }, [])
+  }, [userData])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -222,11 +222,6 @@ export function PaymentRequisitionPopup({
     status: 'Draft' | 'Posted'
   ) => {
     console.log('Before Any edit', values)
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
-      console.log('Current userId from localStorage:', userData.userId)
-    }
 
     const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
@@ -355,7 +350,7 @@ export function PaymentRequisitionPopup({
         )
       case 'GRN Completed':
         return (
-          <div className='w-full'>
+          <div className="w-full">
             <PaymentRequisitionCreateInvoiceForm />
           </div>
         )

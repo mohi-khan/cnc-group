@@ -37,6 +37,8 @@ import {
   reverseJournalVoucher,
 } from '@/api/contra-voucher-api'
 import Loader from '@/utils/loader'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 // Add this after your imports
 const printStyles = `
@@ -54,6 +56,11 @@ const printStyles = `
 `
 
 export default function SingleVoucherDetails() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const { voucherid } = useParams()
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
@@ -105,9 +112,7 @@ export default function SingleVoucherDetails() {
   }
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log(
         'Current userId from localStorage in everywhere:',
@@ -116,7 +121,7 @@ export default function SingleVoucherDetails() {
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const handleReferenceSave = () => {
     if (data && editingReferenceIndex !== null) {
@@ -406,41 +411,46 @@ export default function SingleVoucherDetails() {
 
       {/* Hidden check for printing - completely separate from the main card */}
       {data.map((item, index) => (
-      <div className="hidden" key={index}>
-        <div ref={checkRef} className="p-8 bg-white">
-          <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="relative p-6 border border-gray-300 bg-white">
-              {/* Bank Header */}
-              <div className="flex justify-end items-start mb-8">
-                <div className="text-right">
-                  <div className="flex items-center justify-end">
-                    <span className="text-sm mr-2">{item.date}</span>
+        <div className="hidden" key={index}>
+          <div ref={checkRef} className="p-8 bg-white">
+            <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
+              <div className="relative p-6 border border-gray-300 bg-white">
+                {/* Bank Header */}
+                <div className="flex justify-end items-start mb-8">
+                  <div className="text-right">
+                    <div className="flex items-center justify-end">
+                      <span className="text-sm mr-2">{item.date}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Payee Section */}
-              <div className="mb-6">
-                <div className="flex items-center mb-1">
-                  <p className="flex-1 pb-1 pt-2 ">{data[0]?.payTo}</p>
+                {/* Payee Section */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-1">
+                    <p className="flex-1 pb-1 pt-2 ">{data[0]?.payTo}</p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Amount Section */}
-              <div className="flex mb-6">
-                <div className="flex-1">
-                  <p className="flex-1 pb-1 pt-2 ">{item.debit === 0? toWords(item.credit): toWords(item.debit)}</p>
-                </div>
-                <div className="px-2 py-1 flex items-center whitespace-nowrap ml-5">
-                  <span className="font-medium">{item.debit === 0? item.credit: item.debit}/-</span>
+                {/* Amount Section */}
+                <div className="flex mb-6">
+                  <div className="flex-1">
+                    <p className="flex-1 pb-1 pt-2 ">
+                      {item.debit === 0
+                        ? toWords(item.credit)
+                        : toWords(item.debit)}
+                    </p>
+                  </div>
+                  <div className="px-2 py-1 flex items-center whitespace-nowrap ml-5">
+                    <span className="font-medium">
+                      {item.debit === 0 ? item.credit : item.debit}/-
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       ))}
-
     </>
   )
 }

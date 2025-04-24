@@ -16,8 +16,16 @@ import {
   getAllVoucher,
 } from '@/api/journal-voucher-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useRouter } from 'next/router'
+import { useAtom } from 'jotai'
 
 export default function VoucherTable() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
+
   //state variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
@@ -75,11 +83,10 @@ export default function VoucherTable() {
     []
   )
 
-  // Effect to fetch user data from localStorage and fetch vouchers
+  //getting userData from jotai (atom) and setting the userId, companies and locations
+  // and fetching all vouchers based on the user data
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
@@ -94,7 +101,7 @@ export default function VoucherTable() {
       console.log('No user data found in localStorage')
       setIsLoading(false)
     }
-  }, [fetchAllVoucher])
+  }, [fetchAllVoucher, router, userData])
 
   // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
