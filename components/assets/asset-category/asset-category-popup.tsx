@@ -18,8 +18,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { AccountsHead, CreateAssetCategoryData, createAssetCategorySchema, User } from '@/utils/type'
+} from '@/components/ui/select'
+import {
+  AccountsHead,
+  CreateAssetCategoryData,
+  createAssetCategorySchema,
+  User,
+} from '@/utils/type'
 import {
   createAssetCategory,
   getAllChartOfAccounts,
@@ -31,6 +36,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface AssetCategoryPopupProps {
   isOpen: boolean
@@ -43,20 +50,23 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   onOpenChange,
   onCategoryAdded,
 }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
   const [userId, setUserId] = useState<number>(0)
 
   React.useEffect(() => {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUserId(userData.userId)
-        console.log('Current user from localStorage:', userData)
-      } else {
-        console.log('No user data found in localStorage')
-      }
-    }, [])
+    if (userData) {
+      setUserId(userData.userId)
+      console.log('Current user from localStorage:', userData)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userData])
 
   const form = useForm<CreateAssetCategoryData>({
     resolver: zodResolver(createAssetCategorySchema),
@@ -76,7 +86,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     }
   }, [userId, form])
 
-    const fetchChartOfAccounts = useCallback(async () => {
+  const fetchChartOfAccounts = useCallback(async () => {
     const response = await getAllChartOfAccounts()
     console.log('Fetched chart of accounts:', response.data)
 
@@ -93,7 +103,9 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     }
   }, [chartOfAccounts])
 
-  const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (data) => {
+  const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (
+    data
+  ) => {
     console.log('Form submitted:', data)
     setIsSubmitting(true)
     try {
@@ -163,7 +175,10 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                     </FormControl>
                     <SelectContent>
                       {chartOfAccounts.map((account) => (
-                        <SelectItem key={account.accountId} value={account.accountId.toString()}>
+                        <SelectItem
+                          key={account.accountId}
+                          value={account.accountId.toString()}
+                        >
                           {account.name}
                         </SelectItem>
                       ))}
@@ -190,7 +205,10 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                     </FormControl>
                     <SelectContent>
                       {chartOfAccounts.map((account) => (
-                        <SelectItem key={account.accountId} value={account.accountId.toString()}>
+                        <SelectItem
+                          key={account.accountId}
+                          value={account.accountId.toString()}
+                        >
                           {account.name}
                         </SelectItem>
                       ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,13 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { createAdvance } from '@/api/payment-requisition-api'
+import { createAdvance, getAllEmployees } from '@/api/payment-requisition-api'
 import { useToast } from '@/hooks/use-toast'
 import {
+  type Employee,
   requisitionAdvanceSchema,
   type RequisitionAdvanceType,
 } from '@/utils/type'
 import { useForm, useWatch } from 'react-hook-form'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface PaymentRequisitionAdvanceFormProps {
   requisition?: any
@@ -39,21 +43,44 @@ export default function PaymentRequisitionAdvanceForm({
   token = '',
   onSuccess = () => {},
 }: PaymentRequisitionAdvanceFormProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [employees, setEmployees] = useState<Employee[]>([])
 
   const getCurrentUser = () => {
     try {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        return JSON.parse(userStr)
-      }
-      return { userId: 60 }
+      return { userId: userData?.userId }
     } catch (error) {
       console.error('Error getting current user:', error)
       return { userId: 60 }
     }
   }
+
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const response = await getAllEmployees()
+      console.log('Raw API response:', response) // Log the entire response to see its structure
+
+      if (response && response.data) {
+        console.log('Employee data structure:', response.data[0]) // Log the first employee to see structure
+        setEmployees(response.data)
+        console.log('Employees data set:', response.data)
+      } else {
+        console.error('Invalid response format from getAllEmployees:', response)
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [fetchEmployees])
 
   const currentUser = getCurrentUser()
 
@@ -61,7 +88,7 @@ export default function PaymentRequisitionAdvanceForm({
     requisitionNo: requisition?.poNo || '',
     poId: requisition?.id || 0,
     vendorId: requisition?.vendorId || 0,
-    requestedBy: currentUser.employeeId,
+    requestedBy: 0, 
     createdBy: currentUser.userId,
     requestedDate: new Date(),
     advanceAmount: 0,
@@ -273,6 +300,40 @@ export default function PaymentRequisitionAdvanceForm({
                         ? new Date(e.target.value)
                         : null
                       field.onChange(date)
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="requestedBy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Requested By</FormLabel>
+                <FormControl>
+                  <CustomCombobox
+                    items={employees.map((e) => ({
+                      id: Number(e.id),
+                      name: e.employeeName,
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: Number(field.value),
+                            name:
+                              employees.find(
+                                (e) => Number(e.id) === Number(field.value)
+                              )?.employeeName || '',
+                          }
+                        : null
+                    }
+                    onChange={(value) => {
+                      console.log('Selected employee ID:', value?.id)
+                      field.onChange(value?.id || '')
                     }}
                   />
                 </FormControl>

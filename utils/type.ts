@@ -415,8 +415,8 @@ export interface User {
   username: string
   roleId: number
   roleName: string
-  userCompanies: Company[]
-  userLocations: Location[]
+  userCompanies: CompanyFromLocalstorage[]
+  userLocations: LocationFromLocalstorage[]
   voucherTypes: string[]
 }
 

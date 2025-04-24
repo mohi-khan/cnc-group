@@ -12,8 +12,14 @@ import {
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 import VoucherList from '@/components/voucher-list/voucher-list'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 export default function ContraVoucherTable() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
   // State variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
@@ -23,9 +29,7 @@ export default function ContraVoucherTable() {
 
   //getting user data from localStorage and setting it to state
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
@@ -38,7 +42,7 @@ export default function ContraVoucherTable() {
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   // Function to fetch all vouchers based on company and location IDs
   async function fetchAllVoucher(company: number[], location: number[]) {

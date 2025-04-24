@@ -19,6 +19,8 @@ import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 import { Popup } from '@/utils/popup'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 //child component props interface to define the props for the ContraVoucherPopup component
 interface ChildComponentProps {
@@ -28,6 +30,10 @@ interface ChildComponentProps {
 export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   fetchAllVoucher,
 }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
   //state variables
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -35,9 +41,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
 
   //getting user data from localStorage and setting it to state
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log(
         'Current userId from localStorage in everywhere:',
@@ -46,7 +50,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   //defaultValues is used to set the default values for the form fields
   const form = useForm<JournalEntryWithDetails>({

@@ -17,7 +17,9 @@ import { Button } from '@/components/ui/button'
 import { CalendarIcon, FileText } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { getAllCompany } from '@/api/company-api'
-import { Company, User } from '@/utils/type'
+import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface CashPositonHeadingProps {
   generatePdf: () => void
@@ -34,35 +36,29 @@ const CashPositonHeading = ({
   generateExcel,
   onFilterChange,
 }: CashPositonHeadingProps) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [companies, setCompanies] = useState<Company[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   // Now store the selected company name instead of companyId
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>('')
 
-  async function fetchCompanies() {
-    const response = await getAllCompany()
-    const data: Company[] = response.data || []
-
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData: User = JSON.parse(userStr)
-      setUser(userData)
-
-      const userCompanyIds = userData.userCompanies.map((uc) => uc.companyId)
-      const filteredCompanies = data.filter((company) =>
-        userCompanyIds.includes(company.companyId)
-      )
-      setCompanies(filteredCompanies)
-    }
-  }
-
+  // getting userData from local storage
   useEffect(() => {
-    fetchCompanies()
-  }, [])
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userData])
 
   // Whenever the start date, end date, or selected company name changes, pass the new filters upward.
   useEffect(() => {
@@ -232,8 +228,8 @@ const CashPositonHeading = ({
             <SelectContent>
               {companies.map((company) => (
                 // Use companyName as the select value for filtering
-                <SelectItem key={company.companyId} value={company.companyName}>
-                  {company.companyName}
+                <SelectItem key={company.company.companyId} value={company.company.companyName}>
+                  {company.company.companyName}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -57,6 +57,8 @@ import {
 } from '@/components/ui/pagination'
 import { CompanyType, getAllCompany } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 type SortColumn =
   | 'departmentName'
@@ -69,6 +71,11 @@ type SortColumn =
 type SortDirection = 'asc' | 'desc'
 
 export default function DepartmentManagement() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [departments, setDepartments] = useState<GetDepartment[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -127,15 +134,13 @@ export default function DepartmentManagement() {
     console.log('this is company is fetch by department components', response)
   }
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const onSubmit = async (values: z.infer<typeof departmentSchema>) => {
     setIsLoading(true)

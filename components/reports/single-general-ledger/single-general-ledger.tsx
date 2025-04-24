@@ -13,8 +13,15 @@ import {
 } from '@/api/journal-voucher-api'
 import { VoucherById } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 export default function SingleGenralLedger() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const voucherid: number = parseInt(useParams().voucherid as string, 10);
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
@@ -123,15 +130,13 @@ export default function SingleGenralLedger() {
   };
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const handleReverseVoucher = async () => {
     const createdId = userId

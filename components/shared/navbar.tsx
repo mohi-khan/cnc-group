@@ -5,20 +5,27 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Company, User } from '@/utils/type'
+import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
 import { MENU_ITEMS } from '@/utils/constants'
 import { DollarSign, Building, BookOpen, Repeat } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/tooltip'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 export default function Navbar() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [user, setUser] = useState<User | null>(null)
-  const [companies, setCompanies] = useState<Company[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isCompaniesOpen, setIsCompaniesOpen] = useState(false)
@@ -33,35 +40,15 @@ export default function Navbar() {
     router.push('/')
   }
 
+  // getting userData from local storage
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const response = await fetch(
-          'http://localhost:4000/api/company/get-all-companies'
-        )
-        const data: Company[] = await response.json()
-
-        const userStr = localStorage.getItem('currentUser')
-        if (userStr) {
-          const userData: User = JSON.parse(userStr)
-          setUser(userData)
-
-          // Filter companies based on userCompanies
-          const userCompanyIds = userData.userCompanies.map(
-            (uc) => uc.companyId
-          )
-          const filteredCompanies = data.filter((company) =>
-            userCompanyIds.includes(company.companyId)
-          )
-          setCompanies(filteredCompanies)
-        }
-      } catch (error) {
-        console.error('Error fetching companies:', error)
-      }
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+    } else {
+      console.log('No user data found in localStorage')
     }
-
-    fetchCompanies()
-  }, [])
+  }, [userData])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -85,19 +72,28 @@ export default function Navbar() {
   // Middleware to check route access
   const checkRouteAccess = (source: string) => {
     // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
-    if (source.includes('/settings/') && user?.roleId !== 2 ) {
+    if (source.includes('/settings/') && user?.roleId !== 2) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source.includes('/reports/') && (!user?.roleId || ![1, 2, 5].includes(user.roleId))) {
+    if (
+      source.includes('/reports/') &&
+      (!user?.roleId || ![1, 2, 5].includes(user.roleId))
+    ) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/bank/bank-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
+    if (
+      source === '/bank/bank-voucher' &&
+      (!user?.roleId || ![1, 2].includes(user.roleId))
+    ) {
       router.push('/unauthorized-access')
       return false
     }
-    if (source === '/cash/cash-voucher' && (!user?.roleId || ![1, 2].includes(user.roleId))) {
+    if (
+      source === '/cash/cash-voucher' &&
+      (!user?.roleId || ![1, 2].includes(user.roleId))
+    ) {
       router.push('/unauthorized-access')
       return false
     }
@@ -194,12 +190,12 @@ export default function Navbar() {
                     {companies?.length > 0 ? (
                       companies?.map((company) => (
                         <Link
-                          key={company?.companyId}
-                          href={`/company/${company.companyId}`}
+                          key={company?.company.companyId}
+                          href={`/company/${company.company.companyId}`}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           role="menuitem"
                         >
-                          {company?.companyName}
+                          {company?.company.companyName}
                         </Link>
                       ))
                     ) : (
@@ -257,65 +253,65 @@ export default function Navbar() {
         </div>
       </div>
       <div className="py-1 text-center">
-      <TooltipProvider>
-      <div className='flex gap-6 items-center justify-center'>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={'/cash/cash-voucher'}>
-              <Button variant="ghost" size="icon">
-                <DollarSign className="h-5 w-5" />
-                <span className="sr-only">Cash Voucher</span>
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Cash Voucher</p>
-          </TooltipContent>
-        </Tooltip>
+        <TooltipProvider>
+          <div className="flex gap-6 items-center justify-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/cash/cash-voucher'}>
+                  <Button variant="ghost" size="icon">
+                    <DollarSign className="h-5 w-5" />
+                    <span className="sr-only">Cash Voucher</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Cash Voucher</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={'/bank/bank-vouchers'}>
-              <Button variant="ghost" size="icon">
-                <Building className="h-5 w-5" />
-                <span className="sr-only">Bank Voucher</span>
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Bank Voucher</p>
-          </TooltipContent>
-        </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/bank/bank-vouchers'}>
+                  <Button variant="ghost" size="icon">
+                    <Building className="h-5 w-5" />
+                    <span className="sr-only">Bank Voucher</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Bank Voucher</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={'/accounting/journal-voucher'}>
-              <Button variant="ghost" size="icon">
-                <BookOpen className="h-5 w-5" />
-                <span className="sr-only">Journal Voucher</span>
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Journal Voucher</p>
-          </TooltipContent>
-        </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/accounting/journal-voucher'}>
+                  <Button variant="ghost" size="icon">
+                    <BookOpen className="h-5 w-5" />
+                    <span className="sr-only">Journal Voucher</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Journal Voucher</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={'/cash/contra-vouchers'}>
-              <Button variant="ghost" size="icon">
-                <Repeat className="h-5 w-5" />
-                <span className="sr-only">Contra Voucher</span>
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Contra Voucher</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/cash/contra-vouchers'}>
+                  <Button variant="ghost" size="icon">
+                    <Repeat className="h-5 w-5" />
+                    <span className="sr-only">Contra Voucher</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Contra Voucher</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
       </div>
     </nav>
   )

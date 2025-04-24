@@ -85,6 +85,8 @@ import {
 } from '@/components/ui/pagination'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllCurrency } from '@/api/exchange-api'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 
@@ -163,6 +165,11 @@ const codeGroups: CodeGroup[] = [
 ]
 
 export default function ChartOfAccountsTable() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [searchTerm, setSearchTerm] = React.useState('')
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
@@ -184,9 +191,7 @@ export default function ChartOfAccountsTable() {
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log(
         'Current userId from localStorage in everywhere:',
@@ -195,7 +200,7 @@ export default function ChartOfAccountsTable() {
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({

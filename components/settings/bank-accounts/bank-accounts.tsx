@@ -63,6 +63,8 @@ import {
   type BankAccount,
   type CreateBankAccount,
 } from '@/utils/type'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 type SortColumn =
   | 'accountName'
@@ -75,6 +77,11 @@ type SortColumn =
 type SortDirection = 'asc' | 'desc'
 
 export default function BankAccounts() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingAccount, setEditingAccount] =
@@ -88,15 +95,13 @@ export default function BankAccounts() {
   const itemsPerPage = 10
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const form = useForm<BankAccount>({
     resolver: zodResolver(createBankAccountSchema),

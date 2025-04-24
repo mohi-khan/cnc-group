@@ -18,7 +18,9 @@ import {
 import { format, startOfMonth, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { getAllCompany } from '@/api/company-api'
-import { Company, User } from '@/utils/type'
+import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface CashFlowStatementHeadingProps {
   generatePdf: () => void
@@ -35,35 +37,29 @@ export default function ProfitAndLossHeading({
   generateExcel,
   onFilterChange,
 }: CashFlowStatementHeadingProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [startDate, setStartDate] = useState<Date>(
     startOfMonth(subMonths(new Date(), 1)) // Previous month's first day
   )
   const [endDate, setEndDate] = useState<Date>(new Date()) // Today's date
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
-  const [companies, setCompanies] = useState<Company[]>([])
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
 
-  async function fetchCompanies() {
-    const response = await getAllCompany()
-    const data: Company[] = response.data || []
-
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData: User = JSON.parse(userStr)
-      setUser(userData)
-
-      const userCompanyIds = userData.userCompanies.map((uc) => uc.companyId)
-      const filteredCompanies = data.filter((company) =>
-        userCompanyIds.includes(company.companyId)
-      )
-      setCompanies(filteredCompanies)
-    }
-  }
-
+  // getting userData from local storage
   useEffect(() => {
-    fetchCompanies()
-  }, [])
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userData])
 
   useEffect(() => {
     onFilterChange(startDate, endDate, selectedCompanyId)
@@ -225,10 +221,10 @@ export default function ProfitAndLossHeading({
           <SelectContent>
             {companies.map((company) => (
               <SelectItem
-                key={company.companyId}
-                value={company.companyId?.toString()??""}
+                key={company.company.companyId}
+                value={company.company.companyId?.toString()??""}
               >
-                {company.companyName}
+                {company.company.companyName}
               </SelectItem>
             ))}
           </SelectContent>

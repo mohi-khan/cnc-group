@@ -28,22 +28,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { User } from '@/utils/type'
 import { createFinancialYear, financialYear } from '@/api/financial-year.api'
 import { toast } from '@/hooks/use-toast'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const FinancialYear = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [userId, setUserId] = useState(0)
   const [error, setError] = useState('')
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData: User = JSON.parse(userStr)
-
+    if (userData) {
       console.log('Current user from localStorage:', userId)
       setUserId(userData.userId)
     } else {
       console.log('No user data found in localStorage')
       setError('User not authenticated. Please log in.')
     }
-  }, [userId])
+  }, [userId, userData])
 
   const form = useForm<financialYear>({
     /*  resolver: zodResolver(createFinancialYearSchema),

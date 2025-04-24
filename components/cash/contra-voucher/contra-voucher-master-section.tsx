@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/dialog'
 import { Pencil } from 'lucide-react'
 import { Label } from '@/components/ui/label'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -47,6 +49,10 @@ interface JournalVoucherMasterSectionProps {
 export function ContraVoucherMasterSection({
   form,
 }: JournalVoucherMasterSectionProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [user, setUser] = useState<User | null>(null)
@@ -61,9 +67,7 @@ export function ContraVoucherMasterSection({
   const [exchangeRate, setExchangeRate] = useState<number>(0)
 
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
@@ -76,7 +80,7 @@ export function ContraVoucherMasterSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   async function fetchAllVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
@@ -230,16 +234,22 @@ export function ContraVoucherMasterSection({
                   <CustomCombobox
                     items={currency.map((curr: CurrencyType) => ({
                       id: curr.currencyId.toString(),
-                      name: `${curr.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === curr.currencyId)?.rate ?? 1}` || 'Unnamed Currency',
+                      name:
+                        `${curr.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === curr.currencyId)?.rate ?? 1}` ||
+                        'Unnamed Currency',
                     }))}
                     value={
                       field.value
                         ? {
                             id: field.value.toString(),
-                            name: `${currency.find(
-                                (curr: CurrencyType) =>
-                                  curr.currencyId === field.value
-                              )?.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === field.value)?.rate ?? 1}` || 'Unnamed Currency',
+                            name:
+                              `${
+                                currency.find(
+                                  (curr: CurrencyType) =>
+                                    curr.currencyId === field.value
+                                )?.currencyCode
+                              } - Rate: ${exchanges.find((e) => e.baseCurrency === field.value)?.rate ?? 1}` ||
+                              'Unnamed Currency',
                           }
                         : null
                     }
@@ -256,7 +266,10 @@ export function ContraVoucherMasterSection({
                       setExchangeRate(exchange?.rate ?? 1)
                     }}
                     placeholder="Select currency"
-                  />                  <Dialog>                    <DialogTrigger asChild>
+                  />{' '}
+                  <Dialog>
+                    {' '}
+                    <DialogTrigger asChild>
                       <Button variant="outline" className="px-3">
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -329,8 +342,6 @@ export function ContraVoucherMasterSection({
           <FormMessage />
         </div> */}
       </div>
-
-
 
       {/* Notes Textarea */}
       <FormField

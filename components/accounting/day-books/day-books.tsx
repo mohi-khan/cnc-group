@@ -12,17 +12,24 @@ import {
   type User,
   type Voucher,
 } from '@/utils/type'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 const DayBooks = () => {
+  //getting userData from jotai atom component
   const router = useRouter()
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  // State variables
   const { toast } = useToast()
   const [voucherGrid, setVoucherGrid] = useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+
 
   // New state for the selected date. Defaults to today's date.
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -56,31 +63,25 @@ const DayBooks = () => {
   }
 
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (typeof window !== 'undefined') {
-      try {
-        if (userStr) {
-          const userData = JSON.parse(userStr)
-          setUser(userData)
-          setCompanies(userData.userCompanies || [])
-          setLocations(userData.userLocations || [])
-          if (!userData.voucherTypes.includes('Cash Voucher')) {
-            router.push('/unauthorized-access')
-          }
-        } else {
-          router.push('/unauthorized-access')
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load user data',
-        })
-      } finally {
-        setIsLoading(false)
+    if (userData) {
+      console.log("🚀 ~ useEffect ~ userData:", userData)
+      setUser(userData)
+      if (userData?.userCompanies?.length > 0) {
+        setCompanies(userData.userCompanies)
       }
+      if (userData?.userLocations?.length > 0) {
+        setLocations(userData.userLocations)
+      }
+      if (!userData.voucherTypes.includes('Cash Voucher')) {
+        router.push('/unauthorized-access')
+      }
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Failed to load user data',
+      })
     }
-  }, [router, toast])
+  }, [router, userData, toast])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)

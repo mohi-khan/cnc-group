@@ -2,6 +2,7 @@ import { fetchApi } from '@/utils/http'
 import {
   ApproveInvoiceType,
   CreateInvoiceType,
+  Employee,
   GetPaymentOrder,
   PurchaseEntryType,
   RequisitionAdvanceType,
@@ -29,6 +30,17 @@ export async function getAllAdvance(data: { token: string }) {
     method: 'GET',
     headers: {
       Authorization: `${data.token}`,
+    },
+  })
+}
+
+export async function getAllEmployees() {
+  // console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
+  return fetchApi<Employee[]>({
+    url: `api/employee/getEmployees`,
+    method: 'GET',
+    headers: {
+      // Authorization: `${data.token}`,
     },
   })
 }

@@ -31,6 +31,8 @@ import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CURRENCY_ITEMS } from '@/utils/constants'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllCurrency } from '@/api/exchange-api'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -39,6 +41,10 @@ interface JournalVoucherMasterSectionProps {
 export function JournalVoucherMasterSection({
   form,
 }: JournalVoucherMasterSectionProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
   // State variables
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
     []
@@ -47,14 +53,11 @@ export function JournalVoucherMasterSection({
     []
   )
   const [user, setUser] = React.useState<User | null>(null)
-  const [vouchergrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Fetching user data from localStorage and setting it to state
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
@@ -67,7 +70,7 @@ export function JournalVoucherMasterSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   // Fetching all vouchers based on company and location IDs
   async function fetchAllVoucher(company: number[], location: number[]) {

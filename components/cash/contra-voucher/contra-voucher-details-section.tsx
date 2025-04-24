@@ -33,6 +33,8 @@ import {
 import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -43,6 +45,11 @@ export function ContraVoucherDetailsSection({
   form,
   onRemoveEntry,
 }: ContraVoucherDetailsSectionProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
   const [accountQuery, setAccountQuery] = useState('')
@@ -65,9 +72,7 @@ export function ContraVoucherDetailsSection({
         )
 
   React.useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       setUserId(userData.userId)
       console.log(
         'Current userId from localStorage in everywhere:',
@@ -76,7 +81,7 @@ export function ContraVoucherDetailsSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [])
+  }, [userData])
 
   const entries = form.watch('journalDetails')
 

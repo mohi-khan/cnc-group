@@ -46,11 +46,18 @@ import {
 } from '@/components/ui/table'
 import { formatCurrency } from '@/utils/format'
 import { useForm } from 'react-hook-form'
+import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 // Use the imported schema instead of defining a new one
 type FormValues = z.infer<typeof createAssetDepreciationSchema>
 
 export default function AssetDepreciation() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
+  // State variables
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [companies, setCompanies] = useState<any[]>([])
@@ -78,21 +85,19 @@ export default function AssetDepreciation() {
 
   const token = `Bearer ${mainToken}`
 
-  console.log("🚀 ~ AssetDepreciation ~ token:", token)
+  console.log('🚀 ~ AssetDepreciation ~ token:', token)
 
   useEffect(() => {
     // Ensure we're in a browser environment
     if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('currentUser')
-      if (userStr) {
-        const userData = JSON.parse(userStr)
+      if (userData) {
         setUserId(userData?.userId)
         console.log('Current userId from localStorage:', userData.userId)
       } else {
         console.log('No user data found in localStorage')
       }
     }
-  }, [])
+  }, [userData])
 
   // Handle preview request
   const onPreview = async (data: FormValues) => {

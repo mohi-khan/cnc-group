@@ -34,9 +34,18 @@ import type { z } from 'zod'
 import CashVoucherMaster from './cash-voucher-master'
 import CashVoucherDetails from './cash-voucher-details'
 import VoucherList from '@/components/voucher-list/voucher-list'
+import {
+  useInitializeUser,
+  userDataAtom,
+} from '@/utils/user'
+import { useAtom } from 'jotai'
 
 export default function CashVoucher() {
+  //getting userData from jotai atom component
   const router = useRouter()
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+
   // State variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
@@ -77,33 +86,27 @@ export default function CashVoucher() {
 
   //Function to get user data from localStorage and set it to state
   useEffect(() => {
-    const userStr = localStorage.getItem('currentUser')
     setIsLoadingCompanies(true)
     setIsLoadingLocations(true)
-    try {
-      if (userStr) {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
-        setCompanies(userData.userCompanies || [])
-        setLocations(userData.userLocations || [])
-        if (!userData.voucherTypes.includes('Cash Voucher')) {
-          router.push('/unauthorized-access')
-        }
-      } else {
+    if (userData) {
+      console.log("🚀 ~ useEffect ~ userData:", userData)
+      setUser(userData)
+      if (userData?.userCompanies?.length > 0) {
+        setCompanies(userData.userCompanies)
+      }
+      if (userData?.userLocations?.length > 0) {
+        setLocations(userData.userLocations)
+      }
+      if (!userData.voucherTypes.includes('Cash Voucher')) {
         router.push('/unauthorized-access')
       }
-    } catch (error) {
-      console.error('Error parsing user data:', error)
+    } else {
       toast({
         title: 'Error',
         description: 'Failed to load user data',
       })
-    } finally {
-      // setIsLoadingCompanies(false)
-      // setIsLoadingLocations(false)
-      setIsLoading(false)
     }
-  }, [router]) // Added router to dependencies
+  }, [router, userData])
 
   //Function to get company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
@@ -330,9 +333,7 @@ export default function CashVoucher() {
     status: 'Draft' | 'Posted'
   ) => {
     console.log('Before Any edit', values)
-    const userStr = localStorage.getItem('currentUser')
-    if (userStr) {
-      const userData = JSON.parse(userStr)
+    if (userData) {
       console.log('Current userId from localStorage:', userData.userId)
       setUser(userData)
     }
