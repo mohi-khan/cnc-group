@@ -11,10 +11,3 @@ export async function getAllTradeDebtors() {
   })
 }
 
-// Get All companies api
-export async function getAllCompany() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}

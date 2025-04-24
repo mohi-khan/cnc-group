@@ -53,8 +53,8 @@ import {
 import {
   createResPartner,
   editResPartner,
-  getAllResPartners,
-  getAllCompanies,
+ 
+ 
 } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
 import { Company, resPartnerSchema, type ResPartner } from '@/utils/type'
@@ -68,6 +68,7 @@ import {
 } from '@/components/ui/pagination'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
 
 export default function ResPartners() {
   //getting userData from jotai atom component

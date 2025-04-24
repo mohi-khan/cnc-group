@@ -27,7 +27,7 @@ import {
 } from '@/utils/type'
 import {
   createAssetCategory,
-  getAllChartOfAccounts,
+
 } from '@/api/asset-category-api'
 import {
   Dialog,
@@ -38,6 +38,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface AssetCategoryPopupProps {
   isOpen: boolean

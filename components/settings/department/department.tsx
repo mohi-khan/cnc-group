@@ -31,7 +31,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
-import { createDepartment, getAllDepartments } from '@/api/department-api'
+import { createDepartment } from '@/api/department-api'
 import {
   type Department,
   departmentsArraySchema,
@@ -55,10 +55,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { CompanyType, getAllCompany } from '@/api/company-api'
+import { CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies, getAllDepartments } from '@/api/common-shared-api'
 
 type SortColumn =
   | 'departmentName'
@@ -125,7 +126,7 @@ export default function DepartmentManagement() {
   }, [fetchDepartments])
 
   const fetchCompany = async () => {
-    const response = await getAllCompany()
+    const response = await getAllCompanies()
     if (response.data) {
       setCompany(response.data)
     } else {

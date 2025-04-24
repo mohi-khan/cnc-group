@@ -28,11 +28,11 @@ import {
 import React, { useEffect, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
-import { CURRENCY_ITEMS } from '@/utils/constants'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllCurrency } from '@/api/exchange-api'
+import { getAllCurrency } from '@/api/common-shared-api'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>

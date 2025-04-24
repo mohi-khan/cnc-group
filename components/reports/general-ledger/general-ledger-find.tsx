@@ -10,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AccountsHead, ChartOfAccount, GeneralLedgerType } from '@/utils/type'
-import { getAllCoa } from '@/api/general-ledger-api'
+import { AccountsHead } from '@/utils/type'
+
 import { FileText } from 'lucide-react'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface GeneralLedgerFindProps {
   onSearch: (accountcode: number, fromdate: string, todate: string) => void
@@ -31,7 +32,7 @@ export default function GeneralLedgerFind({
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllCoa()
+    const fetchedAccounts = await getAllChartOfAccounts()
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({
@@ -190,4 +191,3 @@ export default function GeneralLedgerFind({
     </div>
   )
 }
-

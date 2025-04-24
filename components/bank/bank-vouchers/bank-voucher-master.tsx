@@ -1,4 +1,5 @@
-import { getAllCurrency } from '@/api/exchange-api'
+
+import { getAllCurrency } from '@/api/common-shared-api'
 import {
   FormControl,
   FormField,

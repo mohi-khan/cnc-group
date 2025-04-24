@@ -16,12 +16,13 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { getAllCompany } from '@/api/company-api'
+
 import { Company, CompanyFromLocalstorage, Department, GetDepartment, User } from '@/utils/type'
 
 import { getAllDepartments } from '@/api/department-summary-api'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface CostCenterSummaryHeadingProps {
   generatePdf: () => void

@@ -29,7 +29,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import {
   updateCostCenter,
-  getAllCostCenters,
+ 
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/pagination'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCostCenters } from '@/api/common-shared-api'
 
 export default function CostCenterManagement() {
   //getting userData from jotai atom component

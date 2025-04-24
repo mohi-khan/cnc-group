@@ -16,19 +16,14 @@ import {
 import BankVoucherMaster from '@/components/bank/bank-vouchers/bank-voucher-master'
 import BankVoucherDetails from '@/components/bank/bank-vouchers/bank-voucher-details'
 import BankVoucherSubmit from '@/components/bank/bank-vouchers/bank-voucher-submit'
-import {
-  getAllBankAccounts,
-  getAllChartOfAccounts,
-  getAllCostCenters,
-  getAllDepartments,
-  getAllResPartners,
-} from '@/api/bank-vouchers-api'
+
 import type { z } from 'zod'
 import { createJournalEntryWithDetails } from '@/api/vouchers-api'
 import PaymentRequisitionAdvanceForm from './payment-requisition-advance-form'
 import PaymentRequisitionCreateInvoiceForm from './payment-requisition-create-invoice'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 interface PaymentRequisitionPopupProps {
   isOpen: boolean

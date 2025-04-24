@@ -4,8 +4,9 @@ import LoanList from './iou-list'
 import LoanPopUp from './iou-popup'
 import IouList from './iou-list'
 import IouPopUp from './iou-popup'
-import { getEmployee, getLoanData } from '@/api/iou-api'
+import {  getLoanData } from '@/api/iou-api'
 import { Employee, IouRecordGetType } from '@/utils/type'
+import { getEmployee } from '@/api/common-shared-api'
 
 const Iou = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)

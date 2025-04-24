@@ -28,10 +28,10 @@ import { useToast } from '@/hooks/use-toast'
 import {
   createExchange,
   editExchange,
-  getAllCurrency,
-  getAllExchange,
+
 } from '@/api/exchange-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
 
 export default function ExchangePage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false)

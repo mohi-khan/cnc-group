@@ -30,8 +30,6 @@ import {
 import {
   createAssetDepreciation,
   createJournalEntryWithDetails,
-  getAllCompanies,
-  getAssets,
   previewAssetDepreciation,
 } from '@/api/asset-depreciation-api'
 import { toast } from '@/hooks/use-toast'
@@ -48,6 +46,7 @@ import { formatCurrency } from '@/utils/format'
 import { useForm } from 'react-hook-form'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies, getAssets } from '@/api/common-shared-api'
 
 // Use the imported schema instead of defining a new one
 type FormValues = z.infer<typeof createAssetDepreciationSchema>

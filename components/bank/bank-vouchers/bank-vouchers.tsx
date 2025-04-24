@@ -19,13 +19,7 @@ import {
   type User,
   FormStateType,
 } from '@/utils/type'
-import {
-  getAllBankAccounts,
-  getAllChartOfAccounts,
-  getAllCostCenters,
-  getAllDepartments,
-  getAllResPartners,
-} from '@/api/bank-vouchers-api'
+
 import {
   createJournalEntryWithDetails,
   getAllVoucher,
@@ -38,6 +32,7 @@ import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
 export default function BankVoucher() {
   //getting userData from jotai atom component

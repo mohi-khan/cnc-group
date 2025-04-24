@@ -26,15 +26,13 @@ import type {
   AccountsHead,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
-import {
-  getAllChartOfAccounts,
-  getAllBankAccounts,
-} from '@/api/contra-voucher-api'
+
 import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllBankAccounts, getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>

@@ -17,10 +17,10 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { getAllCompany } from '@/api/company-api'
 import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface TrialBalanceHeadingProps {
   generatePdf: () => void

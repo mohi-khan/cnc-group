@@ -16,10 +16,10 @@ import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { CalendarIcon, FileText } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { getAllCompany } from '@/api/company-api'
 import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 interface CashPositonHeadingProps {
   generatePdf: () => void

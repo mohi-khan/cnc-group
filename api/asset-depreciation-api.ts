@@ -30,22 +30,7 @@ export async function previewAssetDepreciation(
   })
 }
 
-export async function getAllCompanies() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
 
-export async function getAssets() {
-  return fetchApi<GetAssetData[]>({
-    url: 'api/asset/get-all-asset',
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-}
 
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails

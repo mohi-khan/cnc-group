@@ -29,9 +29,3 @@ export async function getMeterEntry() {
 }
 
 
-export async function getAllCoa() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}

@@ -1,13 +1,12 @@
 import { fetchApi } from '@/utils/http'
-import { Department, GetDepartment } from '@/utils/type'
-import { CompanyType } from './company-api'
+import { Department } from '@/utils/type'
 
-export async function getAllDepartments() {
-  return fetchApi<GetDepartment[]>({
-    url: 'api/department/get-all-departments',
-    method: 'GET',
-  })
-}
+// export async function getAllDepartments() {
+//   return fetchApi<GetDepartment[]>({
+//     url: 'api/department/get-all-departments',
+//     method: 'GET',
+//   })
+// }
 
 export async function createDepartment(data: Department) {
   console.log('Creating department:', data)
@@ -18,10 +17,4 @@ export async function createDepartment(data: Department) {
   })
 }
 
-//get all companies api
-export async function getAllCompany() {
-  return fetchApi<CompanyType[]>({
-    url: 'api/company/get-all-companies',
-    method: 'GET',
-  })
-}
+

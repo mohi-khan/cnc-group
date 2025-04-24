@@ -27,8 +27,8 @@ import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CURRENCY_ITEMS } from '@/utils/constants'
 import { Button } from '@/components/ui/button'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllCurrency } from '@/api/exchange-api'
-import { getAllExchange } from '@/api/contra-voucher-api'
+
+
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ import { Pencil } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>

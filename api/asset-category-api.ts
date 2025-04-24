@@ -22,10 +22,5 @@ export async function createAssetCategory(data: CreateAssetCategoryData) {
   })
 }
 
-export async function getAllChartOfAccounts() {
-  return fetchApi<AccountsHead[]>({
-    url: 'api/chart-of-accounts/get-all-coa',
-    method: 'GET',
-  })
-}
+
 

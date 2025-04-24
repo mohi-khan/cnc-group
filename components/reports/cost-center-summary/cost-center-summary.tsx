@@ -8,9 +8,10 @@ import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import {
-  getAllCostCenters,
+ 
   getCostCenterSummary,
 } from '@/api/cost-center-summary-api'
+import { getAllCostCenters } from '@/api/common-shared-api'
 
 const CostCenterSummary = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'cost_center_summary.pdf' })

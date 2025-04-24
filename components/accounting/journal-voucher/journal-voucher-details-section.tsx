@@ -16,12 +16,9 @@ import type {
 } from '@/utils/type'
 import React, { useEffect, useRef } from 'react'
 import { toast } from '@/hooks/use-toast'
-import {
-  getAllChartOfAccounts,
-  getAllCostCenters,
-  getAllDepartments,
-} from '@/api/journal-voucher-api'
+
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllChartOfAccounts, getAllCostCenters, getAllDepartments } from '@/api/common-shared-api'
 
 // Define the props for the JournalVoucherDetailsSection component
 interface JournalVoucherDetailsSectionProps {

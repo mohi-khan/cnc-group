@@ -5,7 +5,7 @@ import type { AssetDepreciationReportType } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2 } from 'lucide-react'
-import { getAllCompanies, getAssetReport } from '@/api/asset-report-api'
+import {  getAssetReport } from '@/api/asset-report-api'
 import {
   Table,
   TableBody,
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { toast } from '@/hooks/use-toast'
+import { getAllCompanies } from '@/api/common-shared-api'
 
 const AssetReport = () => {
   const [loading, setLoading] = useState(false)

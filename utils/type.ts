@@ -1442,3 +1442,12 @@ export interface GetTradeDebtorsType {
   balanceCurrentYear: number
   balanceLastYear: number
 }
+
+export interface User {
+  id: number
+  username: string
+  voucherTypes: string[]
+  roleId: number
+  active: boolean
+  roleName: string
+}

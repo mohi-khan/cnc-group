@@ -22,13 +22,14 @@ import { Button } from '@/components/ui/button'
 import type { BankAccount, BankReconciliationType } from '@/utils/type'
 import { useToast } from '@/hooks/use-toast'
 import {
-  getAllBankAccounts,
+ 
   getBankReconciliations,
   updateBankReconciliation,
 } from '@/api/bank-reconciliation-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
 import { Check, Edit } from 'lucide-react'
+import { getAllBankAccounts } from '@/api/common-shared-api'
 
 export const BankReconciliation = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
