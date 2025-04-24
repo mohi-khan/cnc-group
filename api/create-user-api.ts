@@ -46,6 +46,7 @@ const signUpSchema = z
     locationid: z
       .array(z.number())
       .min(1, 'At least one location type is required'),
+    employeeId: z.number()
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

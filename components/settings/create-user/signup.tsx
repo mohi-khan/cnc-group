@@ -42,6 +42,7 @@ export default function SignUp() {
     username: '',
     password: '',
     confirmPassword: '',
+    employeeId: 1,
     active: true,
     roleId: 2,
     voucherTypes: [],
@@ -56,7 +57,6 @@ export default function SignUp() {
   //     userId: 1,
   //     locationId: [],
   // })
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -244,6 +244,7 @@ export default function SignUp() {
         username: '',
         password: '',
         confirmPassword: '',
+        employeeId: 1,
         active: true,
         roleId: 2,
         voucherTypes: [],
