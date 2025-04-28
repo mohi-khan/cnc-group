@@ -14,10 +14,14 @@ import {
 import { CompanyType } from './company-api'
 
 // Chart of Accounts Get Api
-export async function getAllChartOfAccounts() {
+export async function getAllChartOfAccounts(token: string) {
   return fetchApi<AccountsHead[]>({
     url: 'api/chart-of-accounts/get-all-coa',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
@@ -41,10 +45,14 @@ export async function getAssets() {
 }
 
 // All Department Get Api
-export async function getAllDepartments() {
+export async function getAllDepartments(token: string) {
   return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
@@ -57,10 +65,14 @@ export async function getAllResPartners() {
 }
 
 // All Bank Accounts Get Api
-export async function getAllBankAccounts() {
+export async function getAllBankAccounts(token: string) {
   return fetchApi<BankAccount[]>({
     url: 'api/bank-accounts/get-all-bank-accounts',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 

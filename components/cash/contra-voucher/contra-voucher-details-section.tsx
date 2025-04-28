@@ -7,32 +7,23 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Trash2 } from 'lucide-react'
 import type {
-  ChartOfAccount,
   JournalEntryWithDetails,
   BankAccount,
   AccountsHead,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
-
-import { Combobox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllBankAccounts, getAllChartOfAccounts } from '@/api/common-shared-api'
+import {
+  getAllBankAccounts,
+  getAllChartOfAccounts,
+} from '@/api/common-shared-api'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -46,28 +37,15 @@ export function ContraVoucherDetailsSection({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
-  const [accountQuery, setAccountQuery] = useState('')
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
   const [userId, setUserId] = useState<number>()
-
-  const filteredAccounts =
-    accountQuery === ''
-      ? accounts
-      : accounts.filter(
-          (account) =>
-            account.accountName
-              .toLowerCase()
-              .includes(accountQuery.toLowerCase()) ||
-            account.accountNumber
-              .toLowerCase()
-              .includes(accountQuery.toLowerCase())
-        )
 
   React.useEffect(() => {
     if (userData) {
@@ -102,7 +80,7 @@ export function ContraVoucherDetailsSection({
   }, [entries.length, form])
 
   const fetchChartOfAccounts = async () => {
-    const response = await getAllChartOfAccounts()
+    const response = await getAllChartOfAccounts(token)
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -115,7 +93,7 @@ export function ContraVoucherDetailsSection({
   }
 
   const fetchBankAccounts = async () => {
-    const response = await getAllBankAccounts()
+    const response = await getAllBankAccounts(token)
     if (response.error || !response.data) {
       toast({
         title: 'Error',

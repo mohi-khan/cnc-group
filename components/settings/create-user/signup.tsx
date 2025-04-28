@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -20,15 +21,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff } from 'lucide-react'
 import {
   signUp,
-  SignUpData,
+  type SignUpData,
   getAllCompanies,
-  CompanyData,
+  type CompanyData,
   getAllLocations,
-  LocationData,
+  type LocationData,
   getAllRoles,
-  RoleData,
+  type RoleData,
 } from '../../../api/create-user-api'
 import { toast } from '@/hooks/use-toast'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 enum VoucherTypes {
   Cash = 'Cash Voucher',
@@ -57,6 +60,12 @@ export default function SignUp() {
   //     userId: 1,
   //     locationId: [],
   // })
+
+  //token from atom
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  //sate variables
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -77,7 +86,7 @@ export default function SignUp() {
     const { name, value } = e.target
     setUserFormData((prev) => ({
       ...prev,
-      [name]: name === 'roleId' ? parseInt(value, 10) : value,
+      [name]: name === 'roleId' ? Number.parseInt(value, 10) : value,
     }))
   }
   ///For Validating Pasword on Inline //////
@@ -134,8 +143,8 @@ export default function SignUp() {
     }
   }
 
-  async function fetchAllCompanies() {
-    const fetchedCompanies = await getAllCompanies()
+  const fetchAllCompanies = useCallback(async () => {
+    const fetchedCompanies = await getAllCompanies(token)
     console.log('Fetched companies:', fetchedCompanies.data)
 
     if (fetchedCompanies.error || !fetchedCompanies.data) {
@@ -147,22 +156,44 @@ export default function SignUp() {
     } else {
       setCompanies(fetchedCompanies.data)
     }
-  }
+  }, [toast, token])
 
-  async function fetchAllLocations() {
-    const fetchedLocations = await getAllLocations()
-    
+  const fetchAllLocations = useCallback(async () => {
+    const fetchedLocations = await getAllLocations(token)
+
     if (fetchedLocations.error || !fetchedLocations.data) {
       console.error('Error getting location:', fetchedLocations.error)
       toast({
         title: 'Error',
-        description: fetchedLocations.error?.message || 'Failed to get location',
+        description:
+          fetchedLocations.error?.message || 'Failed to get location',
       })
     } else {
       console.log('Fetched locations:', fetchedLocations.data)
       setLocations(fetchedLocations.data)
     }
-  }
+  }, [toast, token])
+
+  const fetchAllRoles = useCallback(async () => {
+    const fetchedRoles = await getAllRoles(token)
+
+    if (fetchedRoles.error || !fetchedRoles.data) {
+      console.error('Error getting roles:', fetchedRoles.error)
+      toast({
+        title: 'Error',
+        description: fetchedRoles.error?.message || 'Failed to get roles',
+      })
+    } else {
+      console.log('Fetched roles:', fetchedRoles.data)
+      setRoles(fetchedRoles.data)
+    }
+  }, [toast, token])
+
+  useEffect(() => {
+    fetchAllCompanies()
+    fetchAllLocations()
+    fetchAllRoles()
+  }, [fetchAllCompanies, fetchAllLocations, fetchAllRoles])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,9 +204,8 @@ export default function SignUp() {
           await Promise.all([
             fetchAllCompanies(),
             fetchAllLocations(),
-            getAllRoles(),
+            fetchAllRoles(),
           ])
-        setRoles(fetchedRoles)
       } catch (error) {
         console.error('Error fetching data:', error)
         setError(
@@ -212,26 +242,6 @@ export default function SignUp() {
 
       const newUserId = signUpResult.userId // Assuming the API returns the new user's ID
       console.log(newUserId)
-
-      // Step 2: Create user-location associations
-      // if (userFormData.locationid.length > 0) {
-      //     const userLocationData = {
-      //         userId: newUserId,
-      //         locationId: userFormData.locationid
-      //     }
-      //     console.log('Creating user locations with data:', userLocationData);
-      //     await createUserLocation(userLocationData)
-      // }
-
-      // // Step 3: Create user-company associations
-      // if (userFormData.companyid.length > 0) {
-      //     const userCompanyData = {
-      //         userId: newUserId,
-      //         companyId: userFormData.companyid
-      //     }
-      //     console.log('Creating user companies with data:', userCompanyData);
-      //     await createUserCompany(userCompanyData)
-      // }
 
       setFeedback({
         type: 'success',
