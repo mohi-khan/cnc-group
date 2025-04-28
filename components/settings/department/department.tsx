@@ -126,15 +126,16 @@ export default function DepartmentManagement() {
     fetchCompany()
   }, [fetchDepartments])
 
-  const fetchCompany = async () => {
-    const response = await getAllCompanies()
+  const fetchCompany = useCallback(async () => {
+    const response = await getAllCompanies(token)
     if (response.data) {
       setCompany(response.data)
     } else {
       setCompany([])
     }
     console.log('this is company is fetch by department components', response)
-  }
+  }, [])
+
   React.useEffect(() => {
     if (userData) {
       setUserId(userData?.userId)
@@ -264,7 +265,7 @@ export default function DepartmentManagement() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Departments</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>
