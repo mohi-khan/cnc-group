@@ -26,10 +26,14 @@ export async function getAllChartOfAccounts(token: string) {
 }
 
 // All Company Get Api
-export async function getAllCompanies() {
+export async function getAllCompanies(token: string) {
   return fetchApi<CompanyType[]>({
     url: 'api/company/get-all-companies',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
