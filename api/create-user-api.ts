@@ -123,44 +123,63 @@ export async function signUp(data: SignUpData) {
 }
 
 // Get all companies function
-export async function getAllCompanies() {
+export async function getAllCompanies(token: string) {
   return fetchApi<CompanyData[]>({
     url: 'api/company/get-all-companies',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
-export async function getAllLocations() {
+export async function getAllLocations(token: string) {
   return fetchApi<LocationData[]>({
     url: 'api/location/get-all-locations',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
 // Get all roles function
-export async function getAllRoles(): Promise<RoleData[]> {
-  const response = await fetch(`${API_BASE_URL}/api/roles/get-all-roles`)
+// export async function getAllRoles(token: string): Promise<RoleData[]> {
+//   const response = await fetch(`${API_BASE_URL}/api/roles/get-all-roles`)
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch roles')
-  }
+//   if (!response.ok) {
+//     throw new Error('Failed to fetch roles')
+//   }
 
-  const responseData = await response.json()
-  const roles = responseData.data
+//   const responseData = await response.json()
+//   const roles = responseData.data
 
-  return roles
-    .map((role: any) => {
-      try {
-        return roleSchema.parse({
-          roleId: role.roleId,
-          roleName: role.roleName,
-        })
-      } catch (error) {
-        console.error('Error parsing role:', role, error)
-        return null
-      }
-    })
-    .filter((role: RoleData | null): role is RoleData => role !== null)
+//   return roles
+//     .map((role: any) => {
+//       try {
+//         return roleSchema.parse({
+//           roleId: role.roleId,
+//           roleName: role.roleName,
+//         })
+//       } catch (error) {
+//         console.error('Error parsing role:', role, error)
+//         return null
+//       }
+//     })
+//     .filter((role: RoleData | null): role is RoleData => role !== null)
+// }
+
+export async function getAllRoles(token: string) {
+  return fetchApi<RoleData[]>({
+    url: 'api/roles/get-all-roles',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
+  })
 }
 
 // export async function getAllRoles() {

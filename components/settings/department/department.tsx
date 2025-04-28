@@ -57,7 +57,7 @@ import {
 } from '@/components/ui/pagination'
 import { CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAllDepartments } from '@/api/common-shared-api'
 
@@ -75,6 +75,7 @@ export default function DepartmentManagement() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [departments, setDepartments] = useState<GetDepartment[]>([])
@@ -107,7 +108,7 @@ export default function DepartmentManagement() {
 
   const fetchDepartments = useCallback(async () => {
     setIsLoading(true)
-    const data = await getAllDepartments()
+    const data = await getAllDepartments(token)
     if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
       toast({
