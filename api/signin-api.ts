@@ -19,7 +19,7 @@ export const SignInRequestSchema = z.object({
 const RoleSchema = z.object({
   roleId: z.number(),
   roleName: z.string(),
-  permissions: z.null(),
+  permissions: z.string(),
 })
 const CompanySchema = z.object({
   companyId: z.number(),
@@ -78,8 +78,8 @@ const UserSchema = z.object({
   roleId: z.number(),
   voucherTypes: z.array(z.string()),
   isPasswordResetRequired: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   role: RoleSchema,
   userCompanies: z.array(UserCompanySchema),
   userLocations: z.array(UserLocationSchema),
@@ -98,6 +98,7 @@ export type SignInRequest = z.infer<typeof SignInRequestSchema>
 export type SignInResponse = z.infer<typeof SignInResponseSchema>
 
 export async function signIn(credentials: SignInRequest) {
+ 
   return fetchApi<SignInResponse>({
     url: 'api/auth/login',
     method: 'POST',

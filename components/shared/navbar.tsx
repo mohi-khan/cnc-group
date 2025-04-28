@@ -72,13 +72,13 @@ export default function Navbar() {
   // Middleware to check route access
   const checkRouteAccess = (source: string) => {
     // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
-    if (source.includes('/settings/') && user?.roleId !== 2) {
+    if (source.includes('/settings/') && user?.roleId !== 1) {
       router.push('/unauthorized-access')
       return false
     }
     if (
       source.includes('/reports/') &&
-      (!user?.roleId || ![1, 2, 5].includes(user.roleId))
+      (!user?.roleId || ![ 2, 5].includes(user.roleId))
     ) {
       router.push('/unauthorized-access')
       return false

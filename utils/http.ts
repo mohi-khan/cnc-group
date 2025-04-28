@@ -36,8 +36,7 @@ export async function fetchApi<T>({
   headers = {},
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
-  console.log(`${API_BASE_URL}/${url}`)
-  console.log(JSON.stringify(body))
+
 
   const response = await fetch(
     `${API_BASE_URL}/${url}`,
@@ -50,7 +49,7 @@ export async function fetchApi<T>({
       body: body ? JSON.stringify(body) : undefined,
     }
   )
-console.log(`${API_BASE_URL}/${url}`)
+console.log(response)
   // Handle network errors
   if (!response) {
     return {
@@ -119,6 +118,7 @@ console.log(`${API_BASE_URL}/${url}`)
       return {
         data: null,
         error: {
+          
           message: 'Response validation failed',
           status: 400,
           details: result.error.flatten(),
