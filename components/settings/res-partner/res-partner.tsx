@@ -50,12 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  createResPartner,
-  editResPartner,
- 
- 
-} from '../../../api/res-partner-api'
+import { createResPartner, editResPartner } from '../../../api/res-partner-api'
 import { useToast } from '@/hooks/use-toast'
 import { Company, resPartnerSchema, type ResPartner } from '@/utils/type'
 import {
@@ -66,7 +61,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
 
@@ -74,12 +69,11 @@ export default function ResPartners() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [partners, setPartners] = React.useState<ResPartner[]>([])
-  const [companies, setCompanies] = React.useState<
-    Company[]
-  >([])
+  const [companies, setCompanies] = React.useState<Company[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [editingPartner, setEditingPartner] = React.useState<ResPartner | null>(
     null
@@ -123,9 +117,9 @@ export default function ResPartners() {
     }
   }, [userData])
 
-  const fetchResPartners = React.useCallback (async () => {
+  const fetchResPartners = React.useCallback(async () => {
     // setIsLoading(true)
-    const data = await getAllResPartners()
+    const data = await getAllResPartners(token)
     console.log('🚀 ~ fetchrespartners ~ data:', data)
     if (data.error || !data.data || !data.data) {
       console.error('Error getting res partners:', data.error)
@@ -137,9 +131,9 @@ export default function ResPartners() {
     // setIsLoading(false)
   }, [companies])
 
-  const fetchCompanies = React.useCallback (async () => {
+  const fetchCompanies = React.useCallback(async () => {
     // setIsLoading(true)
-    const data = await getAllCompanies()
+    const data = await getAllCompanies(token)
     console.log('🚀 ~ fetchCompanies ~ data:', data)
     if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
@@ -215,7 +209,7 @@ export default function ResPartners() {
       const response = await createResPartner({
         ...values,
         createdBy: userId,
-      })
+      }, token)
       if (response.error || !response.data) {
         console.error('Error creating res partner:', response.error)
         toast({

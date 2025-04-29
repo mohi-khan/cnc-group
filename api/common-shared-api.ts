@@ -12,6 +12,7 @@ import {
   ResPartner,
 } from '@/utils/type'
 import { CompanyType } from './company-api'
+import { RoleData } from './create-user-api'
 
 // Chart of Accounts Get Api
 export async function getAllChartOfAccounts(token: string) {
@@ -48,6 +49,18 @@ export async function getAssets() {
   })
 }
 
+// All Role Get Api
+export async function getAllRoles(token: string) {
+  return fetchApi<RoleData[]>({
+    url: 'api/roles/get-all-roles',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+}
+
 // All Department Get Api
 export async function getAllDepartments(token: string) {
   return fetchApi<GetDepartment[]>({
@@ -61,10 +74,14 @@ export async function getAllDepartments(token: string) {
 }
 
 // get all res partner data
-export async function getAllResPartners() {
+export async function getAllResPartners(token: string) {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
@@ -108,11 +125,12 @@ export async function getAllExchange() {
 }
 
 //get all currency api
-export async function getAllCurrency() {
+export async function getAllCurrency(token: string) {
   return fetchApi<CurrencyType[]>({
     url: 'api/exchange/get-all-currency',
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

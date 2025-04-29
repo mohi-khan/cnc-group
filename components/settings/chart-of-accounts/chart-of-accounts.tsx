@@ -85,7 +85,7 @@ import {
 import { CustomCombobox } from '@/utils/custom-combobox'
 
 import { getAllChartOfAccounts, getAllCurrency } from '@/api/common-shared-api'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
@@ -168,6 +168,7 @@ export default function ChartOfAccountsTable() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [searchTerm, setSearchTerm] = React.useState('')
@@ -287,9 +288,9 @@ export default function ChartOfAccountsTable() {
     return () => subscription.unsubscribe()
   }, [form, generateAccountCode])
 
-  async function fetchParentCodes() {
-    const fetchedParentCodes = await getParentCodes()
-    console.log('Fetched parent codes:', fetchedParentCodes)
+  const fetchParentCodes = React.useCallback(async () => {
+    const fetchedParentCodes = await getParentCodes(token)
+    console.log('Fetched parent codes:', fetchedParentCodes.data)
 
     if (fetchedParentCodes.error || !fetchedParentCodes.data) {
       console.error('Error fetching parent codes:', fetchedParentCodes.error)
@@ -305,34 +306,26 @@ export default function ChartOfAccountsTable() {
         console.log(fetchedParentCodes.data)
       }
     }
-  }
-
-  // get all details api chart of accounts
-
-  React.useEffect(() => {
-    fetchCoaAccounts()
-    fetchParentCodes()
-    fetchCurrency()
-  }, [])
+  }, [token])
 
   // get all currency api
-  const fetchCurrency = async () => {
-    const data = await getAllCurrency()
-    if (data.error || !data.data) {
-      console.error('Error getting currency:', data.error)
+  const fetchCurrency = React.useCallback(async () => {
+    const fetchedCurrency = await getAllCurrency(token)
+    console.log('🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:', fetchedCurrency)
+    if (fetchedCurrency.error || !fetchedCurrency.data) {
+      console.error('Error getting currency:', fetchedCurrency.error)
       toast({
         title: 'Error',
-        description: data.error?.message || 'Failed to get currency',
+        description: fetchedCurrency.error?.message || 'Failed to get currency',
       })
     } else {
-      setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      setCurrency(fetchedCurrency.data)
     }
-  }
+  }, [toast, token])
 
-  async function fetchCoaAccounts() {
-    const fetchedAccounts = await getAllChartOfAccounts()
-    console.log('Fetched chart of accounts:', fetchedAccounts)
+  const fetchCoaAccounts = React.useCallback(async () => {
+    const fetchedAccounts = await getAllChartOfAccounts(token)
+    console.log('Fetched chart of accounts:', fetchedAccounts.data)
 
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
@@ -345,7 +338,13 @@ export default function ChartOfAccountsTable() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }
+  }, [token])
+
+  React.useEffect(() => {
+    fetchCoaAccounts()
+    fetchParentCodes()
+    fetchCurrency()
+  }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency])
 
   // Filter accounts based on search term, selected types, and active accounts
   React.useEffect(() => {
