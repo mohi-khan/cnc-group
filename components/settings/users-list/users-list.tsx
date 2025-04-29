@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   TableBody,
@@ -36,6 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getAllRoles } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { RoleData } from '@/api/create-user-api'
+import { GetUsersByRoles } from '@/api/user-list-api'
+import { toast } from '@/hooks/use-toast'
 
 interface User {
   id: number
@@ -63,57 +69,63 @@ const VOUCHER_TYPES = [
 ]
 
 export default function UsersList() {
+  //token from atom
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  //state variables
   const [users, setUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [roles, setRoles] = useState<
-    { roleId: number; roleName: string; permission: string }[]
-  >([])
+  const [roles, setRoles] = useState<RoleData[]>([])
 
-  useEffect(() => {
-    fetchUsers()
-    fetchRoles()
-  }, [])
+  // const fetchUsers = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       'http://localhost:4000/api/auth/users-by-roles'
+  //     )
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch users')
+  //     }
+  //     const data = await response.json()
+  //     if (data.status === 'success' && Array.isArray(data.data.users)) {
+  //       setUsers(data.data.users)
+  //     } else {
+  //       throw new Error('Unexpected data format')
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching users:', error)
+  //   }
+  // }
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost:4000/api/auth/users-by-roles'
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch users')
-      }
-      const data = await response.json()
-      if (data.status === 'success' && Array.isArray(data.data.users)) {
-        setUsers(data.data.users)
-      } else {
-        throw new Error('Unexpected data format')
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error)
+  const fetchUsers = React.useCallback(async () => {
+    // setIsLoading(true)
+    const data = await GetUsersByRoles(token)
+    console.log('🚀 ~ fetchUsers ~ data:', data)
+    if (data.error || !data.data || !data.data) {
+      console.error('Error getting res partners:', data.error)
+    } else {
+      setUsers(data.data)
+      console.log('users', data)
     }
-  }
+    // setIsLoading(false)
+  }, [token])
 
-  const fetchRoles = async () => {
-    try {
-      const response = await fetch(
-        'http://localhost:4000/api/roles/get-all-roles'
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch roles')
-      }
-      const roledata = await response.json()
-      if (Array.isArray(roledata.data)) {
-        setRoles(roledata.data)
-      } else {
-        throw new Error('Unexpected data format')
-      }
-    } catch (error) {
-      console.error('Error fetching roles:', error)
+  console.log("🚀 ~ fetchRoles ~ token:", token)
+  const fetchRoles = React.useCallback(async () => {
+    const fetchedRoles = await getAllRoles(token)
+    if (fetchedRoles.error || !fetchedRoles.data) {
+      console.error('Error getting roles:', fetchedRoles.error)
+      toast({
+        title: 'Error',
+        description: fetchedRoles.error?.message || 'Failed to get roles',
+      })
+    } else {
+      setRoles(fetchedRoles.data)
+      console.log('Fetched roles:', fetchedRoles.data)
     }
-  }
+  }, [toast, token])
 
   const refreshAttachment = async () => {
     try {
@@ -123,6 +135,11 @@ export default function UsersList() {
       console.error('Error refreshing attachment:', error)
     }
   }
+
+  useEffect(() => {
+    fetchUsers()
+    fetchRoles()
+  }, [])
 
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -332,10 +349,7 @@ export default function UsersList() {
                       />
                       <Label htmlFor="roleId">Role</Label>
                       <Select
-                        value={
-                          editingUser?.roleId?.toString() ||
-                          'no-role'
-                        }
+                        value={editingUser?.roleId?.toString() || 'no-role'}
                         onValueChange={(value) =>
                           setEditingUser((prev) =>
                             prev
@@ -378,9 +392,11 @@ export default function UsersList() {
                           >
                             <Checkbox
                               id={`voucherType-${voucherType}`}
-                              checked={editingUser?.voucherTypes?.includes(
-                                voucherType
-                              ) || false}
+                              checked={
+                                editingUser?.voucherTypes?.includes(
+                                  voucherType
+                                ) || false
+                              }
                               onCheckedChange={(checked) =>
                                 handleVoucherTypeChange(
                                   voucherType,

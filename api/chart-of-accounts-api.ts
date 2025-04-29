@@ -22,10 +22,14 @@ export async function createChartOfAccounts(data: ChartOfAccounts) {
 }
 
 // Function to get parent codes with names
-export async function getParentCodes() {
+export async function getParentCodes(token: string) {
   return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/get-pc-w-name-coa',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 

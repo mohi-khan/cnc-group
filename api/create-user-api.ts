@@ -77,6 +77,7 @@ const userCompanySchema = z.object({
 const roleSchema = z.object({
   roleId: z.number(),
   roleName: z.string().min(1, 'role name is required'),
+  permission: z.string()
 })
 
 export type LocationData = z.infer<typeof locationSchema>
