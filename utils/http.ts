@@ -49,17 +49,9 @@ console.log(headers.Authorization)
       body: body ? JSON.stringify(body) : undefined,
     }
   )
-console.log(response)
+  console.log("Response is",response)
   // Handle network errors
-  if (!response) {
-    return {
-      data: null,
-      error: {
-        message: 'Network error occurred',
-        status: 500,
-      },
-    }
-  }
+ 
  console.log(response.status)
   // Handle unauthorized access
   if (response.status === 401) {
