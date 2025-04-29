@@ -37,7 +37,7 @@ export async function fetchApi<T>({
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
 
-console.log('token', headers.Authorization)
+console.log(headers.Authorization)
   const response = await fetch(
     `${API_BASE_URL}/${url}`,
     {

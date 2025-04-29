@@ -342,6 +342,7 @@ export const chartOfAccountSchema = z.object({
   cashTag: z.string(),
   createdBy: z.number().int().positive(),
   notes: z.string(),
+  // financialTag: z.string(),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
@@ -561,12 +562,25 @@ const costCenterSchema = z.object({
   isVehicle: z.boolean(),
   createdBy: z.number(),
 })
+export type CostCenter = z.infer<typeof costCenterSchema>
+
+const CreatecostCenterSchema = z.object({
+  costCenterName: z.string().min(1, 'Cost center name is required'),
+  costCenterDescription: z.string(),
+  budget: z.number(),
+  actual: z.number().optional(),
+  currencyCode: z.enum(['USD', 'BDT', 'EUR', 'GBP']),
+  isActive: z.boolean(),
+  isVehicle: z.boolean(),
+  createdBy: z.number(),
+})
+export type CreateCostCenterType = z.infer<typeof CreatecostCenterSchema>
 
 export const activateDeactivateCostCenterSchema = z.object({
   costCenterId: z.number().min(1, 'Cost center id is required'),
 })
-export type CostCenter = z.infer<typeof costCenterSchema>
 export const costCentersArraySchema = z.array(costCenterSchema)
+
 export type CostCenterActivateDeactivate = z.infer<
   typeof activateDeactivateCostCenterSchema
 >

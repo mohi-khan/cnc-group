@@ -44,7 +44,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCostCenters } from '@/api/common-shared-api'
 
@@ -52,6 +52,7 @@ export default function CostCenterManagement() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -76,7 +77,7 @@ export default function CostCenterManagement() {
 
   const fetchCostCenters = useCallback (async () => {
     setIsLoading(true)
-    const data = await getAllCostCenters()
+    const data = await getAllCostCenters(token)
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
@@ -89,7 +90,7 @@ export default function CostCenterManagement() {
       setCostCenters(data.data)
     }
     setIsLoading(false)
-  }, [toast])
+  }, [toast, token])
 
   useEffect(() => {
     fetchCostCenters()
@@ -181,6 +182,18 @@ export default function CostCenterManagement() {
       try {
         const formData = new FormData(formRef.current!)
         const newCostCenter = {
+          costCenterName: formData.get('name') as string,
+          costCenterDescription: formData.get('description') as string,
+          currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+          budget: Number(formData.get('budget')) || 0,
+          isActive: formData.get('isActive') === 'on',
+          isVehicle: formData.get('isVehicle') === 'on',
+          actual: Number(formData.get('actual')) || 0,
+          createdBy: userId,
+          // updatedBy is not required for createCostCenter
+        }
+
+        const updateCostCenterData = {
           costCenterId: 0,
           costCenterName: formData.get('name') as string,
           costCenterDescription: formData.get('description') as string,
@@ -194,8 +207,8 @@ export default function CostCenterManagement() {
         }
 
         if (isEdit && selectedCostCenter) {
-          newCostCenter.costCenterId = selectedCostCenter.costCenterId
-          const response = await updateCostCenter(newCostCenter)
+          updateCostCenterData.costCenterId = selectedCostCenter.costCenterId
+          const response = await updateCostCenter(updateCostCenterData)
           if (response.error || !response.data) {
             throw new Error(
               response.error?.message || 'Failed to edit cost center'
@@ -207,7 +220,7 @@ export default function CostCenterManagement() {
             description: 'Cost center edited successfully',
           })
         } else {
-          const response = await createCostCenter(newCostCenter)
+          const response = await createCostCenter(newCostCenter, token)
           if (response.error || !response.data) {
             throw new Error(
               response.error?.message || 'Failed to create cost center'
