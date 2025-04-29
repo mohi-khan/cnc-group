@@ -106,10 +106,14 @@ export async function getAllLocations() {
 }
 
 //get all cost center api
-export async function getAllCostCenters() {
+export async function getAllCostCenters(token: string) {
   return fetchApi<CostCenter[]>({
     url: 'api/cost-centers/get-all-cost-centers',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 

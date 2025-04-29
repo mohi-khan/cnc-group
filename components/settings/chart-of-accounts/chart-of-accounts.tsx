@@ -89,6 +89,13 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
+const financialTags = [
+  'Gross Profit',
+  'Operating Profit',
+  'Net Profit',
+  'Asset',
+  'Liablities',
+]
 
 const cashTags = [
   'Advance Payments received from customers',
@@ -262,7 +269,7 @@ export default function ChartOfAccountsTable() {
       data.code = await generateAccountCode(parentAccountId)
     }
 
-    const response = await createChartOfAccounts(data)
+    const response = await createChartOfAccounts(data, token)
     console.log('response', response)
     if (response.error || !response.data) {
       console.error('Error creating chart of accounts:', response.error)
@@ -311,7 +318,10 @@ export default function ChartOfAccountsTable() {
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
     const fetchedCurrency = await getAllCurrency(token)
-    console.log('🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:', fetchedCurrency)
+    console.log(
+      '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
+      fetchedCurrency
+    )
     if (fetchedCurrency.error || !fetchedCurrency.data) {
       console.error('Error getting currency:', fetchedCurrency.error)
       toast({
@@ -456,7 +466,7 @@ export default function ChartOfAccountsTable() {
       }
 
       // API request to update the account
-      const response = await updateChartOfAccounts(updatedAccount)
+      const response = await updateChartOfAccounts(updatedAccount, token)
 
       if (response.error || !response.data) {
         console.error('Error updating chart of accounts:', response.error)
@@ -496,7 +506,7 @@ export default function ChartOfAccountsTable() {
             : editingAccount.isReconcilable,
       }
 
-      const response = await updateChartOfAccounts(updatedAccount)
+      const response = await updateChartOfAccounts(updatedAccount, token)
       if (response.error || !response.data) {
         console.error('Error updating chart of accounts:', response.error)
         toast({
@@ -749,6 +759,33 @@ export default function ChartOfAccountsTable() {
                   />
                   <FormField
                     control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Financial Tag</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value ?? undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {financialTags.map((type) => (
+                              <SelectItem key={type} value={type.toLowerCase()}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="isReconcilable"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
@@ -885,19 +922,6 @@ export default function ChartOfAccountsTable() {
                             Check if this is a group account
                           </FormDescription>
                         </div>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} rows={3} />
-                        </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />

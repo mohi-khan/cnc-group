@@ -12,12 +12,19 @@ export type UpdateChartOfAccounts = Omit<
 >
 //create chart of accounts
 
-export async function createChartOfAccounts(data: ChartOfAccounts) {
+export async function createChartOfAccounts(
+  data: ChartOfAccounts,
+  token: string
+) {
   console.log('Created Chart Of Account:', data)
   return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/create-coa',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 
@@ -26,6 +33,7 @@ export async function getParentCodes(token: string) {
   return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/get-pc-w-name-coa',
     method: 'GET',
+
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
@@ -34,10 +42,14 @@ export async function getParentCodes(token: string) {
 }
 
 // Update Data Api
-export async function updateChartOfAccounts(data: UpdateChartOfAccounts) {
+export async function updateChartOfAccounts(data: UpdateChartOfAccounts, token: string) {
   return fetchApi<ChartOfAccount[]>({
     url: `api/chart-of-accounts/update-coa/${data.accountId}`,
     method: 'PATCH',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }

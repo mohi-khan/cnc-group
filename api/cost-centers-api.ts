@@ -1,14 +1,18 @@
 import { fetchApi } from '@/utils/http'
-import { CostCenter, CostCenterActivateDeactivate } from '@/utils/type'
+import { CostCenter, CostCenterActivateDeactivate, CreateCostCenterType } from '@/utils/type'
 
 
 
-export async function createCostCenter(data: Omit<CostCenter, 'costCenterId'>) {
+export async function createCostCenter(data: CreateCostCenterType, token: string) {
   console.log('Creating cost center:', data)
-  return fetchApi<CostCenter>({
+  return fetchApi<CreateCostCenterType>({
     url: 'api/cost-centers/create-cost-centers',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
   })
 }
 
