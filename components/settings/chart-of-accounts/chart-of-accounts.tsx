@@ -87,6 +87,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllChartOfAccounts, getAllCurrency } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 const financialTags = [
@@ -177,6 +178,8 @@ export default function ChartOfAccountsTable() {
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
+  const router = useRouter()
+
   // State variables
   const [searchTerm, setSearchTerm] = React.useState('')
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
@@ -209,6 +212,7 @@ export default function ChartOfAccountsTable() {
       console.log('No user data found in localStorage')
     }
   }, [userData])
+  console.log('🚀 ~ ChartOfAccountsTable ~ userData:', userData)
 
   // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({
@@ -335,9 +339,14 @@ export default function ChartOfAccountsTable() {
 
   const fetchCoaAccounts = React.useCallback(async () => {
     const fetchedAccounts = await getAllChartOfAccounts(token)
-    console.log('Fetched chart of accounts:', fetchedAccounts.data)
-
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
+   console.log(fetchedAccounts?.error?.message === 'Unauthorized access'  )
+    if (
+        fetchedAccounts?.error?.status === 401
+    ) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return;
+    } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
       toast({
         variant: 'destructive',
@@ -348,13 +357,13 @@ export default function ChartOfAccountsTable() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }, [token])
+  }, [token, router])
 
   React.useEffect(() => {
     fetchCoaAccounts()
     fetchParentCodes()
     fetchCurrency()
-  }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency])
+  }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency, router])
 
   // Filter accounts based on search term, selected types, and active accounts
   React.useEffect(() => {

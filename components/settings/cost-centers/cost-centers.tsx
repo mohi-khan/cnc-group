@@ -190,7 +190,6 @@ export default function CostCenterManagement() {
           isVehicle: formData.get('isVehicle') === 'on',
           actual: Number(formData.get('actual')) || 0,
           createdBy: userId,
-          // updatedBy is not required for createCostCenter
         }
 
         const updateCostCenterData = {
@@ -208,7 +207,7 @@ export default function CostCenterManagement() {
 
         if (isEdit && selectedCostCenter) {
           updateCostCenterData.costCenterId = selectedCostCenter.costCenterId
-          const response = await updateCostCenter(updateCostCenterData)
+          const response = await updateCostCenter(updateCostCenterData, token)
           if (response.error || !response.data) {
             throw new Error(
               response.error?.message || 'Failed to edit cost center'

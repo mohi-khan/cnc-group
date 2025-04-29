@@ -16,12 +16,16 @@ export async function createCostCenter(data: CreateCostCenterType, token: string
   })
 }
 
-export async function updateCostCenter(data: Omit<CostCenter, 'updatedBy'>) {
+export async function updateCostCenter(data: CostCenter, token: string) {
   console.log('Editing cost center:', data)
   return fetchApi<CostCenter>({
     url: `api/cost-centers/edit-cost-center/${data.costCenterId}`,
     method: 'PATCH',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 
