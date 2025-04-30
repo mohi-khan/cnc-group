@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import {
   AccountsHead,
+  ChartOfAccount,
   CreateAssetCategoryData,
   createAssetCategorySchema,
   User,
@@ -36,9 +37,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllChartOfAccounts } from '@/api/common-shared-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface AssetCategoryPopupProps {
   isOpen: boolean
@@ -54,11 +56,12 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
-  const [userId, setUserId] = useState<number>(0)
+  const [userId, setUserId] = useState<number>(userData?.userId ?? 0)
 
   React.useEffect(() => {
     if (userData) {
@@ -76,7 +79,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       depreciation_rate: '',
       account_code: undefined,
       depreciation_account_code: undefined,
-      created_by: userId,
+      created_by: 1,
     },
   })
 
@@ -88,7 +91,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   }, [userId, form])
 
   const fetchChartOfAccounts = useCallback(async () => {
-    const response = await getAllChartOfAccounts()
+    const response = await getAllChartOfAccounts(token)
     console.log('Fetched chart of accounts:', response.data)
 
     if (response.error || !response.data) {
@@ -102,15 +105,15 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       setChartOfAccounts(response.data)
       console.log('coa', chartOfAccounts)
     }
-  }, [chartOfAccounts])
+  }, [])
 
   const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (
     data
   ) => {
-    console.log('Form submitted:', data)
+    console.log('Form submitted:', data, token)
     setIsSubmitting(true)
     try {
-      await createAssetCategory(data)
+      await createAssetCategory(data, token)
       onCategoryAdded()
       onOpenChange(false)
       form.reset()
@@ -132,7 +135,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
           <DialogTitle>Add Asset Category</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit((data) => onSubmit(data))} className="space-y-4">
             <FormField
               control={form.control}
               name="category_name"
@@ -153,7 +156,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                 <FormItem>
                   <FormLabel>Depreciation Rate</FormLabel>
                   <FormControl>
-                    <Input {...field} type="text" placeholder="e.g., 10.5" />
+                    <Input {...field} type="number" placeholder="e.g., 10.5" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,26 +168,30 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Account Code</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {chartOfAccounts.map((account) => (
-                        <SelectItem
-                          key={account.accountId}
-                          value={account.accountId.toString()}
-                        >
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomCombobox
+                    items={chartOfAccounts.map((account: ChartOfAccount) => ({
+                      id: account.code.toString(),
+                      name: account.name || 'Unnamed Account',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              chartOfAccounts.find(
+                                (id: ChartOfAccount) =>
+                                  Number(id.code) === field.value
+                              )?.name || 'Select Parent Account',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select currency"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -195,27 +202,30 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Depreciation Account Code</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a depreciation account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {chartOfAccounts.map((account) => (
-                        <SelectItem
-                          key={account.accountId}
-                          value={account.accountId.toString()}
-                        >
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={chartOfAccounts.map((account: ChartOfAccount) => ({
+                      id: account.code.toString(),
+                      name: account.name || 'Unnamed Account',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              chartOfAccounts.find(
+                                (id: ChartOfAccount) =>
+                                  Number(id.code) === field.value
+                              )?.name || 'Select Parent Account',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select currency"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />

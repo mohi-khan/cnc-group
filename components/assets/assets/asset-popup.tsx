@@ -34,16 +34,17 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useEffect, useState } from 'react'
-import {
-  createAsset,
-  
-  
-} from '@/api/assets.api'
+import { createAsset } from '@/api/assets.api'
 import { type CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllCompanies, getAllCostCenters, getAllDepartments, getAllLocations } from '@/api/common-shared-api'
+import {
+  getAllCompanies,
+  getAllCostCenters,
+  getAllDepartments,
+  getAllLocations,
+} from '@/api/common-shared-api'
 
 interface AssetPopupProps {
   isOpen: boolean
@@ -61,6 +62,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -127,7 +129,8 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
       }
 
       console.log('Formatted data for submission:', formattedData)
-      await createAsset(formattedData)
+      await createAsset(formattedData, token)
+      console.log('Asset created successfully')
       onCategoryAdded()
       onOpenChange(false)
       form.reset()
@@ -140,7 +143,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
   const fetchCompnay = async () => {
     try {
-      const response = await getAllCompanies()
+      const response = await getAllCompanies(token)
 
       setGetCompany(response.data)
       console.log(
@@ -153,7 +156,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
   }
   const fetchLocation = async () => {
     try {
-      const response = await getAllLocations()
+      const response = await getAllLocations(token)
 
       setGetLocation(response.data ?? [])
       console.log(
@@ -167,7 +170,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
   const fetchDepartments = async () => {
     try {
-      const response = await getAllDepartments()
+      const response = await getAllDepartments(token)
 
       setGetDepartment(response.data ?? [])
       console.log('dept data', response.data)
@@ -178,7 +181,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
   const fetchCostCenters = async () => {
     try {
-      const response = await getAllCostCenters()
+      const response = await getAllCostCenters(token)
 
       setGetCostCenter(response.data ?? [])
       console.log('cost center data', response.data)
@@ -527,19 +530,17 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
                                   location.locationId === field.value
                               )?.branchName || 'Unnamed Location',
                           }
-                        : null
+                        : { id: '0', name: 'Select location' }
                     }
                     onChange={(value: { id: string; name: string } | null) =>
-                      field.onChange(
-                        value ? Number.parseInt(value.id, 10) : null
-                      )
+                      field.onChange(value ? Number.parseInt(value.id, 10) : 0)
                     }
                     placeholder="Select location"
                   />
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            />{' '}
             <FormField
               control={form.control}
               name="status"
