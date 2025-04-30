@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { z } from 'zod'
+import type { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -21,13 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
@@ -36,7 +29,7 @@ import {
   type Department,
   departmentsArraySchema,
   departmentSchema,
-  GetDepartment,
+  type GetDepartment,
 } from '@/utils/type'
 import {
   Form,
@@ -55,11 +48,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
-import { CompanyType } from '@/api/company-api'
+import type { CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAllDepartments } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 type SortColumn =
   | 'departmentName'
@@ -76,6 +70,7 @@ export default function DepartmentManagement() {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+  console.log("🚀 ~ DepartmentManagement ~ token:", token)
 
   // State variables
   const [departments, setDepartments] = useState<GetDepartment[]>([])
@@ -93,6 +88,8 @@ export default function DepartmentManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
+  const router = useRouter()
+
   const form = useForm<z.infer<typeof departmentSchema>>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
@@ -103,13 +100,17 @@ export default function DepartmentManagement() {
       actual: 0,
       startDate: undefined,
       endDate: undefined,
+      createdBy: userId,
     },
   })
 
   const fetchDepartments = useCallback(async () => {
     setIsLoading(true)
     const data = await getAllDepartments(token)
-    if (data.error || !data.data) {
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
       toast({
         title: 'Error',
@@ -145,13 +146,21 @@ export default function DepartmentManagement() {
     }
   }, [userData])
 
-  const onSubmit = async (values: z.infer<typeof departmentSchema>) => {
+  React.useEffect(() => {
+    if (userId !== undefined) {
+      form.setValue('createdBy', userId)
+    }
+  }, [userId, form])
+  console.log('🚀 ~ DepartmentManagement ~ userData:', userData)
+
+  const onSubmit = async (values: Department) => {
     setIsLoading(true)
     setFeedback(null)
+    console.log('Form values:', values)
 
     const newDepartment = {
       ...values,
-      createdBy: userId,
+      createdBy: userId, // Use the state variable directly
       startDate: values.startDate ? new Date(values.startDate) : undefined,
       endDate: values.endDate ? new Date(values.endDate) : undefined,
     }
@@ -160,7 +169,7 @@ export default function DepartmentManagement() {
       const departmentSchema = departmentsArraySchema.element
       departmentSchema.parse(newDepartment)
 
-      if (!userId) {
+      if (!userId && userId !== 0) {
         throw new Error('User ID is required to create a department')
       }
 
@@ -168,16 +177,19 @@ export default function DepartmentManagement() {
         throw new Error('Department name and company code are required')
       }
 
-      const response = await createDepartment({
-        departmentName: values.departmentName,
-        createdBy: userId,
-        budget: values.budget || 0,
-        companyCode: values.companyCode,
-        isActive: values.isActive,
-        startDate: values.startDate ? new Date(values.startDate) : undefined,
-        endDate: values.endDate ? new Date(values.endDate) : undefined,
-        actual: values.actual || 0,
-      })
+      const response = await createDepartment(
+        {
+          departmentName: values.departmentName,
+          createdBy: userId!, // Use non-null assertion since you've already checked it exists
+          budget: values.budget || 0,
+          companyCode: values.companyCode,
+          isActive: values.isActive,
+          startDate: values.startDate ? new Date(values.startDate) : undefined,
+          endDate: values.endDate ? new Date(values.endDate) : undefined,
+          actual: values.actual || 0,
+        },
+        token
+      )
 
       if (response.error || !response.data) {
         throw new Error(
@@ -263,6 +275,8 @@ export default function DepartmentManagement() {
       </TableHead>
     )
   }
+
+  console.log('Form values:', form.getValues())
 
   return (
     <div className="w-[97%] mx-auto py-10">
@@ -382,9 +396,6 @@ export default function DepartmentManagement() {
           <Form {...form}>
             <form
               onSubmit={(e) => {
-                e.preventDefault()
-                console.log('Form Data:', form.getValues())
-                console.log('Submit button clicked')
                 form.handleSubmit(onSubmit)(e)
               }}
               className="space-y-2"
@@ -428,7 +439,7 @@ export default function DepartmentManagement() {
                   <FormControl>
                     <CustomCombobox
                       items={company.map((company) => ({
-                        id: company.companyId?.toString() ?? "",
+                        id: company.companyId?.toString() ?? '',
                         name: company.companyName || 'Unnamed Company',
                       }))}
                       value={
@@ -546,11 +557,7 @@ export default function DepartmentManagement() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  onClick={() => console.log('Add Department button clicked')}
-                >
+                <Button type="submit" disabled={isLoading}>
                   {isLoading ? 'Saving...' : 'Add Department'}
                 </Button>
               </div>
@@ -561,5 +568,3 @@ export default function DepartmentManagement() {
     </div>
   )
 }
-
-

@@ -52,8 +52,6 @@ import {
 import {
   createBankAccount,
   editBankAccount,
-  
-  
 } from '../../../api/bank-accounts-api'
 import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
@@ -63,9 +61,13 @@ import {
   type BankAccount,
   type CreateBankAccount,
 } from '@/utils/type'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllBankAccounts, getAllChartOfAccounts } from '@/api/common-shared-api'
+import {
+  getAllBankAccounts,
+  getAllChartOfAccounts,
+} from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 type SortColumn =
   | 'accountName'
@@ -81,6 +83,7 @@ export default function BankAccounts() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
@@ -94,6 +97,8 @@ export default function BankAccounts() {
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
+
+  const router = useRouter()
 
   React.useEffect(() => {
     if (userData) {
@@ -120,10 +125,13 @@ export default function BankAccounts() {
     },
   })
 
-  const fetchBankAccounts = React.useCallback (async() => {
-    const fetchedAccounts = await getAllBankAccounts()
+  const fetchBankAccounts = React.useCallback(async () => {
+    const fetchedAccounts = await getAllBankAccounts(token)
     console.log('Fetched accounts:', fetchedAccounts)
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
+    if (fetchedAccounts?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting bank account:', fetchedAccounts.error)
       toast({
         title: 'Error',
@@ -135,8 +143,8 @@ export default function BankAccounts() {
     }
   }, [toast])
 
-  const fetchGlAccounts = React.useCallback (async () => {
-    const fetchedGlAccounts = await getAllChartOfAccounts()
+  const fetchGlAccounts = React.useCallback(async () => {
+    const fetchedGlAccounts = await getAllChartOfAccounts(token)
     console.log('Fetched gl accounts:', fetchedGlAccounts)
 
     if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
@@ -184,10 +192,14 @@ export default function BankAccounts() {
     console.log('Form submitted:', values)
     if (editingAccount) {
       console.log('Editing account:', editingAccount.id)
-      const response = await editBankAccount(editingAccount.id!, {
-        ...values,
-        updatedBy: userId,
-      })
+      const response = await editBankAccount(
+        editingAccount.id!,
+        {
+          ...values,
+          updatedBy: userId,
+        },
+        token
+      )
       if (response.error || !response.data) {
         console.error('Error editing bank account:', response.error)
         toast({
@@ -205,7 +217,7 @@ export default function BankAccounts() {
       }
     } else {
       console.log('Creating new account')
-      const response = await createBankAccount(values)
+      const response = await createBankAccount(values, token)
       if (response.error || !response.data) {
         console.error('Error creating bank account:', response.error)
       } else {

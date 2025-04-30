@@ -88,12 +88,13 @@ export type UserLocationData = z.infer<typeof userLocationSchema>
 export type RoleData = z.infer<typeof roleSchema>
 
 // Sign-up function
-export async function signUp(data: SignUpData) {
+export async function signUp(data: SignUpData, token: string) {
   try {
     const validatedData = signUpSchema.parse(data)
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
+        Authorization: `${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(validatedData),
