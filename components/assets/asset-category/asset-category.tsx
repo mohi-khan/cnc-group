@@ -5,25 +5,29 @@ import { AssetCategoryType } from '@/utils/type'
 import { getAllAssetCategories } from '@/api/asset-category-api'
 import { AssetCategoryList } from './asset-category-list'
 import { AssetCategoryPopup } from './asset-category-popup'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const AssetCategory = () => {
-  const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>([])
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+
+  const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
+    []
+  )
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+
+  const fetchAssetCategories = React.useCallback(async () => {
+    const categories = await getAllAssetCategories(token)
+    console.log('🚀 ~ fetchAssetCategories ~ categories:', categories)
+    setAssetCategories(categories.data ?? [])
+  }, [])
 
   useEffect(() => {
     fetchAssetCategories()
   }, [])
-
-  const fetchAssetCategories = async () => {
-    try {
-      const categories = await getAllAssetCategories()
-      setAssetCategories(categories.data ?? [])
-      console.log("🚀 ~ fetchAssetCategories ~ categories:", categories)
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
-
   const handleAddCategory = () => {
     setIsPopupOpen(true)
   }
@@ -39,18 +43,17 @@ const AssetCategory = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <AssetCategoryList 
-        categories={assetCategories} 
-        onAddCategory={handleAddCategory} 
+      <AssetCategoryList
+        categories={assetCategories}
+        onAddCategory={handleAddCategory}
       />
-      <AssetCategoryPopup 
+      <AssetCategoryPopup
         isOpen={isPopupOpen}
         onOpenChange={setIsPopupOpen}
-        onCategoryAdded={handleCategoryAdded} 
+        onCategoryAdded={handleCategoryAdded}
       />
     </div>
   )
 }
 
 export default AssetCategory
-

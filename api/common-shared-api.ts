@@ -22,7 +22,7 @@ export async function getAllChartOfAccounts(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
@@ -34,16 +34,17 @@ export async function getAllCompanies(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
 //get all assets api from database
-export async function getAssets() {
+export async function getAssets(token: string) {
   return fetchApi<GetAssetData[]>({
     url: 'api/asset/get-all-asset',
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
@@ -57,7 +58,7 @@ export async function getAllRoles(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
@@ -69,7 +70,7 @@ export async function getAllDepartments(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
@@ -81,7 +82,7 @@ export async function getAllResPartners(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
@@ -93,15 +94,19 @@ export async function getAllBankAccounts(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
 //Get All Locations Get Api
-export async function getAllLocations() {
+export async function getAllLocations(token: string) {
   return fetchApi<LocationData[]>({
     url: 'api/location/get-all-locations',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 
@@ -113,16 +118,17 @@ export async function getAllCostCenters(token: string) {
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
-    }
+    },
   })
 }
 
 //Get all currency api
-export async function getAllExchange() {
+export async function getAllExchange(token: string) {
   return fetchApi<ExchangeType[]>({
     url: 'api/exchange/get-all-exchange',
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
@@ -141,11 +147,12 @@ export async function getAllCurrency(token: string) {
 }
 
 //Fetch All Employee Data
-export async function getEmployee() {
+export async function getEmployee(token: string) {
   return fetchApi<Employee[]>({
     url: 'api/employee/getEmployees',
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
