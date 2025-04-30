@@ -524,12 +524,12 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentName: z.string().min(1, 'Department name is required'),
+  departmentName: z.string().min(1, "Department name is required"),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
-  startDate: z.coerce.date().optional().nullable(),
-  endDate: z.coerce.date().optional().nullable(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
   actual: z.number().optional(),
   createdBy: z.number(),
 })
