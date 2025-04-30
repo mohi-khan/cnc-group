@@ -229,7 +229,7 @@ export default function SignUp() {
       console.log('Submitting form data:', userFormData)
 
       // Step 1: Register the user
-      const signUpResult = await signUp(userFormData)
+      const signUpResult = await signUp(userFormData, token)
       if (!signUpResult.success) {
         const errorMessages = signUpResult.errors
           ? signUpResult.errors
