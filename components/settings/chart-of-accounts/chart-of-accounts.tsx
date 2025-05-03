@@ -338,14 +338,14 @@ export default function ChartOfAccountsTable() {
   }, [toast, token])
 
   const fetchCoaAccounts = React.useCallback(async () => {
+    if (!token) return;
     const fetchedAccounts = await getAllChartOfAccounts(token)
-   console.log(fetchedAccounts?.error?.message === 'Unauthorized access'  )
+  
     if (
         fetchedAccounts?.error?.status === 401
     ) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
-      return;
+        return;
     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
       toast({
