@@ -30,7 +30,7 @@ import BankVoucherMaster from './bank-voucher-master'
 import BankVoucherDetails from './bank-voucher-details'
 import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
 
@@ -39,6 +39,7 @@ export default function BankVoucher() {
   useInitializeUser()
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   //State Variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
@@ -123,11 +124,11 @@ export default function BankVoucher() {
         partnersResponse,
         departmentsResponse,
       ] = await Promise.all([
-        getAllBankAccounts(),
-        getAllChartOfAccounts(),
-        getAllCostCenters(),
-        getAllResPartners(),
-        getAllDepartments(),
+        getAllBankAccounts(token),
+        getAllChartOfAccounts(token),
+        getAllCostCenters(token),
+        getAllResPartners(token),
+        getAllDepartments(token),
       ])
       const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
         return account.isGroup === false
@@ -144,7 +145,7 @@ export default function BankVoucher() {
     }
 
     fetchInitialData()
-  }, [])
+  }, [token])
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
