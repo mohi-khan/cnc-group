@@ -99,10 +99,14 @@ export async function getNPData(
 }
 
 //Get Department Data API
-export async function getAllDepartments() {
+export async function getAllDepartments(token: string) {
   return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 
@@ -124,11 +128,11 @@ export async function getCostBreakdown(
 
 //Get cost breakdown details API
 export async function getCostBreakdownDetails() {
-// departmentId: number,
-// fromDate: string,
-// toDate: string,
-// companyId: number,
-// financialTag:string
+  // departmentId: number,
+  // fromDate: string,
+  // toDate: string,
+  // companyId: number,
+  // financialTag:string
   return fetchApi<GetCostBreakdownDetailsType>({
     // url: `api/dashboard/getcostBreakdownDetails?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}&financial_Tag=${financial_Tag}`,
     url: 'api/dashboard/getCostBreakdownDetails?departmentId=16&fromDate=2024-01-01&toDate=2025-03-31&companyId=75&financialTag=Asset',

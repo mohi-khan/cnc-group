@@ -317,7 +317,7 @@ export default function ChartOfAccountsTable() {
         console.log(fetchedParentCodes.data)
       }
     }
-  }, [token])
+  }, [])
 
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
@@ -340,12 +340,11 @@ export default function ChartOfAccountsTable() {
   const fetchCoaAccounts = React.useCallback(async () => {
     if (!token) return;
     const fetchedAccounts = await getAllChartOfAccounts(token)
-  
-    if (
-        fetchedAccounts?.error?.status === 401
-    ) {
+    console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
+    if (fetchedAccounts?.error?.status === 401) {
       router.push('/unauthorized-access')
-        return;
+      console.log('Unauthorized access')
+      return
     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
       toast({
@@ -621,23 +620,26 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value ?? undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select account type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {accountTypes.map((type) => (
-                              <SelectItem key={type} value={type.toLowerCase()}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <CustomCombobox
+                          items={accountTypes.map((type) => ({
+                            id: type.toLowerCase(),
+                            name: type,
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value,
+                                  name: accountTypes.find(
+                                    (type) => type.toLowerCase() === field.value
+                                  ) || 'Select account type',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) => field.onChange(value ? value.id : null)}
+                          placeholder="Select account type"
+                        />                        
                         <FormMessage />
                       </FormItem>
                     )}
@@ -649,24 +651,27 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Cash Tag</FormLabel>
-
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value ?? undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Account Cash Tag" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {cashTags.map((type) => (
-                              <SelectItem key={type} value={type.toLowerCase()}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <CustomCombobox
+                          items={cashTags.map((tag) => ({
+                            id: tag.toLowerCase(),
+                            name: tag,
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value,
+                                  name:
+                                    cashTags.find(
+                                      (tag) => tag.toLowerCase() === field.value
+                                    ) || 'Select Cash Tag',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) => field.onChange(value ? value.id : null)}
+                          placeholder="Select Cash Tag"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -704,26 +709,6 @@ export default function ChartOfAccountsTable() {
                           }
                           placeholder="Select currency"
                         />
-                        {/* <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          } // Convert to number before updating the field
-                          defaultValue={field.value?.toString()} // Ensure compatibility by converting field value to a string
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Parent Account" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {parentCodes.map((id) => (
-                              <SelectItem key={id.code} value={id.code}>
-                                {id.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select> */}
-
                         <FormMessage />
                       </FormItem>
                     )}
@@ -735,7 +720,6 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
-
                         <CustomCombobox
                           items={currency.map((curr: CurrencyType) => ({
                             id: curr.currencyId.toString(),
@@ -772,23 +756,24 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Financial Tag</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value ?? undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select account type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {financialTags.map((type) => (
-                              <SelectItem key={type} value={type.toLowerCase()}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <CustomCombobox
+                          items={financialTags.map((tag) => ({
+                            id: tag.toLowerCase(),
+                            name: tag,
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toLowerCase(),
+                                  name: field.value,
+                                }
+                              : null
+                          }
+                          onChange={(value: { id: string; name: string } | null) =>
+                            field.onChange(value ? value.id : null)
+                          }
+                          placeholder="Select financial tag"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -802,6 +787,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -822,6 +815,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -842,13 +843,20 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
                           <FormLabel>Budget Tracking</FormLabel>
                           <FormDescription>
-                            Check if this account should be included in budget
-                            tracking
+                            Check if this account should be included in budget tracking
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -863,6 +871,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -883,6 +899,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -903,6 +927,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -923,6 +955,14 @@ export default function ChartOfAccountsTable() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault()
+                                field.onChange(!field.value)
+                              }
+                            }}
+                            tabIndex={0}
+                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -934,7 +974,17 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        e.currentTarget.click()
+                      }
+                    }}
+                    tabIndex={0}
+                  >
                     Create Account
                   </Button>
                 </form>

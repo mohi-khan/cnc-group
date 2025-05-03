@@ -47,12 +47,15 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCostCenters } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 export default function CostCenterManagement() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -79,7 +82,11 @@ export default function CostCenterManagement() {
     setIsLoading(true)
     const data = await getAllCostCenters(token)
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
-    if (data.error || !data.data) {
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    }
+    else if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
         title: 'Error',
@@ -100,9 +107,9 @@ export default function CostCenterManagement() {
     try {
       let response
       if (isActive) {
-        response = await deactivateCostCenter(id)
+        response = await deactivateCostCenter(id, token)
       } else {
-        response = await activateCostCenter(id)
+        response = await activateCostCenter(id, token)
       }
 
       if (response.error || !response.data) {

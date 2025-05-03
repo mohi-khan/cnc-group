@@ -6,8 +6,16 @@ import { AssetCategoryType, CreateAssetData, GetAssetData } from '@/utils/type'
 import { AssetPopUp } from './asset-popup'
 import { getAllAssetCategories } from '@/api/asset-category-api'
 import { getAssets } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const Asset = () => {
+
+    //getting userData from jotai atom component
+    useInitializeUser()
+  
+  const [token] = useAtom(tokenAtom)
+  
   const [asset, setAsset] = useState<GetAssetData[]>([])
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
@@ -21,7 +29,7 @@ const Asset = () => {
   // Fetch all assets
   const fetchAssets = async () => {
     try {
-      const assetdata = await getAssets()
+      const assetdata = await getAssets(token)
       if (assetdata.data) {
         setAsset(assetdata.data)
       } else {
@@ -35,7 +43,7 @@ const Asset = () => {
 
   const fetchAssetCategories = async () => {
     try {
-      const categories = await getAllAssetCategories()
+      const categories = await getAllAssetCategories(token)
       const categoryNames = categories.data ?? []
       setAssetCategories(categoryNames)
       console.log(

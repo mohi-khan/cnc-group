@@ -61,6 +61,8 @@ import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CompanyType } from '@/api/company-api'
 import { getAllCompanies } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -80,6 +82,11 @@ const costBreakdownData = [
 ]
 
 export default function Dashboard() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
@@ -103,24 +110,13 @@ export default function Dashboard() {
     null
   )
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
-  const [selectFinancialTag, setSelectFinancialTag] = useState<string>('')
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
-  const [mainToken, setMainToken] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken')
-      setMainToken(token)
-    }
-  }, [])
-
-  const token = `Bearer ${mainToken}`
 
   console.log('🚀 ~ AssetDepreciation ~ token:', token)
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
-      const data = await getFundPosition(77, '2025-02-19', '02')
+      const data = await getFundPosition(3, '2025-02-19', '02')
       console.log('Fetched fund position data:', data)
       setFundPositionData(data.data)
     } catch (error) {
@@ -128,22 +124,9 @@ export default function Dashboard() {
     }
   }, [])
 
-  // const router = useRouter()
-
-  // const Revert = (financialTag: string) => {
-  //   router.push('/dashboard/asset')
-  //   if (financialTag === 'Asset') {
-  //     setSelectFinancialTag('Asset')
-  //     router.push({
-  //       pathname: '/dashboard/cost-breakdown-details',
-  //       query: { financialTag: financialTag },
-  //     })
-  //   }
-  // }
-
   // Fetch Departments
   const fetchDepartments = useCallback(async () => {
-    const data = await getAllDepartments()
+    const data = await getAllDepartments(token)
     if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
       toast({
@@ -159,7 +142,7 @@ export default function Dashboard() {
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
-        companyId: 75,
+        companyId: getCompany[0]?.companyId || 3,
         token: token,
       })
       const filteredInvoices =
@@ -192,14 +175,14 @@ export default function Dashboard() {
 
   // Get All company function
   const fetchAllCompany = async () => {
-    const response = await getAllCompanies()
+    const response = await getAllCompanies(token)
     console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
     setGetCompany(response.data || [])
   }
 
   //  Get Expense data monthly
   const fetchExpenseData = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
 
@@ -216,7 +199,7 @@ export default function Dashboard() {
 
   //  Get Expense data yearly
   const fetchExpenseDataYearly = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
 
@@ -233,7 +216,7 @@ export default function Dashboard() {
 
   // Get Income Data
   const fetchIncomeData = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
 
@@ -250,7 +233,7 @@ export default function Dashboard() {
 
   // Get Income Data  yearly
   const fetchIncomeDataYearly = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
 
@@ -267,7 +250,7 @@ export default function Dashboard() {
 
   //Get getGPData
   const fetchGPData = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
 
@@ -282,7 +265,7 @@ export default function Dashboard() {
 
   //Get getGPData yearly
   const fetchGPDataYearly = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
 
@@ -299,7 +282,7 @@ export default function Dashboard() {
 
   //Get getNPData
   const fetchNPData = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
 
@@ -314,7 +297,7 @@ export default function Dashboard() {
 
   //Get getNPData yearly
   const fetchNPDataYearly = useCallback(async () => {
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
 
@@ -334,7 +317,7 @@ export default function Dashboard() {
     const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
-    const companyId = 75 // Example companyId
+    const companyId = 3 // Example companyId
 
     const response = await getCostBreakdown(
       departmentId,
@@ -565,37 +548,33 @@ export default function Dashboard() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-20">
           <Select defaultValue="nationa">
-            <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Select company" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="nationa">Nationa Accessories</SelectItem>
-              <SelectItem value="other">Other Company</SelectItem>
-            </SelectContent>
+            <CustomCombobox
+              items={getCompany.map((company) => ({
+                id: (company.companyId ?? '').toString(),
+                name: company.companyName || 'Unnamed Company',
+              }))}
+              value={
+                selectedDepartment
+                  ? {
+                      id: selectedDepartment?.toString() || '',
+                      name:
+                        getCompany.find(
+                          (company) => company.companyId === selectedDepartment
+                        )?.companyName || 'Unnamed Company',
+                    }
+                  : null
+              }
+              onChange={(value: { id: string; name: string } | null) =>
+                handleDepartmentChange(
+                  value ? Number.parseInt(value.id, 10) : null
+                )
+              }
+              placeholder="Select company"
+            />
           </Select>
-          {/* <CustomCombobox
-            items={getCompany.map((company) => ({
-              id: company.companyId.toString(),
-              name: company.companyName || 'Unnamed Company',
-            }))}
-            value={
-              field.value
-                ? {
-                    id: field.value.toString(),
-                    name:
-                      getCompany.find(
-                        (company) => company.companyId === field.value
-                      )?.companyName || 'Unnamed Company',
-                  }
-                : null
-            }
-            onChange={(value: { id: string; name: string } | null) =>
-              field.onChange(value ? Number.parseInt(value.id, 10) : null)
-            }
-            placeholder="Select company"
-          /> */}
+
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               31/03/17
@@ -609,7 +588,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-5">
-        <Link href="/approve-advance">
+        <Link href="/approve-advance">\
           <Card className="p-3 text-center">
             You have {advances.length} pending advance approvals
           </Card>

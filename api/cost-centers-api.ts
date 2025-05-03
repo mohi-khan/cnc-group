@@ -29,18 +29,26 @@ export async function updateCostCenter(data: CostCenter, token: string) {
   })
 }
 
-export function activateCostCenter(costCenterId: number) {
+export function activateCostCenter(costCenterId: number, token: string) {
   console.log('Activating cost center:', costCenterId)
   return fetchApi<CostCenterActivateDeactivate>({
     url: `api/cost-centers/activate-cost-center/${costCenterId}`,
     method: 'PATCH',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
 
-export function deactivateCostCenter(costCenterId: number) {
+export function deactivateCostCenter(costCenterId: number, token: string) {
   console.log('Deactivating cost center:', costCenterId)
   return fetchApi<CostCenterActivateDeactivate>({
     url: `api/cost-centers/deactivate-cost-center/${costCenterId}`,
     method: 'PATCH',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }

@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import VehiclePopUp from './vehicle-popup'
 import { getAllVehicles } from '@/api/vehicle.api'
@@ -12,10 +12,22 @@ import {
 import { VehicleList } from './vehicle-list'
 import { toast } from '@/hooks/use-toast'
 
-
-import { getAllCostCenters, getAssets, getEmployee } from '@/api/common-shared-api'
+import {
+  getAllCostCenters,
+  getAssets,
+  getEmployee,
+} from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const Vehicle = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
@@ -33,7 +45,7 @@ const Vehicle = () => {
   // Fetch all cost centers
   async function fetchgetAllCostCenters() {
     try {
-      const response = await getAllCostCenters()
+      const response = await getAllCostCenters(token)
       if (!response.data) throw new Error('No data received')
       setCostCenters(response.data)
     } catch (error) {
@@ -47,20 +59,30 @@ const Vehicle = () => {
   }
 
   // Fetch all vehicles
-  const fetchVehicles = async () => {
-    try {
-      const vehicleData = await getAllVehicles()
-      setVehicles(vehicleData.data || [])
-      console.log('Show The Vehicle All Data :', vehicleData.data)
-    } catch (error) {
-      console.error('Failed to fetch vehicles:', error)
+  const fetchVehicles = React.useCallback(async () => {
+    const vehicleData = await getAllVehicles(token)
+    console.log(vehicleData?.error?.message === 'Unauthorized access')
+    if (vehicleData?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (vehicleData.error || !vehicleData.data) {
+      console.error('Error fetching chart of accounts:', vehicleData.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          vehicleData.error?.message || 'Failed to fetch chart of accounts',
+      })
+    } else {
+      setVehicles(vehicleData.data)
     }
-  }
+  }, [token, router])
 
   // Fetch all assets
   const fetchAssets = async () => {
     try {
-      const assetData = await getAssets()
+      const assetData = await getAssets(token)
       setAsset(assetData.data || [])
       console.log('Show The Assets All Data :', assetData.data)
     } catch (error) {
@@ -70,7 +92,7 @@ const Vehicle = () => {
 
   const fetchEmployeeData = async () => {
     try {
-      const employees = await getEmployee()
+      const employees = await getEmployee(token)
       if (employees.data) {
         setEmployeeData(employees.data)
       } else {

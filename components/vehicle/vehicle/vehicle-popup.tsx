@@ -21,6 +21,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { createVehicle } from '@/api/vehicle.api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface VehicleFormModalProps {
   isOpen: boolean
@@ -39,6 +41,10 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
   asset,
   employeeData,
 }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
   const {
     register,
     handleSubmit,
@@ -65,7 +71,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
     }
 
     try {
-      await createVehicle(formattedData)
+      await createVehicle(formattedData, token)
       reset()
       onClose()
       refreshVehicles()

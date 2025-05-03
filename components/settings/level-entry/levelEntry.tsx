@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -29,7 +29,9 @@ import {
 import { Plus, SkipBackIcon as Backspace } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { getAllChartOfAccounts } from '@/api/common-shared-api'
-
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 // Define operators
 const OPERATORS = [
@@ -39,26 +41,37 @@ const OPERATORS = [
 
 // Add these utility functions
 function parseFormula(formula: string): string[] {
-  return formula.split(/(\d+|[-+])/).filter(Boolean);
+  return formula.split(/(\d+|[-+])/).filter(Boolean)
 }
 
 function convertFormulaToDisplay(formula: string, levels: LevelType[]): string {
-  if (!formula) return '';
-  const parts = parseFormula(formula);
-  return parts.map(part => {
-    if (/^\d+$/.test(part)) {
-      const level = levels.find(l => l.position === parseInt(part, 10));
-      return level ? (level.title || `l${level.position}`) : part;
-    }
-    return part;
-  }).join('');
+  if (!formula) return ''
+  const parts = parseFormula(formula)
+  return parts
+    .map((part) => {
+      if (/^\d+$/.test(part)) {
+        const level = levels.find((l) => l.position === parseInt(part, 10))
+        return level ? level.title || `l${level.position}` : part
+      }
+      return part
+    })
+    .join('')
 }
 
 export default function LevelEntry() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  // State variables
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
   const [levels, setLevels] = useState<LevelType[]>([])
   const [displayFormula, setDisplayFormula] = useState<string>('')
-  const [levelFormulas, setLevelFormulas] = useState<{ [key: number]: string }>({});
+  const [levelFormulas, setLevelFormulas] = useState<{ [key: number]: string }>(
+    {}
+  )
 
   const useLevelRows = () => {
     const [rows, setRows] = React.useState<LevelType[]>([
@@ -103,11 +116,11 @@ export default function LevelEntry() {
 
     return { rows, setRows, addRow, updateRow }
   }
-  const { rows, setRows, addRow, updateRow } = useLevelRows()
+  const { rows, addRow, updateRow } = useLevelRows()
 
   const handleSave = async () => {
     console.log('Saving data:', rows)
-    const response = await createLevel(rows)
+    const response = await createLevel(rows, token)
     if (response.error || !response.data) {
       console.error('Error creating level', response.error)
       toast({
@@ -123,8 +136,8 @@ export default function LevelEntry() {
     }
   }
 
-  async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllChartOfAccounts()
+  const fetchChartOfAccounts = useCallback(async() => {
+    const fetchedAccounts = await getAllChartOfAccounts(token)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({
@@ -135,11 +148,15 @@ export default function LevelEntry() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }
+  }, [token])
 
-  async function fetchLevels() {
-    const fetchLevels = await getAllLevel()
-    if (fetchLevels.error || !fetchLevels.data) {
+  const fetchLevels = useCallback(async() => {
+    const fetchLevels = await getAllLevel(token)
+    if (fetchLevels?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    }
+    else if (fetchLevels.error || !fetchLevels.data) {
       console.error('Error getting chart of accounts:', fetchLevels.error)
       toast({
         title: 'Error',
@@ -150,12 +167,12 @@ export default function LevelEntry() {
       setLevels(fetchLevels.data)
       console.log('🚀 ~ fetchLevels ~ fetchLevels.data:', fetchLevels.data)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchChartOfAccounts()
     fetchLevels()
-  }, [])
+  }, [fetchChartOfAccounts, fetchLevels])
 
   const handleChartOfAccountSelect = (position: number, value: string) => {
     const accountId = parseInt(value, 10)
@@ -190,8 +207,8 @@ export default function LevelEntry() {
           name: row.title || `l${row.position}`,
           id: row.position,
           position: row.position,
-          displayValue: row.title || `l${row.position}`
-        }));
+          displayValue: row.title || `l${row.position}`,
+        }))
     }
 
     // For existing entries, use levels
@@ -201,9 +218,9 @@ export default function LevelEntry() {
         name: level.title || `l${level.position}`,
         id: level.position,
         position: level.position,
-        displayValue: level.title || `l${level.position}`
-      }));
-  };
+        displayValue: level.title || `l${level.position}`,
+      }))
+  }
 
   const handleInsertVariable = (
     position: number,
@@ -212,65 +229,77 @@ export default function LevelEntry() {
   ) => {
     if (levels.length === 0) {
       // For new entries
-      const currentValue = rows.find((row) => row.position === position)?.formula || '';
-      const currentDisplayValue = displayFormula || '';
-      updateRow(position, 'formula', `${currentValue}${variablePosition}`);
-      setDisplayFormula(`${currentDisplayValue}${displayValue}`);
+      const currentValue =
+        rows.find((row) => row.position === position)?.formula || ''
+      const currentDisplayValue = displayFormula || ''
+      updateRow(position, 'formula', `${currentValue}${variablePosition}`)
+      setDisplayFormula(`${currentDisplayValue}${displayValue}`)
     } else {
       // For existing entries
-      const currentFormula = levelFormulas[position] || levels.find(l => l.position === position)?.formula || '';
-      const newFormula = `${currentFormula}${variablePosition}`;
-      setLevelFormulas(prev => ({ ...prev, [position]: newFormula }));
-      updateRow(position, 'formula', newFormula);
+      const currentFormula =
+        levelFormulas[position] ||
+        levels.find((l) => l.position === position)?.formula ||
+        ''
+      const newFormula = `${currentFormula}${variablePosition}`
+      setLevelFormulas((prev) => ({ ...prev, [position]: newFormula }))
+      updateRow(position, 'formula', newFormula)
     }
-  };
+  }
 
   const handleInsertOperator = (position: number, operator: string) => {
     if (levels.length === 0) {
       // For new entries
-      const currentValue = rows.find((row) => row.position === position)?.formula || '';
-      updateRow(position, 'formula', `${currentValue}${operator}`);
-      setDisplayFormula(`${displayFormula}${operator}`);
+      const currentValue =
+        rows.find((row) => row.position === position)?.formula || ''
+      updateRow(position, 'formula', `${currentValue}${operator}`)
+      setDisplayFormula(`${displayFormula}${operator}`)
     } else {
       // For existing entries
-      const currentFormula = levelFormulas[position] || levels.find(l => l.position === position)?.formula || '';
-      const newFormula = `${currentFormula}${operator}`;
-      setLevelFormulas(prev => ({ ...prev, [position]: newFormula }));
-      updateRow(position, 'formula', newFormula);
+      const currentFormula =
+        levelFormulas[position] ||
+        levels.find((l) => l.position === position)?.formula ||
+        ''
+      const newFormula = `${currentFormula}${operator}`
+      setLevelFormulas((prev) => ({ ...prev, [position]: newFormula }))
+      updateRow(position, 'formula', newFormula)
     }
-  };
+  }
 
   const handleBackspace = (position: number) => {
     if (levels.length === 0) {
       // For new entries
-      const currentValue = rows.find((row) => row.position === position)?.formula || '';
-      const newValue = currentValue.slice(0, -1);
-      updateRow(position, 'formula', newValue);
-      setDisplayFormula(displayFormula.slice(0, -1));
+      const currentValue =
+        rows.find((row) => row.position === position)?.formula || ''
+      const newValue = currentValue.slice(0, -1)
+      updateRow(position, 'formula', newValue)
+      setDisplayFormula(displayFormula.slice(0, -1))
     } else {
       // For existing entries
-      const currentFormula = levelFormulas[position] || levels.find(l => l.position === position)?.formula || '';
-      const newFormula = currentFormula.slice(0, -1);
-      setLevelFormulas(prev => ({ ...prev, [position]: newFormula }));
-      updateRow(position, 'formula', newFormula);
+      const currentFormula =
+        levelFormulas[position] ||
+        levels.find((l) => l.position === position)?.formula ||
+        ''
+      const newFormula = currentFormula.slice(0, -1)
+      setLevelFormulas((prev) => ({ ...prev, [position]: newFormula }))
+      updateRow(position, 'formula', newFormula)
     }
-  };
+  }
 
   const handleUpdate = async () => {
-    console.log('Updating levels:', levels);
-    const response = await editLevel(levels);
+    console.log('Updating levels:', levels)
+    const response = await editLevel(levels, token)
     if (response.error) {
       toast({
         title: 'Error',
         description: response.error.message || 'Failed to update levels',
-      });
+      })
     } else {
       toast({
         title: 'Success',
         description: 'Levels updated successfully',
-      });
+      })
     }
-  };
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -440,7 +469,7 @@ export default function LevelEntry() {
                           {getAvailableAccounts(row.position).map((account) => (
                             <SelectItem
                               key={account.accountId}
-                              value={account.accountId?.toString() ?? ""}
+                              value={account.accountId?.toString() ?? ''}
                             >
                               {account.name}
                             </SelectItem>
@@ -530,7 +559,12 @@ export default function LevelEntry() {
                     {level.type === 'Calculated Field' && (
                       <div className="flex gap-2">
                         <Input
-                          value={convertFormulaToDisplay(levelFormulas[level.position] || level.formula || '', levels)}
+                          value={convertFormulaToDisplay(
+                            levelFormulas[level.position] ||
+                              level.formula ||
+                              '',
+                            levels
+                          )}
                           placeholder="Use Insert button to add variables and operators"
                           maxLength={45}
                           readOnly
@@ -566,8 +600,8 @@ export default function LevelEntry() {
                                       </Button>
                                     )
                                   )}
-                                  {getPreviousVariables(level.position).length ===
-                                    0 && (
+                                  {getPreviousVariables(level.position)
+                                    .length === 0 && (
                                     <p className="text-sm text-muted-foreground">
                                       No variables available from previous
                                       levels
@@ -625,14 +659,16 @@ export default function LevelEntry() {
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {getAvailableAccounts(level.position).map((account) => (
-                            <SelectItem
-                              key={account.accountId}
-                              value={account.accountId?.toString() ?? ""}
-                            >
-                              {account.name}
-                            </SelectItem>
-                          ))}
+                          {getAvailableAccounts(level.position).map(
+                            (account) => (
+                              <SelectItem
+                                key={account.accountId}
+                                value={account.accountId?.toString() ?? ''}
+                              >
+                                {account.name}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     )}
@@ -655,4 +691,3 @@ export default function LevelEntry() {
     </div>
   )
 }
-
