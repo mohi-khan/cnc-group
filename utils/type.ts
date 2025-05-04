@@ -719,16 +719,17 @@ export type GetAssetData = z.infer<typeof getAssetSchema>
 export const createAssetCategorySchema = z.object({
   category_name: z
     .string()
-    .min(2, 'Category name must be at least 2 characters.')
-    .max(255, 'Category name must not exceed 255 characters.'),
+    .min(2, "Category name must be at least 2 characters.")
+    .max(255, "Category name must not exceed 255 characters."),
   depreciation_rate: z
     .string()
-    .regex(/^\d+(\.\d+)?$/, { message: 'Invalid decimal format' }),
-  account_code: z.number().int('Account code must be an integer.'),
+    .regex(/^\d+(\.\d+)?$/, { message: "Invalid decimal format" }),
+  account_code: z.number().int("Account code must be an integer.").optional(),
   depreciation_account_code: z
     .number()
-    .int('Depreciation account code must be an integer.'),
-  created_by: z.number().int('Created by must be an integer.'),
+    .int("Depreciation account code must be an integer.")
+    .optional(),
+  created_by: z.number().int("Created by must be an integer."),
 })
 
 export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
@@ -1347,6 +1348,7 @@ export interface GetElectricityBillType {
   amount: number
   payment: number
   description: string
+  
 }
 
 //Create Electricity Bill Schema

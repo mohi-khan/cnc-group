@@ -91,6 +91,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   }, [userId, form])
 
   const fetchChartOfAccounts = useCallback(async () => {
+    if (!token) return
     const response = await getAllChartOfAccounts(token)
     console.log('Fetched chart of accounts:', response.data)
 
@@ -103,16 +104,18 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       })
     } else {
       setChartOfAccounts(response.data)
-      console.log('coa', chartOfAccounts)
+      
     }
-  }, [])
+  }, [token]) 
 
   const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (
     data
   ) => {
     console.log('Form submitted:', data, token)
+    if (!token) return
     setIsSubmitting(true)
     try {
+
       await createAssetCategory(data, token)
       onCategoryAdded()
       onOpenChange(false)

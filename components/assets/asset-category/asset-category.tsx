@@ -23,11 +23,13 @@ const AssetCategory = () => {
     const categories = await getAllAssetCategories(token)
     console.log('🚀 ~ fetchAssetCategories ~ categories:', categories)
     setAssetCategories(categories.data ?? [])
-  }, [])
+  }, [token])
 
   useEffect(() => {
     fetchAssetCategories()
-  }, [])
+  }, [fetchAssetCategories])
+
+  
   const handleAddCategory = () => {
     setIsPopupOpen(true)
   }

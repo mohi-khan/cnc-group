@@ -300,6 +300,7 @@ export default function ChartOfAccountsTable() {
   }, [form, generateAccountCode])
 
   const fetchParentCodes = React.useCallback(async () => {
+    if(!token) return;
     const fetchedParentCodes = await getParentCodes(token)
     console.log('Fetched parent codes:', fetchedParentCodes.data)
 
@@ -317,10 +318,11 @@ export default function ChartOfAccountsTable() {
         console.log(fetchedParentCodes.data)
       }
     }
-  }, [])
+  }, [token])
 
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
+    if(!token) return;
     const fetchedCurrency = await getAllCurrency(token)
     console.log(
       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
@@ -335,9 +337,10 @@ export default function ChartOfAccountsTable() {
     } else {
       setCurrency(fetchedCurrency.data)
     }
-  }, [toast, token])
+  }, [token])
 
   const fetchCoaAccounts = React.useCallback(async () => {
+    if(!token) return;
     const fetchedAccounts = await getAllChartOfAccounts(token)
     console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
     if (fetchedAccounts?.error?.status === 401) {
