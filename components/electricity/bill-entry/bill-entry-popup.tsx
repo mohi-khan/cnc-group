@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -31,6 +31,10 @@ import {
 import { createBillEntry } from '@/api/bill-entry-api'
 import { toast } from '@/hooks/use-toast'
 import { getMeterEntry } from '@/api/meter-entry-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface MeterEntryPopUpProps {
   isOpen: boolean
@@ -45,6 +49,11 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   onCategoryAdded,
   fetchBillEntry,
 }) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+
   const form = useForm<CreateElectricityBillType>({
     resolver: zodResolver(CreateElectricityBillSchema),
     defaultValues: {
@@ -74,7 +83,8 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     }
 
     try {
-      const response = await createBillEntry(submitData)
+      const response = await createBillEntry(submitData, token)
+      
       console.log('Response:', response.data)
       if (response.data) {
         toast({
@@ -103,15 +113,16 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     }
   }
 
-  const fetchMeterEntry = async () => {
-    const response = await getMeterEntry()
+  const fetchMeterEntry = React.useCallback(async () => {
+    if (!token) return
+    const response = await getMeterEntry(token)
     setMeterEntry(response.data ?? [])
     console.log('🚀 ~get meter entry data :', response)
-  }
+  }, [token])
 
   useEffect(() => {
     fetchMeterEntry()
-  }, [])
+  }, [fetchMeterEntry])
 
   return (
     <div>
@@ -148,18 +159,29 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   <FormItem>
                     <FormLabel>Meter No</FormLabel>
                     <FormControl>
-                      <select
-                        {...field}
-                        onChange={(e) => onChange(Number(e.target.value))}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                      >
-                        <option value="">Select Meter</option>
-                        {meterEntry.map((meter) => (
-                          <option key={meter.meterid} value={meter.meterid}>
-                            {meter.meterName}
-                          </option>
-                        ))}
-                      </select>
+                      <CustomCombobox
+                        items={meterEntry.map((meter) => ({
+                          id: meter.meterid.toString(),
+                          name: meter.meterName || 'Unnamed Meter',
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  meterEntry.find(
+                                    (meter) => meter.meterid === field.value
+                                  )?.meterName || 'Unnamed Meter',
+                              }
+                            : null
+                        }
+                        onChange={(
+                          value: { id: string; name: string } | null
+                        ) =>
+                          onChange(value ? Number.parseInt(value.id, 10) : null)
+                        }
+                        placeholder="Select meter"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -11,30 +11,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { GetElectricityMeterType } from '@/utils/type'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 
 interface MeterEntryListProps {
   onAddCategory: () => void
+  meterEntry: GetElectricityMeterType[]
 }
 
-const MeterEntryList: React.FC<MeterEntryListProps> = ({ onAddCategory }) => {
- 
-
-  const [meterEntry, setMeterEntry] = React.useState<GetElectricityMeterType[]>(
-    []
-  )
-
-  const fetchMeterEntry = async () => {
-    const response = await getMeterEntry()
-    setMeterEntry(response.data ?? [])
-    console.log('🚀 ~get meter entry data :', response)
-  }
-
-  useEffect(() => {
-    fetchMeterEntry()
-  }, [])
-
+const MeterEntryList: React.FC<MeterEntryListProps> = ({
+  onAddCategory,
+  meterEntry,
+}) => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">

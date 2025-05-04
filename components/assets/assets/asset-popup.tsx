@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { createAsset } from '@/api/assets.api'
 import { type CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -141,61 +141,58 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     }
   }
 
-  const fetchCompnay = async () => {
-    try {
-      const response = await getAllCompanies(token)
+  /**
+   * Fetches all companies from the API and updates the state
+   */
+  const fetchCompnay = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllCompanies(token)
+    setGetCompany(response.data)
+    console.log(
+      'fetchAssetCategories category names asset tsx file:',
+      response.data
+    )
+  }, [token])  
 
-      setGetCompany(response.data)
-      console.log(
-        'fetchAssetCategories category names asset tsx file:',
-        response.data
-      )
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
-  const fetchLocation = async () => {
-    try {
-      const response = await getAllLocations(token)
+  /**
+   * Fetches all locations from the API and updates the state
+   */
+  const fetchLocation = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllLocations(token)
+    setGetLocation(response.data ?? [])
+    console.log(
+      'fetchAssetCategories category names asset tsx file:',
+      response.data
+    )
+  }, [token])
 
-      setGetLocation(response.data ?? [])
-      console.log(
-        'fetchAssetCategories category names asset tsx file:',
-        response.data
-      )
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
+  /**
+   * Fetches all departments from the API and updates the state
+   */
+  const fetchDepartments = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllDepartments(token)
+    setGetDepartment(response.data ?? [])
+    console.log('dept data', response.data)
+  }, [token])
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await getAllDepartments(token)
 
-      setGetDepartment(response.data ?? [])
-      console.log('dept data', response.data)
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
-
-  const fetchCostCenters = async () => {
-    try {
-      const response = await getAllCostCenters(token)
-
-      setGetCostCenter(response.data ?? [])
-      console.log('cost center data', response.data)
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
-
+  /**
+   * Fetches all cost centers from the API and updates the state
+   */
+  const fetchCostCenters = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllCostCenters(token)
+    setGetCostCenter(response.data ?? [])
+    console.log('cost center data', response.data)
+  }, [token])
   useEffect(() => {
     fetchCompnay()
     fetchLocation()
     fetchDepartments()
     fetchCostCenters()
-  }, [])
+  }, [fetchCompnay, fetchCostCenters, fetchDepartments, fetchLocation])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

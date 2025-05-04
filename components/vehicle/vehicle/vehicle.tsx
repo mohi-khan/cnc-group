@@ -43,23 +43,24 @@ const Vehicle = () => {
   }
 
   // Fetch all cost centers
-  async function fetchgetAllCostCenters() {
-    try {
-      const response = await getAllCostCenters(token)
-      if (!response.data) throw new Error('No data received')
-      setCostCenters(response.data)
-    } catch (error) {
-      console.error('Error getting cost centers:', error)
+  const fetchgetAllCostCenters = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllCostCenters(token)
+    if (!response.data) {
       toast({
         title: 'Error',
         description: 'Failed to load cost centers',
       })
       setCostCenters([])
+      return
     }
-  }
+    setCostCenters(response.data)
+  }, [token])
+
 
   // Fetch all vehicles
   const fetchVehicles = React.useCallback(async () => {
+    if (!token) return
     const vehicleData = await getAllVehicles(token)
     console.log(vehicleData?.error?.message === 'Unauthorized access')
     if (vehicleData?.error?.status === 401) {
@@ -80,36 +81,31 @@ const Vehicle = () => {
   }, [token, router])
 
   // Fetch all assets
-  const fetchAssets = async () => {
-    try {
-      const assetData = await getAssets(token)
-      setAsset(assetData.data || [])
-      console.log('Show The Assets All Data :', assetData.data)
-    } catch (error) {
-      console.error('Failed to fetch assets:', error)
-    }
-  }
+  const fetchAssets = React.useCallback(async () => {
+    if (!token) return
+    const assetData = await getAssets(token)
+    setAsset(assetData.data || [])
+    console.log('Show The Assets All Data :', assetData.data)
+  }, [token])
 
-  const fetchEmployeeData = async () => {
-    try {
-      const employees = await getEmployee(token)
-      if (employees.data) {
-        setEmployeeData(employees.data)
-      } else {
-        setEmployeeData([])
-      }
-      console.log('Show The Employee Data :', employees.data)
-    } catch (error) {
-      console.error('Failed to fetch Employee Data :', error)
+
+  const fetchEmployeeData = React.useCallback(async () => {
+    if (!token) return
+    const employees = await getEmployee(token)
+    if (employees.data) {
+      setEmployeeData(employees.data)
+    } else {
+      setEmployeeData([])
     }
-  }
+    console.log('Show The Employee Data :', employees.data)
+  }, [token])
 
   useEffect(() => {
     fetchgetAllCostCenters()
     fetchVehicles()
     fetchAssets()
     fetchEmployeeData()
-  }, [])
+  }, [fetchgetAllCostCenters, fetchVehicles, fetchAssets, fetchEmployeeData])
 
   return (
     <div>
