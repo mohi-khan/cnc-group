@@ -14,11 +14,18 @@ import type {
   AccountsHead,
   GetDepartment,
 } from '@/utils/type'
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { toast } from '@/hooks/use-toast'
 
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllChartOfAccounts, getAllCostCenters, getAllDepartments } from '@/api/common-shared-api'
+import {
+  getAllChartOfAccounts,
+  getAllCostCenters,
+  getAllDepartments,
+} from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 // Define the props for the JournalVoucherDetailsSection component
 interface JournalVoucherDetailsSectionProps {
@@ -31,6 +38,12 @@ export function JournalVoucherDetailsSection({
   form,
   onRemoveEntry,
 }: JournalVoucherDetailsSectionProps) {
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
   //state variables
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
@@ -41,8 +54,8 @@ export function JournalVoucherDetailsSection({
   const entries = form.watch('journalDetails')
 
   // Fetching chart of accounts data
-  async function fetchChartOfAccounts() {
-    const response = await getAllChartOfAccounts()
+  const fetchChartOfAccounts = useCallback(async () => {
+    const response = await getAllChartOfAccounts(token)
     if (response.error || !response.data) {
       console.error('Error getting Chart Of accounts:', response.error)
       toast({
@@ -56,11 +69,11 @@ export function JournalVoucherDetailsSection({
       })
       setChartOfAccounts(filteredCoa)
     }
-  }
+  }, [token])
 
   // Fetching cost centers data
-  const fetchCostCenters = async () => {
-    const data = await getAllCostCenters()
+  const fetchCostCenters = useCallback(async () => {
+    const data = await getAllCostCenters(token)
     if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
@@ -70,11 +83,11 @@ export function JournalVoucherDetailsSection({
     } else {
       setCostCenters(data.data)
     }
-  }
+  }, [token])
 
   // Fetching departments data
-  async function fetchDepartments() {
-    const response = await getAllDepartments()
+  const fetchDepartments = useCallback(async() => {
+    const response = await getAllDepartments(token)
     if (response.error || !response.data) {
       console.error('Error getting departments:', response.error)
       toast({
@@ -84,7 +97,7 @@ export function JournalVoucherDetailsSection({
     } else {
       setDepartments(response.data)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchChartOfAccounts()

@@ -64,12 +64,15 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 export default function ResPartners() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [partners, setPartners] = React.useState<ResPartner[]>([])
@@ -118,9 +121,14 @@ export default function ResPartners() {
   }, [userData])
 
   const fetchResPartners = React.useCallback(async () => {
-    // setIsLoading(true)
+    if (!token) return
     const data = await getAllResPartners(token)
     console.log('🚀 ~ fetchrespartners ~ data:', data)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    }
     if (data.error || !data.data || !data.data) {
       console.error('Error getting res partners:', data.error)
     } else {
@@ -129,13 +137,17 @@ export default function ResPartners() {
     }
     console.log('companies here', companies)
     // setIsLoading(false)
-  }, [companies])
+  }, [companies, token])
 
   const fetchCompanies = React.useCallback(async () => {
-    // setIsLoading(true)
+    if (!token) return
     const data = await getAllCompanies(token)
     console.log('🚀 ~ fetchCompanies ~ data:', data)
-    if (data.error || !data.data) {
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
     } else {
       console.log('company', data.data)
@@ -143,12 +155,12 @@ export default function ResPartners() {
     }
     console.log('companies here', companies)
     // setIsLoading(false)
-  }, [companies])
+  }, [companies, token])
 
   React.useEffect(() => {
     fetchResPartners()
     fetchCompanies()
-  }, [fetchResPartners, fetchCompanies])
+  }, [fetchResPartners, fetchCompanies, router])
 
   React.useEffect(() => {
     console.log('Resetting form', { editingPartner })
@@ -206,10 +218,13 @@ export default function ResPartners() {
       }
     } else {
       console.log('Creating new partner')
-      const response = await createResPartner({
-        ...values,
-        createdBy: userId,
-      }, token)
+      const response = await createResPartner(
+        {
+          ...values,
+          createdBy: userId,
+        },
+        token
+      )
       if (response.error || !response.data) {
         console.error('Error creating res partner:', response.error)
         toast({

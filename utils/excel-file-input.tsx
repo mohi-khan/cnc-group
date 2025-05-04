@@ -13,12 +13,19 @@ import {
 } from '@/components/ui/table'
 import React from 'react'
 import * as XLSX from 'xlsx'
+import { tokenAtom, useInitializeUser } from './user'
+import { useAtom } from 'jotai'
 
 interface ExcelFileInputProps {
   apiEndpoint: string
 }
 
 function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  //state variables
   const [data, setData] = React.useState<object[] | null>(null)
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [message, setMessage] = React.useState<string | null>(null)
@@ -90,7 +97,7 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
       setIsLoading(true)
       setMessage('Submitting data...')
 
-      const response = await createBankTransactions(data, apiEndpoint)
+      const response = await createBankTransactions(data, apiEndpoint, token)
 
       setMessage('Bank transactions created successfully!')
       console.log('API response:', response)
@@ -137,8 +144,8 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
       {Array.isArray(data) && data.length > 0 && (
         <div className="mt-4 pb-10">
           <h2 className="text-lg font-semibold mb-2">Imported Data:</h2>
-          <Table className='border shadow-md mb-20'>
-            <TableHeader className='bg-slate-200 shadow-md'>
+          <Table className="border shadow-md mb-20">
+            <TableHeader className="bg-slate-200 shadow-md">
               <TableRow>
                 {getTableHeaders().map((header) => (
                   <TableHead key={header}>{header}</TableHead>

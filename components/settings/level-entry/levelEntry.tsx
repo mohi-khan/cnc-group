@@ -44,20 +44,6 @@ function parseFormula(formula: string): string[] {
   return formula.split(/(\d+|[-+])/).filter(Boolean)
 }
 
-function convertFormulaToDisplay(formula: string, levels: LevelType[]): string {
-  if (!formula) return ''
-  const parts = parseFormula(formula)
-  return parts
-    .map((part) => {
-      if (/^\d+$/.test(part)) {
-        const level = levels.find((l) => l.position === parseInt(part, 10))
-        return level ? level.title || `l${level.position}` : part
-      }
-      return part
-    })
-    .join('')
-}
-
 export default function LevelEntry() {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -73,6 +59,20 @@ export default function LevelEntry() {
     {}
   )
 
+  function convertFormulaToDisplay(formula: string, levels: LevelType[]): string {
+    if (!formula) return ''
+    const parts = parseFormula(formula)
+    return parts
+      .map((part) => {
+        if (/^\d+$/.test(part)) {
+          const level = levels.find((l) => l.position === parseInt(part, 10))
+          return level ? level.title || `l${level.position}` : part
+        }
+        return part
+      })
+      .join('')
+  }
+  
   const useLevelRows = () => {
     const [rows, setRows] = React.useState<LevelType[]>([
       {
@@ -136,9 +136,13 @@ export default function LevelEntry() {
     }
   }
 
-  const fetchChartOfAccounts = useCallback(async() => {
+  const fetchChartOfAccounts = useCallback(async () => {
+    if (!token) return
     const fetchedAccounts = await getAllChartOfAccounts(token)
-    if (fetchedAccounts.error || !fetchedAccounts.data) {
+    if (fetchedAccounts?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({
         title: 'Error',
@@ -150,13 +154,12 @@ export default function LevelEntry() {
     }
   }, [token])
 
-  const fetchLevels = useCallback(async() => {
+  const fetchLevels = useCallback(async () => {
     const fetchLevels = await getAllLevel(token)
     if (fetchLevels?.error?.status === 401) {
       router.push('/unauthorized-access')
       return
-    }
-    else if (fetchLevels.error || !fetchLevels.data) {
+    } else if (fetchLevels.error || !fetchLevels.data) {
       console.error('Error getting chart of accounts:', fetchLevels.error)
       toast({
         title: 'Error',

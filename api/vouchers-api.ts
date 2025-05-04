@@ -17,7 +17,7 @@ import { z } from 'zod'
 export type CostCenter = z.infer<typeof costCentersArraySchema>
 
 export async function createJournalEntryWithDetails(
-  data: JournalEntryWithDetails
+  data: JournalEntryWithDetails, token: string
 ) {
   console.log('Under APi:')
   console.log(data)
@@ -25,10 +25,13 @@ export async function createJournalEntryWithDetails(
     url: 'api/journal/entry',
     method: 'POST',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+    },
   })
 }
 // Get All Voucher Data
-export async function getAllVoucher(data: JournalQuery) {
+export async function getAllVoucher(data: JournalQuery, token: string) {
   const queryParams = new URLSearchParams({
     date: data.date,
     companyId: JSON.stringify(data.companyId), // Convert array to JSON string
@@ -39,6 +42,9 @@ export async function getAllVoucher(data: JournalQuery) {
   return fetchApi({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+    },
   })
 }
 

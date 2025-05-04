@@ -17,7 +17,10 @@ import type {
   CurrencyType,
   LocationFromLocalstorage,
 } from '@/utils/type'
-import { useEffect, useState } from 'react'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 
 // Defines the props for the CashVoucherMaster component
 interface CashVoucherMasterProps {
@@ -31,13 +34,24 @@ export default function CashVoucherMaster({
   companies,
   locations,
 }: CashVoucherMasterProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Function to fetch currency data
-  const fetchCurrency = async () => {
-    const data = await getAllCurrency()
-    if (data.error || !data.data) {
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
+    const data = await getAllCurrency(token)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({
         title: 'Error',
@@ -47,7 +61,7 @@ export default function CashVoucherMaster({
       setCurrency(data.data)
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
-  }
+  }, [token, router])
 
   useEffect(() => {
     fetchCurrency()
@@ -171,21 +185,25 @@ export default function CashVoucherMaster({
         )}
       />
 
-       <FormField
-              control={form.control}
-              name="journalEntry.payTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pay To</FormLabel>
-                  <FormControl>
-                    <Input {...field} value={field.value ?? ''} placeholder="Enter payee name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <FormField
+        control={form.control}
+        name="journalEntry.payTo"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Pay To</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                value={field.value ?? ''}
+                placeholder="Enter payee name"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className='col-span-4'>
+      <div className="col-span-4">
         <FormField
           control={form.control}
           name="journalEntry.notes"

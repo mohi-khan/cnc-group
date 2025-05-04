@@ -18,7 +18,7 @@ export async function createAssetDepreciation(
 }
 
 export async function previewAssetDepreciation(
-  data: CreateAssetDepreciationData
+  data: CreateAssetDepreciationData, token: string
 ) {
   return fetchApi<CreateAssetDepreciationData[]>({
     url: 'api/depreciation-schedules/preview-depreciation-schedule',
@@ -26,6 +26,7 @@ export async function previewAssetDepreciation(
     body: data,
     headers: {
       'Content-Type': 'application/json',
+      Authorization: token,
     },
   })
 }
@@ -33,12 +34,16 @@ export async function previewAssetDepreciation(
 
 
 export async function createJournalEntryWithDetails(
-  data: JournalEntryWithDetails
+  data: JournalEntryWithDetails, token: string
 ) {
   console.log('journal', data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
     body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }

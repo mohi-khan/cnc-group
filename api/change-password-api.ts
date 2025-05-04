@@ -25,7 +25,8 @@ export async function changePassword(
   userId: number,
   currentPassword: string,
   newPassword: string,
-  confirmNewPassword: string
+  confirmNewPassword: string,
+  token: string
 ) {
   const validatedData = changePasswordSchema.parse({
     currentPassword,
@@ -38,5 +39,9 @@ export async function changePassword(
     url: `api/auth/change-password/${userId}`,
     method: 'PATCH',
     body: validatedData,
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
   })
 }

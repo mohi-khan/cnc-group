@@ -42,7 +42,7 @@ export async function editJournalDetail(data: JournalNotes) {
   })
 }
 
-export async function getAllVoucher(data: JournalQuery) {
+export async function getAllVoucher(data: JournalQuery, token: string) {
   const queryParams = new URLSearchParams(
     Object.entries({
       date: data.date,
@@ -61,16 +61,24 @@ export async function getAllVoucher(data: JournalQuery) {
   return fetchApi<JournalResult[]>({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+    },
   })
 }
 
 export async function createJournalEntryWithDetails(
-  data: JournalEntryWithDetails
+  data: JournalEntryWithDetails,
+  token: string
 ) {
   console.log('journal', data)
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
     body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }

@@ -30,9 +30,9 @@ import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllCurrency } from '@/api/common-shared-api'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-
+import { useRouter } from 'next/navigation'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -44,6 +44,9 @@ export function JournalVoucherMasterSection({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
@@ -80,9 +83,15 @@ export function JournalVoucherMasterSection({
       locationId: location,
       voucherType: VoucherTypes.JournalVoucher,
     }
-    const response = await getAllVoucher(voucherQuery)
+    if (!token) return
+    const response = await getAllVoucher(voucherQuery, token)
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    }
     // Check for errors in the response. if no errors, set the voucher grid data
-    if (response.error || !response.data) {
+    else if (response.error || !response.data) {
       console.error('Error getting Voucher Data:', response.error)
       toast({
         title: 'Error',
@@ -105,8 +114,13 @@ export function JournalVoucherMasterSection({
 
   // Function to fetch currency data
   const fetchCurrency = async () => {
-    const data = await getAllCurrency()
-    if (data.error || !data.data) {
+    if (!token) return
+    const data = await getAllCurrency(token)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({
         title: 'Error',

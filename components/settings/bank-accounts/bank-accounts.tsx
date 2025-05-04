@@ -85,6 +85,8 @@ export default function BankAccounts() {
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
+  const router = useRouter()
+
   // State variables
   const [accounts, setAccounts] = React.useState<BankAccount[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
@@ -97,8 +99,6 @@ export default function BankAccounts() {
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
-
-  const router = useRouter()
 
   React.useEffect(() => {
     if (userData) {
@@ -126,6 +126,7 @@ export default function BankAccounts() {
   })
 
   const fetchBankAccounts = React.useCallback(async () => {
+    if (!token) return
     const fetchedAccounts = await getAllBankAccounts(token)
     console.log('Fetched accounts:', fetchedAccounts)
     if (fetchedAccounts?.error?.status === 401) {
@@ -144,10 +145,13 @@ export default function BankAccounts() {
   }, [toast])
 
   const fetchGlAccounts = React.useCallback(async () => {
+    if (!token) return
     const fetchedGlAccounts = await getAllChartOfAccounts(token)
     console.log('Fetched gl accounts:', fetchedGlAccounts)
-
-    if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
+    if (fetchedGlAccounts?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (fetchedGlAccounts.error || !fetchedGlAccounts.data) {
       console.error('Error getting gl bank account:', fetchedGlAccounts.error)
       toast({
         title: 'Error',

@@ -59,10 +59,13 @@ export async function createInvoice(data: CreateInvoiceType, token: string) {
   })
 }
 
-export async function getAllVendors() {
+export async function getAllVendors(token: string) {
   return fetchApi<ResPartner[]>({
     url: 'api/res-partner/get-all-res-partners',
     method: 'GET',
+    headers: {
+      Authorization: token,
+    },
   })
 }
 

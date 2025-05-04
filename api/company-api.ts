@@ -31,7 +31,8 @@ export type CompanyType = z.infer<typeof companySchema>
 
 export async function createCompany(
   companyData: z.infer<typeof companySchema>,
-  locations: string[]
+  locations: string[],
+  token: string
 ) {
   console.log('API: Creating company with data:', companyData)
 
@@ -41,6 +42,7 @@ export async function createCompany(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `${token}`,
       },
       body: JSON.stringify({
         companydata: companyData,

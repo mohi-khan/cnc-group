@@ -14,8 +14,15 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import { PaymentRequisitionPopup } from '../payment-requisition/payment-requisition-popup'
 import { getAllAdvance } from '@/api/approved-advances-api'
+import { useAtom } from 'jotai'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 
 const ApprovedAdvances = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,23 +31,23 @@ const ApprovedAdvances = () => {
   const [selectedAdvance, setSelectedAdvance] =
     useState<ApproveAdvanceType | null>(null)
 
-  // Get authentication token from localStorage
-  const mainToken =
-    typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
-  const token = mainToken ? `Bearer ${mainToken}` : ''
-  const user =
-    typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('currentUser') || '{}')
-      : {}
-
-  const fetchAdvances = useCallback (async () => {
+  const fetchAdvances = useCallback(async () => {
+    if (!token) return
     try {
       setIsLoading(true)
       setError(null)
-
       const data = await getAllAdvance(token)
       console.log('🚀 ~ fetchAdvances ~ data:', data)
-      setAdvances(Array.isArray(data?.data) ? data.data : [])
+      if (data?.error?.status === 401) {
+        console.log('Unauthorized access')
+        return
+      } else if (data.error || !data.data) {
+        console.error('Error fetching approved advances:', data.error)
+        setError(data.error?.message || 'Failed to fetch approved advances')
+        return
+      } else {
+        setAdvances(Array.isArray(data?.data) ? data.data : [])
+      }
     } catch (err) {
       console.error('Error fetching approved advances:', err)
       setError('Failed to fetch approved advances')
