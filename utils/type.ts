@@ -318,14 +318,19 @@ export const chartOfAccountSchema = z.object({
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()
-    .min(1, 'Code is required')
+    // .min(1, 'Code is required')
     .max(64, 'Maximum 64 characters allowed'),
   accountType: z
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int().min(1, 'Parent account ID is required'),
-  parentName: z.string().min(1, 'Parent account ID is required').optional(),
+    // parentAccountId: z.number().int().min(1,'Parent account ID is required'),  
+    parentAccountId: z
+    .number({ required_error: 'Parent Account is required' })
+    .int()
+    .positive('Parent Account is required'),
+  
+
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -352,7 +357,7 @@ export const AccountsHeadSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int(),
+  parentAccountId: z.number().int().positive(),
   parentName: z.string().min(1, 'Parent account ID is required'),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
