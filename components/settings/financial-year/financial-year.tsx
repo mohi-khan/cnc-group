@@ -59,15 +59,28 @@ const FinancialYear = () => {
       isactive: true,
       createdby: userId,
       yearname: '',
+      startdate: undefined,
+      enddate: undefined,
     },
   })
 
   useEffect(() => {
     if (userId !== 0) {
-      form.setValue('createdby', userId)
-      console.log('Updated form createdby with userId:', userId)
+      form.reset({
+        ...form.getValues(),
+        createdby: userId,
+      })
+      console.log('Reset form with updated userId:', userId)
     }
   }, [userId, form])
+
+  // Remove or comment out this useEffect
+  // useEffect(() => {
+  //   if (userId !== 0) {
+  //     form.setValue('createdby', userId)
+  //     console.log('Updated form createdby with userId:', userId)
+  //   }
+  // }, [userId, form])
 
   async function onSubmit(values: financialYear) {
     try {
@@ -92,6 +105,13 @@ const FinancialYear = () => {
           title: 'Success',
           description: 'Financial year created successfully',
         })
+        form.reset({
+          isactive: true,
+          createdby: userId,
+          yearname: '',
+          startdate: undefined,
+          enddate: undefined,
+        }) // Reset the form after successful submission
       }
     } catch (error) {
       console.error('Unexpected error:', error)
