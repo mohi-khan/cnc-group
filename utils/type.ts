@@ -339,10 +339,9 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string(),
+  cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
-  notes: z.string(),
-  // financialTag: z.string(),
+  notes: z.string().nullable(),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
@@ -524,7 +523,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentName: z.string().min(1, "Department name is required"),
+  departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
@@ -724,10 +723,11 @@ export const createAssetCategorySchema = z.object({
   depreciation_rate: z
     .string()
     .regex(/^\d+(\.\d+)?$/, { message: 'Invalid decimal format' }),
-  account_code: z.number().int('Account code must be an integer.'),
+  account_code: z.number().int('Account code must be an integer.').optional(),
   depreciation_account_code: z
     .number()
-    .int('Depreciation account code must be an integer.'),
+    .int('Depreciation account code must be an integer.')
+    .optional(),
   created_by: z.number().int('Created by must be an integer.'),
 })
 

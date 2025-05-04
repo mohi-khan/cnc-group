@@ -42,6 +42,7 @@ import { useAtom } from 'jotai'
 import { RoleData } from '@/api/create-user-api'
 import { GetUsersByRoles } from '@/api/user-list-api'
 import { toast } from '@/hooks/use-toast'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: number
@@ -72,6 +73,7 @@ export default function UsersList() {
   //token from atom
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   //state variables
   const [users, setUsers] = useState<User[]>([])
@@ -80,40 +82,33 @@ export default function UsersList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [roles, setRoles] = useState<RoleData[]>([])
 
-  // const fetchUsers = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       'http://localhost:4000/api/auth/users-by-roles'
-  //     )
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch users')
-  //     }
-  //     const data = await response.json()
-  //     if (data.status === 'success' && Array.isArray(data.data.users)) {
-  //       setUsers(data.data.users)
-  //     } else {
-  //       throw new Error('Unexpected data format')
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching users:', error)
-  //   }
-  // }
 
-  const fetchUsers = React.useCallback(async () => {
-    // setIsLoading(true)
-    const data = await GetUsersByRoles(token)
-    console.log('🚀 ~ fetchUsers ~ data:', data)
-    if (data.error || !data.data || !data.data) {
-      console.error('Error getting res partners:', data.error)
-    } else {
-      setUsers(data.data)
-      console.log('users', data)
-    }
-    // setIsLoading(false)
-  }, [token])
+    const fetchUsers = React.useCallback(async () => {
+      // if(!token) return
+      const data = await GetUsersByRoles(token)
+      console.log('🚀 ~ fetchUsers ~ data:', data)
+      if (data?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (data.error || !data.data) {
+        console.error('Error getting users:', data.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: data.error?.message || 'Failed to get users',
+        })
+      } else {
+        setUsers(data.data)
+        console.log('users', data)
+      }
+    }, [token, router])
 
-  console.log("🚀 ~ fetchRoles ~ token:", token)
+
+
+  // console.log("🚀 ~ fetchRoles ~ token:", token)
   const fetchRoles = React.useCallback(async () => {
+    if(!token) return;
     const fetchedRoles = await getAllRoles(token)
     if (fetchedRoles.error || !fetchedRoles.data) {
       console.error('Error getting roles:', fetchedRoles.error)
@@ -125,7 +120,7 @@ export default function UsersList() {
       setRoles(fetchedRoles.data)
       console.log('Fetched roles:', fetchedRoles.data)
     }
-  }, [toast, token])
+  }, [token])
 
   const refreshAttachment = async () => {
     try {
@@ -139,7 +134,7 @@ export default function UsersList() {
   useEffect(() => {
     fetchUsers()
     fetchRoles()
-  }, [])
+  }, [fetchUsers, fetchRoles])
 
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -172,11 +167,11 @@ export default function UsersList() {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `${token}`,
             },
             body: JSON.stringify(updateData),
           }
         )
-
         if (!response.ok) {
           const errorData = await response.json()
           throw new Error(errorData.message || 'Failed to update user')
@@ -193,18 +188,24 @@ export default function UsersList() {
           setEditingUser(null)
           setIsEditDialogOpen(false)
           await refreshAttachment()
+          toast({
+            title: 'Success',
+            description: 'User updated successfully',
+          })
         } else {
           throw new Error(result.message || 'Failed to update user')
         }
       } catch (error) {
         console.error('Error updating user:', error)
-        alert(
-          `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`
-        )
+        toast({
+          title: 'Error',
+          description: `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        })
+      } finally {
+        setIsEditDialogOpen(false)
       }
     }
   }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
@@ -239,6 +240,8 @@ export default function UsersList() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `${token}`,
+          
           },
           body: JSON.stringify({ active: newActiveState }),
         }
@@ -286,7 +289,7 @@ export default function UsersList() {
               <TableCell className="font-medium">
                 {startIndex + index + 1}
               </TableCell>
-              <TableCell className="capitalize">{user.username}</TableCell>
+              <TableCell >{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
                 <Dialog key={`view-${user.id}`}>
@@ -320,15 +323,13 @@ export default function UsersList() {
                   </DialogContent>
                 </Dialog>
 
-                <Dialog
-                  key={`edit-${user.id}`}
-                  open={isEditDialogOpen}
-                  onOpenChange={setIsEditDialogOpen}
-                >
+                <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
+                     
                       size="sm"
+                     
                       onClick={() => handleEditUser(user)}
                     >
                       Edit

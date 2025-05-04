@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useCallback } from 'react'
 import { AssetList } from '@/components/assets/assets/asset-list'
 
 import { AssetCategoryType, CreateAssetData, GetAssetData } from '@/utils/type'
@@ -8,6 +8,8 @@ import { getAllAssetCategories } from '@/api/asset-category-api'
 import { getAssets } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { toast } from '@/hooks/use-toast'
 
 const Asset = () => {
 
@@ -15,45 +17,51 @@ const Asset = () => {
     useInitializeUser()
   
   const [token] = useAtom(tokenAtom)
+    const router = useRouter()
   
   const [asset, setAsset] = useState<GetAssetData[]>([])
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
     []
   )
+ 
+
+  // Fetch all assets
+  const fetchAssets = useCallback(async () => {
+    if(!token) return;
+    const assetdata = await getAssets(token)
+    if (assetdata?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (assetdata.error || !assetdata.data) {
+      console.error('Error fetching assets:', assetdata.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: assetdata.error?.message || 'Failed to fetch assets',
+      })
+    } else {
+      setAsset(assetdata.data)
+    }
+  }, [token, router])
+
+  // Fetch all asset categories
+  const fetchAssetCategories = React.useCallback(async () => {
+    if(!token) return;
+    const categories = await getAllAssetCategories(token)
+    const categoryNames = categories.data ?? []
+    setAssetCategories(categoryNames)
+    console.log(
+      'fetchAssetCategories category names asset tsx file:',
+      categoryNames
+    )
+  }, [token])
+  
   useEffect(() => {
     fetchAssets()
     fetchAssetCategories()
-  }, [])
-
-  // Fetch all assets
-  const fetchAssets = async () => {
-    try {
-      const assetdata = await getAssets(token)
-      if (assetdata.data) {
-        setAsset(assetdata.data)
-      } else {
-        setAsset([])
-      }
-      console.log('Show The Assets All Data :', assetdata.data)
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
-
-  const fetchAssetCategories = async () => {
-    try {
-      const categories = await getAllAssetCategories(token)
-      const categoryNames = categories.data ?? []
-      setAssetCategories(categoryNames)
-      console.log(
-        'fetchAssetCategories category names asset tsx file:',
-        categoryNames
-      )
-    } catch (error) {
-      console.error('Failed to fetch asset categories:', error)
-    }
-  }
+  }, [fetchAssets, fetchAssetCategories])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)

@@ -25,15 +25,19 @@ import { CurrencyType, exchangeSchema, type ExchangeType } from '@/utils/type'
 import { Popup } from '@/utils/popup'
 import { Plus, Edit2, Check } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import {
-  createExchange,
-  editExchange,
-
-} from '@/api/exchange-api'
+import { createExchange, editExchange } from '@/api/exchange-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function ExchangePage() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
   const [currency, setCurrency] = useState<CurrencyType[]>([])
@@ -51,33 +55,38 @@ export default function ExchangePage() {
     },
   })
 
-  
-
   useEffect(() => {
     if (!isPopupOpen) {
       form.reset()
     }
   }, [isPopupOpen, form])
 
-  const fetchExchanges = useCallback (async () => {
+  const fetchExchanges = useCallback(async () => {
+    if (!token) return
     setIsLoading(true)
-    const data = await getAllExchange()
-    if (data.error || !data.data) {
+    const data = await getAllExchange(token)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting exchanges:', data.error)
       toast({
+        variant: 'destructive',
         title: 'Error',
         description: data.error?.message || 'Failed to get exchanges',
       })
     } else {
       setExchanges(data.data)
-      console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }, [toast])
+  }, [token, router, toast])
 
-  const fetchCurrency = useCallback (async () => {
+  // Fetch all currency
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
     setIsLoading(true)
-    const data = await getAllCurrency()
+    const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({
@@ -89,11 +98,11 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }, [toast])
+  }, [token,toast])
 
   async function onSubmit(data: ExchangeType) {
     setIsLoading(true)
-    const result = await createExchange(data)
+    const result = await createExchange(data, token)
     if (result.error || !result.data) {
       console.error('Error creating exchange:', result.error)
       toast({
@@ -122,6 +131,7 @@ export default function ExchangePage() {
   }
 
   async function handleUpdate(exchangeDate: string, baseCurrency: number) {
+    if (!token) return
     setIsLoading(true)
     const formattedDate = new Date(exchangeDate).toISOString().split('T')[0]
     const rate = parseFloat(editRate)
@@ -136,7 +146,7 @@ export default function ExchangePage() {
       return
     }
 
-    const result = await editExchange(formattedDate, baseCurrency, rate)
+    const result = await editExchange(formattedDate, baseCurrency, rate, token)
 
     if (result.error || !result.data) {
       toast({
@@ -186,7 +196,8 @@ export default function ExchangePage() {
                 {new Date(exchange.exchangeDate).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                {currency.find((c) => c.currencyId === exchange.baseCurrency)?.currencyCode || exchange.baseCurrency}
+                {currency.find((c) => c.currencyId === exchange.baseCurrency)
+                  ?.currencyCode || exchange.baseCurrency}
               </TableCell>
               <TableCell>
                 {editingId ===

@@ -24,8 +24,8 @@ export async function createAssetCategory(
     method: 'POST',
     body: data,
     headers: {
-      Authorization: `${token}`,
       'Content-Type': 'application/json',
+      Authorization: `${token}`,
     },
   })
 }

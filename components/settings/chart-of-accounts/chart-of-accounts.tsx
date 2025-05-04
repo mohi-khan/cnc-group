@@ -227,11 +227,11 @@ export default function ChartOfAccountsTable() {
       budgetTracking: false,
       isActive: true,
       isGroup: false,
-      notes: '',
+      notes: null,
       code: '',
       isCash: false,
       isBank: false,
-      cashTag: '',
+      cashTag: null,
       createdBy: userId ?? undefined, // `undefined` to avoid passing `null`
     },
   })
@@ -300,6 +300,7 @@ export default function ChartOfAccountsTable() {
   }, [form, generateAccountCode])
 
   const fetchParentCodes = React.useCallback(async () => {
+    if(!token) return;
     const fetchedParentCodes = await getParentCodes(token)
     console.log('Fetched parent codes:', fetchedParentCodes.data)
 
@@ -317,10 +318,11 @@ export default function ChartOfAccountsTable() {
         console.log(fetchedParentCodes.data)
       }
     }
-  }, [])
+  }, [token])
 
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
+    if(!token) return;
     const fetchedCurrency = await getAllCurrency(token)
     console.log(
       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
@@ -335,10 +337,10 @@ export default function ChartOfAccountsTable() {
     } else {
       setCurrency(fetchedCurrency.data)
     }
-  }, [toast, token])
+  }, [token])
 
   const fetchCoaAccounts = React.useCallback(async () => {
-    if (!token) return;
+    if(!token) return;
     const fetchedAccounts = await getAllChartOfAccounts(token)
     console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
     if (fetchedAccounts?.error?.status === 401) {
@@ -608,7 +610,11 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Account Name</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input 
+                            {...field} 
+                            placeholder="Enter account name"
+                            className="focus:ring-2 focus:ring-primary focus:border-primary"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -629,9 +635,11 @@ export default function ChartOfAccountsTable() {
                             field.value
                               ? {
                                   id: field.value,
-                                  name: accountTypes.find(
-                                    (type) => type.toLowerCase() === field.value
-                                  ) || 'Select account type',
+                                  name:
+                                    accountTypes.find(
+                                      (type) =>
+                                        type.toLowerCase() === field.value
+                                    ) || 'Select account type',
                                 }
                               : null
                           }
@@ -639,7 +647,7 @@ export default function ChartOfAccountsTable() {
                             value: { id: string; name: string } | null
                           ) => field.onChange(value ? value.id : null)}
                           placeholder="Select account type"
-                        />                        
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -669,7 +677,9 @@ export default function ChartOfAccountsTable() {
                           }
                           onChange={(
                             value: { id: string; name: string } | null
-                          ) => field.onChange(value ? value.id : null)}
+                          ) => {
+                            field.onChange(value ? value.id : null)
+                          }}
                           placeholder="Select Cash Tag"
                         />
                         <FormMessage />
@@ -769,9 +779,11 @@ export default function ChartOfAccountsTable() {
                                 }
                               : null
                           }
-                          onChange={(value: { id: string; name: string } | null) =>
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) => {
                             field.onChange(value ? value.id : null)
-                          }
+                          }}
                           placeholder="Select financial tag"
                         />
                         <FormMessage />
@@ -782,7 +794,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isReconcilable"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -810,7 +822,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="withholdingTax"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -838,7 +850,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="budgetTracking"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -856,7 +868,8 @@ export default function ChartOfAccountsTable() {
                         <div className="space-y-1 leading-none">
                           <FormLabel>Budget Tracking</FormLabel>
                           <FormDescription>
-                            Check if this account should be included in budget tracking
+                            Check if this account should be included in budget
+                            tracking
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -866,7 +879,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isActive"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -894,7 +907,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isCash"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -922,7 +935,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isBank"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -950,7 +963,7 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isGroup"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -974,8 +987,8 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {

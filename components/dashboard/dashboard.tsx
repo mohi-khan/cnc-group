@@ -126,6 +126,7 @@ export default function Dashboard() {
 
   // Fetch Departments
   const fetchDepartments = useCallback(async () => {
+    if (!token) return
     const data = await getAllDepartments(token)
     if (data.error || !data.data) {
       console.error('Error getting departments:', data.error)
@@ -136,9 +137,10 @@ export default function Dashboard() {
     } else {
       setDepartments(data.data)
     }
-  }, [])
+  }, [token])
 
   const fetchRequisitions = useCallback(async () => {
+    if (!token) return
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
@@ -154,7 +156,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, getCompany])
 
   const fetchAdvances = useCallback(async () => {
     try {
@@ -174,11 +176,11 @@ export default function Dashboard() {
   }, [token])
 
   // Get All company function
-  const fetchAllCompany = async () => {
+  const fetchAllCompany = React.useCallback(async () => {
     const response = await getAllCompanies(token)
     console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
     setGetCompany(response.data || [])
-  }
+  }, [token])
 
   //  Get Expense data monthly
   const fetchExpenseData = useCallback(async () => {
@@ -364,8 +366,8 @@ export default function Dashboard() {
     fetchNPDataYearly,
     fetchDepartments,
     fetchCostBreakdown,
+    fetchAllCompany
   ])
-
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []
 
@@ -588,7 +590,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-5">
-        <Link href="/approve-advance">\
+        <Link href="/approve-advance">
           <Card className="p-3 text-center">
             You have {advances.length} pending advance approvals
           </Card>

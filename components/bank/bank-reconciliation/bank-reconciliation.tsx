@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button'
 import type { BankAccount, BankReconciliationType } from '@/utils/type'
 import { useToast } from '@/hooks/use-toast'
 import {
- 
   getBankReconciliations,
   updateBankReconciliation,
 } from '@/api/bank-reconciliation-api'
@@ -30,8 +29,16 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
 import { Check, Edit } from 'lucide-react'
 import { getAllBankAccounts } from '@/api/common-shared-api'
+import { useAtom } from 'jotai'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 
 export const BankReconciliation = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  // State variables
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
   const [selectedBankAccount, setSelectedBankAccount] =
     useState<BankAccount | null>(null)
@@ -51,9 +58,10 @@ export const BankReconciliation = () => {
 
   useEffect(() => {
     const fetchBankAccounts = async () => {
+      if (!token) return
       try {
         setLoading(true)
-        const accounts = await getAllBankAccounts()
+        const accounts = await getAllBankAccounts(token)
         if (accounts.data) {
           setBankAccounts(accounts.data)
         }
@@ -74,7 +82,9 @@ export const BankReconciliation = () => {
     bankAccount: string
     fromDate: string
     toDate: string
+    token: string
   }) => {
+    if (!token) return
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
@@ -82,7 +92,8 @@ export const BankReconciliation = () => {
         const response = await getBankReconciliations(
           Number.parseInt(data.bankAccount),
           data.fromDate,
-          data.toDate
+          data.toDate,
+          data.token
         )
         console.log('Received reconciliations:', response.data) // Debug log
         setReconciliations(response.data || [])
@@ -105,13 +116,13 @@ export const BankReconciliation = () => {
   // Update the handleReconciliationUpdate function
   const handleReconciliationUpdate = async (
     id: number,
-    reconciled: boolean, 
+    reconciled: boolean,
     comments: string
   ) => {
     try {
       setLoading(true)
       // Update both reconciled status and comments in a single API call
-      await updateBankReconciliation(id, reconciled, comments)
+      await updateBankReconciliation(id, reconciled, comments, token)
 
       // Update local state
       setReconciliations((prevReconciliations) =>
@@ -139,7 +150,8 @@ export const BankReconciliation = () => {
   const updateLocalReconciliation = (
     id: number,
     field: 'reconciled' | 'comments',
-    value: any
+    value: any,
+    token: string
   ) => {
     setReconciliations((prevReconciliations) =>
       prevReconciliations.map((r) =>
@@ -164,11 +176,12 @@ export const BankReconciliation = () => {
   }
 
   // Helper function to update local reconciliation data while editing
-
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(fetchReconciliations)}
+        onSubmit={form.handleSubmit((data) =>
+          fetchReconciliations({ ...data, token })
+        )}
         className="w-[98%] mx-auto p-4"
       >
         <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">
@@ -271,7 +284,8 @@ export const BankReconciliation = () => {
                           updateLocalReconciliation(
                             reconciliation.id,
                             'reconciled',
-                            checked ? 1 : 0 // Convert to 1 or 0
+                            checked ? 1 : 0,
+                            token
                           )
                         }
                       />
@@ -289,7 +303,8 @@ export const BankReconciliation = () => {
                           updateLocalReconciliation(
                             reconciliation.id,
                             'comments',
-                            e.target.value
+                            e.target.value,
+                            token
                           )
                         }
                       />
@@ -326,7 +341,8 @@ export const BankReconciliation = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
-                  Please select a bank account and date range, then click &quot;Show&quot;
+                  Please select a bank account and date range, then click
+                  &quot;Show&quot;
                 </TableCell>
               </TableRow>
             )}

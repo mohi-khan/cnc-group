@@ -105,6 +105,7 @@ export default function DepartmentManagement() {
   })
 
   const fetchDepartments = useCallback(async () => {
+    if (!token) return;
     setIsLoading(true)
     const data = await getAllDepartments(token)
     if (data?.error?.status === 401) {
@@ -128,6 +129,7 @@ export default function DepartmentManagement() {
   }, [fetchDepartments])
 
   const fetchCompany = useCallback(async () => {
+    if (!token) return;
     const response = await getAllCompanies(token)
     if (response.data) {
       setCompany(response.data)
@@ -154,9 +156,11 @@ export default function DepartmentManagement() {
   console.log('🚀 ~ DepartmentManagement ~ userData:', userData)
 
   const onSubmit = async (values: Department) => {
+    if (!token) return;
     setIsLoading(true)
     setFeedback(null)
     console.log('Form values:', values)
+
 
     const newDepartment = {
       ...values,

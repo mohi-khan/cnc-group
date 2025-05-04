@@ -26,7 +26,7 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { CompanyType } from '@/api/company-api'
 
 import { createMeterEntry } from '@/api/meter-entry-api'
@@ -38,25 +38,38 @@ import {
   CreateElectricityMeterSchema,
   CreateElectricityMeterType,
 } from '@/utils/type'
-import { getAllChartOfAccounts, getAllCompanies, getAllCostCenters } from '@/api/common-shared-api'
-
+import {
+  getAllChartOfAccounts,
+  getAllCompanies,
+  getAllCostCenters,
+} from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface MeterEntryPopUpProps {
   isOpen: boolean
   onOpenChange: (isOpen: boolean) => void
   onCategoryAdded: () => void
+  fetchMeterEntry: () => void
 }
 
 const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   isOpen,
   onOpenChange,
   onCategoryAdded,
+  fetchMeterEntry,
 }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
   const [getCostCenters, setGetCostCenters] = useState<CostCenter[]>([])
-  const [getChartOfAccounts, setGetChartOfAccounts] = useState<
-    AccountsHead[]
-  >([])
+  const [getChartOfAccounts, setGetChartOfAccounts] = useState<AccountsHead[]>(
+    []
+  )
 
   const form = useForm<CreateElectricityMeterType>({
     resolver: zodResolver(CreateElectricityMeterSchema),
@@ -72,32 +85,35 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     },
   })
 
+  const fetchCompany = useCallback(async () => {
+    if (!token) return
+    const response = await getAllCompanies(token)
+    setGetCompany(response.data ?? [])
+  }, [token])
+
+  const fetchCostCenters = useCallback(async () => {
+    if (!token) return
+    const response = await getAllCostCenters(token)
+    setGetCostCenters(response.data ?? [])
+  }, [token])
+
+  const fetchChartOfAccounts = useCallback(async () => {
+    if (!token) return
+    const response = await getAllChartOfAccounts(token)
+    setGetChartOfAccounts(response.data ?? [])
+  }, [token])
+
   useEffect(() => {
-    const fetchCompany = async () => {
-      const response = await getAllCompanies()
-      setGetCompany(response.data ?? [])
-    }
-
-    const fetchCostCenters = async () => {
-      const response = await getAllCostCenters()
-      setGetCostCenters(response.data ?? [])
-    }
-
-    const fetchChartOfAccounts = async () => {
-      const response = await getAllChartOfAccounts()
-      setGetChartOfAccounts(response.data ?? [])
-    }
-
     fetchCompany()
     fetchCostCenters()
     fetchChartOfAccounts()
-  }, [])
+  }, [fetchCompany, fetchCostCenters, fetchChartOfAccounts])
 
   const onSubmit = async (data: CreateElectricityMeterType) => {
     console.log('Form Data:', data) // Debugging data before submission
 
     try {
-      const response = await createMeterEntry(data)
+      const response = await createMeterEntry(data, token)
       if (response.data) {
         toast({
           title: 'Success',
@@ -106,6 +122,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
         onCategoryAdded()
         onOpenChange(false)
         form.reset()
+        fetchMeterEntry() // Fetch updated meter entries after creation
       }
     } catch (error) {
       console.error('Error:', error)
@@ -165,27 +182,32 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Company</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getCompany?.map((company) => (
-                        <SelectItem
-                          key={company.companyId}
-                          value={company?.companyId?.toString() ?? ""}
-                        >
-                          {company.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={getCompany?.map((company) => ({
+                      id: (company.companyId ?? '').toString(),
+                      name: company.companyName || 'Unnamed Company',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getCompany?.find(
+                                (company) =>
+                                  company.companyId === field.value
+                              )?.companyName || 'Unnamed Company',
+                          }
+                        : null
+                    }
+                    onChange={(
+                      value: { id: string; name: string } | null
+                    ) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select company"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -229,27 +251,32 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cost Center</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select cost center" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getCostCenters.map((category) => (
-                        <SelectItem
-                          key={category.costCenterId}
-                          value={category.costCenterId.toString()}
-                        >
-                          {category.costCenterName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={getCostCenters.map((category) => ({
+                      id: category.costCenterId.toString(),
+                      name: category.costCenterName || 'Unnamed Cost Center',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getCostCenters.find(
+                                (category) =>
+                                  category.costCenterId === field.value
+                              )?.costCenterName || 'Unnamed Cost Center',
+                          }
+                        : null
+                    }
+                    onChange={(
+                      value: { id: string; name: string } | null
+                    ) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select cost center"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -274,27 +301,32 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Provision Account Name</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select provision account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getChartOfAccounts.map((account) => (
-                        <SelectItem
-                          key={account.accountId}
-                          value={account.accountId.toString()}
-                        >
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={getChartOfAccounts.map((account) => ({
+                      id: account.accountId.toString(),
+                      name: account.name || 'Unnamed Account',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getChartOfAccounts.find(
+                                (account) =>
+                                  account.accountId === field.value
+                              )?.name || 'Unnamed Account',
+                          }
+                        : null
+                    }
+                    onChange={(
+                      value: { id: string; name: string } | null
+                    ) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select provision account"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -305,27 +337,32 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expense Account Name</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select expense account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {getChartOfAccounts.map((account) => (
-                        <SelectItem
-                          key={account.accountId}
-                          value={account.accountId.toString()}
-                        >
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={getChartOfAccounts.map((account) => ({
+                      id: account.accountId.toString(),
+                      name: account.name || 'Unnamed Account',
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getChartOfAccounts.find(
+                                (account) =>
+                                  account.accountId === field.value
+                              )?.name || 'Unnamed Account',
+                          }
+                        : null
+                    }
+                    onChange={(
+                      value: { id: string; name: string } | null
+                    ) =>
+                      field.onChange(
+                        value ? Number.parseInt(value.id, 10) : null
+                      )
+                    }
+                    placeholder="Select expense account"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />
