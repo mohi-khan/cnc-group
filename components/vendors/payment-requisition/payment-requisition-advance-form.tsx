@@ -28,9 +28,10 @@ import {
   type RequisitionAdvanceType,
 } from '@/utils/type'
 import { useForm, useWatch } from 'react-hook-form'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { useRouter } from 'next/navigation'
 
 interface PaymentRequisitionAdvanceFormProps {
   requisition?: any
@@ -40,12 +41,14 @@ interface PaymentRequisitionAdvanceFormProps {
 
 export default function PaymentRequisitionAdvanceForm({
   requisition = null,
-  token = '',
   onSuccess = () => {},
 }: PaymentRequisitionAdvanceFormProps) {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const { toast } = useToast()
@@ -57,16 +60,28 @@ export default function PaymentRequisitionAdvanceForm({
       return { userId: userData?.userId }
     } catch (error) {
       console.error('Error getting current user:', error)
-      return { userId: 60 }
+      return
     }
   }
 
   const fetchEmployees = useCallback(async () => {
+    if (!token) return
     try {
       const response = await getAllEmployees()
       console.log('Raw API response:', response) // Log the entire response to see its structure
-
-      if (response && response.data) {
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error fetching employees:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: response.error?.message || 'Failed to fetch employees',
+        })
+        return
+      } else if (response && response.data) {
         console.log('Employee data structure:', response.data[0]) // Log the first employee to see structure
         setEmployees(response.data)
         console.log('Employees data set:', response.data)
@@ -82,14 +97,12 @@ export default function PaymentRequisitionAdvanceForm({
     fetchEmployees()
   }, [fetchEmployees])
 
-  const currentUser = getCurrentUser()
-
   const defaultValues: Partial<RequisitionAdvanceType> = {
     requisitionNo: requisition?.poNo || '',
     poId: requisition?.id || 0,
     vendorId: requisition?.vendorId || 0,
-    requestedBy: 0, 
-    createdBy: currentUser.userId,
+    requestedBy: 0,
+    createdBy: userData?.userId,
     requestedDate: new Date(),
     advanceAmount: 0,
     currency: 'USD',

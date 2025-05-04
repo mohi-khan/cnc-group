@@ -8,36 +8,45 @@ import {
   getAllPaymentRequisition,
 } from '@/api/payment-requisition-api'
 import { PaymentRequisitionPopup } from './payment-requisition-popup'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const PaymentRequisition = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variables
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [requisitions, setRequisitions] = useState<GetPaymentOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [mainToken, setMainToken] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken')
-      setMainToken(token)
-    }
-  }, [])
-
-  const token = `Bearer ${mainToken}`
-
-  console.log("🚀 ~ AssetDepreciation ~ token:", token)
-
-  const fetchRequisitions = useCallback (async () => {
+  const fetchRequisitions = useCallback(async () => {
+    if (!token) return
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
         companyId: 75,
         token: token,
       })
-      const filteredRequisitions =
-        data.data?.filter((req) => req.status !== 'Invoice Created') || []
-      setRequisitions(filteredRequisitions)
-      console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+      if (data?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (data.error || !data.data) {
+        console.error('Error fetching requisitions:', data.error)
+        setError(data.error?.message || 'Failed to fetch requisitions')
+        return
+      } else {
+        const filteredRequisitions =
+          data.data?.filter((req) => req.status !== 'Invoice Created') || []
+        setRequisitions(filteredRequisitions)
+        console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+      }
     } catch (err) {
       setError('Failed to fetch requisitions')
     } finally {

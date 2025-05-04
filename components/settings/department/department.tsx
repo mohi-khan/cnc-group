@@ -70,7 +70,9 @@ export default function DepartmentManagement() {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-  console.log("🚀 ~ DepartmentManagement ~ token:", token)
+  console.log('🚀 ~ DepartmentManagement ~ token:', token)
+
+  const router = useRouter()
 
   // State variables
   const [departments, setDepartments] = useState<GetDepartment[]>([])
@@ -88,8 +90,6 @@ export default function DepartmentManagement() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const router = useRouter()
-
   const form = useForm<z.infer<typeof departmentSchema>>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
@@ -105,7 +105,7 @@ export default function DepartmentManagement() {
   })
 
   const fetchDepartments = useCallback(async () => {
-    if (!token) return;
+    if (!token) return
     setIsLoading(true)
     const data = await getAllDepartments(token)
     if (data?.error?.status === 401) {
@@ -129,9 +129,18 @@ export default function DepartmentManagement() {
   }, [fetchDepartments])
 
   const fetchCompany = useCallback(async () => {
-    if (!token) return;
+    if (!token) return
     const response = await getAllCompanies(token)
-    if (response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (response.error || !response.data) {
+      console.error('Error getting companies:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get companies',
+      })
+    } else if (response.data) {
       setCompany(response.data)
     } else {
       setCompany([])
@@ -156,11 +165,10 @@ export default function DepartmentManagement() {
   console.log('🚀 ~ DepartmentManagement ~ userData:', userData)
 
   const onSubmit = async (values: Department) => {
-    if (!token) return;
+    if (!token) return
     setIsLoading(true)
     setFeedback(null)
     console.log('Form values:', values)
-
 
     const newDepartment = {
       ...values,

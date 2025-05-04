@@ -144,10 +144,14 @@ export default function SignUp() {
   }
 
   const fetchAllCompanies = useCallback(async () => {
+    if (!token) return
     const fetchedCompanies = await getAllCompanies(token)
     console.log('Fetched companies:', fetchedCompanies.data)
-
-    if (fetchedCompanies.error || !fetchedCompanies.data) {
+    if (fetchedCompanies?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (fetchedCompanies.error || !fetchedCompanies.data) {
       console.error('Error getting company:', fetchedCompanies.error)
       toast({
         title: 'Error',
@@ -159,9 +163,14 @@ export default function SignUp() {
   }, [toast, token])
 
   const fetchAllLocations = useCallback(async () => {
+    if (!token) return
     const fetchedLocations = await getAllLocations(token)
-
-    if (fetchedLocations.error || !fetchedLocations.data) {
+    if( fetchedLocations?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    }
+    else if (fetchedLocations.error || !fetchedLocations.data) {
       console.error('Error getting location:', fetchedLocations.error)
       toast({
         title: 'Error',
@@ -175,9 +184,13 @@ export default function SignUp() {
   }, [toast, token])
 
   const fetchAllRoles = useCallback(async () => {
+    if (!token) return
     const fetchedRoles = await getAllRoles(token)
-
-    if (fetchedRoles.error || !fetchedRoles.data) {
+    if (fetchedRoles?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (fetchedRoles.error || !fetchedRoles.data) {
       console.error('Error getting roles:', fetchedRoles.error)
       toast({
         title: 'Error',

@@ -27,7 +27,9 @@ import { createInvoice, getAllVendors } from '@/api/payment-requisition-api'
 import { useForm } from 'react-hook-form'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { ResPartner } from '@/utils/type'
-import { get } from 'http'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 // Define the schema for form validation
 const createInvoiceSchema = z.object({
@@ -75,18 +77,16 @@ const PaymentRequisitionCreateInvoiceForm = ({
   requisition,
   onSuccess,
 }: PaymentRequisitionCreateInvoiceFormProps) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [userId, setUserId] = useState(null)
-
-  // Get current user ID from localStorage
-  const getCurrentUserId = (): number => {
-    try {
-    } catch (error) {
-      console.error('Error getting user ID:', error)
-    }
-    return 1 // Default user ID if not found
-  }
 
   // Default values for the form
   const defaultValues: Partial<CreateInvoiceFormValues> = {
@@ -108,25 +108,9 @@ const PaymentRequisitionCreateInvoiceForm = ({
     approvalStatus: 'Pending',
     approvedBy: null,
     attachmentUrl: '',
-    createdBy: getCurrentUserId(),
+    createdBy: userData?.userId,
   }
 
-  const getAuthToken = () => {
-    const mainToken = localStorage.getItem('authToken')
-    if (!mainToken) {
-      console.error('No auth token found in localStorage')
-      return null
-    }
-
-    // Check if token already has Bearer prefix
-    if (mainToken.startsWith('Bearer ')) {
-      return mainToken
-    } else {
-      return `Bearer ${mainToken}`
-    }
-  }
-
-  const token = getAuthToken()
   if (!token) {
     toast({
       title: 'Authentication Error',
@@ -181,12 +165,25 @@ const PaymentRequisitionCreateInvoiceForm = ({
   const [vendors, setVendors] = useState<ResPartner[]>([])
 
   const getVendors = useCallback (async () => {
+    if(!token) return
     try {
-      const response = await getAllVendors()
-      if (!response.data) {
-        throw new Error('No data received')
+      const response = await getAllVendors(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error fetching employees:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: response.error?.message || 'Failed to fetch employees',
+        })
+        return
       }
-      setVendors(response.data)
+      else {
+        setVendors(response.data)
+      }
     } catch (error) {
       console.error('Error getting partners:', error)
       toast({
@@ -195,7 +192,7 @@ const PaymentRequisitionCreateInvoiceForm = ({
       })
       setVendors([])
     }
-  }, [toast])
+  }, [toast, token])
 
   useEffect(() => {
     getVendors()

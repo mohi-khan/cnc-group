@@ -183,11 +183,11 @@ export function PaymentRequisitionPopup({
           partnersResponse,
           departmentsResponse,
         ] = await Promise.all([
-          getAllBankAccounts(),
-          getAllChartOfAccounts(),
-          getAllCostCenters(),
-          getAllResPartners(),
-          getAllDepartments(),
+          getAllBankAccounts(token),
+          getAllChartOfAccounts(token),
+          getAllCostCenters(token),
+          getAllResPartners(token),
+          getAllDepartments(token),
         ])
 
         const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
@@ -285,7 +285,7 @@ export function PaymentRequisitionPopup({
       JSON.stringify(updateValueswithBank, null, 2)
     )
 
-    const response = await createJournalEntryWithDetails(updateValueswithBank)
+    const response = await createJournalEntryWithDetails(updateValueswithBank, token)
     if (response.error || !response.data) {
       toast({
         title: 'Error',

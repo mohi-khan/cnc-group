@@ -28,14 +28,23 @@ import type {
   BankReconciliationType,
 } from '@/utils/type'
 import {
- 
   getBankReconciliations,
   getBankTransactions,
   automaticReconciliation,
 } from '@/api/automatic-reconciliation-api'
 import { getAllBankAccounts } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function AutomaticReconciliation() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variables
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
   const [selectedBankAccount, setSelectedBankAccount] =
     useState<BankAccount | null>(null)
@@ -61,7 +70,7 @@ export default function AutomaticReconciliation() {
   const fetchBankAccounts = useCallback(async () => {
     try {
       setLoading(true)
-      const accounts = await getAllBankAccounts()
+      const accounts = await getAllBankAccounts(token)
       if (accounts.data) {
         setBankAccounts(accounts.data)
       }
@@ -80,7 +89,9 @@ export default function AutomaticReconciliation() {
     bankAccount: string
     fromDate: string
     toDate: string
+    token: string
   }) => {
+    if (!token) return
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
@@ -88,10 +99,23 @@ export default function AutomaticReconciliation() {
         const response = await getBankReconciliations(
           Number.parseInt(data.bankAccount),
           data.fromDate,
-          data.toDate
+          data.toDate,
+          data.token
         )
-        console.log('Received reconciliations:', response.data) // Debug log
-        setReconciliations(response.data || [])
+        if (response?.error?.status === 401) {
+          router.push('/unauthorized-access')
+          return
+        } else if (response.error || !response.data) {
+          console.error('Error getting gl bank account:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get gl bank accounts',
+          })
+        } else {
+          setReconciliations(response.data || [])
+          console.log('Received reconciliations:', response.data) // Debug log
+        }
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
         toast({
@@ -112,7 +136,9 @@ export default function AutomaticReconciliation() {
     bankAccount: string
     fromDate: string
     toDate: string
+    token: string
   }) => {
+    if (!token) return
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
@@ -120,10 +146,24 @@ export default function AutomaticReconciliation() {
         const response = await getBankTransactions(
           Number.parseInt(data.bankAccount),
           data.fromDate,
-          data.toDate
+          data.toDate,
+          data.token
         )
+        if (response?.error?.status === 401) {
+          router.push('/unauthorized-access')
+          return
+        } else if (response.error || !response.data) {
+          console.error('Error getting gl bank account:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get gl bank accounts',
+          })
+        }
+        else {
+          setTransactions(response.data || [])
+        }
         console.log('Received transactions:', response.data) // Debug log
-        setTransactions(response.data || [])
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
         toast({
@@ -281,7 +321,7 @@ export default function AutomaticReconciliation() {
         )
 
       // Send all reconciliations in a single API call
-      await automaticReconciliation(reconciliationsToProcess)
+      await automaticReconciliation(reconciliationsToProcess, token)
 
       toast({
         title: 'Success',
@@ -290,8 +330,8 @@ export default function AutomaticReconciliation() {
 
       // Refresh the data
       const formData = form.getValues()
-      fetchReconciliations(formData)
-      fetchTransactions(formData)
+      fetchReconciliations({ ...formData, token })
+      fetchTransactions({ ...formData, token })
 
       // Clear selections
       setSelectedReconciliations([])
@@ -312,8 +352,8 @@ export default function AutomaticReconciliation() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit((data) => {
-            fetchReconciliations(data)
-            fetchTransactions(data)
+            fetchReconciliations({ ...data, token })
+            fetchTransactions({ ...data, token })
           })}
           className="mb-6"
         >
@@ -413,7 +453,9 @@ export default function AutomaticReconciliation() {
                     (transaction) =>
                       !reconciliations.some(
                         (r) =>
-                          (r.reconcileId !== null && r.reconcileId === transaction.id) && r.reconciled === true
+                          r.reconcileId !== null &&
+                          r.reconcileId === transaction.id &&
+                          r.reconciled === true
                       )
                   )
                   .map((transaction) => (
@@ -469,7 +511,9 @@ export default function AutomaticReconciliation() {
               ) : selectedBankAccount && reconciliations.length > 0 ? (
                 // Filter out already reconciled items
                 reconciliations
-                  .filter((reconciliation) => reconciliation.reconciled !== true)
+                  .filter(
+                    (reconciliation) => reconciliation.reconciled !== true
+                  )
                   .map((reconciliation) => (
                     <TableRow
                       key={reconciliation.id}

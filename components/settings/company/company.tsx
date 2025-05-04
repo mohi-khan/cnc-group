@@ -17,8 +17,18 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { companySchema, createCompany } from '../../../api/company-api'
 import { useToast } from '@/hooks/use-toast'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function CompanyForm() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variables
   const [companyName, setCompanyName] = useState('')
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
@@ -119,10 +129,17 @@ export default function CompanyForm() {
 
     const response = await createCompany(
       companyData,
-      locations.filter((loc) => loc.trim() !== '')
+      locations.filter((loc) => loc.trim() !== ''),
+      token
     )
+    if(!token) return;
     console.log("🚀 ~ handleSave ~ companyData:", response)
-    if (response.error || !response.data) {
+    if(response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    }
+    else if (response.error || !response.data) {
       console.error('Error creating company or location', response.error)
       toast({
         title: 'Error',
