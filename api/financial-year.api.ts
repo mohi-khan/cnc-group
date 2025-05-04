@@ -13,13 +13,16 @@ export type financialYearCreate = Omit<
   >
 
 //create Financial Year
-export async function createFinancialYear(data: financialYearCreate) {
+export async function createFinancialYear(data: financialYearCreate, token: string) {
   console.log('create financial year: ', data)
   return fetchApi<financialYear>({
     url: 'api/financial-year/entry',
     method: 'POST',
     body: data,
-    
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    }
   })
 }
 
