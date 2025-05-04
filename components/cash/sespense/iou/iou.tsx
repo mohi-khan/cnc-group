@@ -1,14 +1,20 @@
 'use client'
-import { useEffect, useState } from 'react'
-import LoanList from './iou-list'
-import LoanPopUp from './iou-popup'
+
+import { useEffect, useState, useCallback } from 'react'
 import IouList from './iou-list'
 import IouPopUp from './iou-popup'
 import {  getLoanData } from '@/api/iou-api'
 import { Employee, IouRecordGetType } from '@/utils/type'
 import { getEmployee } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const Iou = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
@@ -20,38 +26,28 @@ const Iou = () => {
   }, [])
 
   // Fetch all Loan Data
-  const fetchLoanData = async () => {
+  const fetchLoanData = useCallback(async () => {
     setIsLoading(true)
-    try {
-      const loansdata = await getLoanData()
-      if (loansdata.data) {
-        setLoanData(loansdata.data)
-      } else {
-        setLoanData([])
-      }
-      console.log('Show The Loan  All Data :', loansdata.data)
-    } catch (error) {
-      console.error('Failed to fetch Loan Data :', error)
-    } finally {
-      setIsLoading(false)
+    const loansdata = await getLoanData(token)
+    if (loansdata.data) {
+      setLoanData(loansdata.data)
+    } else {
+      setLoanData([])
     }
-  }
-
+    console.log('Show The Loan  All Data :', loansdata.data)
+    setIsLoading(false)
+  }, [token])
+  
   // Fetch all Employee Data
-  const fetchEmployeeData = async () => {
-    try {
-      const employees = await getEmployee()
-      if (employees.data) {
-        setEmployeeData(employees.data)
-      } else {
-        setEmployeeData([])
-      }
-      console.log('Show The Employee Data :', employees.data)
-    } catch (error) {
-      console.error('Failed to fetch Employee Data :', error)
+  const fetchEmployeeData = useCallback(async () => {
+    const employees = await getEmployee(token)
+    if (employees.data) {
+      setEmployeeData(employees.data)
+    } else {
+      setEmployeeData([])
     }
-  }
-
+    console.log('Show The Employee Data :', employees.data)
+  }, [token])
   const handleAddCategory = () => {
     setIsPopupOpen(true)
   }

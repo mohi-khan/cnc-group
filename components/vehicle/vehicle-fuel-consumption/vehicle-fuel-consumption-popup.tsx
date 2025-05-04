@@ -19,6 +19,9 @@ import {
   GetAllVehicleType,
 } from '@/utils/type'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 interface VehicleFuelConsumptionPopUpProps {
   isOpen: boolean
@@ -32,6 +35,11 @@ interface VehicleFuelConsumptionPopUpProps {
 const VehicleFuelConsumptionPopUp: React.FC<
   VehicleFuelConsumptionPopUpProps
 > = ({ isOpen, onClose, refreshFuelData, loading, vehicles }) => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+ const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -47,13 +55,13 @@ const VehicleFuelConsumptionPopUp: React.FC<
       totalConsumption: 0,
       kmrsPerLitr: 0,
       transDate: new Date(),
-      createdBy: 84,
+      createdBy: userData?.userId || 0,
     },
   })
 
   const handleFormSubmit = async (data: createVehicleFuelConsumptionType) => {
     try {
-      await createVehicleFuelConsumption(data)
+      await createVehicleFuelConsumption(data, token)
       reset()
       onClose()
       refreshFuelData()

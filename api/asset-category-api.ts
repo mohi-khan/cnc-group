@@ -1,8 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import {
-  AssetCategoryType,
-  CreateAssetCategoryData,
-} from '@/utils/type'
+import { AssetCategoryType, CreateAssetCategoryData } from '@/utils/type'
 
 export async function getAllAssetCategories(token: string) {
   return fetchApi<AssetCategoryType[]>({

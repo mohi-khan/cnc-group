@@ -125,7 +125,7 @@ export default function Dashboard() {
   }, [])
 
   // Fetch Departments
-  const fetchDepartments = useCallback(async () => {
+  const fetchDepartments = React.useCallback(async () => {
     if (!token) return
     const data = await getAllDepartments(token)
     if (data.error || !data.data) {
@@ -139,7 +139,7 @@ export default function Dashboard() {
     }
   }, [token])
 
-  const fetchRequisitions = useCallback(async () => {
+  const fetchRequisitions = React.useCallback(async () => {
     if (!token) return
     try {
       setLoading(true)
@@ -158,7 +158,7 @@ export default function Dashboard() {
     }
   }, [token, getCompany])
 
-  const fetchAdvances = useCallback(async () => {
+  const fetchAdvances = React.useCallback(async () => {
     try {
       setLoading(true)
       setError(null) // Reset error state
@@ -183,7 +183,7 @@ export default function Dashboard() {
   }, [token])
 
   //  Get Expense data monthly
-  const fetchExpenseData = useCallback(async () => {
+  const fetchExpenseData = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -200,7 +200,7 @@ export default function Dashboard() {
   }, [token])
 
   //  Get Expense data yearly
-  const fetchExpenseDataYearly = useCallback(async () => {
+  const fetchExpenseDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -217,7 +217,7 @@ export default function Dashboard() {
   }, [token])
 
   // Get Income Data
-  const fetchIncomeData = useCallback(async () => {
+  const fetchIncomeData = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -234,7 +234,7 @@ export default function Dashboard() {
   }, [token])
 
   // Get Income Data  yearly
-  const fetchIncomeDataYearly = useCallback(async () => {
+  const fetchIncomeDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -251,7 +251,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getGPData
-  const fetchGPData = useCallback(async () => {
+  const fetchGPData = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate
@@ -266,7 +266,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getGPData yearly
-  const fetchGPDataYearly = useCallback(async () => {
+  const fetchGPDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -283,7 +283,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getNPData
-  const fetchNPData = useCallback(async () => {
+  const fetchNPData = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -298,7 +298,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get getNPData yearly
-  const fetchNPDataYearly = useCallback(async () => {
+  const fetchNPDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
@@ -315,7 +315,7 @@ export default function Dashboard() {
   }, [token])
 
   //Get Cost Breakdown Data
-  const fetchCostBreakdown = useCallback(async () => {
+  const fetchCostBreakdown = React.useCallback(async () => {
     const departmentId = 16 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-03-31' // Example endDate

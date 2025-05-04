@@ -142,10 +142,7 @@ export const bankAccountSchema = z.object({
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
-  openingBalance: z
-    .number()
-    .nonnegative('Opening balance must be a non-negative number.')
-    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  openingBalance: z.number(),
   validityDate: z
     .string()
     .optional()
@@ -207,10 +204,8 @@ export const createBankAccountSchema = z.object({
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
-  openingBalance: z
-    .number()
-    .nonnegative('Opening balance must be a non-negative number.')
-    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  openingBalance: z.string(),
+
   validityDate: z
     .string()
     .optional()
@@ -329,7 +324,7 @@ export const chartOfAccountSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int(),
+  parentAccountId: z.number().int().min(1, 'Parent account ID is required'),
   parentName: z.string().min(1, 'Parent account ID is required').optional(),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
@@ -358,7 +353,7 @@ export const AccountsHeadSchema = z.object({
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
   parentAccountId: z.number().int(),
-  parentName: z.string().min(1, 'Parent account ID is required').optional(),
+  parentName: z.string().min(1, 'Parent account ID is required'),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
