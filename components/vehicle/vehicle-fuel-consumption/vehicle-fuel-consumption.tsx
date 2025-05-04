@@ -1,10 +1,14 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import VehicleFuelConsumptionList from './vehicle-fuel-consumption-list'
 import VehicleFuelConsumptionPopUp from './vehicle-fuel-consumption-popup'
 import { getAllVehicleFuelConsumpiton } from '@/api/vehicle-fuel-consumption-api'
 import { GetAllVehicleType, GetVehicleConsumptionType } from '@/utils/type'
 import { getAllVehicles } from '@/api/vehicle.api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { toast } from '@/hooks/use-toast'
 // Define the type for vehicle data
 export interface Vehicle {
   id: number
@@ -12,6 +16,11 @@ export interface Vehicle {
 }
 
 const VehicleFuelConsumption = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
   const [vehicleFuel, setVehicleFuel] = useState<GetVehicleConsumptionType[]>(
     []
   )
@@ -27,36 +36,46 @@ const VehicleFuelConsumption = () => {
     setIsOpen(false)
   }
   // Fetch all vehicle fuel consumption
-  const fetchVehicleFuelConsumptionData = async () => {
-    try {
-      const vehicleData = await getAllVehicleFuelConsumpiton()
-      setVehicleFuel(vehicleData.data || [])
-      console.log(
-        'Show The Vehicle Fuel Consumption All Data :',
-        vehicleData.data
+  const fetchVehicleFuelConsumptionData = React.useCallback(async () => {
+    if (!token) return
+    const vehicleData = await getAllVehicleFuelConsumpiton(token)
+    if (vehicleData?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (vehicleData.error || !vehicleData.data) {
+      console.error(
+        'Error fetching vehicle fuel consumption:',
+        vehicleData.error
       )
-    } catch (error) {
-      console.error('Failed to fetch Vehicle Fuel Consumption:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          vehicleData.error?.message ||
+          'Failed to fetch vehicle fuel consumption',
+      })
+    } else {
+      setVehicleFuel(vehicleData.data)
     }
-  }
+  }, [token, router])
 
-  useEffect(() => {
-    fetchVehicleFuelConsumptionData()
-    fetchVehicles()
-  }, [])
+ 
 
   // Fetch the vehicle data from API
-  const fetchVehicles = async () => {
-    try {
-      const response = await getAllVehicles()
-      const data: GetAllVehicleType[] = response.data ?? []
-      setVehicles(data)
-      setLoading(false)
-    } catch (error) {
-      console.error('Failed to fetch vehicles:', error)
-      setLoading(false)
-    }
-  }
+  const fetchVehicles = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllVehicles(token)
+    const data: GetAllVehicleType[] = response.data ?? []
+    setVehicles(data)
+    setLoading(false)
+  }, [token])
+
+
+   useEffect(() => {
+     fetchVehicleFuelConsumptionData()
+     fetchVehicles()
+   }, [])
 
   return (
     <div>

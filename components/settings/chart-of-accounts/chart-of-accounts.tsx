@@ -228,11 +228,11 @@ export default function ChartOfAccountsTable() {
       isActive: true,
       isGroup: false,
       notes: null,
-      code: '',
+      // code: '',
       isCash: false,
       isBank: false,
       cashTag: null,
-      createdBy: userId ?? undefined, // `undefined` to avoid passing `null`
+      createdBy: userId || 3,
     },
   })
 
@@ -283,11 +283,11 @@ export default function ChartOfAccountsTable() {
         title: 'Success',
         description: 'Chart Of account created successfully',
       })
+      form.reset()
       fetchCoaAccounts()
       setIsAddAccountOpen(false)
     }
   }
-
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'parentAccountId' && value.parentAccountId) {
@@ -300,7 +300,7 @@ export default function ChartOfAccountsTable() {
   }, [form, generateAccountCode])
 
   const fetchParentCodes = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedParentCodes = await getParentCodes(token)
     console.log('Fetched parent codes:', fetchedParentCodes.data)
 
@@ -322,7 +322,7 @@ export default function ChartOfAccountsTable() {
 
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
     console.log(
       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
@@ -340,7 +340,7 @@ export default function ChartOfAccountsTable() {
   }, [token])
 
   const fetchCoaAccounts = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedAccounts = await getAllChartOfAccounts(token)
     console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
     if (fetchedAccounts?.error?.status === 401) {
@@ -539,6 +539,7 @@ export default function ChartOfAccountsTable() {
         )
       }
       setIsEditAccountOpen(false)
+
       setEditingAccount(null)
     }
   }
@@ -587,7 +588,16 @@ export default function ChartOfAccountsTable() {
           </div>
 
           {/* Add account  */}
-          <Dialog open={isAddAccountOpen} onOpenChange={setIsAddAccountOpen}>
+          <Dialog
+            open={isAddAccountOpen}
+            onOpenChange={(open) => {
+              fetchCoaAccounts()
+              if (!open) {
+                form.reset()
+              }
+              setIsAddAccountOpen(open)
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="default" size="lg" className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
@@ -610,8 +620,8 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Account Name</FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
+                          <Input
+                            {...field}
                             placeholder="Enter account name"
                             className="focus:ring-2 focus:ring-primary focus:border-primary"
                           />
@@ -690,9 +700,13 @@ export default function ChartOfAccountsTable() {
                   <FormField
                     control={form.control}
                     name="parentAccountId"
+                    rules={{ required: 'Parent Account is required' }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parent Account Name</FormLabel>
+                        <FormLabel>
+                          Parent Account Name
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <CustomCombobox
                           items={parentCodes.map((account: ChartOfAccount) => ({
                             id: account.code.toString(),
@@ -723,7 +737,6 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="currencyId"

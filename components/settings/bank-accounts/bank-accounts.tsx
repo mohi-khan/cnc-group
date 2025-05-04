@@ -16,13 +16,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -57,6 +50,7 @@ import { useToast } from '@/hooks/use-toast'
 import { BANGLADESH_BANKS } from '@/utils/constants'
 import {
   createBankAccountSchema,
+  CurrencyType,
   type AccountsHead,
   type BankAccount,
   type CreateBankAccount,
@@ -66,8 +60,10 @@ import { useAtom } from 'jotai'
 import {
   getAllBankAccounts,
   getAllChartOfAccounts,
+  getAllCurrency,
 } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 type SortColumn =
   | 'accountName'
@@ -78,6 +74,13 @@ type SortColumn =
   | 'openingBalance'
   | 'isActive'
 type SortDirection = 'asc' | 'desc'
+
+enum AccountType {
+  Savings = 'Savings',
+  Current = 'Current',
+  Overdraft = 'Overdraft',
+  Fixed = 'Fixed',
+}
 
 export default function BankAccounts() {
   //getting userData from jotai atom component
@@ -98,6 +101,7 @@ export default function BankAccounts() {
   const [sortColumn, setSortColumn] = React.useState<SortColumn>('accountName')
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = React.useState(1)
+  const [currency, setCurrency] = React.useState<CurrencyType[]>([])
   const itemsPerPage = 10
 
   React.useEffect(() => {
@@ -109,7 +113,7 @@ export default function BankAccounts() {
     }
   }, [userData])
 
-  const form = useForm<BankAccount>({
+  const form = useForm<CreateBankAccount>({
     resolver: zodResolver(createBankAccountSchema),
     defaultValues: {
       accountName: '',
@@ -117,13 +121,32 @@ export default function BankAccounts() {
       bankName: '',
       currencyId: '',
       accountType: 'Savings',
-      openingBalance: 0,
+      openingBalance: '',
       isActive: true,
       isReconcilable: true,
       createdBy: userId,
       glAccountId: 0, // Initialize as a number
     },
   })
+
+  // get all currency api
+  const fetchCurrency = React.useCallback(async () => {
+    if (!token) return
+    const fetchedCurrency = await getAllCurrency(token)
+    console.log(
+      '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
+      fetchedCurrency
+    )
+    if (fetchedCurrency.error || !fetchedCurrency.data) {
+      console.error('Error getting currency:', fetchedCurrency.error)
+      toast({
+        title: 'Error',
+        description: fetchedCurrency.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(fetchedCurrency.data)
+    }
+  }, [token])
 
   const fetchBankAccounts = React.useCallback(async () => {
     if (!token) return
@@ -166,13 +189,14 @@ export default function BankAccounts() {
   React.useEffect(() => {
     fetchGlAccounts()
     fetchBankAccounts()
+    fetchCurrency()
   }, [fetchBankAccounts, fetchGlAccounts])
 
   React.useEffect(() => {
     if (editingAccount) {
       form.reset({
         ...editingAccount,
-        openingBalance: Number(editingAccount.openingBalance),
+        openingBalance: Number(editingAccount.openingBalance).toString(),
         updatedBy: userId,
         glAccountId: Number(editingAccount.glAccountId) || 0,
       })
@@ -183,7 +207,7 @@ export default function BankAccounts() {
         bankName: '',
         currencyId: '',
         accountType: 'Savings',
-        openingBalance: 0,
+        openingBalance: '',
         isActive: true,
         isReconcilable: true,
         createdBy: userId,
@@ -201,9 +225,10 @@ export default function BankAccounts() {
         {
           ...values,
           updatedBy: userId,
+          openingBalance: Number(values.openingBalance),
         },
         token
-      )
+      ); // Add semicolon here
       if (response.error || !response.data) {
         console.error('Error editing bank account:', response.error)
         toast({
@@ -221,7 +246,7 @@ export default function BankAccounts() {
       }
     } else {
       console.log('Creating new account')
-      const response = await createBankAccount(values, token)
+      const response = await createBankAccount({...values, openingBalance: Number(values.openingBalance)}, token);      
       if (response.error || !response.data) {
         console.error('Error creating bank account:', response.error)
       } else {
@@ -279,7 +304,7 @@ export default function BankAccounts() {
       setSortDirection('asc')
     }
   }
-
+console.log('Form values:', form.getValues())
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -292,7 +317,11 @@ export default function BankAccounts() {
           }}
         >
           <DialogTrigger asChild>
-            <Button variant="default" className="bg-black hover:bg-black/90">
+            <Button
+              variant="default"
+              className="bg-black hover:bg-black/90"
+              onClick={() => form.reset()}
+            >
               <Plus className="mr-2 h-4 w-4" /> Add Bank Account
             </Button>
           </DialogTrigger>
@@ -354,23 +383,27 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Bank Name</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select bank" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {BANGLADESH_BANKS.map((bank) => (
-                                <SelectItem key={bank.id} value={bank.name}>
-                                  {bank.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={BANGLADESH_BANKS.map((bank) => ({
+                              id: bank.id.toString(),
+                              name: bank.name || 'Unnamed Bank',
+                            }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      BANGLADESH_BANKS.find(
+                                        (bank) => bank.name === field.value
+                                      )?.name || 'Unnamed Bank',
+                                  }
+                                : null
+                            }
+                            onChange={(
+                              value: { id: string; name: string } | null
+                            ) => field.onChange(value ? value.name : null)}
+                            placeholder="Select bank"
+                          />{' '}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -382,7 +415,7 @@ export default function BankAccounts() {
                         <FormItem>
                           <FormLabel>Branch Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter branch name" {...field} />
+                            <Input placeholder="Enter branch name" value={field.value || ''} onChange={field.onChange} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -394,49 +427,61 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Currency</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select currency" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="BDT">BDT</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="EUR">EUR</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={currency.map((curr: CurrencyType) => ({
+                              id: curr.currencyId.toString(),
+                              name: curr.currencyCode || 'Unnamed Currency',
+                            }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      currency.find(
+                                        (curr: CurrencyType) =>
+                                          curr.currencyId ===
+                                          Number(field.value)
+                                      )?.currencyCode || 'Unnamed Currency',
+                                  }
+                                : null
+                            }
+                            onChange={(
+                              value: { id: string; name: string } | null
+                            ) => field.onChange(value ? value.id : '')}
+                            placeholder="Select currency"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
+                    />{' '}
                     <FormField
                       control={form.control}
                       name="accountType"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Account Type</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select account type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Savings">Savings</SelectItem>
-                              <SelectItem value="Current">Current</SelectItem>
-                              <SelectItem value="Overdraft">
-                                Overdraft
-                              </SelectItem>
-                              <SelectItem value="Fixed">Fixed</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={[
+                              { id: 'Savings', name: 'Savings' },
+                              { id: 'Current', name: 'Current' },
+                              { id: 'Overdraft', name: 'Overdraft' },
+                              { id: 'Fixed', name: 'Fixed' },
+                            ]}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value,
+                                    name: field.value,
+                                  }
+                                : null
+                            }
+                            onChange={(
+                              value: { id: string; name: string } | null
+                            ) => {
+                              field.onChange(value ? value.id : null)
+                            }}
+                            placeholder="Select account type"
+                          />{' '}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -447,21 +492,30 @@ export default function BankAccounts() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Opening Balance</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(
-                                  Number.parseFloat(e.target.value)
-                                )
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              if (
+                                value === '' ||
+                                value === '-' ||
+                                value === '.' ||
+                                value === '-.' ||
+                                value.startsWith('-')
+                              ) {
+                                field.onChange(value) // Allow negative values and incomplete input
+                              } else {
+                                const parsed = parseFloat(value)
+                                if (!isNaN(parsed)) {
+                                  field.onChange(parsed)
+                                }
                               }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                            }}
+                            value={field.value}
+                          />                        </FormItem>
                       )}
                     />
                     <FormField
@@ -539,30 +593,41 @@ export default function BankAccounts() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>GL Account</FormLabel>
-                            <Select
-                              onValueChange={(value) =>
-                                field.onChange(Number(value))
+                            <CustomCombobox
+                              items={glAccounts
+                                ?.filter((glaccount) => !glaccount.isGroup)
+                                .map((glaccount) => ({
+                                  id: glaccount.accountId.toString(),
+                                  name: `${glaccount.name} (${glaccount.code})`,
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        glAccounts?.find(
+                                          (glaccount) =>
+                                            glaccount.accountId === field.value
+                                        )?.name +
+                                          ' (' +
+                                          glAccounts?.find(
+                                            (glaccount) =>
+                                              glaccount.accountId ===
+                                              field.value
+                                          )?.code +
+                                          ')' || 'Unnamed Account',
+                                    }
+                                  : null
                               }
-                              value={field.value?.toString() || ''}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select GL Account" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {glAccounts
-                                  ?.filter((glaccount) => !glaccount.isGroup)
-                                  .map((glaccount) => (
-                                    <SelectItem
-                                      key={glaccount.accountId}
-                                      value={glaccount.accountId.toString()}
-                                    >
-                                      {glaccount.name} ({glaccount.code})
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                              onChange={(
+                                value: { id: string; name: string } | null
+                              ) =>
+                                field.onChange(
+                                  value ? Number.parseInt(value.id, 10) : null
+                                )
+                              }
+                              placeholder="Select GL Account"
+                            />{' '}
                             <FormMessage />
                           </FormItem>
                         )}
