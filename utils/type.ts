@@ -339,10 +339,9 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
-  cashTag: z.string(),
+  cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
-  notes: z.string(),
-  // financialTag: z.string(),
+  notes: z.string().nullable(),
 })
 
 export type ChartOfAccount = z.infer<typeof chartOfAccountSchema>
@@ -524,7 +523,7 @@ export type JournalResult = z.infer<typeof JournalResultSchema>
 
 //department
 export const departmentSchema = z.object({
-  departmentName: z.string().min(1, "Department name is required"),
+  departmentName: z.string().min(1, 'Department name is required'),
   budget: z.number().optional(),
   companyCode: z.number().optional(),
   isActive: z.boolean().optional(),
@@ -719,17 +718,17 @@ export type GetAssetData = z.infer<typeof getAssetSchema>
 export const createAssetCategorySchema = z.object({
   category_name: z
     .string()
-    .min(2, "Category name must be at least 2 characters.")
-    .max(255, "Category name must not exceed 255 characters."),
+    .min(2, 'Category name must be at least 2 characters.')
+    .max(255, 'Category name must not exceed 255 characters.'),
   depreciation_rate: z
     .string()
-    .regex(/^\d+(\.\d+)?$/, { message: "Invalid decimal format" }),
-  account_code: z.number().int("Account code must be an integer.").optional(),
+    .regex(/^\d+(\.\d+)?$/, { message: 'Invalid decimal format' }),
+  account_code: z.number().int('Account code must be an integer.').optional(),
   depreciation_account_code: z
     .number()
-    .int("Depreciation account code must be an integer.")
+    .int('Depreciation account code must be an integer.')
     .optional(),
-  created_by: z.number().int("Created by must be an integer."),
+  created_by: z.number().int('Created by must be an integer.'),
 })
 
 export type CreateAssetCategoryData = z.infer<typeof createAssetCategorySchema>
@@ -1348,7 +1347,6 @@ export interface GetElectricityBillType {
   amount: number
   payment: number
   description: string
-  
 }
 
 //Create Electricity Bill Schema
