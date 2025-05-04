@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 
@@ -25,16 +24,21 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { User } from '@/utils/type'
-import { createFinancialYear, financialYear } from '@/api/financial-year.api'
+import {
+  createFinancialYear,
+  type financialYear,
+} from '@/api/financial-year.api'
 import { toast } from '@/hooks/use-toast'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { createFinancialYearSchema } from '@/utils/type'
 
 const FinancialYear = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  console.log('🚀 ~ FinancialYear ~ token:', token)
 
   // State variables
   const [userId, setUserId] = useState(0)
@@ -50,23 +54,30 @@ const FinancialYear = () => {
   }, [userId, userData])
 
   const form = useForm<financialYear>({
-    /*  resolver: zodResolver(createFinancialYearSchema),
+    resolver: zodResolver(createFinancialYearSchema),
     defaultValues: {
       isactive: true,
       createdby: userId,
-    },*/
+      yearname: '',
+    },
   })
-  
+
   useEffect(() => {
     if (userId !== 0) {
-      console.log('UserId after set:', userId)
+      form.setValue('createdby', userId)
+      console.log('Updated form createdby with userId:', userId)
     }
   }, [userId, form])
 
   async function onSubmit(values: financialYear) {
     try {
-      console.log('Form data submitted:', values)
-      const response = await createFinancialYear(values)
+      // Ensure createdby is set to userId
+      const dataToSubmit = {
+        ...values,
+        createdby: userId,
+      }
+      console.log('Form data submitted:', dataToSubmit)
+      const response = await createFinancialYear(dataToSubmit, token)
 
       if (response.error || !response.data) {
         console.error('Error creating Financial year:', response.error)
