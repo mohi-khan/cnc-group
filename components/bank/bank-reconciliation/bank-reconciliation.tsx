@@ -31,12 +31,15 @@ import { Check, Edit } from 'lucide-react'
 import { getAllBankAccounts } from '@/api/common-shared-api'
 import { useAtom } from 'jotai'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useRouter } from 'next/navigation'
 
 export const BankReconciliation = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
@@ -62,7 +65,10 @@ export const BankReconciliation = () => {
       try {
         setLoading(true)
         const accounts = await getAllBankAccounts(token)
-        if (accounts.data) {
+        if (accounts.error?.status === 401) {
+          router.push('/unauthorized-access')
+          return
+        } else if (accounts.data) {
           setBankAccounts(accounts.data)
         }
       } catch (error) {
@@ -95,8 +101,21 @@ export const BankReconciliation = () => {
           data.toDate,
           data.token
         )
-        console.log('Received reconciliations:', response.data) // Debug log
-        setReconciliations(response.data || [])
+        if (response?.error?.status === 401) {
+          router.push('/unauthorized-access')
+          return
+        } else if (response.error || !response.data) {
+          console.error('Error getting gl bank account:', response.error)
+          toast({
+            title: 'Error',
+            description:
+              response.error?.message || 'Failed to get gl bank accounts',
+          })
+        } else {
+          setReconciliations(response.data || [])
+        }
+        // console.log('Received reconciliations:', response.data) // Debug log
+        // setReconciliations(response.data || [])
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
         toast({

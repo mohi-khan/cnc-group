@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type * as z from 'zod'
 
@@ -44,9 +44,10 @@ import {
 } from '@/components/ui/table'
 import { formatCurrency } from '@/utils/format'
 import { useForm } from 'react-hook-form'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAssets } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 // Use the imported schema instead of defining a new one
 type FormValues = z.infer<typeof createAssetDepreciationSchema>
@@ -55,6 +56,9 @@ export default function AssetDepreciation() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [isLoading, setIsLoading] = useState(false)
@@ -64,7 +68,6 @@ export default function AssetDepreciation() {
   const [formData, setFormData] = useState<FormValues | null>(null)
   const [asset, setAsset] = useState<GetAssetData[]>([])
   const [userId, setUserId] = useState<number | undefined>()
-  const [mainToken, setMainToken] = useState<string | null>(null)
 
   // Initialize the form with react-hook-form
   const form = useForm<FormValues>({
@@ -74,17 +77,6 @@ export default function AssetDepreciation() {
       depreciation_date: '',
     },
   })
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken')
-      setMainToken(token)
-    }
-  }, [])
-
-  const token = `Bearer ${mainToken}`
-
-  console.log('🚀 ~ AssetDepreciation ~ token:', token)
 
   useEffect(() => {
     // Ensure we're in a browser environment
@@ -107,10 +99,13 @@ export default function AssetDepreciation() {
       console.log('Calling preview API with data:', data)
 
       // Make sure we're calling the preview API, not the create API
-      const response = await previewAssetDepreciation({
-        company_id: data.company_id,
-        depreciation_date: data.depreciation_date,
-      })
+      const response = await previewAssetDepreciation(
+        {
+          company_id: data.company_id,
+          depreciation_date: data.depreciation_date,
+        },
+        token
+      )
 
       console.log('Preview API response:', response.data)
 
@@ -144,8 +139,9 @@ export default function AssetDepreciation() {
   }
 
   const fetchAssets = async () => {
+    if (!token) return
     try {
-      const assetdata = await getAssets()
+      const assetdata = await getAssets(token)
       if (assetdata.data) {
         setAsset(assetdata.data)
       } else {
@@ -258,8 +254,10 @@ export default function AssetDepreciation() {
             JSON.stringify(journalVoucherData, null, 2)
           )
 
-          const journalResponse =
-            await createJournalEntryWithDetails(journalVoucherData)
+          const journalResponse = await createJournalEntryWithDetails(
+            journalVoucherData,
+            token
+          )
 
           if (
             !journalResponse ||
@@ -305,11 +303,14 @@ export default function AssetDepreciation() {
     }
   }
 
-  async function fetchAllCompanies() {
+  const fetchAllCompanies = useCallback(async () => {
+    if (!token) return
     try {
-      const fetchedCompanies = await getAllCompanies()
-
-      if (fetchedCompanies.error || !fetchedCompanies.data) {
+      const fetchedCompanies = await getAllCompanies(token)
+      if (fetchedCompanies?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (fetchedCompanies.error || !fetchedCompanies.data) {
         console.error('Error getting companies:', fetchedCompanies.error)
         toast({
           title: 'Error',
@@ -328,7 +329,7 @@ export default function AssetDepreciation() {
         variant: 'destructive',
       })
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchAllCompanies()

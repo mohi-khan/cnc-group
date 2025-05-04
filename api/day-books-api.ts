@@ -1,7 +1,7 @@
 import { fetchApi } from "@/utils/http"
 import { JournalQuery } from "@/utils/type"
 
-export async function getAllVoucher(data: JournalQuery) {
+export async function getAllVoucher(data: JournalQuery, token: string) {
   const queryParams = new URLSearchParams({
     date: data.date,
     companyId: JSON.stringify(data.companyId), // Convert array to JSON string
@@ -11,5 +11,8 @@ export async function getAllVoucher(data: JournalQuery) {
   return fetchApi({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+    },
   })
 }

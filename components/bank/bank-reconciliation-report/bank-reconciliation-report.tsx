@@ -24,13 +24,20 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
 import type { BankAccount, BankReconciliationReportType } from '@/utils/type'
-import {
- 
-  getBankReconciliationReports,
-} from '@/api/bank-reconciliation-report-api'
+import { getBankReconciliationReports } from '@/api/bank-reconciliation-report-api'
 import { getAllBankAccounts } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function BankReconciliationReport() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variables
   const [report, setReport] = useState<BankReconciliationReportType | null>(
     null
   )
@@ -53,10 +60,15 @@ export default function BankReconciliationReport() {
 
   useEffect(() => {
     const fetchBankAccounts = async () => {
+      if (!token) return
       try {
         setLoading(true)
-        const accounts = await getAllBankAccounts()
-        if (accounts.data) {
+        const accounts = await getAllBankAccounts(token)
+        if (accounts?.error?.status === 401) {
+          router.push('/unauthorized-access')
+          console.log('Unauthorized access')
+          return
+        } else if (accounts.data) {
           setBankAccounts(accounts.data)
         }
       } catch (error) {
@@ -70,12 +82,13 @@ export default function BankReconciliationReport() {
       }
     }
     fetchBankAccounts()
-  }, [toast])
+  }, [toast, token])
 
   const fetchReconciliationsReport = async (data: {
     bankAccount: string
     fromDate: string
     toDate: string
+    token: string
   }) => {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
@@ -84,7 +97,8 @@ export default function BankReconciliationReport() {
         const response = await getBankReconciliationReports(
           Number.parseInt(data.bankAccount),
           data.fromDate,
-          data.toDate
+          data.toDate,
+          data.token
         )
         console.log('Received reconciliations:', response.data) // Debug log
         setReconciliations(response.data || [])
@@ -161,7 +175,9 @@ export default function BankReconciliationReport() {
     <div className="w-[98%] mx-auto p-4">
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(fetchReconciliationsReport)}
+          onSubmit={form.handleSubmit((data) =>
+            fetchReconciliationsReport({ ...data, token })
+          )}
           className="space-y-6"
         >
           <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">

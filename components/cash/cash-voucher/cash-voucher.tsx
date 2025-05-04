@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
 import {
   createJournalEntryWithDetails,
-  
   getAllVoucher,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
@@ -32,18 +31,21 @@ import type { z } from 'zod'
 import CashVoucherMaster from './cash-voucher-master'
 import CashVoucherDetails from './cash-voucher-details'
 import VoucherList from '@/components/voucher-list/voucher-list'
-import {
-  useInitializeUser,
-  userDataAtom,
-} from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
+import {
+  getAllChartOfAccounts,
+  getAllCostCenters,
+  getAllDepartments,
+  getAllResPartners,
+} from '@/api/common-shared-api'
 
 export default function CashVoucher() {
   //getting userData from jotai atom component
   const router = useRouter()
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
@@ -88,7 +90,7 @@ export default function CashVoucher() {
     setIsLoadingCompanies(true)
     setIsLoadingLocations(true)
     if (userData) {
-      console.log("🚀 ~ useEffect ~ userData:", userData)
+      console.log('🚀 ~ useEffect ~ userData:', userData)
       setUser(userData)
       if (userData?.userCompanies?.length > 0) {
         setCompanies(userData.userCompanies)
@@ -126,7 +128,7 @@ export default function CashVoucher() {
         voucherType: VoucherTypes.CashVoucher,
       }
       //sending the voucherQuery to the API to get all vouchers
-      const response = await getAllVoucher(voucherQuery)
+      const response = await getAllVoucher(voucherQuery, token)
       // Check for errors in the response. if no errors, set the voucher grid data
       if (!response.data) {
         throw new Error('No data received from server')
@@ -200,23 +202,29 @@ export default function CashVoucher() {
     }
   }
 
-  useEffect(() => {
-    fetchChartOfAccounts()
-    fetchgetAllCostCenters()
-    fetchgetResPartner()
-    fetchDepartments()
-  }, [])
-
   //Function to fetch chart of accounts from the API
-  async function fetchChartOfAccounts() {
+  const fetchChartOfAccounts = useCallback(async () => {
     setIsLoadingAccounts(true)
+    if (!token) return
     try {
-      const response = await getAllChartOfAccounts()
-      if (!response.data) {
-        throw new Error('No data received')
+      const response = await getAllChartOfAccounts(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting chart of accounts:', response.error)
+        toast({
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to load chart of accounts',
+        })
+        setChartOfAccounts([])
+        return
+      } else {
+        console.log('Fetched Chart of Accounts:', response.data)
+        setChartOfAccounts(response.data)
       }
-      console.log('Fetched Chart of Accounts:', response.data)
-      setChartOfAccounts(response.data)
     } catch (error) {
       console.error('Error getting chart of accounts:', error)
       toast({
@@ -227,17 +235,30 @@ export default function CashVoucher() {
     } finally {
       setIsLoadingAccounts(false)
     }
-  }
+  }, [token, router])
 
   //Function to fetch departments from the API
-  async function fetchDepartments() {
+  const fetchDepartments = useCallback(async () => {
+    if (!token) return
     setIsLoadingAccounts(true)
     try {
-      const response = await getAllDepartments()
-      if (!response.data) {
-        throw new Error('No data received')
+      const response = await getAllDepartments(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting chart of accounts:', response.error)
+        toast({
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to load chart of accounts',
+        })
+        setDepartments([])
+        return
+      } else {
+        setDepartments(response.data)
       }
-      setDepartments(response.data)
     } catch (error) {
       console.error('Error getting chart of accounts:', error)
       toast({
@@ -248,17 +269,29 @@ export default function CashVoucher() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [token, router])
 
   //Function to fetch cost centers from the API
   async function fetchgetAllCostCenters() {
     setIsLoadingCostCenters(true)
+    if (!token) return
     try {
-      const response = await getAllCostCenters()
-      if (!response.data) {
-        throw new Error('No data received')
+      const response = await getAllCostCenters(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting cost centers:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to load cost centers',
+        })
+        setCostCenters([])
+        return
+      } else {
+        setCostCenters(response.data)
       }
-      setCostCenters(response.data)
     } catch (error) {
       console.error('Error getting cost centers:', error)
       toast({
@@ -274,12 +307,25 @@ export default function CashVoucher() {
   //Function to fetch partners from the API
   async function fetchgetResPartner() {
     setIsLoadingPartners(true)
+    if (!token) return
     try {
-      const response = await getAllResPartners()
-      if (!response.data) {
-        throw new Error('No data received')
+      const response = await getAllResPartners(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting partners:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to load partners',
+        })
+        setPartners([])
+        return
+      } else {
+        console.log('Fetched Partners:', response.data)
+        setPartners(response.data)
       }
-      setPartners(response.data)
     } catch (error) {
       console.error('Error getting partners:', error)
       toast({
@@ -291,6 +337,13 @@ export default function CashVoucher() {
       setIsLoadingPartners(false)
     }
   }
+
+  useEffect(() => {
+    fetchChartOfAccounts()
+    fetchgetAllCostCenters()
+    fetchgetResPartner()
+    fetchDepartments()
+  }, [])
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const form = useForm<JournalEntryWithDetails>({
@@ -393,7 +446,7 @@ export default function CashVoucher() {
       JSON.stringify(updateValueswithCash, null, 2)
     )
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(updateValueswithCash)
+    const response = await createJournalEntryWithDetails(updateValueswithCash, token)
     // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({

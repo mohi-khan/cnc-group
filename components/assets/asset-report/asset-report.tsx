@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { AssetDepreciationReportType } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2 } from 'lucide-react'
-import {  getAssetReport } from '@/api/asset-report-api'
+import { getAssetReport } from '@/api/asset-report-api'
 import {
   Table,
   TableBody,
@@ -17,8 +17,18 @@ import {
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { toast } from '@/hooks/use-toast'
 import { getAllCompanies } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const AssetReport = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variables
   const [loading, setLoading] = useState(false)
   const [reportData, setReportData] = useState<AssetDepreciationReportType[]>(
     []
@@ -28,21 +38,6 @@ const AssetReport = () => {
   const [companyId, setCompanyId] = useState<number>(0)
   const [companies, setCompanies] = useState<any[]>([])
   const [dataFetched, setDataFetched] = useState(false)
-
-  const [mainToken, setMainToken] = useState<string | null>(null);
-    
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('authToken');
-        setMainToken(token);
-      }
-    }, []);
-  
-    const token = `Bearer ${mainToken}`
-
-  // const mainToken = localStorage.getItem('authToken')
-  // console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
-  // const token = `Bearer ${mainToken}`
 
   const fetchReportData = async () => {
     // Validate inputs before fetching
@@ -71,11 +66,13 @@ const AssetReport = () => {
     }
   }
 
-  async function fetchAllCompanies() {
+  const fetchAllCompanies = useCallback(async () => {
     try {
-      const fetchedCompanies = await getAllCompanies()
-
-      if (fetchedCompanies.error || !fetchedCompanies.data) {
+      const fetchedCompanies = await getAllCompanies(token)
+      if (fetchedCompanies?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (fetchedCompanies.error || !fetchedCompanies.data) {
         console.error('Error getting companies:', fetchedCompanies.error)
         toast({
           title: 'Error',
@@ -94,16 +91,11 @@ const AssetReport = () => {
         variant: 'destructive',
       })
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchAllCompanies()
   }, [])
-
-  const handleExportToExcel = () => {
-    // Implementation for exporting to Excel would go here
-    console.log('Exporting to Excel...')
-  }
 
   return (
     <div className="w-[97%] mx-auto py-6">
@@ -167,12 +159,12 @@ const AssetReport = () => {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Generate Report
             </Button>
-            {dataFetched && (
+            {/* {dataFetched && (
               <Button variant="outline" onClick={handleExportToExcel}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -305,7 +297,8 @@ const AssetReport = () => {
           </div>
         ) : (
           <div className="text-center py-10 text-gray-500">
-            Please select a date range and click &quot;Generate Report&quot; to view data
+            Please select a date range and click &quot;Generate Report&quot; to
+            view data
           </div>
         )}
       </div>

@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CurrencyType, FormStateType } from '@/utils/type'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 
 // Define the props for the BankVoucherMaster component
@@ -27,12 +29,17 @@ export default function BankVoucherMaster({
   formState,
   setFormState,
 }: BankVoucherMasterProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Function to fetch currency data
   const fetchCurrency = async () => {
-    const data = await getAllCurrency()
+    const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({

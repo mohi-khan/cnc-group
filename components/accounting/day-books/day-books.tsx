@@ -12,7 +12,7 @@ import {
   type User,
   type Voucher,
 } from '@/utils/type'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
@@ -22,6 +22,8 @@ const DayBooks = () => {
   const router = useRouter()
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
   // State variables
   const { toast } = useToast()
   const [voucherGrid, setVoucherGrid] = useState<JournalResult[]>([])
@@ -102,7 +104,7 @@ const DayBooks = () => {
         companyId: company,
         locationId: location,
       }
-      const response = await getAllVoucher(voucherQuery)
+      const response = await getAllVoucher(voucherQuery, token)
       if (!response.data) {
         throw new Error('No data received from server')
       }

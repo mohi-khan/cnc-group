@@ -29,7 +29,6 @@ import {
 import { Switch } from '@/components/ui/switch'
 import {
   updateCostCenter,
- 
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
@@ -68,7 +67,7 @@ export default function CostCenterManagement() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
-  const [userId, setUserId] = React.useState<number >(0)
+  const [userId, setUserId] = React.useState<number>(0)
   const { toast } = useToast()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
@@ -78,15 +77,19 @@ export default function CostCenterManagement() {
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  const fetchCostCenters = useCallback (async () => {
+  const fetchCostCenters = useCallback(async () => {
+    if (!token) return
     setIsLoading(true)
     const data = await getAllCostCenters(token)
     console.log('🚀 ~ fetchCostCenters ~ data:', data)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
+      console.log('Unauthorized access')
       return
-    }
-    else if (data.error || !data.data) {
+    } else if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting cost centers:', data.error)
       toast({
         title: 'Error',

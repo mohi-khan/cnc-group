@@ -9,14 +9,14 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { changePassword } from '@/api/change-password-api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { User } from '@/utils/type'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 
 const ChangePassword = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const [oldPassword, setOldPassword] = useState('')
@@ -62,7 +62,8 @@ const ChangePassword = () => {
       userId,
       oldPassword,
       newPassword,
-      confirmPassword
+      confirmPassword,
+      token
     )
     if (result.error || !result.data) {
       console.error('Error changing password:', result.error)

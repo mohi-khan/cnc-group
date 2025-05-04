@@ -14,7 +14,6 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
   AccountsHead,
   CostCenter,
-  Department,
   GetDepartment,
   ResPartner,
 } from '@/utils/type'

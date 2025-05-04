@@ -16,15 +16,17 @@ import {
   getAllVoucher,
 } from '@/api/journal-voucher-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
-import { useRouter } from 'next/router'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function VoucherTable() {
   //getting userData from jotai atom component
   useInitializeUser()
-  const router = useRouter()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  
+  const router = useRouter()
 
   //state variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
@@ -53,7 +55,7 @@ export default function VoucherTable() {
 
   // Function to fetch all vouchers based on company and location IDs
   const fetchAllVoucher = useCallback(
-    async (company: number[], location: number[]) => {
+    async (company: number[], location: number[], token: string) => {
       setIsLoading(true)
       const voucherQuery: JournalQuery = {
         date: new Date().toISOString().split('T')[0],
@@ -62,12 +64,24 @@ export default function VoucherTable() {
         voucherType: VoucherTypes.JournalVoucher,
       }
       try {
-        const response = await getAllVoucher(voucherQuery)
-        if (response.error) {
-          throw new Error(response.error.message)
+        const response = await getAllVoucher(voucherQuery, token)
+        if (response?.error?.status === 401) {
+          router.push('/unauthorized-access')
+          console.log('Unauthorized access')
+          return
+        } else if (response.error || !response.data) {
+          console.error('Error getting Voucher Data:', response.error)
+          toast({
+            title: 'Error',
+            description: response.error?.message || 'Failed to fetch vouchers',
+            variant: 'destructive',
+          })
+          setVouchers([])
+          return
+        } else {
+          console.log('API Response:', response.data)
+          setVouchers(Array.isArray(response.data) ? response.data : [])
         }
-        console.log('API Response:', response.data)
-        setVouchers(Array.isArray(response.data) ? response.data : [])
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
         toast({
@@ -96,7 +110,7 @@ export default function VoucherTable() {
       const locationIds = getLocationIds(userData.userLocations)
       console.log({ companyIds, locationIds })
 
-      fetchAllVoucher(companyIds, locationIds)
+      fetchAllVoucher(companyIds, locationIds, token)
     } else {
       console.log('No user data found in localStorage')
       setIsLoading(false)
@@ -141,7 +155,7 @@ export default function VoucherTable() {
     console.log('Submission data:', submissionData)
 
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(submissionData)
+    const response = await createJournalEntryWithDetails(submissionData, token)
 
     // Check for errors in the response. if no error, show success message and reset the form
     if (response.error || !response.data) {
@@ -161,7 +175,7 @@ export default function VoucherTable() {
 
     setIsSubmitting(false)
     // Refetch the vouchers after submission. so that we don't have to refresh the page after submission
-    fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations))
+    fetchAllVoucher(getCompanyIds(companies), getLocationIds(locations), token)
   }
 
   return (

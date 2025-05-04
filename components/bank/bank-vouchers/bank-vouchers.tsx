@@ -117,6 +117,7 @@ export default function BankVoucher() {
   // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
+      if(!token) return
       const [
         bankAccountsResponse,
         chartOfAccountsResponse,
@@ -156,6 +157,7 @@ export default function BankVoucher() {
   }, [])
   // fetch today's Voucher List from Database and populate the grid
   async function getallVoucher(company: number[], location: number[]) {
+    if (!token) return
     let localVoucherGrid: JournalResult[] = []
     try {
       const voucherQuery: JournalQuery = {
@@ -164,8 +166,12 @@ export default function BankVoucher() {
         locationId: location,
         voucherType: VoucherTypes.BankVoucher,
       }
-      const response = await getAllVoucher(voucherQuery)
-      if (!response.data) {
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      }
+      else if (!response.data) {
         throw new Error('No data received from server')
       }
       localVoucherGrid = Array.isArray(response.data) ? response.data : []
@@ -297,7 +303,7 @@ export default function BankVoucher() {
       JSON.stringify(updateValueswithBank, null, 2)
     )
 
-    const response = await createJournalEntryWithDetails(updateValueswithBank)
+    const response = await createJournalEntryWithDetails(updateValueswithBank, token)
     if (response.error || !response.data) {
       toast({
         title: 'Error',
