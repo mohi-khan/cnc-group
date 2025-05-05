@@ -228,7 +228,7 @@ export default function BankAccounts() {
           openingBalance: Number(values.openingBalance),
         },
         token
-      ); // Add semicolon here
+      ) // Add semicolon here
       if (response.error || !response.data) {
         console.error('Error editing bank account:', response.error)
         toast({
@@ -246,7 +246,10 @@ export default function BankAccounts() {
       }
     } else {
       console.log('Creating new account')
-      const response = await createBankAccount({...values, openingBalance: Number(values.openingBalance)}, token);      
+      const response = await createBankAccount(
+        { ...values, openingBalance: Number(values.openingBalance) },
+        token
+      )
       if (response.error || !response.data) {
         console.error('Error creating bank account:', response.error)
       } else {
@@ -304,7 +307,7 @@ export default function BankAccounts() {
       setSortDirection('asc')
     }
   }
-console.log('Form values:', form.getValues())
+  console.log('Form values:', form.getValues())
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -415,7 +418,11 @@ console.log('Form values:', form.getValues())
                         <FormItem>
                           <FormLabel>Branch Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter branch name" value={field.value || ''} onChange={field.onChange} />
+                            <Input
+                              placeholder="Enter branch name"
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -515,7 +522,8 @@ console.log('Form values:', form.getValues())
                               }
                             }}
                             value={field.value}
-                          />                        </FormItem>
+                          />{' '}
+                        </FormItem>
                       )}
                     />
                     <FormField
@@ -546,7 +554,7 @@ console.log('Form values:', form.getValues())
                       control={form.control}
                       name="isActive"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Active</FormLabel>
                             <FormDescription>
@@ -566,7 +574,7 @@ console.log('Form values:', form.getValues())
                       control={form.control}
                       name="isReconcilable"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">
                               Reconcilable
@@ -652,7 +660,7 @@ console.log('Form values:', form.getValues())
                     )}
                   />
                 </div>
-                <div className="sticky bottom-0 bg-background pt-2 pb-4">
+                <div className="bg-background pt-2 pb-4">
                   <Button type="submit" className="w-full">
                     {editingAccount ? 'Update' : 'Submit'}
                   </Button>
