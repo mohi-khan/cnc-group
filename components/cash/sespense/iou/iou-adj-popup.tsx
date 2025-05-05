@@ -37,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface IouAdjPopUpProps {
   isOpen: boolean
@@ -49,13 +51,17 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
   onOpenChange,
   iouId,
 }) => {
+   //getting userData from jotai atom component
+    useInitializeUser()
+  
+    const [token] = useAtom(tokenAtom)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [currentLoanAmount, setCurrentLoanAmount] = useState(0)
 
   const fetchLoanData = useCallback(async () => {
     try {
-      const loansdata = await getLoanData()
+      const loansdata = await getLoanData(token)
       if (loansdata.data) {
         setLoanData(loansdata.data)
         const currentLoan = loansdata.data.find((loan) => loan.iouId === iouId)

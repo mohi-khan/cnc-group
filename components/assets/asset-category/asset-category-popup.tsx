@@ -13,13 +13,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   AccountsHead,
   ChartOfAccount,
   CreateAssetCategoryData,
@@ -74,8 +67,8 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     defaultValues: {
       category_name: '',
       depreciation_rate: '',
-      account_code: undefined,
-      depreciation_account_code: undefined,
+      account_code: 0,
+      depreciation_account_code: 0,
       created_by: userId,
     },
   })
@@ -125,6 +118,9 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   useEffect(() => {
     fetchChartOfAccounts()
   }, [fetchChartOfAccounts])
+
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
