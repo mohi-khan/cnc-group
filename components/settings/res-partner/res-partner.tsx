@@ -65,6 +65,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function ResPartners() {
   //getting userData from jotai atom component
@@ -105,8 +106,8 @@ export default function ResPartners() {
       zip: '',
       active: true,
       creditLimit: 0,
-      customerRank: 0,
-      supplierRank: 0,
+      // customerRank: 0,
+      // supplierRank: 0,
       comment: '',
     },
   })
@@ -135,9 +136,9 @@ export default function ResPartners() {
       console.log('partner', data)
       setPartners(data.data)
     }
-    console.log('companies here', companies)
+    // console.log('companies here', companies)
     // setIsLoading(false)
-  }, [companies, token])
+  }, [token])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -153,14 +154,12 @@ export default function ResPartners() {
       console.log('company', data.data)
       setCompanies(data.data)
     }
-    console.log('companies here', companies)
-    // setIsLoading(false)
-  }, [companies, token])
+  }, [token])
 
   React.useEffect(() => {
     fetchResPartners()
     fetchCompanies()
-  }, [fetchResPartners, fetchCompanies, router])
+  }, [fetchResPartners, fetchCompanies])
 
   React.useEffect(() => {
     console.log('Resetting form', { editingPartner })
@@ -198,10 +197,14 @@ export default function ResPartners() {
     console.log('Form submitted:', values)
     if (editingPartner) {
       console.log('Editing partner:', editingPartner.id)
-      const response = await editResPartner(editingPartner.id!, {
-        ...values,
-        updatedBy: userId,
-      })
+      const response = await editResPartner(
+        editingPartner.id!,
+        {
+          ...values,
+          updatedBy: userId,
+        },
+        token
+      )
       console.log('🚀 ~ onSubmit ~ response:', response)
       if (response.error || !response.data) {
         console.error('Error editing res partner:', response.error)
@@ -375,22 +378,20 @@ export default function ResPartners() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Type</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="contact">Contact</SelectItem>
-                              <SelectItem value="invoice">Invoice</SelectItem>
-                              <SelectItem value="delivery">Delivery</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={[
+                              { id: 'contact', name: 'Contact' },
+                              { id: 'invoice', name: 'Invoice' },
+                              { id: 'delivery', name: 'Delivery' },
+                              { id: 'other', name: 'Other' },
+                            ]}
+                            value={{
+                              id: field.value ?? '',
+                              name: field.value ?? '',
+                            }}
+                            onChange={(value) => field.onChange(value?.id)}
+                            placeholder="Select type"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -538,53 +539,13 @@ export default function ResPartners() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="customerRank"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer Rank</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number.parseInt(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="supplierRank"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Supplier Rank</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number.parseInt(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
                   <div className="flex space-x-4 pt-5">
                     <FormField
                       control={form.control}
                       name="isCompany"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">
                               Is Company
@@ -606,7 +567,7 @@ export default function ResPartners() {
                       control={form.control}
                       name="active"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Active</FormLabel>
                             <FormDescription>
@@ -643,7 +604,7 @@ export default function ResPartners() {
                     />
                   </div>
                 </div>
-                <div className="sticky bottom-0 bg-background pt-2 pb-4">
+                <div className=" bg-background pt-2 pb-4">
                   <Button type="submit" className="w-full">
                     {editingPartner ? 'Update' : 'Submit'}
                   </Button>
