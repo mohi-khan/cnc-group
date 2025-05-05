@@ -15,6 +15,7 @@ const Iou = () => {
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
+
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
@@ -27,6 +28,7 @@ const Iou = () => {
 
   // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
+    if (!token) return
     setIsLoading(true)
     const loansdata = await getLoanData(token)
     if (loansdata.data) {
@@ -40,6 +42,7 @@ const Iou = () => {
   
   // Fetch all Employee Data
   const fetchEmployeeData = useCallback(async () => {
+    if (!token) return
     const employees = await getEmployee(token)
     if (employees.data) {
       setEmployeeData(employees.data)
@@ -48,6 +51,7 @@ const Iou = () => {
     }
     console.log('Show The Employee Data :', employees.data)
   }, [token])
+
   const handleAddCategory = () => {
     setIsPopupOpen(true)
   }
@@ -69,7 +73,7 @@ const Iou = () => {
         onOpenChange={setIsPopupOpen}
         onCategoryAdded={handleCategoryAdded}
         fetchLoanData={fetchLoanData}
-        employees={[]} // Pass an empty array or the appropriate employees data
+        employees={employeeData} // Pass an empty array or the appropriate employees data
       />
     </div>
   )
