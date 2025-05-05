@@ -25,6 +25,7 @@ import { useAtom } from 'jotai'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { toast } from '@/hooks/use-toast'
 
 const PostingPeriodManager = () => {
   // Getting userData from jotai atom component
@@ -50,7 +51,18 @@ const PostingPeriodManager = () => {
     setIsLoading(true)
     try {
       const data = await getFinancialYear(token)
-      if (data.data != null) {
+      if (data?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (data.error || !data.data) {
+        console.error('Error getting users:', data.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: data.error?.message || 'Failed to get users',
+        })
+      } else {
         setFinancialYears(data.data)
       }
       console.log('🚀 ~ fetchFinancialYears ~ data.data:', data.data)
@@ -72,8 +84,18 @@ const PostingPeriodManager = () => {
     try {
       const data = await getPostingPeriod(token, selectedYearId)
       console.log('🚀 ~ fetchPeriods ~ data:', data)
-
-      if (data.data != null) {
+      if (data?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (data.error || !data.data) {
+        console.error('Error getting users:', data.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: data.error?.message || 'Failed to get users',
+        })
+      } else {
         setPeriods(data.data)
       }
       setShowPeriods(true) // Set showPeriods to true after successful fetch
@@ -189,7 +211,7 @@ const PostingPeriodManager = () => {
           {/* <label className="block text-sm font-medium mb-2">
             Select Financial Year
           </label> */}
-          <div className='flex justify-center items-center'>
+          <div className="flex justify-center items-center">
             <div className="max-w-md mt-2 mr-3">
               <CustomCombobox
                 items={financialYears.map((year) => ({

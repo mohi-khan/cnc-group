@@ -11,10 +11,8 @@ import {
   updateNumberSeries,
   deleteNumberSeries,
   NumberSeries as NumberSeriesType,
-  
- 
+  getFinancialYear,
 } from '../../../api/number-series-api'
-
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -40,8 +38,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Company, Location } from '@/utils/type'
+import { Company, GetFinancialYearType, Location } from '@/utils/type'
 import { getAllCompanies, getAllLocations } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const numberSeriesSchema = z
   .object({
@@ -70,7 +71,6 @@ const numberSeriesSchema = z
     message: 'Ending number must be greater than or equal to starting number',
     path: ['endingNumber'],
   })
-
 type NumberSeries = NumberSeriesType
 
 const voucherTypes = [
@@ -81,9 +81,20 @@ const voucherTypes = [
 ]
 
 export function NumberSeries() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
+  //state variable
   const [series, setSeries] = React.useState<NumberSeries[]>([])
   const [companies, setCompanies] = React.useState<Company[]>([])
   const [locations, setLocations] = React.useState<Location[]>([])
+  const [fynancialYear, setFynancialYear] = React.useState<
+    GetFinancialYearType[]
+  >([])
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isError, setIsError] = React.useState(false)
@@ -99,7 +110,7 @@ export function NumberSeries() {
       seriesFormat: '',
       startingNumber: 1,
       endingNumber: 9,
-      createdBy: 60,
+      createdBy: userData?.userId,
       currentNumber: 1,
     },
   })
@@ -108,10 +119,11 @@ export function NumberSeries() {
     resolver: zodResolver(numberSeriesSchema),
   })
 
-  const fetchNumberSeries = React.useCallback (async () => {
+  const fetchNumberSeries = React.useCallback(async () => {
+    if(!token) return
     setIsLoading(true)
     setIsError(false)
-    const response = await getAllNumberSeries()
+    const response = await getAllNumberSeries(token)
     console.log('Fetched number series:', response.data)
     if (response.error || !response.data) {
       console.error('Error fetching number series:', response.error)
@@ -124,10 +136,30 @@ export function NumberSeries() {
       setSeries(response.data)
     }
     setIsLoading(false)
-  }, [toast])
+  }, [toast, token])
 
-  const fetchCompanies = React.useCallback (async () => {
-    const data = await getAllCompanies()
+  const fetchFinancialYears = React.useCallback(async () => {
+    if(!token) return
+    setIsLoading(true)
+    setIsError(false)
+    const response = await getFinancialYear(token)
+    console.log('Fetched fynancial year:', response.data)
+    if (response.error || !response.data) {
+      console.error('Error fetching fynancial year:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to show number series',
+      })
+      setIsError(true)
+    } else {
+      setFynancialYear(response.data)
+    }
+    setIsLoading(false)
+  }, [toast, token])
+
+  const fetchCompanies = React.useCallback(async () => {
+    if(!token) return
+    const data = await getAllCompanies(token)
     console.log('Fetched companies:', data.data)
     if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
@@ -138,10 +170,11 @@ export function NumberSeries() {
     } else {
       setCompanies(data.data)
     }
-  }, [toast])
+  }, [toast, token])
 
-  const fetchAllLocations = React.useCallback (async() => {
-    const response = await getAllLocations()
+  const fetchAllLocations = React.useCallback(async () => {
+    if(!token) return
+    const response = await getAllLocations(token)
     console.log('Fetched locations:', response.data)
 
     if (response.error || !response.data) {
@@ -153,13 +186,19 @@ export function NumberSeries() {
     } else {
       setLocations(response.data)
     }
-  }, [toast])
+  }, [toast, token])
 
   React.useEffect(() => {
     fetchNumberSeries()
     fetchCompanies()
     fetchAllLocations()
-  }, [fetchAllLocations, fetchCompanies, fetchNumberSeries])
+    fetchFinancialYears()
+  }, [
+    fetchAllLocations,
+    fetchCompanies,
+    fetchNumberSeries,
+    fetchFinancialYears,
+  ])
 
   const onSubmit = async (values: NumberSeriesType) => {
     console.log('Form values before formatting:', values)
@@ -171,10 +210,10 @@ export function NumberSeries() {
       endingNumber: Number(values.endingNumber),
       companyId: Number(values.companyId),
       locationId: Number(values.locationId),
-      createdBy: 60, // Add createdBy with a fixed value of 60
+      createdBy: userData?.userId, // Add createdBy with a fixed value of 60
       currentNumber: Number(values.startingNumber),
     }
-    console.log('Values being sent to the backend:', formattedValues);
+    console.log('Values being sent to the backend:', formattedValues)
     console.log('Formatted values to be submitted:', formattedValues)
 
     if (formattedValues.endingNumber < formattedValues.startingNumber) {
@@ -188,7 +227,7 @@ export function NumberSeries() {
     }
 
     try {
-      const response = await createNumberSeries(formattedValues)
+      const response = await createNumberSeries(formattedValues, token)
       console.log('API response:', response)
       if (response.error) {
         throw new Error(
@@ -213,7 +252,7 @@ export function NumberSeries() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteNumberSeries(id)
+      await deleteNumberSeries(id, token)
       fetchNumberSeries()
       toast({
         title: 'Success',
@@ -249,7 +288,7 @@ export function NumberSeries() {
       return
     }
     try {
-      const response = await updateNumberSeries(values)
+      const response = await updateNumberSeries(values, token)
       console.log('Update response:', response)
       if (response.error) {
         throw new Error(
@@ -301,7 +340,7 @@ export function NumberSeries() {
                     {options.map((option) => (
                       <SelectItem
                         key={option.companyId}
-                        value={option.companyId?.toString()??""}
+                        value={option.companyId?.toString() ?? ''}
                       >
                         {option.address}
                       </SelectItem>
@@ -493,7 +532,7 @@ export function NumberSeries() {
                               {companies.map((company) => (
                                 <SelectItem
                                   key={company.companyId}
-                                  value={company.companyId?.toString()??""}
+                                  value={company.companyId?.toString() ?? ''}
                                 >
                                   {company.companyName}
                                 </SelectItem>
@@ -573,17 +612,23 @@ export function NumberSeries() {
                       name="financialYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Financial Year"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                              value={field.value || ''}
-                            />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value?.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Fynancial Year" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {fynancialYear.map((year) => (
+                                <SelectItem key={year.yearid} value={year.yearid.toString()}>
+                                  {year.yearname}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -665,4 +710,3 @@ export function NumberSeries() {
 }
 
 export default NumberSeries
-
