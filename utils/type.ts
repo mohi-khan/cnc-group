@@ -300,6 +300,21 @@ export const createFinancialYearSchema = z
     }
   )
 
+const getFinancialYearSchema = z.object({
+  startdate: z.date(),
+  enddate: z.date(),
+  yearname: z.string(),
+  isactive: z.boolean().nullable(),
+  createdby: z.number(),
+  yearid: z.number(),
+  createdat: z.date().nullable(),
+  updatedat: z.date().nullable(),
+})
+
+export type GetFinancialYearType = z.infer<typeof getFinancialYearSchema>
+
+
+
 export interface CodeGroup {
   id: string
   code: string

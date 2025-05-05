@@ -301,6 +301,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/settings/withholding-taxes',
           },
           { name: 'Financial Year', source: '/settings/financial-year' },
+          { name: 'Posting Period', source: '/settings/posting-period' },
           { name: 'Number Series', source: '/settings/number-series' },
           { name: 'Exchange', source: '/settings/exchange' },
         ],

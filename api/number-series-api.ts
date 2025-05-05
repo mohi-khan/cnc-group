@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { Company } from '@/utils/type'
+import { Company, GetFinancialYearType } from '@/utils/type'
 import { z } from 'zod'
 import { locationSchema } from './company-api'
 
@@ -33,36 +33,63 @@ export type LocationData = z.infer<typeof locationSchema>
 
 export const numberSeriesArraySchema = z.array(numberSeriesSchema)
 
-export async function getAllNumberSeries() {
+export async function getAllNumberSeries(token: string) {
   return fetchApi<NumberSeries[]>({
     url: 'api/number-series/getAll',
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }
 
-export async function createNumberSeries(data: Omit<NumberSeries, 'id'>) {
+export async function createNumberSeries(data: Omit<NumberSeries, 'id'>, token: string) {
   console.log('Creating number series:', data)
   return fetchApi<NumberSeries>({
     url: 'api/number-series/entry',
     method: 'POST',
     body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }
 
-export async function updateNumberSeries(data: NumberSeries) {
+export async function updateNumberSeries(data: NumberSeries, token: string) {
   console.log('Updating number series:', data)
   return fetchApi<NumberSeries>({
     url: `api/number-series/update/${data.id}`,
     method: 'PATCH',
     body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }
 
-export async function deleteNumberSeries(id: number) {
+export async function deleteNumberSeries(id: number, token: string) {
   console.log('Deleting number series:', id)
   return fetchApi<{ success: boolean }>({
     url: `api/number-series/delete/${id}`,
     method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
+  })
+}
+
+export async function getFinancialYear(token: string) {
+  return fetchApi<GetFinancialYearType[]>({
+    url: 'api/financial-year/getfinancialyears',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }
 
