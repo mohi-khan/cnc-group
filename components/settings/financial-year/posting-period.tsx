@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect, useCallback } from 'react'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -12,32 +12,90 @@ import {
 } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { getPostingPeriod, updatePostingPeriod } from '@/api/financial-year.api'
-import { Period } from '@/utils/type'
+import {
+  getFinancialYear,
+  getPostingPeriod,
+  updatePostingPeriod,
+} from '@/api/financial-year.api'
+import type { GetFinancialYearType, Period } from '@/utils/type'
 import { updatePostingPeriodsSchema } from '@/utils/type'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useRouter } from 'next/navigation'
+import { useAtom } from 'jotai'
+import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CustomCombobox } from '@/utils/custom-combobox'
+
 const PostingPeriodManager = () => {
+  // Getting userData from jotai atom component
+  useInitializeUser()
+  const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
   // State variables
   const [error, setError] = useState<string | null>(null)
   const [periods, setPeriods] = useState<Period[]>([])
+  const [financialYears, setFinancialYears] = useState<GetFinancialYearType[]>(
+    []
+  )
+  const [selectedYearId, setSelectedYearId] = useState<number | null>(null)
   const [changedPeriods, setChangedPeriods] = useState<Set<number>>(new Set())
+  const [isLoading, setIsLoading] = useState(true)
+  const [showPeriods, setShowPeriods] = useState(false)
 
-  // Effect hook to fetch posting periods on component mount
-  useEffect(() => {
-    const fetchPeriods = async () => {
-      try {
-        const data = await getPostingPeriod()
-        if (data.data != null) {
-          setPeriods(data.data)
-        }
-      } catch (error) {
-        console.error('Error fetching posting periods:', error)
-        setError('Failed to load posting periods.')
+  // Effect hook to fetch financial years when token is available
+  const fetchFinancialYears = useCallback(async () => {
+    if (!token) return
+    setIsLoading(true)
+    try {
+      const data = await getFinancialYear(token)
+      if (data.data != null) {
+        setFinancialYears(data.data)
       }
+      console.log('🚀 ~ fetchFinancialYears ~ data.data:', data.data)
+      setError(null)
+    } catch (error) {
+      console.error('Error fetching financial years:', error)
+      setError(
+        'Failed to load financial years. Please check your authentication.'
+      )
+    } finally {
+      setIsLoading(false)
     }
+  }, [token])
 
-    fetchPeriods()
-  }, [])
-  // Convert my period type to json format for API calling to update Period Open Data
+  // Effect hook to fetch posting periods when token and selectedYearId are available
+  const fetchPeriods = useCallback(async () => {
+    if (!token || !selectedYearId) return
+    setIsLoading(true)
+    try {
+      const data = await getPostingPeriod(token, selectedYearId)
+      console.log('🚀 ~ fetchPeriods ~ data:', data)
+
+      if (data.data != null) {
+        setPeriods(data.data)
+      }
+      setShowPeriods(true) // Set showPeriods to true after successful fetch
+      setError(null)
+    } catch (error) {
+      console.error('Error fetching posting periods:', error)
+      setError(
+        'Failed to load posting periods. Please check your authentication.'
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }, [token, selectedYearId])
+
+  // Only fetch financial years when token changes and is available
+  useEffect(() => {
+    if (token) {
+      fetchFinancialYears()
+    }
+  }, [token, fetchFinancialYears])
+
+  // Convert period type to json format for API calling to update Period Open Data
   function transformPeriods(periods: Period[], isopen: boolean) {
     if (!periods || periods.length === 0) {
       throw new Error('Input array is empty or undefined')
@@ -82,72 +140,161 @@ const PostingPeriodManager = () => {
     // Clear any existing error
     setError(null)
   }
+
   const onSubmit = async () => {
-    const openPeriodsCount = periods.filter((p) => p.isOpen)
-    const perioddata = updatePostingPeriodsSchema.parse(
-      transformPeriods(openPeriodsCount, true)
-    )
-    console.log(perioddata)
+    if (!token) {
+      setError('Authentication token is missing. Please log in again.')
+      return
+    }
 
-    // Call the updatePostingPeriod API with the transformed data
-    const response = await updatePostingPeriod(perioddata)
+    try {
+      const openPeriodsCount = periods.filter((p) => p.isOpen)
+      const perioddata = updatePostingPeriodsSchema.parse(
+        transformPeriods(openPeriodsCount, true)
+      )
+      console.log(perioddata)
 
-    // Handle the successful response
-    console.log('Posting periods updated successfully:', response)
+      // Call the updatePostingPeriod API with the transformed data
+      const response = await updatePostingPeriod(perioddata, token)
 
-    // You might want to update your UI or state here based on the response
+      // Handle the successful response
+      console.log('Posting periods updated successfully:', response)
+
+      // Reset the changed periods set
+      setChangedPeriods(new Set())
+
+      // Refresh the periods list
+      fetchPeriods()
+    } catch (error) {
+      console.error('Error updating posting periods:', error)
+      setError('Failed to update posting periods.')
+    }
   }
+
+  // Handle financial year selection change
+  const handleYearChange = (value: { id: number; name: string } | null) => {
+    setSelectedYearId(value?.id || null)
+    setShowPeriods(false) // Reset show periods when year changes
+  }
+
   // Render the component
   return (
-    <Card className="w-full max-w-5xl">
+    <div className="w-[97%] mx-auto">
       <CardHeader>
         <CardTitle>Posting Periods</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Display error message if there's an error */}
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {/* Table to display posting periods */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Period Name</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {/* Map through periods and render each as a table row */}
-            {periods.map((period) => (
-              <TableRow key={period.periodId}>
-                <TableCell>{period.periodName}</TableCell>
-                <TableCell>
-                  {new Date(period.startDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {new Date(period.endDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {/* Switch component to toggle period status */}
-                  <Switch
-                    checked={period.isOpen}
-                    onChange={(checked) =>
-                      handleStatusChange(period.periodId, period.isOpen)
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {/* Button to save changes */}
-        <div className="mt-4 flex justify-end">
-          <Button type="button" onClick={onSubmit}>
-            Submit
-          </Button>
+        {/* Financial Year Selector */}
+        <div className="mb-6">
+          {/* <label className="block text-sm font-medium mb-2">
+            Select Financial Year
+          </label> */}
+          <div className='flex justify-center items-center'>
+            <div className="max-w-md mt-2 mr-3">
+              <CustomCombobox
+                items={financialYears.map((year) => ({
+                  id: year.yearid,
+                  name: year.yearname,
+                }))}
+                value={
+                  selectedYearId
+                    ? {
+                        id: selectedYearId,
+                        name:
+                          financialYears.find(
+                            (year) => year.yearid === selectedYearId
+                          )?.yearname || '',
+                      }
+                    : null
+                }
+                onChange={handleYearChange}
+              />
+            </div>
+            <Button
+              className="mt-2"
+              onClick={fetchPeriods}
+              disabled={!selectedYearId}
+            >
+              Show Periods
+            </Button>
+          </div>
         </div>
+
+        {/* Display error message if there's an error */}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading state */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <p>Loading posting periods...</p>
+          </div>
+        ) : (
+          <>
+            {/* Table to display posting periods */}
+            {showPeriods && selectedYearId && periods.length > 0 ? (
+              <>
+                <Table className="border shadow-md">
+                  <TableHeader className="bg-gray-200 shadow-md">
+                    <TableRow>
+                      <TableHead>Period Name</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Map through periods and render each as a table row */}
+                    {periods.map((period) => (
+                      <TableRow key={period.periodId}>
+                        <TableCell>{period.periodName}</TableCell>
+                        <TableCell>
+                          {new Date(period.startDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(period.endDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {/* Switch component to toggle period status */}
+                          <Switch
+                            checked={period.isOpen}
+                            onChange={(checked) =>
+                              handleStatusChange(period.periodId, checked)
+                            }
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Save button */}
+                {changedPeriods.size > 0 && (
+                  <div className="mt-4 flex justify-end">
+                    <Button onClick={onSubmit}>Save Changes</Button>
+                  </div>
+                )}
+              </>
+            ) : showPeriods && selectedYearId ? (
+              <div className="text-center py-8">
+                <p>No posting periods found for the selected financial year.</p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p>
+                  Please select a financial year and click "Show Periods" to
+                  view posting periods.
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
-    </Card>
+    </div>
   )
 }
 
