@@ -220,19 +220,19 @@ export default function ChartOfAccountsTable() {
     defaultValues: {
       name: '',
       accountType: '',
-      parentAccountId: 1,
+      parentAccountId: undefined,
       currencyId: 1,
       isReconcilable: false,
       withholdingTax: false,
       budgetTracking: false,
       isActive: true,
       isGroup: false,
-      notes: null,
-      code: '',
       isCash: false,
       isBank: false,
+      createdBy: userId || 3,
+      notes: null,
       cashTag: null,
-      createdBy: userId ?? undefined, // `undefined` to avoid passing `null`
+      code: '',
     },
   })
 
@@ -283,6 +283,7 @@ export default function ChartOfAccountsTable() {
         title: 'Success',
         description: 'Chart Of account created successfully',
       })
+      form.reset()
       fetchCoaAccounts()
       setIsAddAccountOpen(false)
     }
@@ -300,7 +301,7 @@ export default function ChartOfAccountsTable() {
   }, [form, generateAccountCode])
 
   const fetchParentCodes = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedParentCodes = await getParentCodes(token)
     console.log('Fetched parent codes:', fetchedParentCodes.data)
 
@@ -322,7 +323,7 @@ export default function ChartOfAccountsTable() {
 
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
     console.log(
       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
@@ -340,7 +341,7 @@ export default function ChartOfAccountsTable() {
   }, [token])
 
   const fetchCoaAccounts = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedAccounts = await getAllChartOfAccounts(token)
     console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
     if (fetchedAccounts?.error?.status === 401) {
@@ -539,6 +540,7 @@ export default function ChartOfAccountsTable() {
         )
       }
       setIsEditAccountOpen(false)
+
       setEditingAccount(null)
     }
   }
@@ -587,7 +589,18 @@ export default function ChartOfAccountsTable() {
           </div>
 
           {/* Add account  */}
-          <Dialog open={isAddAccountOpen} onOpenChange={setIsAddAccountOpen}>
+
+          <Dialog
+            open={isAddAccountOpen}
+            onOpenChange={(open) => {
+              fetchCoaAccounts()
+              if (!open) {
+                form.reset()
+              }
+              setIsAddAccountOpen(open)
+              fetchParentCodes()
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="default" size="lg" className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
@@ -609,9 +622,10 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Name</FormLabel>
+                        <span className="text-red-500">*</span>
                         <FormControl>
-                          <Input 
-                            {...field} 
+                          <Input
+                            {...field}
                             placeholder="Enter account name"
                             className="focus:ring-2 focus:ring-primary focus:border-primary"
                           />
@@ -626,6 +640,7 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Account Type</FormLabel>
+                        <span className="text-red-500">*</span>
                         <CustomCombobox
                           items={accountTypes.map((type) => ({
                             id: type.toLowerCase(),
@@ -687,15 +702,19 @@ export default function ChartOfAccountsTable() {
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="parentAccountId"
+                    rules={{ required: "Parent Account Name is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parent Account Name</FormLabel>
+                        <FormLabel>
+                          Parent Account Name
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <CustomCombobox
                           items={parentCodes.map((account: ChartOfAccount) => ({
-                            id: account.code.toString(),
+                            id: account.code?.toString(),
                             name: account.name || 'Unnamed Account',
                           }))}
                           value={
@@ -717,12 +736,48 @@ export default function ChartOfAccountsTable() {
                               value ? Number.parseInt(value.id, 10) : null
                             )
                           }
-                          placeholder="Select currency"
+                          placeholder="Select Parent Account"
                         />
-                        <FormMessage />
+                        <FormMessage className="text-red-500">
+                          {field.value ? '' : 'Parent Account Name is required'}
+                        </FormMessage>
                       </FormItem>
                     )}
-                  />
+                  />         */}
+                  <FormField
+  control={form.control}
+  name="parentAccountId"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        Parent Account Name <span className="text-red-500">*</span>
+      </FormLabel>
+      <CustomCombobox
+        items={parentCodes.map((account: ChartOfAccount) => ({
+          id: account.code.toString(),
+          name: account.name || 'Unnamed Account',
+        }))}
+        value={
+          field.value
+            ? {
+                id: field.value.toString(),
+                name:
+                  parentCodes.find(
+                    (acc) => acc.code.toString() === field.value.toString()
+                  )?.name || 'Select Parent Account',
+              }
+            : null
+        }
+        onChange={(value) =>
+          field.onChange(value ? Number(value.id) : undefined)
+        }
+        placeholder="Select Parent Account"
+      />
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
 
                   <FormField
                     control={form.control}

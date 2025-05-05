@@ -26,10 +26,7 @@ import {
   createAssetCategorySchema,
   User,
 } from '@/utils/type'
-import {
-  createAssetCategory,
-
-} from '@/api/asset-category-api'
+import { createAssetCategory } from '@/api/asset-category-api'
 import {
   Dialog,
   DialogContent,
@@ -79,7 +76,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       depreciation_rate: '',
       account_code: undefined,
       depreciation_account_code: undefined,
-      created_by: 1,
+      created_by: userId,
     },
   })
 
@@ -104,9 +101,8 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       })
     } else {
       setChartOfAccounts(response.data)
-      
     }
-  }, [token]) 
+  }, [token])
 
   const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (
     data
@@ -115,7 +111,6 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     if (!token) return
     setIsSubmitting(true)
     try {
-
       await createAssetCategory(data, token)
       onCategoryAdded()
       onOpenChange(false)
@@ -138,7 +133,10 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
           <DialogTitle>Add Asset Category</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => onSubmit(data))} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit((data) => onSubmit(data))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="category_name"
@@ -193,7 +191,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
-                    placeholder="Select currency"
+                    placeholder="Select Account Code"
                   />
                   <FormMessage />
                 </FormItem>
@@ -227,8 +225,9 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
-                    placeholder="Select currency"
-                  />                  <FormMessage />
+                    placeholder="Select Depreciation Account Code"
+                  />{' '}
+                  <FormMessage />
                 </FormItem>
               )}
             />

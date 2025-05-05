@@ -142,10 +142,7 @@ export const bankAccountSchema = z.object({
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
-  openingBalance: z
-    .number()
-    .nonnegative('Opening balance must be a non-negative number.')
-    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  openingBalance: z.number(),
   validityDate: z
     .string()
     .optional()
@@ -207,10 +204,8 @@ export const createBankAccountSchema = z.object({
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
-  openingBalance: z
-    .number()
-    .nonnegative('Opening balance must be a non-negative number.')
-    .multipleOf(0.01, 'Opening balance must have at most 2 decimal places.'),
+  openingBalance: z.string(),
+
   validityDate: z
     .string()
     .optional()
@@ -323,14 +318,19 @@ export const chartOfAccountSchema = z.object({
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()
-    .min(1, 'Code is required')
+    // .min(1, 'Code is required')
     .max(64, 'Maximum 64 characters allowed'),
   accountType: z
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int(),
-  parentName: z.string().min(1, 'Parent account ID is required').optional(),
+    // parentAccountId: z.number().int().min(1,'Parent account ID is required'),  
+    parentAccountId: z
+    .number({ required_error: 'Parent Account is required' })
+    .int()
+    .positive('Parent Account is required'),
+  
+
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),
@@ -357,8 +357,8 @@ export const AccountsHeadSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-  parentAccountId: z.number().int(),
-  parentName: z.string().min(1, 'Parent account ID is required').optional(),
+  parentAccountId: z.number().int().positive(),
+  parentName: z.string().min(1, 'Parent account ID is required'),
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
   withholdingTax: z.boolean().default(false),

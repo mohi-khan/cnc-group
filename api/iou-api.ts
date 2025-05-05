@@ -20,12 +20,13 @@ export async function createIou(data: IouRecordCreateType) {
 }
 
 //Fetch All Loan Data
-export async function getLoanData() {
+export async function getLoanData(token: string) {
   return fetchApi<IouRecordGetType[]>({
     url: 'api/iou/getIous',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `${token}`,
     },
   })
 }

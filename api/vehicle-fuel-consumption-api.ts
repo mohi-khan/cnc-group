@@ -5,19 +5,21 @@ import {
 } from '@/utils/type'
 
 //get all vehicle fuel consumption api
-export async function getAllVehicleFuelConsumpiton() {
+export async function getAllVehicleFuelConsumpiton(token: string) {
   return fetchApi<GetVehicleConsumptionType[]>({
     url: 'api/vehicle-fuel-consumption/get-all-vehicle-fuel-consumptions',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `${token}`,
     },
   })
 }
 
 //CreateVehicle Fuel Consumption
 export async function createVehicleFuelConsumption(
-  data: createVehicleFuelConsumptionType
+  data: createVehicleFuelConsumptionType,
+  token: string
 ) {
   return fetchApi<createVehicleFuelConsumptionType[]>({
     url: 'api/vehicle-fuel-consumption/create-vehicle-fuel-consumptions',
@@ -25,6 +27,7 @@ export async function createVehicleFuelConsumption(
     body: data,
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `${token}`,
     },
   })
 }
