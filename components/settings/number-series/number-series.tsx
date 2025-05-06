@@ -120,12 +120,16 @@ export function NumberSeries() {
   })
 
   const fetchNumberSeries = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     setIsLoading(true)
     setIsError(false)
     const response = await getAllNumberSeries(token)
     console.log('Fetched number series:', response.data)
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error fetching number series:', response.error)
       toast({
         title: 'Error',
@@ -139,12 +143,16 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchFinancialYears = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     setIsLoading(true)
     setIsError(false)
     const response = await getFinancialYear(token)
     console.log('Fetched fynancial year:', response.data)
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error fetching fynancial year:', response.error)
       toast({
         title: 'Error',
@@ -158,10 +166,14 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchCompanies = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const data = await getAllCompanies(token)
     console.log('Fetched companies:', data.data)
-    if (data.error || !data.data) {
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
       toast({
         title: 'Error',
@@ -173,11 +185,14 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchAllLocations = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const response = await getAllLocations(token)
     console.log('Fetched locations:', response.data)
-
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error getting locations:', response.error)
       toast({
         title: 'Error',
@@ -623,7 +638,10 @@ export function NumberSeries() {
                             </FormControl>
                             <SelectContent>
                               {fynancialYear.map((year) => (
-                                <SelectItem key={year.yearid} value={year.yearid.toString()}>
+                                <SelectItem
+                                  key={year.yearid}
+                                  value={year.yearid.toString()}
+                                >
                                   {year.yearname}
                                 </SelectItem>
                               ))}
