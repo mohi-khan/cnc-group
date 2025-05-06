@@ -137,39 +137,87 @@ export function JournalVoucherDetailsSection({
 
   // Function to add a new entry to the journal details
   const addEntry = () => {
-    form.setValue('journalDetails', [
-      ...entries,
-      {
-        accountId: 0,
-        costCenterId: null,
-        departmentId: null,
-        debit: 0,
-        credit: 0,
-        notes: '',
-        createdBy: 60,
-        analyticTags: null,
-        taxId: null,
-      },
-    ])
-    // Focus on the first input of the new row after a short delay
-    setTimeout(() => {
-      newRowRef.current?.focus()
-    }, 0)
+    const currentEntries = [...entries]
+    const firstEntry = currentEntries[0]
+
+    let newEntry = {
+      bankaccountid: 0,
+      accountId: 0,
+      debit: 0,
+      credit: 0,
+      notes: '',
+      createdBy: 0,
+      analyticTags: null,
+      taxId: null,
+    }
+
+    if (firstEntry && firstEntry.debit > 0) {
+      let totalUsedCredit = currentEntries.reduce((sum, entry, index) => {
+        return index === 0 ? sum : sum + entry.credit
+      }, 0)
+      newEntry.credit = firstEntry.debit - totalUsedCredit
+    }
+
+    form.setValue('journalDetails', [...entries, newEntry])
   }
 
-  // Function to change the debit value of an entry
-  const handleDebitChange = (index: number, value: number) => {
+  const handleDebitChange = (index: number, value: string) => {
     const updatedEntries = [...entries]
-    updatedEntries[index].debit = value
+    updatedEntries[index].debit = value === '' ? 0 : Number(value)
     updatedEntries[index].credit = 0
+
+    if (index === 0) {
+      const debitValue = value === '' ? 0 : Number(value)
+      let remainingCredit = debitValue
+
+      // Start from index 1 and distribute remaining amount
+      for (let i = 1; i < updatedEntries.length; i++) {
+        if (i === updatedEntries.length - 1) {
+          // Last entry gets remaining amount
+          updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
+        } else {
+          // Use existing credit value if available, otherwise use remaining credit
+          const existingCredit = updatedEntries[i].credit || 0
+          updatedEntries[i].credit = existingCredit || Number(remainingCredit.toFixed(2))
+        }
+        updatedEntries[i].debit = 0
+        remainingCredit -= updatedEntries[i].credit
+        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
+        form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+      }
+    }
+
     form.setValue('journalDetails', updatedEntries)
   }
 
-  // Function to change the credit value of an entry
-  const handleCreditChange = (index: number, value: number) => {
+  const handleCreditChange = (index: number, value: string) => {
     const updatedEntries = [...entries]
-    updatedEntries[index].credit = value
+    updatedEntries[index].credit = value === '' ? 0 : Number(value)
     updatedEntries[index].debit = 0
+
+    if (index > 0) {
+      const firstEntryDebit = updatedEntries[0].debit
+      let usedCredit = 0
+
+      // Calculate used credit from entries 1 to current index
+      for (let i = 1; i <= index; i++) {
+        usedCredit += updatedEntries[i].credit
+      }
+
+      // Distribute remaining amount to next entries if any
+      const remainingCredit = firstEntryDebit - usedCredit
+      for (let i = index + 1; i < updatedEntries.length; i++) {
+        if (i === updatedEntries.length - 1) {
+          updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
+        } else {
+          updatedEntries[i].credit = 0
+        }
+        updatedEntries[i].debit = 0
+        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
+        form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+      }
+    }
+
     form.setValue('journalDetails', updatedEntries)
   }
 
@@ -315,9 +363,7 @@ export function JournalVoucherDetailsSection({
                     <Input
                       type="number"
                       {...field}
-                      onChange={(e) =>
-                        handleDebitChange(index, Number(e.target.value))
-                      }
+                      onChange={(e) => handleDebitChange(index, e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -334,9 +380,7 @@ export function JournalVoucherDetailsSection({
                     <Input
                       type="number"
                       {...field}
-                      onChange={(e) =>
-                        handleCreditChange(index, Number(e.target.value))
-                      }
+                      onChange={(e) => handleCreditChange(index, e.target.value)}
                     />
                   </FormControl>
                   <FormMessage />
