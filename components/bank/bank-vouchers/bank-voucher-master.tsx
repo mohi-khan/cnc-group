@@ -1,3 +1,6 @@
+'use client'
+
+import type React from 'react'
 
 import { getAllCurrency } from '@/api/common-shared-api'
 import {
@@ -10,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { CurrencyType, FormStateType } from '@/utils/type'
+import type { CurrencyType, FormStateType } from '@/utils/type'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
@@ -19,6 +22,8 @@ import { useEffect, useState } from 'react'
 interface BankVoucherMasterProps {
   form: {
     control: any
+    getValues: any
+    setValue: any
   }
   formState: FormStateType
   setFormState: React.Dispatch<React.SetStateAction<FormStateType>>
@@ -32,7 +37,6 @@ export default function BankVoucherMaster({
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
-
 
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
@@ -165,9 +169,15 @@ export default function BankVoucherMaster({
             { id: 'Credit', name: 'Credit' },
             { id: 'Debit', name: 'Debit' },
           ]}
-          value={{ id: String(formState.formType), name: String(formState.formType) }}
+          value={{
+            id: String(formState.formType),
+            name: String(formState.formType),
+          }}
           onChange={(value) =>
-            setFormState({ ...formState, formType: (value?.id as 'Credit' | 'Debit') || 'Credit' })
+            setFormState({
+              ...formState,
+              formType: (value?.id as 'Credit' | 'Debit') || 'Credit',
+            })
           }
           placeholder="Select type"
         />
@@ -263,28 +273,45 @@ export default function BankVoucherMaster({
                 type="number"
                 placeholder="Enter amount"
                 {...field}
-                onChange={(e) =>
-                  field.onChange(Number.parseFloat(e.target.value))
-                }
+                onChange={(e) => {
+                  const amount = Number.parseFloat(e.target.value)
+                  field.onChange(amount)
+
+                  // Update only the first detail row if it exists
+                  const detailsArray = form.getValues('journalDetails') || []
+                  if (detailsArray.length > 0) {
+                    const updatedDetails = [...detailsArray]
+                    updatedDetails[0] = {
+                      ...updatedDetails[0],
+                      [formState.formType === 'Credit' ? 'debit' : 'credit']:
+                        amount,
+                    }
+                    form.setValue('journalDetails', updatedDetails)
+                  }
+                }}
               />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-       <FormField
-              control={form.control}
-              name="journalEntry.payTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pay To</FormLabel>
-                  <FormControl>
-                    <Input {...field} value={field.value ?? ''} placeholder="Enter payee name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <FormField
+        control={form.control}
+        name="journalEntry.payTo"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Pay To</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                value={field.value ?? ''}
+                placeholder="Enter payee name"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }

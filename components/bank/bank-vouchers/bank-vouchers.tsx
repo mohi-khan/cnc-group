@@ -32,13 +32,20 @@ import BankVoucherSubmit from './bank-voucher-submit'
 import { useForm } from 'react-hook-form'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllBankAccounts, getAllChartOfAccounts, getAllCostCenters, getAllDepartments, getAllResPartners } from '@/api/common-shared-api'
+import {
+  getAllBankAccounts,
+  getAllChartOfAccounts,
+  getAllCostCenters,
+  getAllDepartments,
+  getAllResPartners,
+} from '@/api/common-shared-api'
 
 export default function BankVoucher() {
   //getting userData from jotai atom component
   useInitializeUser()
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
+  console.log('🚀 ~ BankVoucher ~ userData:', userData)
   const [token] = useAtom(tokenAtom)
 
   //State Variables
@@ -110,14 +117,14 @@ export default function BankVoucher() {
       }
     } else {
       console.log('No user data found in localStorage')
-      router.push('/unauthorized-access')
+      // router.push('/unauthorized-access')
     }
   }, [router, userData])
   //Check If user have the previlage
   // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
-      if(!token) return
+      if (!token) return
       const [
         bankAccountsResponse,
         chartOfAccountsResponse,
@@ -131,6 +138,16 @@ export default function BankVoucher() {
         getAllResPartners(token),
         getAllDepartments(token),
       ])
+      if (
+        bankAccountsResponse?.error?.status === 441 ||
+        chartOfAccountsResponse?.error?.status === 441 ||
+        costCentersResponse?.error?.status === 441 ||
+        partnersResponse?.error?.status === 441 ||
+        departmentsResponse?.error?.status === 441
+      ) {
+        router.push('/unauthorized-access')
+        return
+      }
       const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
         return account.isGroup === false
       })
@@ -170,8 +187,7 @@ export default function BankVoucher() {
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
         return
-      }
-      else if (!response.data) {
+      } else if (!response.data) {
         throw new Error('No data received from server')
       }
       localVoucherGrid = Array.isArray(response.data) ? response.data : []
@@ -303,7 +319,10 @@ export default function BankVoucher() {
       JSON.stringify(updateValueswithBank, null, 2)
     )
 
-    const response = await createJournalEntryWithDetails(updateValueswithBank, token)
+    const response = await createJournalEntryWithDetails(
+      updateValueswithBank,
+      token
+    )
     if (response.error || !response.data) {
       toast({
         title: 'Error',
