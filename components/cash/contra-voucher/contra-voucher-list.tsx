@@ -12,13 +12,16 @@ import {
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { ContraVoucherPopup } from './contra-voucher-popup'
 import VoucherList from '@/components/voucher-list/voucher-list'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function ContraVoucherTable() {
   //getting userData from jotai atom component
-  useInitializeUser()
-  const [userData] = useAtom(userDataAtom)
+      useInitializeUser()
+      const [userData] = useAtom(userDataAtom)
+        const [token] = useAtom(tokenAtom)
+        const router = useRouter()
 
   // State variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
@@ -53,7 +56,7 @@ export default function ContraVoucherTable() {
       locationId: location,
       voucherType: VoucherTypes.ContraVoucher,
     }
-    const response = await getAllVoucher(voucherQuery)
+    const response = await getAllVoucher(voucherQuery,token)
     if (response.data && Array.isArray(response.data)) {
       console.log(
         'contra voucher data line no 57 and i am from contra voucher list:',
