@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -67,15 +67,16 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         companyId: 0,
         locationId: 0,
         currencyId: 0,
+        exchangeRate: 0,
         amountTotal: 0,
-        createdBy: undefined,
+        createdBy: userData?.userId,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: undefined,
+          createdBy: userData?.userId,
         },
       ],
     },

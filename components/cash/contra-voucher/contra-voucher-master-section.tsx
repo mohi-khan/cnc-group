@@ -1,7 +1,6 @@
 'use client'
 import { Fragment, useState, useEffect, useCallback } from 'react'
-import { Combobox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+
 import { UseFormReturn } from 'react-hook-form'
 import {
   FormControl,
@@ -28,7 +27,6 @@ import { CURRENCY_ITEMS } from '@/utils/constants'
 import { Button } from '@/components/ui/button'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
-
 import {
   Dialog,
   DialogContent,
@@ -43,6 +41,17 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -54,8 +63,8 @@ export function ContraVoucherMasterSection({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
-    const [token] = useAtom(tokenAtom)
-    const router = useRouter()
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
@@ -144,6 +153,8 @@ export function ContraVoucherMasterSection({
     fetchExchanges()
   }, [])
 
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -224,7 +235,6 @@ export function ContraVoucherMasterSection({
           />
           <FormMessage />
         </div>
-
         {/* Currency Combobox */}
         <div className="flex flex-col">
           <FormLabel className="mb-2">Currency</FormLabel>
@@ -234,116 +244,61 @@ export function ContraVoucherMasterSection({
             render={({ field }) => (
               <FormControl>
                 <div className="flex gap-2">
-                  <CustomCombobox
-                    items={currency.map((curr: CurrencyType) => ({
-                      id: curr.currencyId.toString(),
-                      name:
-                        `${curr.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === curr.currencyId)?.rate ?? 1}` ||
-                        'Unnamed Currency',
-                    }))}
-                    value={
-                      field.value
-                        ? {
-                            id: field.value.toString(),
-                            name:
-                              `${
-                                currency.find(
-                                  (curr: CurrencyType) =>
-                                    curr.currencyId === field.value
-                                )?.currencyCode
-                              } - Rate: ${exchanges.find((e) => e.baseCurrency === field.value)?.rate ?? 1}` ||
-                              'Unnamed Currency',
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        <CustomCombobox
+                          items={currency.map((curr: CurrencyType) => ({
+                            id: curr.currencyId.toString(),
+                            name: curr.currencyCode || 'Unnamed Currency',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    currency.find(
+                                      (curr: CurrencyType) =>
+                                        curr.currencyId === field.value
+                                    )?.currencyCode || 'Unnamed Currency',
+                                }
+                              : null
                           }
-                        : null
-                    }
-                    onChange={(value: { id: string; name: string } | null) => {
-                      field.onChange(
-                        value ? Number.parseInt(value.id, 10) : null
-                      )
-                      const selectedCurrencyId = value
-                        ? Number.parseInt(value.id, 10)
-                        : null
-                      const exchange = exchanges.find(
-                        (e) => e.baseCurrency === selectedCurrencyId
-                      )
-                      setExchangeRate(exchange?.rate ?? 1)
-                    }}
-                    placeholder="Select currency"
-                  />{' '}
-                  <Dialog>
-                    {' '}
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="px-3">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Exchange Rate</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="rate" className="text-right">
-                            Rate
-                          </Label>
-                          <Input
-                            id="rate"
-                            type="number"
-                            step="0.0001"
-                            className="col-span-3"
-                            value={exchangeRate}
-                            onChange={(e) =>
-                              setExchangeRate(parseFloat(e.target.value))
-                            }
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="date" className="text-right">
-                            Date
-                          </Label>
-                          <Input
-                            id="date"
-                            type="date"
-                            className="col-span-3"
-                            defaultValue={
-                              new Date().toISOString().split('T')[0]
-                            }
-                          />
-                        </div>
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
                       </div>
-                      <DialogFooter>
-                        <Button
-                          type="submit"
-                          onClick={() => {
-                            // Add your rate update logic here
-                          }}
-                        >
-                          Save Changes
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                    </HoverCardTrigger>
+                  </HoverCard>
+                  {field.value && field.value !== 1 && (
+                    <FormField
+                      control={form.control}
+                      name="journalEntry.exchangeRate"
+                      render={({ field: exchangeField }) => (
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Exchange Rate"
+                            value={exchangeField.value ?? ''}
+                            onChange={(e) => exchangeField.onChange(Number(e.target.value))}
+                            className="w-32"
+                          />
+                        </FormControl>
+                      )}
+                    />
+                  )}
                 </div>
               </FormControl>
             )}
           />
           <FormMessage />
         </div>
-
-        {/* Analysis Tags Input */}
-        {/* <div className="flex flex-col">
-          <FormLabel className="mb-2">Analysis Tags</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.journalType"
-            render={({ field }) => (
-              <FormControl>
-                <Input className="h-10" />
-              </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div> */}
       </div>
 
       {/* Notes Textarea */}
