@@ -464,6 +464,7 @@ const JournalEntrySchema = z.object({
   companyId: z.number(),
   locationId: z.number(),
   currencyId: z.number(),
+  exchangeRate: z.number(),
   amountTotal: z.number(),
   notes: z.string().optional(),
   payTo: z.string().nullable().optional(),

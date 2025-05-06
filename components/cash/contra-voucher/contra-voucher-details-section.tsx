@@ -242,7 +242,7 @@ export function ContraVoucherDetailsSection({
       debit: 0,
       credit: 0,
       notes: '',
-      createdBy: userId ?? 0,
+      createdBy: userData?.userId,
       analyticTags: null,
       taxId: null,
     }
@@ -254,7 +254,7 @@ export function ContraVoucherDetailsSection({
       newEntry.credit = firstEntry.debit - totalUsedCredit
     }
 
-    form.setValue('journalDetails', [...entries, newEntry])
+    form.setValue('journalDetails', [...entries, {...newEntry, createdBy: userData?.userId || 0}])
     setDisabledStates((prev) => ({
       ...prev,
       [entries.length]: { bank: false, account: false },

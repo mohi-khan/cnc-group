@@ -10,20 +10,28 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CurrencyType } from '@/utils/type'
-import { useEffect, useState } from 'react'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useEffect, useState, useCallback } from 'react'
 
 const CurrencyTable = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
   const [getCurrency, setGetCurrency] = useState<CurrencyType[]>([])
 
-  async function fetchAllCurrency() {
-    const respons = await getAllCurrency()
+  const fetchAllCurrency = useCallback(async () => {
+    if (!token) return
+    const respons = await getAllCurrency(token)
     setGetCurrency(respons.data || [])
     console.log('This is all department   data: ', respons.data || [])
-  }
+  }, [token])
 
   useEffect(() => {
     fetchAllCurrency()
-  }, [])
+  }, [fetchAllCurrency])
 
   return (
     <div>
