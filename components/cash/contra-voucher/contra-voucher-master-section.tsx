@@ -1,5 +1,5 @@
 'use client'
-import { Fragment, useState, useEffect } from 'react'
+import { Fragment, useState, useEffect, useCallback } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { UseFormReturn } from 'react-hook-form'
@@ -39,9 +39,10 @@ import {
 } from '@/components/ui/dialog'
 import { Pencil } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -53,6 +54,8 @@ export function ContraVoucherMasterSection({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+    const [token] = useAtom(tokenAtom)
+    const router = useRouter()
 
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
@@ -90,7 +93,7 @@ export function ContraVoucherMasterSection({
       locationId: location,
       voucherType: VoucherTypes.ContraVoucher,
     }
-    const response = await getAllVoucher(voucherQuery)
+    const response = await getAllVoucher(voucherQuery, token)
     if (response.error || !response.data) {
       console.error('Error getting Voucher Data:', response.error)
       toast({
@@ -109,8 +112,8 @@ export function ContraVoucherMasterSection({
     return data.map((location) => location.location.locationId)
   }
 
-  const fetchCurrency = async () => {
-    const data = await getAllCurrency()
+  const fetchCurrency = useCallback(async () => {
+    const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({
@@ -121,10 +124,10 @@ export function ContraVoucherMasterSection({
       setCurrency(data.data)
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
-  }
+  }, [token])
 
-  const fetchExchanges = async () => {
-    const data = await getAllExchange()
+  const fetchExchanges = useCallback(async () => {
+    const data = await getAllExchange(token)
     if (data.error || !data.data) {
       console.error('Error getting exchanges:', data.error)
       toast({
@@ -135,8 +138,7 @@ export function ContraVoucherMasterSection({
       setExchanges(data.data)
       console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
-  }
-
+  }, [token])
   useEffect(() => {
     fetchCurrency()
     fetchExchanges()
