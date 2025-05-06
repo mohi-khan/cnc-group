@@ -8,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
@@ -65,7 +66,7 @@ export default function CashVoucherMaster({
 
   useEffect(() => {
     fetchCurrency()
-  }, [])
+  }, [fetchCurrency])
 
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -133,41 +134,69 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="journalEntry.currencyId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <FormControl>
-              <CustomCombobox
-                items={currency.map((curr: CurrencyType) => ({
-                  id: curr.currencyId.toString(),
-                  name: curr.currencyCode || 'Unnamed Currency',
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value.toString(),
-                        name:
-                          currency.find(
-                            (curr: CurrencyType) =>
-                              curr.currencyId === field.value
-                          )?.currencyCode || 'Unnamed Currency',
-                      }
-                    : null
-                }
-                onChange={(value: { id: string; name: string } | null) =>
-                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
-                }
-                placeholder="Select currency"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
+      <div className="flex flex-col mt-2 ml-10">
+           <FormLabel className="mb-2">Currency</FormLabel>
+           <FormField
+             control={form.control}
+             name="journalEntry.currencyId"
+             render={({ field }) => (
+               <FormControl>
+                 <div className="flex gap-2">
+                   <HoverCard>
+                     <HoverCardTrigger asChild>
+                       <div>
+                         <CustomCombobox
+                           items={currency.map((curr: CurrencyType) => ({
+                             id: curr.currencyId.toString(),
+                             name: curr.currencyCode || 'Unnamed Currency',
+                           }))}
+                           value={
+                             field.value
+                               ? {
+                                   id: field.value.toString(),
+                                   name:
+                                     currency.find(
+                                       (curr: CurrencyType) =>
+                                         curr.currencyId === field.value
+                                     )?.currencyCode || 'Unnamed Currency',
+                                 }
+                               : null
+                           }
+                           onChange={(
+                             value: { id: string; name: string } | null
+                           ) =>
+                             field.onChange(
+                               value ? Number.parseInt(value.id, 10) : null
+                             )
+                           }
+                           placeholder="Select currency"
+                         />
+                       </div>
+                     </HoverCardTrigger>
+                   </HoverCard>
+                   {field.value && field.value !== 1 && (
+                     <FormField
+                       control={form.control}
+                       name="journalEntry.exchangeRate"
+                       render={({ field: exchangeField }) => (
+                         <FormControl>
+                           <Input
+                             type="number"
+                             placeholder="Exchange Rate"
+                             value={exchangeField.value ?? ''}
+                             onChange={(e) => exchangeField.onChange(Number(e.target.value))}
+                             className="w-32"
+                           />
+                         </FormControl>
+                       )}
+                     />
+                   )}
+                 </div>
+               </FormControl>
+             )}
+           />
+           <FormMessage />
+         </div>      <FormField
         control={form.control}
         name="journalEntry.date"
         render={({ field }) => (
