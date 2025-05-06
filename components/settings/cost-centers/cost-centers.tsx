@@ -34,7 +34,7 @@ import {
   activateCostCenter,
 } from '../../../api/cost-centers-api'
 import { useToast } from '@/hooks/use-toast'
-import type { CostCenter } from '@/utils/type'
+import type { CostCenter, CurrencyType } from '@/utils/type'
 import {
   Pagination,
   PaginationContent,
@@ -45,8 +45,9 @@ import {
 } from '@/components/ui/pagination'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { getAllCostCenters } from '@/api/common-shared-api'
+import { getAllCostCenters, getAllCurrency } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function CostCenterManagement() {
   //getting userData from jotai atom component
@@ -74,6 +75,7 @@ export default function CostCenterManagement() {
   const [sortColumn, setSortColumn] =
     useState<keyof CostCenter>('costCenterName')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -102,9 +104,30 @@ export default function CostCenterManagement() {
     setIsLoading(false)
   }, [toast, token])
 
+  // get all currency api
+    const fetchCurrency = React.useCallback(async () => {
+      if (!token) return
+      const fetchedCurrency = await getAllCurrency(token)
+      console.log(
+        '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
+        fetchedCurrency
+      )
+      if (fetchedCurrency.error || !fetchedCurrency.data) {
+        console.error('Error getting currency:', fetchedCurrency.error)
+        toast({
+          title: 'Error',
+          description: fetchedCurrency.error?.message || 'Failed to get currency',
+        })
+      } else {
+        setCurrency(fetchedCurrency.data)
+      }
+    }, [token])
+
   useEffect(() => {
     fetchCostCenters()
-  }, [fetchCostCenters])
+    fetchCurrency()
+  }, [fetchCostCenters, fetchCurrency])
+   
 
   const handleActivateDeactivate = async (id: number, isActive: boolean) => {
     try {
@@ -172,9 +195,7 @@ export default function CostCenterManagement() {
   }, [userData])
 
   const CostCenterForm: React.FC<{ isEdit: boolean }> = ({ isEdit }) => {
-    const [currencyCode, setCurrencyCode] = useState<
-      'BDT' | 'USD' | 'EUR' | 'GBP'
-    >((isEdit && selectedCostCenter?.currencyCode) || 'BDT')
+    const [currencyCode, setCurrencyCode] = useState<string>((isEdit && selectedCostCenter?.currencyCode) || 'BDT')
 
     useEffect(() => {
       if (isEdit) {
@@ -194,7 +215,7 @@ export default function CostCenterManagement() {
         const newCostCenter = {
           costCenterName: formData.get('name') as string,
           costCenterDescription: formData.get('description') as string,
-          currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+          currencyCode: currencyCode ,
           budget: Number(formData.get('budget')) || 0,
           isActive: formData.get('isActive') === 'on',
           isVehicle: formData.get('isVehicle') === 'on',
@@ -206,7 +227,7 @@ export default function CostCenterManagement() {
           costCenterId: 0,
           costCenterName: formData.get('name') as string,
           costCenterDescription: formData.get('description') as string,
-          currencyCode: currencyCode as 'BDT' | 'USD' | 'EUR' | 'GBP',
+          currencyCode: currencyCode,
           budget: formData.get('budget')?.toString() || '0',
           isActive: formData.get('isActive') === 'on',
           isVehicle: formData.get('isVehicle') === 'on',
@@ -217,7 +238,10 @@ export default function CostCenterManagement() {
 
         if (isEdit && selectedCostCenter) {
           updateCostCenterData.costCenterId = selectedCostCenter.costCenterId
-          const response = await updateCostCenter(updateCostCenterData, token)
+          const response = await updateCostCenter(
+            { ...updateCostCenterData, currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP" },
+            token
+          )
           if (response.error || !response.data) {
             throw new Error(
               response.error?.message || 'Failed to edit cost center'
@@ -229,7 +253,10 @@ export default function CostCenterManagement() {
             description: 'Cost center edited successfully',
           })
         } else {
-          const response = await createCostCenter(newCostCenter, token)
+          const response = await createCostCenter(
+            { ...newCostCenter, currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP" },
+            token
+          )
           if (response.error || !response.data) {
             throw new Error(
               response.error?.message || 'Failed to create cost center'
@@ -297,23 +324,30 @@ export default function CostCenterManagement() {
           <Label htmlFor="currency-code" className="text-right">
             Currency Code
           </Label>
-          <Select
-            name="currencyCode"
-            value={currencyCode}
-            onValueChange={(value) =>
-              setCurrencyCode(value as 'BDT' | 'USD' | 'EUR' | 'GBP')
+          <CustomCombobox
+            items={currency.map((curr: CurrencyType) => ({
+              id: curr.currencyId.toString(),
+              name: curr.currencyCode || 'Unnamed Currency',
+            }))}
+            value={
+              currencyCode
+                ? {
+                    id: currencyCode.toString(),
+                    name:
+                      currency.find(
+                        (curr: CurrencyType) =>
+                          curr.currencyCode === currencyCode
+                      )?.currencyCode || 'Unnamed Currency',
+                  }
+                : null
             }
-          >
-            <SelectTrigger className="col-span-3">
-              <SelectValue placeholder="Select currency code" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="BDT">BDT</SelectItem>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-              <SelectItem value="GBP">GBP</SelectItem>
-            </SelectContent>
-          </Select>
+            onChange={(value: { id: string; name: string } | null) =>
+              setCurrencyCode(
+                value ? (value.name as 'USD' | 'BDT' | 'EUR' | 'GBP') : 'BDT'
+              )
+            }
+            placeholder="Select currency"
+          />{' '}
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="budget" className="text-right">
@@ -341,7 +375,7 @@ export default function CostCenterManagement() {
             required
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
+        <div className="grid grid-cols-4 items-center gap-4 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md p-2">
           <Label htmlFor="isActive" className="text-right">
             Active
           </Label>
@@ -351,9 +385,9 @@ export default function CostCenterManagement() {
             defaultChecked={isEdit ? selectedCostCenter?.isActive : true}
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
+        <div className="grid grid-cols-4 items-center gap-4 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md p-2">
           <Label htmlFor="isVehicle" className="text-right">
-            Vehide
+            Vehicle
           </Label>
           <Switch
             id="isVehicle"
@@ -478,7 +512,7 @@ export default function CostCenterManagement() {
                   onClick={() => handleSort('isVehicle')}
                   className="cursor-pointer"
                 >
-                  Vehide <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                  Vehicle <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
                 <TableHead
                   onClick={() => handleSort('budget')}
@@ -575,7 +609,7 @@ export default function CostCenterManagement() {
       )}
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
             <DialogTitle>Add New Cost Center</DialogTitle>
           </DialogHeader>

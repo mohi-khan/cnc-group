@@ -68,12 +68,12 @@ const Vehicle = () => {
       console.log('Unauthorized access')
       return
     } else if (vehicleData.error || !vehicleData.data) {
-      console.error('Error fetching chart of accounts:', vehicleData.error)
+      console.error('Error vehicle:', vehicleData.error)
       toast({
         variant: 'destructive',
         title: 'Error',
         description:
-          vehicleData.error?.message || 'Failed to fetch chart of accounts',
+          vehicleData.error?.message || 'Failed to fetch Vehicles',
       })
     } else {
       setVehicles(vehicleData.data)
