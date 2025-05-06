@@ -57,31 +57,6 @@ export async function createNumberSeries(data: Omit<NumberSeries, 'id'>, token: 
   })
 }
 
-export async function updateNumberSeries(data: NumberSeries, token: string) {
-  console.log('Updating number series:', data)
-  return fetchApi<NumberSeries>({
-    url: `api/number-series/update/${data.id}`,
-    method: 'PATCH',
-    body: data,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `${token}`,
-    },
-  })
-}
-
-export async function deleteNumberSeries(id: number, token: string) {
-  console.log('Deleting number series:', id)
-  return fetchApi<{ success: boolean }>({
-    url: `api/number-series/delete/${id}`,
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `${token}`,
-    },
-  })
-}
-
 export async function getFinancialYear(token: string) {
   return fetchApi<GetFinancialYearType[]>({
     url: 'api/financial-year/getfinancialyears',

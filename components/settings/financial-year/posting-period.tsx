@@ -135,13 +135,13 @@ const PostingPeriodManager = () => {
   // Function to handle status change of a period
   const handleStatusChange = (periodId: number, newStatus: boolean) => {
     // Check if opening a new period would exceed the limit of 2 open periods
-    const openPeriodsCount = periods.filter((p) => p.isOpen).length
-    const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
+    // const openPeriodsCount = periods.filter((p) => p.isOpen).length
+    // const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
 
-    if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
-      setError('Only two periods can be open at a time.')
-      return
-    }
+    // if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
+    //   setError('Only two periods can be open at a time.')
+    //   return
+    // }
 
     // Update the periods state with the new status
     setPeriods((prevPeriods) => {
@@ -284,8 +284,8 @@ const PostingPeriodManager = () => {
                           {/* Switch component to toggle period status */}
                           <Switch
                             checked={period.isOpen}
-                            onChange={(checked) =>
-                              handleStatusChange(period.periodId, checked)
+                            onChange={e =>
+                              handleStatusChange(period.periodId, (e.target as HTMLInputElement).checked)
                             }
                           />
                         </TableCell>

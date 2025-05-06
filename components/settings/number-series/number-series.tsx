@@ -3,14 +3,12 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Plus, Trash2, Edit, Check } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import * as z from 'zod'
 import {
   getAllNumberSeries,
   createNumberSeries,
-  updateNumberSeries,
-  deleteNumberSeries,
-  NumberSeries as NumberSeriesType,
+  type NumberSeries as NumberSeriesType,
   getFinancialYear,
 } from '../../../api/number-series-api'
 import { Button } from '@/components/ui/button'
@@ -38,7 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Company, GetFinancialYearType, Location } from '@/utils/type'
+import type { Company, GetFinancialYearType, Location } from '@/utils/type'
 import { getAllCompanies, getAllLocations } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -120,12 +118,16 @@ export function NumberSeries() {
   })
 
   const fetchNumberSeries = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     setIsLoading(true)
     setIsError(false)
     const response = await getAllNumberSeries(token)
     console.log('Fetched number series:', response.data)
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error fetching number series:', response.error)
       toast({
         title: 'Error',
@@ -139,12 +141,16 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchFinancialYears = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     setIsLoading(true)
     setIsError(false)
     const response = await getFinancialYear(token)
     console.log('Fetched fynancial year:', response.data)
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error fetching fynancial year:', response.error)
       toast({
         title: 'Error',
@@ -158,10 +164,14 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchCompanies = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const data = await getAllCompanies(token)
     console.log('Fetched companies:', data.data)
-    if (data.error || !data.data) {
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
       toast({
         title: 'Error',
@@ -173,11 +183,14 @@ export function NumberSeries() {
   }, [toast, token])
 
   const fetchAllLocations = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const response = await getAllLocations(token)
     console.log('Fetched locations:', response.data)
-
-    if (response.error || !response.data) {
+    if (response?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (response.error || !response.data) {
       console.error('Error getting locations:', response.error)
       toast({
         title: 'Error',
@@ -210,7 +223,7 @@ export function NumberSeries() {
       endingNumber: Number(values.endingNumber),
       companyId: Number(values.companyId),
       locationId: Number(values.locationId),
-      createdBy: userData?.userId, // Add createdBy with a fixed value of 60
+      createdBy: userData?.userId,
       currentNumber: Number(values.startingNumber),
     }
     console.log('Values being sent to the backend:', formattedValues)
@@ -250,67 +263,6 @@ export function NumberSeries() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteNumberSeries(id, token)
-      fetchNumberSeries()
-      toast({
-        title: 'Success',
-        description: 'Number series deleted successfully',
-      })
-    } catch (error) {
-      console.error('Error deleting number series:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to delete number series',
-        variant: 'destructive',
-      })
-    }
-  }
-
-  const handleEdit = (e: React.MouseEvent, record: NumberSeries) => {
-    e.preventDefault()
-    setEditingId(record.companyId)
-    editForm.reset(record)
-  }
-
-  const handleUpdate = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    const values = editForm.getValues()
-    console.log('Update values:', values)
-    if (values.endingNumber < values.startingNumber) {
-      toast({
-        title: 'Error',
-        description:
-          'Ending number must be greater than or equal to starting number',
-        variant: 'destructive',
-      })
-      return
-    }
-    try {
-      const response = await updateNumberSeries(values, token)
-      console.log('Update response:', response)
-      if (response.error) {
-        throw new Error(
-          response.error.message || 'Failed to update number series'
-        )
-      }
-      fetchNumberSeries()
-      setEditingId(null)
-      toast({
-        title: 'Success',
-        description: 'Number series updated successfully',
-      })
-    } catch (error) {
-      console.error('Error updating number series:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to update number series',
-        variant: 'destructive',
-      })
-    }
-  }
-
   const renderTableCell = (record: NumberSeries, name: keyof NumberSeries) => {
     if (record.id === editingId) {
       if (name === 'companyId' || name === 'locationId') {
@@ -322,7 +274,9 @@ export function NumberSeries() {
             render={({ field }) => (
               <FormItem>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  onValueChange={(value) =>
+                    field.onChange(Number.parseInt(value))
+                  }
                   defaultValue={field.value?.toString()}
                 >
                   <FormControl>
@@ -397,7 +351,7 @@ export function NumberSeries() {
                       name === 'startingNumber' ||
                       name === 'endingNumber' ||
                       name === 'financialYear'
-                        ? parseInt(e.target.value)
+                        ? Number.parseInt(e.target.value)
                         : e.target.value
                     field.onChange(value)
                   }}
@@ -480,32 +434,6 @@ export function NumberSeries() {
                         {renderTableCell(record, 'endingNumber')}
                       </TableCell>
                       <TableCell className="flex gap-3 justify-end">
-                        {editingId === record.id ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => handleUpdate(e)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => handleEdit(e, record)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(record.locationId)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -518,7 +446,7 @@ export function NumberSeries() {
                         <FormItem>
                           <Select
                             onValueChange={(value) =>
-                              field.onChange(parseInt(value))
+                              field.onChange(Number.parseInt(value))
                             }
                             value={field.value?.toString()}
                             defaultValue={field.value?.toString()}
@@ -552,7 +480,7 @@ export function NumberSeries() {
                         <FormItem>
                           <Select
                             onValueChange={(value) =>
-                              field.onChange(parseInt(value))
+                              field.onChange(Number.parseInt(value))
                             }
                             value={field.value?.toString()}
                             defaultValue={field.value?.toString()}
@@ -623,7 +551,10 @@ export function NumberSeries() {
                             </FormControl>
                             <SelectContent>
                               {fynancialYear.map((year) => (
-                                <SelectItem key={year.yearid} value={year.yearid.toString()}>
+                                <SelectItem
+                                  key={year.yearid}
+                                  value={year.yearid.toString()}
+                                >
                                   {year.yearname}
                                 </SelectItem>
                               ))}
@@ -660,7 +591,7 @@ export function NumberSeries() {
                               placeholder="Starting Number"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseInt(e.target.value))
+                                field.onChange(Number.parseInt(e.target.value))
                               }
                             />
                           </FormControl>
@@ -681,7 +612,7 @@ export function NumberSeries() {
                               placeholder="Ending Number"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(parseInt(e.target.value))
+                                field.onChange(Number.parseInt(e.target.value))
                               }
                             />
                           </FormControl>
