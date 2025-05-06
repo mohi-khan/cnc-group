@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/table'
 import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { FormStateType } from '@/utils/type'
+import type { FormStateType } from '@/utils/type'
+import { useEffect } from 'react'
 
 export default function BankVoucherDetails({
   form,
@@ -28,6 +29,19 @@ export default function BankVoucherDetails({
     control: form.control,
     name: 'journalDetails',
   })
+
+  // Update amounts when rows are added or removed
+  useEffect(() => {
+    if (fields.length > 0 && fields.length === 1) {
+      // Only auto-distribute when there's exactly one row (initial state)
+      const totalAmount = form.getValues('journalEntry.amountTotal') || 0
+
+      form.setValue(
+        `journalDetails.0.${formState.formType === 'Credit' ? 'debit' : 'credit'}`,
+        totalAmount
+      )
+    }
+  }, [fields.length, form, formState.formType])
 
   return (
     <div>
@@ -203,7 +217,7 @@ export default function BankVoucherDetails({
                   )}
                 />
               </TableCell>
-             
+
               <TableCell>
                 <FormField
                   control={form.control}
@@ -243,22 +257,36 @@ export default function BankVoucherDetails({
         variant="outline"
         size="sm"
         className="mt-5"
-        onClick={() =>
+        onClick={() => {
+          const totalAmount = form.getValues('journalEntry.amountTotal') || 0
+          const currentDetails = form.getValues('journalDetails') || []
+
+          // Calculate the sum of all existing amounts
+          const currentField =
+            formState.formType === 'Credit' ? 'debit' : 'credit'
+            const usedAmount = currentDetails.reduce(
+            (sum: number, detail: Record<string, number>) => sum + (detail[currentField] || 0),
+            0
+            )
+
+          // Calculate the remaining amount
+          const remainingAmount = totalAmount - usedAmount
+
+          // Add new row with the remaining amount
           append({
             voucherId: 0,
             accountId: 0,
             costCenterId: null,
             departmentId: null,
-            debit: 0,
-            credit: 0,
+            debit: formState.formType === 'Credit' ? remainingAmount : 0,
+            credit: formState.formType === 'Debit' ? remainingAmount : 0,
             analyticTags: null,
             taxId: null,
             resPartnerId: null,
             notes: '',
-            // payTo: '',
             createdBy: 0,
           })
-        }
+        }}
       >
         Add Another
       </Button>
