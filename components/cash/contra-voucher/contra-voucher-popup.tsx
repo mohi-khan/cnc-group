@@ -67,7 +67,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         companyId: 0,
         locationId: 0,
         currencyId: 0,
-        exchangeRate: 0,
+        exchangeRate: 1,
         amountTotal: 0,
         createdBy: userData?.userId,
       },

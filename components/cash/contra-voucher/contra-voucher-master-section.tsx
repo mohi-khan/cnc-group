@@ -79,23 +79,7 @@ export function ContraVoucherMasterSection({
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
   const [exchangeRate, setExchangeRate] = useState<number>(0)
 
-  useEffect(() => {
-    if (userData) {
-      setUser(userData)
-      setCompanies(userData.userCompanies)
-      setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
-
-      const companyIds = getCompanyIds(userData.userCompanies)
-      const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
-      fetchAllVoucher(companyIds, locationIds)
-    } else {
-      console.log('No user data found in localStorage')
-    }
-  }, [userData])
-
-  async function fetchAllVoucher(company: number[], location: number[]) {
+  const fetchAllVoucher = useCallback(async (company: number[], location: number[]) => {
     const voucherQuery: JournalQuery = {
       date: '2024-12-31',
       companyId: company,
@@ -112,7 +96,23 @@ export function ContraVoucherMasterSection({
     } else {
       console.log('voucher', response.data)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+      console.log('Current user from localStorage:', userData)
+
+      const companyIds = getCompanyIds(userData.userCompanies)
+      const locationIds = getLocationIds(userData.userLocations)
+      console.log({ companyIds, locationIds })
+      fetchAllVoucher(companyIds, locationIds)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [fetchAllVoucher, userData])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
@@ -151,7 +151,7 @@ export function ContraVoucherMasterSection({
   useEffect(() => {
     fetchCurrency()
     fetchExchanges()
-  }, [])
+  }, [fetchCurrency, fetchExchanges])
 
   console.log('Form state errors:', form.formState.errors)
   // console.log('Form values:', form.getValues())
