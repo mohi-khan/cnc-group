@@ -77,7 +77,6 @@ export function ContraVoucherMasterSection({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   // const [isLoading, setIsLoading] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
-  
 
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
@@ -241,8 +240,9 @@ export function ContraVoucherMasterSection({
             </FormItem>
           )}
         />
-        
+
         {/* Currency Combobox */}
+
         <FormField
           control={form.control}
           name="journalEntry.currencyId"
@@ -273,17 +273,24 @@ export function ContraVoucherMasterSection({
                           }
                           onChange={(
                             value: { id: string; name: string } | null
-                          ) =>
-                            field.onChange(
-                              value ? Number.parseInt(value.id, 10) : null
-                            )
-                          }
+                          ) => {
+                            const newValue = value
+                              ? Number.parseInt(value.id, 10)
+                              : null
+                            field.onChange(newValue)
+
+                            // Reset exchange rate when currency changes or is cleared
+                            if (newValue === null || newValue === 1) {
+                              form.setValue('journalEntry.exchangeRate', 0)
+                            }
+                          }}
                           placeholder="Select currency"
                         />
                       </div>
                     </HoverCardTrigger>
                   </HoverCard>
-                  {field.value && field.value !== 1 && (
+                  {/* Only show exchange rate field when a non-default currency is selected */}
+                  {field.value && field.value !== 1 ? (
                     <FormField
                       control={form.control}
                       name="journalEntry.exchangeRate"
@@ -291,26 +298,27 @@ export function ContraVoucherMasterSection({
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="Exchange Rate"
-                            value={exchangeField.value === null ? '' : exchangeField.value}
+                            placeholder="Enter exchange rate"
+                            value={exchangeField.value ?? ''}
                             onChange={(e) => {
                               const value = e.target.value
                               exchangeField.onChange(
                                 value === '' ? null : Number(value)
                               )
                             }}
-                            className="w-32"
+                            className="w-40 ml-5"
                           />
                         </FormControl>
                       )}
                     />
-                  )}
+                  ) : null}
                 </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
-        />      </div>
+        />
+      </div>
 
       {/* Notes Textarea */}
       <FormField
@@ -327,4 +335,5 @@ export function ContraVoucherMasterSection({
         )}
       />
     </div>
-  )}
+  )
+}
