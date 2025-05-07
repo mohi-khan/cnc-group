@@ -29,7 +29,7 @@ export function JournalVoucherSubmit({
         control={form.control}
         name="journalEntry.state"
         render={({ field }) => (
-          <FormItem className="flex items-center gap-2">
+          <FormItem className="flex items-center gap-2 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
             <FormControl>
               <Checkbox
                 checked={field.value === 0}

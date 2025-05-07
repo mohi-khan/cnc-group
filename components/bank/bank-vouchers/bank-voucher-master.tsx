@@ -129,41 +129,8 @@ export default function BankVoucherMaster({
           </FormItem>
         )}
       />
+
       {/* <FormField
-        control={form.control}
-        name="journalEntry.currencyId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <FormControl>
-              <CustomCombobox
-                items={currency.map((curr: CurrencyType) => ({
-                  id: curr.currencyId.toString(),
-                  name: curr.currencyCode || 'Unnamed Currency',
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value.toString(),
-                        name:
-                          currency.find(
-                            (curr: CurrencyType) =>
-                              curr.currencyId === field.value
-                          )?.currencyCode || 'Unnamed Currency',
-                      }
-                    : null
-                }
-                onChange={(value: { id: string; name: string } | null) =>
-                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
-                }
-                placeholder="Select currency"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      /> */}
-      <FormField
         control={form.control}
         name="journalEntry.currencyId"
         render={({ field }) => (
@@ -229,6 +196,81 @@ export default function BankVoucherMaster({
                     )}
                   />
                 )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      /> */}
+      <FormField
+        control={form.control}
+        name="journalEntry.currencyId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Currency</FormLabel>
+            <FormControl>
+              <div className="flex gap-2">
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div>
+                      <CustomCombobox
+                        items={currency.map((curr: CurrencyType) => ({
+                          id: curr.currencyId.toString(),
+                          name: curr.currencyCode || 'Unnamed Currency',
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  currency.find(
+                                    (curr: CurrencyType) =>
+                                      curr.currencyId === field.value
+                                  )?.currencyCode || 'Unnamed Currency',
+                              }
+                            : null
+                        }
+                        onChange={(
+                          value: { id: string; name: string } | null
+                        ) => {
+                          const newValue = value
+                            ? Number.parseInt(value.id, 10)
+                            : null
+                          field.onChange(newValue)
+
+                          // Reset exchange rate when currency changes or is cleared
+                          if (newValue === null || newValue === 1) {
+                            form.setValue('journalEntry.exchangeRate', 0)
+                          }
+                        }}
+                        placeholder="Select currency"
+                      />
+                    </div>
+                  </HoverCardTrigger>
+                </HoverCard>
+                {/* Only show exchange rate field when a non-default currency is selected */}
+                {field.value && field.value !== 1 ? (
+                  <FormField
+                    control={form.control}
+                    name="journalEntry.exchangeRate"
+                    render={({ field: exchangeField }) => (
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter exchange rate"
+                          value={exchangeField.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            exchangeField.onChange(
+                              value === '' ? null : Number(value)
+                            )
+                          }}
+                          className="w-40 ml-5"
+                        />
+                      </FormControl>
+                    )}
+                  />
+                ) : null}
               </div>
             </FormControl>
             <FormMessage />

@@ -267,7 +267,7 @@ export default function CashVoucherDetails({
         </TableBody>
       </Table>
       <div className="text-right">
-        <div className="flex justify-end space-x-2 mt-4">
+        <div className="flex justify-end space-x-2 mt-4 ">
           <Button
             type="button"
             variant="outline"
