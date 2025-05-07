@@ -77,26 +77,29 @@ export function ContraVoucherMasterSection({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   // const [isLoading, setIsLoading] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
-  const [exchangeRate, setExchangeRate] = useState<number>(0)
+  
 
-  const fetchAllVoucher = useCallback(async (company: number[], location: number[]) => {
-    const voucherQuery: JournalQuery = {
-      date: '2024-12-31',
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.ContraVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery, token)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
-      console.log('voucher', response.data)
-    }
-  }, [token])
+  const fetchAllVoucher = useCallback(
+    async (company: number[], location: number[]) => {
+      const voucherQuery: JournalQuery = {
+        date: '2024-12-31',
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.ContraVoucher,
+      }
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response.error || !response.data) {
+        console.error('Error getting Voucher Data:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to get Voucher Data',
+        })
+      } else {
+        console.log('voucher', response.data)
+      }
+    },
+    [token]
+  )
 
   useEffect(() => {
     if (userData) {
@@ -165,24 +168,26 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Company</FormLabel>
-              <CustomCombobox
-                items={companies.map((c) => ({
-                  id: c.company.companyId,
-                  name: c.company.companyName,
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value,
-                        name:
-                          companies.find(
-                            (c) => c.company.companyId === field.value
-                          )?.company.companyName || '',
-                      }
-                    : null
-                }
-                onChange={(value) => field.onChange(value?.id || null)}
-              />
+              <FormControl>
+                <CustomCombobox
+                  items={companies.map((c) => ({
+                    id: c.company.companyId,
+                    name: c.company.companyName,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            companies.find(
+                              (c) => c.company.companyId === field.value
+                            )?.company.companyName || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -195,25 +200,26 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-
-              <CustomCombobox
-                items={locations.map((c) => ({
-                  id: c.location.locationId,
-                  name: c.location.address,
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value,
-                        name:
-                          locations.find(
-                            (c) => c.location.locationId === field.value
-                          )?.location.address || '',
-                      }
-                    : null
-                }
-                onChange={(value) => field.onChange(value?.id || null)}
-              />
+              <FormControl>
+                <CustomCombobox
+                  items={locations.map((c) => ({
+                    id: c.location.locationId,
+                    name: c.location.address,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            locations.find(
+                              (c) => c.location.locationId === field.value
+                            )?.location.address || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -222,26 +228,27 @@ export function ContraVoucherMasterSection({
 
       <div className="grid grid-cols-3 gap-4">
         {/* Voucher Date Input */}
-        <div className="flex flex-col">
-          <FormLabel className="mb-2">Voucher Date</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.date"
-            render={({ field }) => (
+        <FormField
+          control={form.control}
+          name="journalEntry.date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Voucher Date</FormLabel>
               <FormControl>
                 <Input type="date" {...field} className="h-10" />
               </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         {/* Currency Combobox */}
-        <div className="flex flex-col">
-          <FormLabel className="mb-2">Currency</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.currencyId"
-            render={({ field }) => (
+        <FormField
+          control={form.control}
+          name="journalEntry.currencyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
               <FormControl>
                 <div className="flex gap-2">
                   <HoverCard>
@@ -285,8 +292,13 @@ export function ContraVoucherMasterSection({
                           <Input
                             type="number"
                             placeholder="Exchange Rate"
-                            value={exchangeField.value ?? ''}
-                            onChange={(e) => exchangeField.onChange(Number(e.target.value))}
+                            value={exchangeField.value === null ? '' : exchangeField.value}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              exchangeField.onChange(
+                                value === '' ? null : Number(value)
+                              )
+                            }}
                             className="w-32"
                           />
                         </FormControl>
@@ -295,11 +307,10 @@ export function ContraVoucherMasterSection({
                   )}
                 </div>
               </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div>
-      </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />      </div>
 
       {/* Notes Textarea */}
       <FormField
@@ -316,5 +327,4 @@ export function ContraVoucherMasterSection({
         )}
       />
     </div>
-  )
-}
+  )}
