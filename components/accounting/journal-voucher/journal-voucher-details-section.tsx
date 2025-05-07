@@ -141,7 +141,7 @@ export function JournalVoucherDetailsSection({
     const firstEntry = currentEntries[0]
 
     let newEntry = {
-      bankaccountid: 0,
+      // bankaccountid: 0,
       accountId: 0,
       debit: 0,
       credit: 0,

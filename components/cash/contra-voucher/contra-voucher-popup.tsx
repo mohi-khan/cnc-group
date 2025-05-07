@@ -32,10 +32,10 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   fetchAllVoucher,
 }) => {
   //getting userData from jotai atom component
-    useInitializeUser()
-    const [userData] = useAtom(userDataAtom)
-      const [token] = useAtom(tokenAtom)
-      const router = useRouter()
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   //state variables
   const [isOpen, setIsOpen] = useState(false)
@@ -67,7 +67,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         companyId: 0,
         locationId: 0,
         currencyId: 0,
-        exchangeRate: 1,
+        exchangeRate: 0,
         amountTotal: 0,
         createdBy: userData?.userId,
       },
@@ -113,7 +113,10 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
     }
 
     try {
-      const response = await createJournalEntryWithDetails(submissionData, token)
+      const response = await createJournalEntryWithDetails(
+        submissionData,
+        token
+      )
       if (response.error || !response.data) {
         throw new Error(response.error?.message || 'Failed to create voucher')
       }

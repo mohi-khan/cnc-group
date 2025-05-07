@@ -33,6 +33,7 @@ import { getAllCurrency } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -59,7 +60,7 @@ export function JournalVoucherMasterSection({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Fetching user data from localStorage and setting it to state
-  React.useEffect(() => {
+  const fetchUserData = React.useCallback(() => {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
@@ -73,12 +74,15 @@ export function JournalVoucherMasterSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, fetchAllVoucher])
 
+  React.useEffect(() => {
+    fetchUserData()
+  }, [fetchUserData])
   // Fetching all vouchers based on company and location IDs
   async function fetchAllVoucher(company: number[], location: number[]) {
     const voucherQuery: JournalQuery = {
-      date: '2024-12-18',
+      date: new Date().toISOString().split('T')[0],
       companyId: company,
       locationId: location,
       voucherType: VoucherTypes.JournalVoucher,
@@ -135,13 +139,6 @@ export function JournalVoucherMasterSection({
   useEffect(() => {
     fetchCurrency()
   }, [])
-
-  // React.useEffect(() => {
-  //   const mycompanies = getCompanyIds(companies)
-  //   const mylocations = getLocationIds(locations)
-  //   console.log(mycompanies, mylocations)
-  //   fetchAllVoucher(mycompanies, mylocations)
-  // }, [companies, locations])
 
   return (
     <div className="space-y-6">
@@ -220,41 +217,82 @@ export function JournalVoucherMasterSection({
           )}
         />
 
-        <div className="flex flex-col pt-3">
-          <FormLabel className="mb-2">Currency</FormLabel>
+        
           <FormField
             control={form.control}
             name="journalEntry.currencyId"
             render={({ field }) => (
-              <FormControl>
-                <CustomCombobox
-                  items={currency.map((curr: CurrencyType) => ({
-                    id: curr.currencyId.toString(),
-                    name: curr.currencyCode || 'Unnamed Currency',
-                  }))}
-                  value={
-                    field.value
-                      ? {
-                          id: field.value.toString(),
-                          name:
-                            currency.find(
-                              (curr: CurrencyType) =>
-                                curr.currencyId === field.value
-                            )?.currencyCode || 'Unnamed Currency',
-                        }
-                      : null
-                  }
-                  onChange={(value: { id: string; name: string } | null) =>
-                    field.onChange(value ? Number.parseInt(value.id, 10) : null)
-                  }
-                  placeholder="Select currency"
-                />
-              </FormControl>
+              <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <FormControl>
+                  <div className="flex gap-2">
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <div>
+                          <CustomCombobox
+                            items={currency.map((curr: CurrencyType) => ({
+                              id: curr.currencyId.toString(),
+                              name: curr.currencyCode || 'Unnamed Currency',
+                            }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      currency.find(
+                                        (curr: CurrencyType) =>
+                                          curr.currencyId === field.value
+                                      )?.currencyCode || 'Unnamed Currency',
+                                  }
+                                : null
+                            }
+                            onChange={(
+                              value: { id: string; name: string } | null
+                            ) =>
+                              field.onChange(
+                                value ? Number.parseInt(value.id, 10) : null
+                              )
+                            }
+                            placeholder="Select currency"
+                          />
+                        </div>
+                      </HoverCardTrigger>
+                    </HoverCard>
+                    {field.value && field.value !== 1 && (
+                      <FormField
+                        control={form.control}
+                        name="journalEntry.exchangeRate"
+                        render={({ field: exchangeField }) => (
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Exchange Rate"
+                              value={
+                                exchangeField.value === null
+                                  ? ''
+                                  : exchangeField.value
+                              }
+                              onChange={(e) => {
+                                const value = e.target.value
+                                exchangeField.onChange(
+                                  value === '' ? null : Number(value)
+                                )
+                              }}
+                              className="w-32"
+                            />
+                          </FormControl>
+                        )}
+                      />
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
 
           <FormMessage />
-        </div>
+      
 
         <FormField
           control={form.control}

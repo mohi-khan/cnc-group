@@ -119,32 +119,35 @@ export default function CashVoucher() {
   }
 
   //Function to get all vouchers based on company and location IDs
-  const getallVoucher = useCallback(async (company: number[], location: number[]) => {
-    try {
-      const voucherQuery: JournalQuery = {
-        date: new Date().toISOString().split('T')[0],
-        companyId: company,
-        locationId: location,
-        voucherType: VoucherTypes.CashVoucher,
+  const getallVoucher = useCallback(
+    async (company: number[], location: number[]) => {
+      try {
+        const voucherQuery: JournalQuery = {
+          date: new Date().toISOString().split('T')[0],
+          companyId: company,
+          locationId: location,
+          voucherType: VoucherTypes.CashVoucher,
+        }
+        //sending the voucherQuery to the API to get all vouchers
+        const response = await getAllVoucher(voucherQuery, token)
+        // Check for errors in the response. if no errors, set the voucher grid data
+        if (!response.data) {
+          throw new Error('No data received from server')
+        }
+        setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+        console.log('Voucher data:', response.data)
+      } catch (error) {
+        console.error('Error getting Voucher Data:', error)
+        setVoucherGrid([])
+        throw error
       }
-      //sending the voucherQuery to the API to get all vouchers
-      const response = await getAllVoucher(voucherQuery, token)
-      // Check for errors in the response. if no errors, set the voucher grid data
-      if (!response.data) {
-        throw new Error('No data received from server')
-      }
-      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-      console.log('Voucher data:', response.data)
-    } catch (error) {
-      console.error('Error getting Voucher Data:', error)
-      setVoucherGrid([])
-      throw error
-    }
-  }, [token, setVoucherGrid])
+    },
+    [token, setVoucherGrid]
+  )
   //Function to fetch all vouchers when companies and locations change
   // useEffect is used to fetch all vouchers when companies and locations change
   const fetchVoucherData = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     setIsLoading(true)
     try {
       const mycompanies = getCompanyIds(companies)
@@ -341,7 +344,12 @@ export default function CashVoucher() {
     fetchgetAllCostCenters()
     fetchgetResPartner()
     fetchDepartments()
-  }, [fetchChartOfAccounts, fetchgetAllCostCenters, fetchgetResPartner, fetchDepartments])
+  }, [
+    fetchChartOfAccounts,
+    fetchgetAllCostCenters,
+    fetchgetResPartner,
+    fetchDepartments,
+  ])
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const form = useForm<JournalEntryWithDetails>({
@@ -362,7 +370,7 @@ export default function CashVoucher() {
       },
       journalDetails: [
         {
-          accountId: cashCoa[0]?.accountId,
+          accountId: undefined,
           costCenterId: null,
           departmentId: null,
           debit: 0,
@@ -407,7 +415,7 @@ export default function CashVoucher() {
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        
+
         notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
@@ -419,8 +427,7 @@ export default function CashVoucher() {
       journalDetails: [
         ...updatedValues.journalDetails, // Spread existing journalDetails
         {
-          accountId: cashCoa[0]?.accountId, //chart of accounts is cash filter by accountType will enter in database, (work in progress)
-          costCenterId: null,
+          accountId: filteredChartOfAccounts[0]?.accountId , // Ensure accountId is always a number (default to 0 if undefined)
           departmentId: null,
           debit: updatedValues.journalDetails.reduce(
             (sum, detail) =>
@@ -447,7 +454,10 @@ export default function CashVoucher() {
       JSON.stringify(updateValueswithCash, null, 2)
     )
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(updateValueswithCash, token)
+    const response = await createJournalEntryWithDetails(
+      updateValueswithCash,
+      token
+    )
     // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({
@@ -477,7 +487,7 @@ export default function CashVoucher() {
         },
         journalDetails: [
           {
-            accountId: cashCoa[0]?.accountId,
+            accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
             costCenterId: null,
             departmentId: null,
             debit: 0,
@@ -495,7 +505,7 @@ export default function CashVoucher() {
       remove()
       // set the default value for journalDetails to the first row
       append({
-        accountId: cashCoa[0]?.accountId,
+        accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
         costCenterId: null,
         departmentId: null,
         debit: 0,
@@ -519,7 +529,7 @@ export default function CashVoucher() {
   //append is used to add a new entry to the journalDetails array in the form state
   const addDetailRow = () => {
     append({
-      accountId: cashCoa[0].accountId,
+      accountId: cashCoa[0]?.accountId,
       costCenterId: null,
       departmentId: null,
       debit: 0,

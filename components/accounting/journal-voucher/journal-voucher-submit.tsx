@@ -25,35 +25,6 @@ export function JournalVoucherSubmit({
 }: JournalVoucherSubmitProps) {
   return (
     <div className="space-y-4">
-      {/* <FormField
-        control={form.control}
-        name="attachment"
-        render={({ field: { value, ...field } }) => (
-          <FormItem>
-            <FormLabel>Attachment</FormLabel>
-            <div className="flex items-center gap-2">
-              <Input
-                type="file"
-                className="hidden"
-                id="file-upload"
-                {...field}
-              />
-              <FormLabel htmlFor="file-upload" className="cursor-pointer">
-                <div className="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-accent">
-                  <Upload className="h-4 w-4" />
-                  <span>Upload File</span>
-                </div>
-              </FormLabel>
-              {value && (
-                <span className="text-sm text-muted-foreground">
-                  {value instanceof File ? value.name : 'File selected'}
-                </span>
-              )}
-            </div>
-          </FormItem>
-        )}
-      /> */}
-
       <FormField
         control={form.control}
         name="journalEntry.state"

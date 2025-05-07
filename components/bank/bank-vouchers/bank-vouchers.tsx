@@ -65,6 +65,7 @@ export default function BankVoucher() {
         companyId: 0,
         locationId: 0,
         currencyId: 0,
+        exchangeRate: 1,
         amountTotal: 0,
         payTo: '',
         notes: '',
