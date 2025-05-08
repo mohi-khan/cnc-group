@@ -7,8 +7,17 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import CashFlowStatementHeading from './cash-flow-statement-heading'
 import CashFlowStatementTableData from './cash-flow-statement-tabledata'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const CashFlowStatement = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'cash_flow_statement.pdf' })
   const [cashFlowStatements, setCashFlowStatements] = useState<
     CashflowStatement[]
@@ -64,7 +73,9 @@ const CashFlowStatement = () => {
           fromdate: startDate.toISOString().split('T')[0],
           enddate: endDate.toISOString().split('T')[0],
           companyid: companyId,
+          token,
         })
+
         setCashFlowStatements(response.data || [])
         console.log('this is from getcash flow data : ', response.data || [])
       }

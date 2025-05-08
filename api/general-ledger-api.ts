@@ -11,15 +11,20 @@ export async function getAllCoa() {
 export async function getGeneralLedgerByDate({
   accountcode,
   fromdate,
-  todate
+  todate,
+  token,
 }: {
   accountcode: number
   fromdate: string
   todate: string
+  token: string
 }) {
   return fetchApi<GeneralLedgerType[]>({
     url: `api/ledgerreport/general-ledger/?fromdate=${fromdate}&todate=${todate}&accountcode=${accountcode}`,
     method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
   })
 }
-

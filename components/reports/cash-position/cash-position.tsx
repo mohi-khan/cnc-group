@@ -7,8 +7,17 @@ import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { getBankBalance, getCashBalance } from '@/api/cash-position-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const CashPositon = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'Cash_Position.pdf' })
   const [bankBalances, setBankBalances] = useState<BankBalance[]>([])
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([])
@@ -19,38 +28,31 @@ const CashPositon = () => {
 
   // Fetch bank balance data and filter by companyName if one is selected
   const fetchGetBankBalance = React.useCallback(async () => {
-    try {
-      const response = await getBankBalance(fromDate, toDate)
-      let data: BankBalance[] = response.data || []
-      if (companyName) {
-        data = data.filter(
-          (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
-        )
-      }
-      setBankBalances(data)
-      console.log('Filtered Bank Balance data: ', data)
-    } catch (error) {
-      console.error('Error fetching bank balance:', error)
+    if (!token) return
+    const response = await getBankBalance(fromDate, toDate, token)
+    let data: BankBalance[] = response.data || []
+    if (companyName) {
+      data = data.filter(
+        (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+      )
     }
-  }, [fromDate, toDate, companyName])
+    setBankBalances(data)
+    console.log('Filtered Bank Balance data: ', data)
+  }, [fromDate, toDate, companyName, token])
 
   // Fetch cash balance data and filter by companyName if one is selected
   const fetchGetCashBalance = React.useCallback(async () => {
-    try {
-      const response = await getCashBalance(fromDate, toDate)
-      let data: CashBalance[] = response.data || []
-      if (companyName) {
-        data = data.filter(
-          (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
-        )
-      }
-      setCashBalances(data)
-      console.log('Filtered Cash Balance data: ', data)
-    } catch (error) {
-      console.error('Error fetching cash balance:', error)
+    if (!token) return
+    const response = await getCashBalance(fromDate, toDate, token)
+    let data: CashBalance[] = response.data || []
+    if (companyName) {
+      data = data.filter(
+        (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+      )
     }
-  }, [fromDate, toDate, companyName])
-
+    setCashBalances(data)
+    console.log('Filtered Cash Balance data: ', data)
+  }, [fromDate, toDate, companyName, token])
   // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
     fetchGetBankBalance()

@@ -1,7 +1,7 @@
 'use client'
 import CostCenterSummaryHeading from './cost-center-summary-heading'
 import CostCenterSummaryTableData from './cost-center-summary-table-data'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { CostCenter, CostCenterSummaryType } from '@/utils/type'
 
 import { usePDF } from 'react-to-pdf'
@@ -12,8 +12,17 @@ import {
   getCostCenterSummary,
 } from '@/api/cost-center-summary-api'
 import { getAllCostCenters } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const CostCenterSummary = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'cost_center_summary.pdf' })
   const [costCenterSummary, setCostCenterSummary] = useState<
     CostCenterSummaryType[]
@@ -64,44 +73,47 @@ const CostCenterSummary = () => {
     setCompanyId(newCompanyId)
   }
 
-  async function fetchAllCostCenter() {
-    const respons = await getAllCostCenters()
+  const fetchAllCostCenter = useCallback(async () => {
+    if (!token) return
+    const respons = await getAllCostCenters(token)
     setCostCenterData(respons.data || [])
     console.log('This is all cost center data: ', respons.data || [])
-  }
+  }, [token])
+
+  const fetchData = useCallback(async () => {
+    if (!token) return
+    const response = await getCostCenterSummary({
+      fromdate: startDate ? startDate.toISOString().split('T')[0] : '',
+      enddate: endDate ? endDate.toISOString().split('T')[0] : '',
+      costCenterId: costCenterData.map((item) => item.costCenterId).join(','),
+     
+      companyid: companyId,
+      token: token,
+    })
+    if (response.data) {
+      console.log('this is non-filter data: ', response.data)
+      const formattedData = response.data.map((item) => ({
+        costCenterId: item.costCenterId,
+        costCenterName: item.costCenterName,
+        accountId: item.accountId,
+        accountName: item.accountName,
+        totalDebit: item.totalDebit,
+        totalCredit: item.totalCredit,
+      }))
+      setCostCenterSummary(formattedData)
+      console.log('this is from cost center summary data : ', response.data)
+    } else {
+      setCostCenterSummary([])
+      console.log('No data received from getCostCenterSummary')
+    }
+  }, [token, startDate, endDate, companyId, costCenterData])
 
   useEffect(() => {
     if (startDate && endDate && companyId) {
-      const fetchData = async () => {
-        const response = await getCostCenterSummary({
-          fromdate: startDate.toISOString().split('T')[0],
-          enddate: endDate.toISOString().split('T')[0],
-          costCenterIds: '1,2,3,4,5,6,7,8,9,10',
-          // costCenterIds: costCenterIds.join(','),
-          companyid: companyId,
-        })
-        if (response.data) {
-          console.log('this is non-filter data: ', response.data)
-          const formattedData = response.data.map((item) => ({
-            costCenterId: item.costCenterId,
-            costCenterName: item.costCenterName,
-            accountId: item.accountId,
-            accountName: item.accountName,
-            totalDebit: item.totalDebit,
-            totalCredit: item.totalCredit,
-          }))
-          setCostCenterSummary(formattedData)
-          console.log('this is from cost center summary data : ', response.data)
-        } else {
-          setCostCenterSummary([])
-          console.log('No data received from getCostCenterSummary')
-        }
-      }
       fetchData()
       fetchAllCostCenter()
     }
-  }, [startDate, endDate, companyId])
-
+  }, [startDate, endDate, companyId, fetchData, fetchAllCostCenter])
   return (
     <div>
       <CostCenterSummaryHeading
