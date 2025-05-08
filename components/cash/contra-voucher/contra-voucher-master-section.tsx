@@ -1,7 +1,6 @@
 'use client'
-import { Fragment, useState, useEffect } from 'react'
-import { Combobox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import { Fragment, useState, useEffect, useCallback } from 'react'
+
 import { UseFormReturn } from 'react-hook-form'
 import {
   FormControl,
@@ -28,7 +27,6 @@ import { CURRENCY_ITEMS } from '@/utils/constants'
 import { Button } from '@/components/ui/button'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
-
 import {
   Dialog,
   DialogContent,
@@ -39,9 +37,21 @@ import {
 } from '@/components/ui/dialog'
 import { Pencil } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -53,6 +63,8 @@ export function ContraVoucherMasterSection({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
@@ -65,7 +77,28 @@ export function ContraVoucherMasterSection({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   // const [isLoading, setIsLoading] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
-  const [exchangeRate, setExchangeRate] = useState<number>(0)
+
+  const fetchAllVoucher = useCallback(
+    async (company: number[], location: number[]) => {
+      const voucherQuery: JournalQuery = {
+        date: '2024-12-31',
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.ContraVoucher,
+      }
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response.error || !response.data) {
+        console.error('Error getting Voucher Data:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to get Voucher Data',
+        })
+      } else {
+        console.log('voucher', response.data)
+      }
+    },
+    [token]
+  )
 
   useEffect(() => {
     if (userData) {
@@ -81,26 +114,7 @@ export function ContraVoucherMasterSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
-
-  async function fetchAllVoucher(company: number[], location: number[]) {
-    const voucherQuery: JournalQuery = {
-      date: '2024-12-31',
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.ContraVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery)
-    if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
-      console.log('voucher', response.data)
-    }
-  }
+  }, [fetchAllVoucher, userData])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
@@ -109,8 +123,8 @@ export function ContraVoucherMasterSection({
     return data.map((location) => location.location.locationId)
   }
 
-  const fetchCurrency = async () => {
-    const data = await getAllCurrency()
+  const fetchCurrency = useCallback(async () => {
+    const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
       toast({
@@ -121,10 +135,10 @@ export function ContraVoucherMasterSection({
       setCurrency(data.data)
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
-  }
+  }, [token])
 
-  const fetchExchanges = async () => {
-    const data = await getAllExchange()
+  const fetchExchanges = useCallback(async () => {
+    const data = await getAllExchange(token)
     if (data.error || !data.data) {
       console.error('Error getting exchanges:', data.error)
       toast({
@@ -135,13 +149,14 @@ export function ContraVoucherMasterSection({
       setExchanges(data.data)
       console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
     }
-  }
-
+  }, [token])
   useEffect(() => {
     fetchCurrency()
     fetchExchanges()
-  }, [])
+  }, [fetchCurrency, fetchExchanges])
 
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -152,24 +167,26 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Company</FormLabel>
-              <CustomCombobox
-                items={companies.map((c) => ({
-                  id: c.company.companyId,
-                  name: c.company.companyName,
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value,
-                        name:
-                          companies.find(
-                            (c) => c.company.companyId === field.value
-                          )?.company.companyName || '',
-                      }
-                    : null
-                }
-                onChange={(value) => field.onChange(value?.id || null)}
-              />
+              <FormControl>
+                <CustomCombobox
+                  items={companies.map((c) => ({
+                    id: c.company.companyId,
+                    name: c.company.companyName,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            companies.find(
+                              (c) => c.company.companyId === field.value
+                            )?.company.companyName || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -182,25 +199,26 @@ export function ContraVoucherMasterSection({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-
-              <CustomCombobox
-                items={locations.map((c) => ({
-                  id: c.location.locationId,
-                  name: c.location.address,
-                }))}
-                value={
-                  field.value
-                    ? {
-                        id: field.value,
-                        name:
-                          locations.find(
-                            (c) => c.location.locationId === field.value
-                          )?.location.address || '',
-                      }
-                    : null
-                }
-                onChange={(value) => field.onChange(value?.id || null)}
-              />
+              <FormControl>
+                <CustomCombobox
+                  items={locations.map((c) => ({
+                    id: c.location.locationId,
+                    name: c.location.address,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value,
+                          name:
+                            locations.find(
+                              (c) => c.location.locationId === field.value
+                            )?.location.address || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => field.onChange(value?.id || null)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -209,139 +227,97 @@ export function ContraVoucherMasterSection({
 
       <div className="grid grid-cols-3 gap-4">
         {/* Voucher Date Input */}
-        <div className="flex flex-col">
-          <FormLabel className="mb-2">Voucher Date</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.date"
-            render={({ field }) => (
+        <FormField
+          control={form.control}
+          name="journalEntry.date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Voucher Date</FormLabel>
               <FormControl>
                 <Input type="date" {...field} className="h-10" />
               </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Currency Combobox */}
-        <div className="flex flex-col">
-          <FormLabel className="mb-2">Currency</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.currencyId"
-            render={({ field }) => (
+
+        <FormField
+          control={form.control}
+          name="journalEntry.currencyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
               <FormControl>
                 <div className="flex gap-2">
-                  <CustomCombobox
-                    items={currency.map((curr: CurrencyType) => ({
-                      id: curr.currencyId.toString(),
-                      name:
-                        `${curr.currencyCode} - Rate: ${exchanges.find((e) => e.baseCurrency === curr.currencyId)?.rate ?? 1}` ||
-                        'Unnamed Currency',
-                    }))}
-                    value={
-                      field.value
-                        ? {
-                            id: field.value.toString(),
-                            name:
-                              `${
-                                currency.find(
-                                  (curr: CurrencyType) =>
-                                    curr.currencyId === field.value
-                                )?.currencyCode
-                              } - Rate: ${exchanges.find((e) => e.baseCurrency === field.value)?.rate ?? 1}` ||
-                              'Unnamed Currency',
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        <CustomCombobox
+                          items={currency.map((curr: CurrencyType) => ({
+                            id: curr.currencyId.toString(),
+                            name: curr.currencyCode || 'Unnamed Currency',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    currency.find(
+                                      (curr: CurrencyType) =>
+                                        curr.currencyId === field.value
+                                    )?.currencyCode || 'Unnamed Currency',
+                                }
+                              : null
                           }
-                        : null
-                    }
-                    onChange={(value: { id: string; name: string } | null) => {
-                      field.onChange(
-                        value ? Number.parseInt(value.id, 10) : null
-                      )
-                      const selectedCurrencyId = value
-                        ? Number.parseInt(value.id, 10)
-                        : null
-                      const exchange = exchanges.find(
-                        (e) => e.baseCurrency === selectedCurrencyId
-                      )
-                      setExchangeRate(exchange?.rate ?? 1)
-                    }}
-                    placeholder="Select currency"
-                  />{' '}
-                  <Dialog>
-                    {' '}
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="px-3">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Exchange Rate</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="rate" className="text-right">
-                            Rate
-                          </Label>
-                          <Input
-                            id="rate"
-                            type="number"
-                            step="0.0001"
-                            className="col-span-3"
-                            value={exchangeRate}
-                            onChange={(e) =>
-                              setExchangeRate(parseFloat(e.target.value))
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) => {
+                            const newValue = value
+                              ? Number.parseInt(value.id, 10)
+                              : null
+                            field.onChange(newValue)
+
+                            // Reset exchange rate when currency changes or is cleared
+                            if (newValue === null || newValue === 1) {
+                              form.setValue('journalEntry.exchangeRate', 0)
                             }
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="date" className="text-right">
-                            Date
-                          </Label>
-                          <Input
-                            id="date"
-                            type="date"
-                            className="col-span-3"
-                            defaultValue={
-                              new Date().toISOString().split('T')[0]
-                            }
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          type="submit"
-                          onClick={() => {
-                            // Add your rate update logic here
                           }}
-                        >
-                          Save Changes
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                          placeholder="Select currency"
+                        />
+                      </div>
+                    </HoverCardTrigger>
+                  </HoverCard>
+                  {/* Only show exchange rate field when a non-default currency is selected */}
+                  {field.value && field.value !== 1 ? (
+                    <FormField
+                      control={form.control}
+                      name="journalEntry.exchangeRate"
+                      render={({ field: exchangeField }) => (
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter exchange rate"
+                            value={exchangeField.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              exchangeField.onChange(
+                                value === '' ? null : Number(value)
+                              )
+                            }}
+                            className="w-40 ml-5"
+                          />
+                        </FormControl>
+                      )}
+                    />
+                  ) : null}
                 </div>
               </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div>
-
-        {/* Analysis Tags Input */}
-        {/* <div className="flex flex-col">
-          <FormLabel className="mb-2">Analysis Tags</FormLabel>
-          <FormField
-            control={form.control}
-            name="journalEntry.journalType"
-            render={({ field }) => (
-              <FormControl>
-                <Input className="h-10" />
-              </FormControl>
-            )}
-          />
-          <FormMessage />
-        </div> */}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Notes Textarea */}

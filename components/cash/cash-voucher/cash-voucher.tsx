@@ -119,54 +119,56 @@ export default function CashVoucher() {
   }
 
   //Function to get all vouchers based on company and location IDs
-  async function getallVoucher(company: number[], location: number[]) {
-    try {
-      const voucherQuery: JournalQuery = {
-        date: new Date().toISOString().split('T')[0],
-        companyId: company,
-        locationId: location,
-        voucherType: VoucherTypes.CashVoucher,
+  const getallVoucher = useCallback(
+    async (company: number[], location: number[]) => {
+      try {
+        const voucherQuery: JournalQuery = {
+          date: new Date().toISOString().split('T')[0],
+          companyId: company,
+          locationId: location,
+          voucherType: VoucherTypes.CashVoucher,
+        }
+        //sending the voucherQuery to the API to get all vouchers
+        const response = await getAllVoucher(voucherQuery, token)
+        // Check for errors in the response. if no errors, set the voucher grid data
+        if (!response.data) {
+          throw new Error('No data received from server')
+        }
+        setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+        console.log('Voucher data:', response.data)
+      } catch (error) {
+        console.error('Error getting Voucher Data:', error)
+        setVoucherGrid([])
+        throw error
       }
-      //sending the voucherQuery to the API to get all vouchers
-      const response = await getAllVoucher(voucherQuery, token)
-      // Check for errors in the response. if no errors, set the voucher grid data
-      if (!response.data) {
-        throw new Error('No data received from server')
-      }
-      setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-      console.log('Voucher data:', response.data)
-    } catch (error) {
-      console.error('Error getting Voucher Data:', error)
-      setVoucherGrid([])
-      throw error
-    }
-  }
-
+    },
+    [token, setVoucherGrid]
+  )
   //Function to fetch all vouchers when companies and locations change
   // useEffect is used to fetch all vouchers when companies and locations change
-  React.useEffect(() => {
-    const fetchVoucherData = async () => {
-      setIsLoading(true)
-      try {
-        const mycompanies = getCompanyIds(companies)
-        const mylocations = getLocationIds(locations)
-        await getallVoucher(mycompanies, mylocations)
-      } catch (error) {
-        console.error('Error fetching voucher data:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load voucher data. Please try again.',
-        })
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchVoucherData = React.useCallback(async () => {
+    if (!token) return
+    setIsLoading(true)
+    try {
+      const mycompanies = getCompanyIds(companies)
+      const mylocations = getLocationIds(locations)
+      await getallVoucher(mycompanies, mylocations)
+    } catch (error) {
+      console.error('Error fetching voucher data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load voucher data. Please try again.',
+      })
+    } finally {
+      setIsLoading(false)
     }
+  }, [token, companies, locations, getallVoucher])
 
+  React.useEffect(() => {
     if (companies.length > 0 && locations.length > 0) {
       fetchVoucherData()
     }
-  }, [companies, locations])
-
+  }, [companies, locations, fetchVoucherData])
   //Function to filter chart of accounts based on isGroup and isCash properties
   //useEffect is used to filter the chart of accounts when it changes
   React.useEffect(() => {
@@ -272,7 +274,7 @@ export default function CashVoucher() {
   }, [token, router])
 
   //Function to fetch cost centers from the API
-  async function fetchgetAllCostCenters() {
+  const fetchgetAllCostCenters = useCallback(async () => {
     setIsLoadingCostCenters(true)
     if (!token) return
     try {
@@ -302,10 +304,10 @@ export default function CashVoucher() {
     } finally {
       setIsLoadingCostCenters(false)
     }
-  }
+  }, [token, router, setCostCenters])
 
   //Function to fetch partners from the API
-  async function fetchgetResPartner() {
+  const fetchgetResPartner = useCallback(async () => {
     setIsLoadingPartners(true)
     if (!token) return
     try {
@@ -336,14 +338,18 @@ export default function CashVoucher() {
     } finally {
       setIsLoadingPartners(false)
     }
-  }
-
+  }, [token, router, setPartners])
   useEffect(() => {
     fetchChartOfAccounts()
     fetchgetAllCostCenters()
     fetchgetResPartner()
     fetchDepartments()
-  }, [])
+  }, [
+    fetchChartOfAccounts,
+    fetchgetAllCostCenters,
+    fetchgetResPartner,
+    fetchDepartments,
+  ])
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const form = useForm<JournalEntryWithDetails>({
@@ -357,13 +363,14 @@ export default function CashVoucher() {
         locationId: 0,
         currencyId: 0,
         amountTotal: 0,
+        exchangeRate: 1,
         payTo: '',
         notes: '',
         createdBy: 0,
       },
       journalDetails: [
         {
-          accountId: cashCoa[0]?.accountId,
+          accountId: undefined,
           costCenterId: null,
           departmentId: null,
           debit: 0,
@@ -403,10 +410,12 @@ export default function CashVoucher() {
         notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Cash Voucher',
         amountTotal: totalAmount, // Set the calculated total amount
+        exchangeRate: values.journalEntry.exchangeRate || 1,
         createdBy: user?.userId || 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
+
         notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
@@ -418,8 +427,7 @@ export default function CashVoucher() {
       journalDetails: [
         ...updatedValues.journalDetails, // Spread existing journalDetails
         {
-          accountId: cashCoa[0].accountId, //chart of accounts is cash filter by accountType will enter in database, (work in progress)
-          costCenterId: null,
+          accountId: filteredChartOfAccounts[0]?.accountId , // Ensure accountId is always a number (default to 0 if undefined)
           departmentId: null,
           debit: updatedValues.journalDetails.reduce(
             (sum, detail) =>
@@ -446,7 +454,10 @@ export default function CashVoucher() {
       JSON.stringify(updateValueswithCash, null, 2)
     )
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(updateValueswithCash, token)
+    const response = await createJournalEntryWithDetails(
+      updateValueswithCash,
+      token
+    )
     // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({
@@ -476,7 +487,7 @@ export default function CashVoucher() {
         },
         journalDetails: [
           {
-            accountId: cashCoa[0]?.accountId,
+            accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
             costCenterId: null,
             departmentId: null,
             debit: 0,
@@ -494,7 +505,7 @@ export default function CashVoucher() {
       remove()
       // set the default value for journalDetails to the first row
       append({
-        accountId: cashCoa[0]?.accountId,
+        accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
         costCenterId: null,
         departmentId: null,
         debit: 0,
@@ -518,7 +529,7 @@ export default function CashVoucher() {
   //append is used to add a new entry to the journalDetails array in the form state
   const addDetailRow = () => {
     append({
-      accountId: cashCoa[0].accountId,
+      accountId: cashCoa[0]?.accountId,
       costCenterId: null,
       departmentId: null,
       debit: 0,

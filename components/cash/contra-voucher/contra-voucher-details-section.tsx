@@ -176,6 +176,28 @@ export function ContraVoucherDetailsSection({
     const updatedEntries = [...entries]
     updatedEntries[index].debit = value === '' ? 0 : Number(value)
     updatedEntries[index].credit = 0
+
+    if (index === 0) {
+      const debitValue = value === '' ? 0 : Number(value)
+      let remainingCredit = debitValue
+
+      // Start from index 1 and distribute remaining amount
+      for (let i = 1; i < updatedEntries.length; i++) {
+        if (i === updatedEntries.length - 1) {
+          // Last entry gets remaining amount
+          updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
+        } else {
+          // Use existing credit value if available, otherwise use remaining credit
+          const existingCredit = updatedEntries[i].credit || 0
+          updatedEntries[i].credit = existingCredit || Number(remainingCredit.toFixed(2))
+        }
+        updatedEntries[i].debit = 0
+        remainingCredit -= updatedEntries[i].credit
+        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
+        form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+      }
+    }
+
     form.setValue('journalDetails', updatedEntries)
   }
 
@@ -183,23 +205,56 @@ export function ContraVoucherDetailsSection({
     const updatedEntries = [...entries]
     updatedEntries[index].credit = value === '' ? 0 : Number(value)
     updatedEntries[index].debit = 0
+
+    if (index > 0) {
+      const firstEntryDebit = updatedEntries[0].debit
+      let usedCredit = 0
+
+      // Calculate used credit from entries 1 to current index
+      for (let i = 1; i <= index; i++) {
+        usedCredit += updatedEntries[i].credit
+      }
+
+      // Distribute remaining amount to next entries if any
+      const remainingCredit = firstEntryDebit - usedCredit
+      for (let i = index + 1; i < updatedEntries.length; i++) {
+        if (i === updatedEntries.length - 1) {
+          updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
+        } else {
+          updatedEntries[i].credit = 0
+        }
+        updatedEntries[i].debit = 0
+        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
+        form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+      }
+    }
+
     form.setValue('journalDetails', updatedEntries)
   }
 
   const addEntry = () => {
-    form.setValue('journalDetails', [
-      ...entries,
-      {
-        bankaccountid: 0,
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        notes: '',
-        createdBy: userId ?? 0,
-        analyticTags: null,
-        taxId: null,
-      },
-    ])
+    const currentEntries = [...entries]
+    const firstEntry = currentEntries[0]
+
+    let newEntry = {
+      bankaccountid: 0,
+      accountId: 0,
+      debit: 0,
+      credit: 0,
+      notes: '',
+      createdBy: userData?.userId,
+      analyticTags: null,
+      taxId: null,
+    }
+
+    if (firstEntry && firstEntry.debit > 0) {
+      let totalUsedCredit = currentEntries.reduce((sum, entry, index) => {
+        return index === 0 ? sum : sum + entry.credit
+      }, 0)
+      newEntry.credit = firstEntry.debit - totalUsedCredit
+    }
+
+    form.setValue('journalDetails', [...entries, {...newEntry, createdBy: userData?.userId || 0}])
     setDisabledStates((prev) => ({
       ...prev,
       [entries.length]: { bank: false, account: false },
@@ -225,7 +280,6 @@ export function ContraVoucherDetailsSection({
       onRemoveEntry(index)
     }
   }
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium">
@@ -242,42 +296,6 @@ export function ContraVoucherDetailsSection({
           key={index}
           className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium"
         >
-          {/* <FormField
-            control={form.control}
-            name={`journalDetails.${index}.bankaccountid`}
-            render={({ field }) => (
-              <FormItem>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(Number(value))
-                    handleBankAccountChange(index, Number(value))
-                  }}
-                  value={field.value?.toString()}
-                  disabled={disabledStates[index]?.bank}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select bank account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem
-                        key={account.id}
-                        value={account.id.toString()}
-                      >
-                        {account.accountName}-
-                        <span className="font-bold">
-                          {account.accountNumber}{' '}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
           <FormField
             control={form.control}
             name={`journalDetails.${index}.bankaccountid`}
@@ -330,31 +348,6 @@ export function ContraVoucherDetailsSection({
             name={`journalDetails.${index}.accountId`}
             render={({ field }) => (
               <FormItem>
-                {/* <Select
-                  onValueChange={(value) => {
-                    field.onChange(Number(value))
-                    handleAccountNameChange(index, Number(value))
-                  }}
-                  value={field.value?.toString()}
-                  disabled={disabledStates[index]?.account}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {chartOfAccounts.map((account) => (
-                      <SelectItem
-                        key={account.accountId}
-                        value={account.accountId.toString()}
-                      >
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
-
                 <CustomCombobox
                   // Convert each chart-of-accounts entry into an object with id and name.
                   items={chartOfAccounts.map((account) => ({

@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -19,8 +19,9 @@ import { ContraVoucherMasterSection } from './contra-voucher-master-section'
 import { ContraVoucherDetailsSection } from './contra-voucher-details-section'
 import { ContraVoucherSubmit } from './contra-voucher-submit'
 import { Popup } from '@/utils/popup'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 //child component props interface to define the props for the ContraVoucherPopup component
 interface ChildComponentProps {
@@ -33,6 +34,8 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   //state variables
   const [isOpen, setIsOpen] = useState(false)
@@ -64,15 +67,16 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         companyId: 0,
         locationId: 0,
         currencyId: 0,
+        exchangeRate: 0,
         amountTotal: 0,
-        createdBy: undefined,
+        createdBy: userData?.userId,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: undefined,
+          createdBy: userData?.userId,
         },
       ],
     },
@@ -109,7 +113,10 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
     }
 
     try {
-      const response = await createJournalEntryWithDetails(submissionData)
+      const response = await createJournalEntryWithDetails(
+        submissionData,
+        token
+      )
       if (response.error || !response.data) {
         throw new Error(response.error?.message || 'Failed to create voucher')
       }

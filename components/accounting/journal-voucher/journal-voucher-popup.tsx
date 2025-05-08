@@ -40,6 +40,7 @@ export function JournalVoucherPopup({
         companyId: 0,
         locationId: 0,
         currencyId: 1,
+        exchangeRate: 1,
         amountTotal: 0,
         createdBy: 0,
       },
@@ -127,6 +128,9 @@ export function JournalVoucherPopup({
   const onSubmit = (data: JournalEntryWithDetails) => {
     handleSubmit(data, resetForm)
   }
+
+  console.log('Form state errors:', form.formState.errors)
+  // console.log('Form values:', form.getValues())
 
   return (
     <>
