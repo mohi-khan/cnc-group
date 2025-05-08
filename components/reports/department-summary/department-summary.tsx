@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { CostCenter, CostCenterSummaryType, Department, DepartmentSummaryType } from '@/utils/type'
 
 import { usePDF } from 'react-to-pdf'
@@ -9,11 +9,20 @@ import { saveAs } from 'file-saver'
 import DeparmentSummaryHeading from './department-summary-heading'
 import DepartmentSummaryTableData from './department-summary-table-data'
 import { getAllDepartments, getDepartmentSummary } from '@/api/department-summary-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const DepartmentSummary = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'department_summary.pdf' })
   const [departmentSummary, setDepartmentSummary] = useState<
-  DepartmentSummaryType[]
+    DepartmentSummaryType[]
   >([])
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
@@ -64,43 +73,51 @@ const DepartmentSummary = () => {
     setDepartmentId(newDepartmentId)
   }
 
-  async function fetchAllCostCenter() {
-    const respons = await getAllDepartments()
-    setDepartment(respons.data || [])
+  const fetchAllCostCenter = useCallback(async () => {
+    if (!token) return
+    const respons = await getAllDepartments(token)
+    setDepartment(
+      (respons.data || []).map((item) => ({
+        ...item,
+        startDate: item.startDate || undefined,
+        endDate: item.endDate || undefined,
+      }))
+    )
     console.log('This is all department summary  data: ', respons.data || [])
-  }
-
-  useEffect(() => {
-    if (startDate && endDate && companyId && departmentId) {
-      const fetchData = async () => {
-        const response = await getDepartmentSummary({
-          fromdate: startDate.toISOString().split('T')[0],
-          enddate: endDate.toISOString().split('T')[0],
-          departmentId: departmentId,
-          companyid: companyId,
-        })
-        if (response.data) {
-          console.log('this is non-filter data: ', response.data)
-          const formattedData = response.data.map((item: any) => ({
-            departmentId: item.departmentId,
-            departmentName: item.departmentName,
-            accountId: item.accountId,
-            accountName: item.accountName,
-            totalDebit: item.totalDebit,
-            totalCredit: item.totalCredit,
-          }))
-          setDepartmentSummary(formattedData)
-          console.log('this is from cost center summary data : ', response.data)
-        } else {
-          setDepartmentSummary([])
-          console.log('No data received from getCostCenterSummary')
-        }
-      }
-      fetchData()
-      fetchAllCostCenter()
+  }, [token])
+  const fetchData = useCallback(async () => {
+    if (!token) return
+    const response = await getDepartmentSummary({
+      fromdate: startDate ? startDate.toISOString().split('T')[0] : '',
+      enddate: endDate ? endDate.toISOString().split('T')[0] : '',
+      departmentId: departmentId,
+      companyid: companyId,
+      token: token,
+    })
+    if (response.data) {
+      console.log('this is non-filter data: ', response.data)
+      const formattedData = response.data.map((item: any) => ({
+        departmentId: item.departmentId,
+        departmentName: item.departmentName,
+        accountId: item.accountId,
+        accountName: item.accountName,
+        totalDebit: item.totalDebit,
+        totalCredit: item.totalCredit,
+      }))
+      setDepartmentSummary(formattedData)
+      console.log('this is from cost center summary data : ', response.data)
+    } else {
+      setDepartmentSummary([])
+      console.log('No data received from getCostCenterSummary')
     }
   }, [startDate, endDate, companyId, departmentId])
 
+  useEffect(() => {
+    if (startDate && endDate && companyId && departmentId) {
+      fetchData()
+      fetchAllCostCenter()
+    }
+  }, [startDate, endDate, companyId, departmentId, fetchData])
   return (
     <div>
       <DeparmentSummaryHeading

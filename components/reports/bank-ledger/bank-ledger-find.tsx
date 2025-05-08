@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -12,19 +12,30 @@ import {
 } from '@/components/ui/select'
 import { BankAccount } from '@/utils/type'
 import { getAllBankAccounts } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 interface BankLedgerFindProps {
   onSearch: (bankaccount: number, fromdate: string, todate: string) => void
 }
 
 export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
+
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [accounts, setAccounts] = useState<BankAccount[]>([])
 
-  async function fetchBankAccounts() {
-    const fetchedAccounts = await getAllBankAccounts()
+  const fetchBankAccounts = useCallback(async () => {
+    if (!token) return
+    const fetchedAccounts = await getAllBankAccounts(token)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting bank account:', fetchedAccounts.error)
       toast({
@@ -35,11 +46,10 @@ export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }
-
+  }, [token])
   useEffect(() => {
     fetchBankAccounts()
-  }, [])
+  }, [fetchBankAccounts])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
@@ -102,11 +112,9 @@ export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
         <SelectContent>
           {accounts.length > 0 ? (
             accounts.map((account) => (
-              <SelectItem
-                key={account.id}
-                value={account.id.toString()}
-              >
-                {account.accountName}-{account.accountNumber}-{account.bankName}-{account.branchName}
+              <SelectItem key={account.id} value={account.id.toString()}>
+                {account.accountName}-{account.accountNumber}-{account.bankName}
+                -{account.branchName}
               </SelectItem>
             ))
           ) : (

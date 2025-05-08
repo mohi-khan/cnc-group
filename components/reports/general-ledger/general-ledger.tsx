@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import GeneralLedgerFind from './general-ledger-find'
 import GeneralLedgerList from './general-ledger-list'
 import { GeneralLedgerType } from '@/utils/type'
@@ -8,8 +8,17 @@ import { getGeneralLedgerByDate } from '@/api/general-ledger-api'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
 import { usePDF } from 'react-to-pdf'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function GeneralLedger() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'general_ledger.pdf' })
   const [transactions, setTransactions] = useState<GeneralLedgerType[]>([])
 
@@ -49,27 +58,21 @@ export default function GeneralLedger() {
     exportToExcel(transactions, 'general_ledger')
   }
 
-  const handleSearch = async (
-    accountcode: number,
-    fromdate: string,
-    todate: string
-  ) => {
-    try {
+  const handleSearch = useCallback(
+    async (accountcode: number, fromdate: string, todate: string) => {
+      if (!token) return
       const response = await getGeneralLedgerByDate({
         accountcode,
         fromdate,
         todate,
+        token,
       })
 
-      if (response.error) {
-        console.error('Error fetching transactions:', response.error)
-      } else {
-        setTransactions(response.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
-    }
-  }
+      setTransactions(response.data || [])
+      console.log(response)
+    },
+    [token]
+  )
 
   return (
     <div className="space-y-4 container mx-auto mt-20">

@@ -78,7 +78,7 @@ export default function Navbar() {
     }
     if (
       source.includes('/reports/') &&
-      (!user?.roleId || ![ 2, 5].includes(user.roleId))
+      (!user?.roleId || ![1,2,].includes(user.roleId))
     ) {
       router.push('/unauthorized-access')
       return false

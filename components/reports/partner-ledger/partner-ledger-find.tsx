@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -13,6 +13,9 @@ import {
 import {  ResPartner } from '@/utils/type'
 import { FileText } from 'lucide-react'
 import { getAllResPartners } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 
 interface PartnerLedgerFindProps {
@@ -26,13 +29,20 @@ export default function PartneredgerFind({
   generatePdf,
   generateExcel,
 }: PartnerLedgerFindProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
   const [partners, setPartners] = useState<ResPartner[]>([])
 
-  async function fetchChartOfAccounts() {
-    const fetchedPartners = await getAllResPartners()
+  const fetchAllResPartners = useCallback(async () => {
+    if (!token) return
+    const fetchedPartners = await getAllResPartners(token)
     if (fetchedPartners.error || !fetchedPartners.data) {
       console.error('Error getting chart of accounts:', fetchedPartners.error)
       toast({
@@ -41,13 +51,12 @@ export default function PartneredgerFind({
           fetchedPartners.error?.message || 'Failed to get chart of accounts',
       })
     } else {
-        setPartners(fetchedPartners.data)
+      setPartners(fetchedPartners.data)
     }
-  }
-
+  }, [token])
   useEffect(() => {
-    fetchChartOfAccounts()
-  }, [])
+    fetchAllResPartners()
+  }, [fetchAllResPartners])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
@@ -111,10 +120,7 @@ export default function PartneredgerFind({
           <SelectContent>
             {partners.length > 0 ? (
               partners.map((partner) => (
-                <SelectItem
-                  key={partner.id}
-                  value={partner.id?.toString()}
-                >
+                <SelectItem key={partner.id} value={partner.id?.toString()}>
                   {partner.name}
                 </SelectItem>
               ))
