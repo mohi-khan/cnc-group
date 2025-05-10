@@ -43,8 +43,7 @@ export default function TrialBalanceTable({
     }
 
     try {
-     
-        
+     if(!token) return
       const response = await getTrialBalance({
         fromdate: startDate.toISOString().split('T')[0],
         enddate: endDate.toISOString().split('T')[0],

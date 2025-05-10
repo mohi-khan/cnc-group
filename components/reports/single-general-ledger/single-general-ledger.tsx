@@ -1,6 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,13 +15,16 @@ import {
 } from '@/api/journal-voucher-api'
 import { VoucherById } from '@/utils/type'
 import { useReactToPrint } from 'react-to-print'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
-import { useAtom } from 'jotai'
+
 
 export default function SingleGenralLedger() {
-  //getting userData from jotai atom component
-  useInitializeUser()
-  const [userData] = useAtom(userDataAtom)
+
+//getting userData from jotai atom component
+      useInitializeUser()
+      const [userData] = useAtom(userDataAtom)
+      const [token] = useAtom(tokenAtom)
+    
+    
 
   // State variables
   const voucherid: number = parseInt(useParams().voucherid as string, 10);
@@ -38,35 +43,35 @@ export default function SingleGenralLedger() {
 
   const reactToPrintFn = useReactToPrint({ contentRef })
 
-  useEffect(() => {
-    async function fetchVoucher() {
-      if (!voucherid) return
-      console.log('Initial fetch for voucher:', voucherid);
-      try {
-        const response = await getSingleVoucher(voucherid)
-        console.log('Initial fetch response:', response);
-        if (response.error || !response.data) {
-          toast({
-            title: 'Error',
-            description:
-              response.error?.message || 'Failed to get Voucher Data',
-          })
-        } else {
-          console.log('Setting initial data:', response.data);
-          setData(response.data)
-        }
-      } catch (error) {
+  const fetchVoucher = useCallback(async () => {
+    if (!voucherid) return
+    console.log('Initial fetch for voucher:', voucherid);
+    try {
+      if (!token) return
+      const response = await getSingleVoucher(voucherid, token)
+      console.log('Initial fetch response:', response);
+      if (response.error || !response.data) {
         toast({
           title: 'Error',
           description:
-            'An unexpected error occurred while fetching the voucher.',
+            response.error?.message || 'Failed to get Voucher Data',
         })
+      } else {
+        console.log('Setting initial data:', response.data);
+        setData(response.data)
       }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description:
+          'An unexpected error occurred while fetching the voucher.',
+      })
     }
-  
-    fetchVoucher()
-  }, [voucherid])
+  }, [voucherid, token])
 
+  useEffect(() => {
+    fetchVoucher()
+  }, [fetchVoucher])
   const handleReferenceEdit = (index: number, currentText: string) => {
     setEditingReferenceIndex(index)
     setEditingReferenceText(currentText)
@@ -84,10 +89,13 @@ export default function SingleGenralLedger() {
     setError(null);
   
     try {
-      const response = await editJournalDetail({
-        id: journalDetail.id,
-        notes: editingReferenceText
-      });
+      const response = await editJournalDetail(
+        {
+          id: journalDetail.id,
+          notes: editingReferenceText,
+        },
+        token
+      );
   
       console.log('API Response:', response);
   
@@ -102,7 +110,8 @@ export default function SingleGenralLedger() {
       // Refetch the data to ensure we have the latest from the database
       if (voucherid) {
         console.log('Refetching data for voucher:', voucherid);
-        const refreshResponse = await getSingleVoucher(voucherid);
+        if (!token) return
+        const refreshResponse = await getSingleVoucher(voucherid, token);
         console.log('Refresh response:', refreshResponse);
         
         if (refreshResponse.error || !refreshResponse.data) {
@@ -138,7 +147,7 @@ export default function SingleGenralLedger() {
     }
   }, [userData])
 
-  const handleReverseVoucher = async () => {
+  const handleReverseVoucher = React.useCallback(async () => {
     const createdId = userId
     let voucherId
     if (data && data[0]) {
@@ -157,7 +166,8 @@ export default function SingleGenralLedger() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(voucherId, createdId)
+      if (!token) return
+      const response = await reverseJournalVoucher(voucherId, createdId, token)
 
       if (!response.data || response.error) {
         toast({
@@ -183,8 +193,8 @@ export default function SingleGenralLedger() {
     } finally {
       setIsReversingVoucher(false)
     }
-  }
-
+  }, [userId, data, token, router])
+  
   if (!data) {
     return <p>Loading...</p>
   }
