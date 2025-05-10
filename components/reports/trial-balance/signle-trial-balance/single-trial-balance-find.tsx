@@ -10,9 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { AccountsHead, ChartOfAccount } from '@/utils/type'
-import { getAllCoa } from '@/api/general-ledger-api'
+import type { AccountsHead } from '@/utils/type'
+
 import { FileText } from 'lucide-react'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 interface SingleTrialBalanceFindProps {
   initialAccountCode: string
@@ -31,14 +35,21 @@ export default function SingleTrialBalanceFind({
   generatePdf,
   generateExcel,
 }: SingleTrialBalanceFindProps) {
+    //getting userData from jotai atom component
+        useInitializeUser()
+        const [userData] = useAtom(userDataAtom)
+        const [token] = useAtom(tokenAtom)
+      
+        const router = useRouter()
   const [fromDate, setFromDate] = useState<string>(initialFromDate)
   const [toDate, setToDate] = useState<string>(initialToDate)
   const [selectedAccountCode, setSelectedAccountCode] =
     useState<string>(initialAccountCode)
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
-  async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllCoa()
+  const fetchChartOfAccounts = React.useCallback(async () => {
+    if(!token) return
+    const fetchedAccounts = await getAllChartOfAccounts(token)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({
@@ -49,7 +60,7 @@ export default function SingleTrialBalanceFind({
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchChartOfAccounts()
@@ -69,7 +80,7 @@ export default function SingleTrialBalanceFind({
     if (initialFromDate && initialToDate && initialAccountCode) {
       onSearch(Number(initialAccountCode), initialFromDate, initialToDate)
     }
-  }, [initialFromDate, initialToDate, initialAccountCode, onSearch])
+  }, [initialFromDate, initialToDate, initialAccountCode, onSearch, fetchChartOfAccounts])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {

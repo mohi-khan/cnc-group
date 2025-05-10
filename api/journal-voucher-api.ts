@@ -7,22 +7,28 @@ import {
   VoucherById,
 } from '@/utils/type'
 
-export async function getSingleVoucher(voucherid: number) {
+export async function getSingleVoucher(voucherid: number,token: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    }, 
   })
 }
 
 export async function reverseJournalVoucher(
   voucherNo: number,
-  createdId: number
+  createdId: number,
+  token: string
 ) {
   console.log(
     '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
     voucherNo,
-    createdId
+    createdId,
+    token
   )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
@@ -30,15 +36,20 @@ export async function reverseJournalVoucher(
     body: { voucherNo, createdId },
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `${token}`,
     },
   })
 }
 
-export async function editJournalDetail(data: JournalNotes) {
+export async function editJournalDetail(data: JournalNotes, token: string) {
   return fetchApi<JournalNotes>({
     url: `api/journal/edit-notes`,
     method: 'PATCH',
     body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    }, 
   })
 }
 

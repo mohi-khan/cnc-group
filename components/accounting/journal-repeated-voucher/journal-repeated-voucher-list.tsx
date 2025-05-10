@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { JournalVoucherPopup } from './journal-voucher-popup'
+
 import {
   type CompanyFromLocalstorage,
   type JournalEntryWithDetails,
@@ -19,6 +19,7 @@ import VoucherList from '@/components/voucher-list/voucher-list'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { JournalVoucherRepeatedPopup } from './journal-repeated-voucher-popup'
 
 export default function VoucherTable() {
   //getting userData from jotai atom component
@@ -181,8 +182,8 @@ export default function VoucherTable() {
   return (
     <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Journal Vouchers</h1>
-        <JournalVoucherPopup
+        <h1 className="text-2xl font-bold">Journal Repeated Vouchers</h1>
+        <JournalVoucherRepeatedPopup
           isOpen={isPopupOpen}
           onOpenChange={setIsPopupOpen}
           handleSubmit={handleSubmit}
