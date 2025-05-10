@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { PartnerLedgerType } from '@/utils/type'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
@@ -8,8 +8,17 @@ import { usePDF } from 'react-to-pdf'
 import PartneredgerFind from './partner-ledger-find'
 import PartnerLedgerList from './partner-ledger-list'
 import { getPartnerLedgerByDate } from '@/api/partner-ledger-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function PartnerLedger() {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'partner_ledger.pdf' })
   const [transactions, setTransactions] = useState<PartnerLedgerType[]>([])
 
@@ -49,28 +58,25 @@ export default function PartnerLedger() {
     exportToExcel(transactions, 'partner_ledger')
   }
 
-  const handleSearch = async (
+  const handleSearch = useCallback(async (
     partnercode: number,
     fromdate: string,
     todate: string
   ) => {
-    try {
-      const response = await getPartnerLedgerByDate({
-        partnercode,
-        fromdate,
-        todate,
-      })
+    const response = await getPartnerLedgerByDate({
+      partnercode,
+      fromdate,
+      todate,
+      token
+    })
 
-      if (response.error) {
-        console.error('Error fetching transactions:', response.error)
-      } else {
-        setTransactions(response.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
+    if (response.error) {
+      console.error('Error fetching transactions:', response.error)
+    } else {
+      setTransactions(response.data || [])
     }
-  }
-
+  }, [token])
+  
   return (
     <div className="space-y-4 container mx-auto mt-20">
       <PartneredgerFind

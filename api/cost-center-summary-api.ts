@@ -8,18 +8,21 @@ import {
 export async function getCostCenterSummary({
   fromdate,
   enddate,
-  costCenterIds,
+  costCenterId,
   companyid,
+  token
 }: {
   fromdate: string
   enddate: string
-  costCenterIds: string
-  companyid: string
+  costCenterId: string
+    companyid: string
+  token: string
 }) {
   return fetchApi<CostCenterSummaryType[]>({
-    url: `api/ledgerreport/costcetersummery?fromDate=${fromdate}&endDate=${enddate}&costCenterIds=${costCenterIds}&companyId=${companyid}`,
+    url: `api/ledgerreport/costcetersummery?fromDate=${fromdate}&endDate=${enddate}&costCenterIds=${costCenterId}&companyId=${companyid}`,
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

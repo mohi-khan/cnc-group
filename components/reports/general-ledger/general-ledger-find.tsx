@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -14,6 +14,9 @@ import { AccountsHead } from '@/utils/type'
 
 import { FileText } from 'lucide-react'
 import { getAllChartOfAccounts } from '@/api/common-shared-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 interface GeneralLedgerFindProps {
   onSearch: (accountcode: number, fromdate: string, todate: string) => void
@@ -26,13 +29,20 @@ export default function GeneralLedgerFind({
   generatePdf,
   generateExcel,
 }: GeneralLedgerFindProps) {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
-  async function fetchChartOfAccounts() {
-    const fetchedAccounts = await getAllChartOfAccounts()
+  const fetchChartOfAccounts = useCallback(async () => {
+    if (!token) return
+    const fetchedAccounts = await getAllChartOfAccounts(token)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
       toast({
@@ -43,11 +53,10 @@ export default function GeneralLedgerFind({
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }
-
+  }, [token])
   useEffect(() => {
     fetchChartOfAccounts()
-  }, [])
+  }, [fetchChartOfAccounts])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {

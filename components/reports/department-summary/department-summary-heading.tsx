@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -20,9 +20,10 @@ import { CalendarIcon, FileText } from 'lucide-react'
 import { Company, CompanyFromLocalstorage, Department, GetDepartment, User } from '@/utils/type'
 
 import { getAllDepartments } from '@/api/department-summary-api'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 interface CostCenterSummaryHeadingProps {
   generatePdf: () => void
@@ -43,6 +44,9 @@ const DeparmentSummaryHeading = ({
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [startDate, setStartDate] = useState<Date>()
@@ -70,15 +74,15 @@ const DeparmentSummaryHeading = ({
   }, [userData])
 
   // Fetch all department  data
-  async function fetchAllCostCenter() {
-    const respons = await getAllDepartments()
+  const fetchAllCostCenter = useCallback(async () => {
+    if (!token) return
+    const respons = await getAllDepartments(token)
     setDepartmentSummary(respons.data || [])
     console.log('This is all department   data: ', respons.data || [])
-  }
-
+  }, [token])
   useEffect(() => {
     fetchAllCostCenter()
-  }, [])
+  }, [fetchAllCostCenter])
 
   useEffect(() => {
     onFilterChange(
@@ -264,7 +268,7 @@ const DeparmentSummaryHeading = ({
               {companies.map((company) => (
                 <SelectItem
                   key={company.company.companyId}
-                  value={company.company.companyId?.toString()??""}
+                  value={company.company.companyId?.toString() ?? ''}
                 >
                   {company.company.companyName}
                 </SelectItem>

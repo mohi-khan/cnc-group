@@ -8,6 +8,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Journal Management',
         items: [
           { name: 'Journal Entry', source: '/accounting/journal-voucher' },
+          { name: 'Journal Repeated Voucher', source: '/accounting/journal-repeated-voucher' },
           { name: 'Journal Items', source: '/accounting/journal-items' },
           { name: 'Reverse Entry', source: '/accounting/reverse-entry' },
         ],

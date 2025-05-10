@@ -5,28 +5,36 @@ import {
   VoucherById,
 } from '@/utils/type'
 
-export async function getSingleVoucher(voucherid: string) {
+export async function getSingleVoucher(voucherid: string,token: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+      
+    }
   })
 }
 
 export async function reverseJournalVoucher(
   voucherNo: number,
-  createdId: number
+  createdId: number,
+  token: string
 ) {
   console.log(
     '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
     voucherNo,
-    createdId
+    createdId,
+    token
   )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
     body: { voucherNo, createdId },
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

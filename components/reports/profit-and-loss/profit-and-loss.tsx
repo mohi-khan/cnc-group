@@ -7,8 +7,17 @@ import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { getProfitAndLoss } from '@/api/profit-and-loss-api'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const ProfitAndLoss = () => {
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'profit_and_loss.pdf' })
   const [profitAndLoss, setProfitAndLoss] = useState<ProfitAndLossType[]>([])
   const [startDate, setStartDate] = useState<Date>()
@@ -63,6 +72,7 @@ const ProfitAndLoss = () => {
           fromdate: startDate.toISOString().split('T')[0],
           enddate: endDate.toISOString().split('T')[0],
           companyId: companyId,
+          token: token,
         })
         setProfitAndLoss(response.data || [])
         console.log('this is from Profit and loss data : ', response.data || [])

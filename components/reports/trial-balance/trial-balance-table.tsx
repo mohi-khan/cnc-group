@@ -7,6 +7,9 @@ import { TrialBalanceData } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import Loader from '@/utils/loader'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 export default function TrialBalanceTable({
   targetRef,
@@ -20,25 +23,36 @@ export default function TrialBalanceTable({
   startDate: Date | undefined
   endDate: Date | undefined
   companyId: string
-}) {
+  }) {
+  //getting userData from jotai atom component
+    useInitializeUser()
+    const [userData] = useAtom(userDataAtom)
+    const [token] = useAtom(tokenAtom)
+  
+    const router = useRouter()
   const [trialBalanceDataLocal, setTrialBalanceDataLocal] = useState<
     TrialBalanceData[]
   >([])
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
 
-  const fetchTrialBalanceTableData = useCallback (async () => {
+  const fetchTrialBalanceTableData = useCallback(async () => {
+    if (!token) return
     if (!startDate || !endDate || !companyId) {
       console.error('Missing required filter parameters')
       return
     }
 
     try {
+     
+        
       const response = await getTrialBalance({
         fromdate: startDate.toISOString().split('T')[0],
         enddate: endDate.toISOString().split('T')[0],
         companyid: companyId,
+        token
       })
       if (response.data) {
+        
         setTrialBalanceDataLocal(response.data)
         setTrialBalanceData(response.data)
         console.log('trial balance data : ', response.data)
@@ -51,9 +65,10 @@ export default function TrialBalanceTable({
     } catch (error) {
       console.error('Error fetching trial balance data:', error)
     }
-  }, [startDate, endDate, companyId, setTrialBalanceData])
+  }, [startDate, endDate, companyId, setTrialBalanceData, token])
 
   useEffect(() => {
+   
     if (startDate && endDate && companyId) {
       fetchTrialBalanceTableData()
     }

@@ -37,7 +37,7 @@ import {
   reverseJournalVoucher,
 } from '@/api/contra-voucher-api'
 import Loader from '@/utils/loader'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 
 // Add this after your imports
@@ -59,6 +59,7 @@ export default function SingleVoucherDetails() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+   const [token] = useAtom(tokenAtom)
 
   // State variables
   const { voucherid } = useParams()
@@ -83,7 +84,7 @@ export default function SingleVoucherDetails() {
     async function fetchVoucher() {
       if (!voucherid) return
       try {
-        const response = await getSingleVoucher(voucherid as string)
+        const response = await getSingleVoucher(voucherid as string,token)
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -156,7 +157,7 @@ export default function SingleVoucherDetails() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(Number(voucherid), createdId)
+      const response = await reverseJournalVoucher(Number(voucherid), createdId, token)
 
       if (!response.data || response.error) {
         toast({
