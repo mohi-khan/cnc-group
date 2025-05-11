@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import SingleTrialBalanceFind from './single-trial-balance-find'
 import SingleTrialBalanceList from './single-trial-balance-list'
 import type { GeneralLedgerType } from '@/utils/type'
@@ -9,6 +9,8 @@ import { getGeneralLedgerByDate } from '@/api/general-ledger-api'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
 import { usePDF } from 'react-to-pdf'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 function formatDateString(dateStr: string) {
   try {
@@ -55,6 +57,12 @@ function formatDateString(dateStr: string) {
 }
 
 export default function SingleTrialBalance() {
+   //getting userData from jotai atom component
+      useInitializeUser()
+      const [userData] = useAtom(userDataAtom)
+      const [token] = useAtom(tokenAtom)
+    
+      const router = useRouter()
   const { toPDF, targetRef } = usePDF({ filename: 'single_trial_balance.pdf' })
   const [transactions, setTransactions] = useState<GeneralLedgerType[]>([])
 
@@ -109,34 +117,34 @@ export default function SingleTrialBalance() {
     exportToExcel(transactions, 'single-trial-balance')
   }
 
-  const handleSearch = async (
-    accountcode: number,
-    fromdate: string,
-    todate: string
-  ) => {
-    try {
-      const response = await getGeneralLedgerByDate({
-        accountcode,
-        fromdate,
-        todate,
-      })
+  const handleSearch = useCallback(
+    async (accountcode: number, fromdate: string, todate: string) => {
+      try {
+        const response = await getGeneralLedgerByDate({
+          accountcode,
+          fromdate,
+          todate,
+          token
+        })
 
-      if (response.error) {
-        console.error('Error fetching transactions:', response.error)
-      } else {
-        setTransactions(response.data || [])
+        if (response.error) {
+          console.error('Error fetching transactions:', response.error)
+        } else {
+          setTransactions(response.data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error)
       }
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
-    }
-  }
+    },
+    [token]
+  )
 
   useEffect(() => {
     if (id && formattedStartDate && formattedEndDate) {
       handleSearch(Number(id), formattedStartDate, formattedEndDate)
     }
-  }, [id, formattedStartDate, formattedEndDate])
-
+ 
+  }, [id, formattedStartDate, formattedEndDate, handleSearch])
   return (
     <div className="space-y-4 container mx-auto mt-20">
       <SingleTrialBalanceFind

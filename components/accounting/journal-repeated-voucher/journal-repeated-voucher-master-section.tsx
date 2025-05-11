@@ -25,7 +25,7 @@ import {
   User,
   VoucherTypes,
 } from '@/utils/type'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -35,13 +35,13 @@ import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
-interface JournalVoucherMasterSectionProps {
+interface JournalVoucherRepeatedMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
 }
 
-export function JournalVoucherMasterSection({
+export function JournalVoucherRepeatedMasterSection({
   form,
-}: JournalVoucherMasterSectionProps) {
+}: JournalVoucherRepeatedMasterSectionProps) {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -101,7 +101,7 @@ export function JournalVoucherMasterSection({
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData , fetchAllVoucher])
+  }, [userData, fetchAllVoucher])
 
   React.useEffect(() => {
     fetchUserData()
@@ -118,7 +118,7 @@ export function JournalVoucherMasterSection({
   }
 
   // Function to fetch currency data
-  const fetchCurrency = useCallback(async () => {
+  const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const data = await getAllCurrency(token)
     if (data?.error?.status === 401) {

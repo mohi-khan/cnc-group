@@ -28,16 +28,16 @@ import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
 // Define the props for the JournalVoucherDetailsSection component
-interface JournalVoucherDetailsSectionProps {
+interface JournalVoucherRepeatedDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onAddEntry: () => void
   onRemoveEntry: (index: number) => void
 }
 
-export function JournalVoucherDetailsSection({
+export function JournalVoucherRepeatedDetailsSection({
   form,
   onRemoveEntry,
-}: JournalVoucherDetailsSectionProps) {
+}: JournalVoucherRepeatedDetailsSectionProps) {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
