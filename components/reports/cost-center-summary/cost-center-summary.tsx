@@ -30,6 +30,7 @@ const CostCenterSummary = () => {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
+  const [costCenterId, setCostCenterId] = useState<string>('')
   const [costCenterData, setCostCenterData] = useState<CostCenter[]>([])
 
   const generatePdf = () => {
@@ -66,11 +67,13 @@ const CostCenterSummary = () => {
   const handleFilterChange = (
     newStartDate: Date | undefined,
     newEndDate: Date | undefined,
-    newCompanyId: string
+    newCompanyId: string,
+    newCostCenterId: string
   ) => {
     setStartDate(newStartDate)
     setEndDate(newEndDate)
     setCompanyId(newCompanyId)
+    setCostCenterId(newCostCenterId)
   }
 
   const fetchAllCostCenter = useCallback(async () => {
@@ -85,8 +88,7 @@ const CostCenterSummary = () => {
     const response = await getCostCenterSummary({
       fromdate: startDate ? startDate.toISOString().split('T')[0] : '',
       enddate: endDate ? endDate.toISOString().split('T')[0] : '',
-      costCenterId: costCenterData.map((item) => item.costCenterId).join(','),
-     
+      costCenterId: costCenterId,     
       companyid: companyId,
       token: token,
     })
@@ -106,8 +108,7 @@ const CostCenterSummary = () => {
       setCostCenterSummary([])
       console.log('No data received from getCostCenterSummary')
     }
-  }, [token, startDate, endDate, companyId, costCenterData])
-
+  }, [token, startDate, endDate, companyId, costCenterId, costCenterData])
   useEffect(() => {
     if (startDate && endDate && companyId) {
       fetchData()
@@ -124,6 +125,12 @@ const CostCenterSummary = () => {
       <CostCenterSummaryTableData
         targetRef={targetRef}
         data={costCenterSummary}
+        startDate={startDate}
+        endDate={endDate}
+       costCenterId={costCenterId}
+        companyId={companyId}
+
+      
       />
     </div>
   )
