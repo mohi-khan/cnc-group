@@ -128,6 +128,10 @@ const DepartmentSummary = () => {
       <DepartmentSummaryTableData
         targetRef={targetRef}
         data={departmentSummary}
+        startDate={startDate}
+        endDate={endDate}   
+        companyId={companyId}
+        departmentId={departmentId}
       />
     </div>
   )

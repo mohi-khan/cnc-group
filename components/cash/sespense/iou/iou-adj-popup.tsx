@@ -118,7 +118,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
 
     setIsSubmitting(true)
     try {
-      await createAdjustment(data)
+      await createAdjustment(data, token)
       toast({
         title: 'Success',
         description: 'Adjustment record has been created successfully.',
