@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import IouList from './iou-list'
 import IouPopUp from './iou-popup'
-import {  getLoanData } from '@/api/iou-api'
+import { getLoanData } from '@/api/iou-api'
 import { Employee, IouRecordGetType } from '@/utils/type'
 import { getEmployee } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
@@ -21,11 +21,6 @@ const Iou = () => {
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
 
-  useEffect(() => {
-    fetchLoanData()
-    fetchEmployeeData()
-  }, [])
-
   // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
     if (!token) return
@@ -39,7 +34,7 @@ const Iou = () => {
     console.log('Show The Loan  All Data :', loansdata.data)
     setIsLoading(false)
   }, [token])
-  
+
   // Fetch all Employee Data
   const fetchEmployeeData = useCallback(async () => {
     if (!token) return
@@ -51,6 +46,11 @@ const Iou = () => {
     }
     console.log('Show The Employee Data :', employees.data)
   }, [token])
+
+  useEffect(() => {
+    fetchLoanData()
+    fetchEmployeeData()
+  }, [fetchLoanData, fetchEmployeeData, token])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)
@@ -73,7 +73,7 @@ const Iou = () => {
         onOpenChange={setIsPopupOpen}
         onCategoryAdded={handleCategoryAdded}
         fetchLoanData={fetchLoanData}
-        employees={employeeData} // Pass an empty array or the appropriate employees data
+        employeeData={employeeData}
       />
     </div>
   )

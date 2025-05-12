@@ -57,7 +57,7 @@ const TradeDebtors = () => {
   useEffect(() => {
     fetchTradeDebtors()
     fetchCompanies()
-  }, [fetchTradeDebtors, fetchCompanies])
+  }, [fetchTradeDebtors, fetchCompanies,token])
 
   const filteredTradeDebtors = selectedCompanyName
     ? tradeDebtors.filter(

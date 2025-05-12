@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
@@ -35,15 +35,18 @@ import {
   IouRecordCreateSchema,
   type IouRecordCreateType,
 } from '@/utils/type'
-import { createIou, getEmployee } from '@/api/iou-api'
-import { useInitializeUser, userDataAtom } from '@/utils/user'
+
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { getEmployee } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
+import { createIou } from '@/api/iou-api'
 
 interface LoanPopUpProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onCategoryAdded: () => void
-  employees: { id: number; employeeName: string }[]
+  employeeData: Employee[] // Type for employeeData
   fetchLoanData: () => Promise<void> // Type for the fetchLoanData function
 }
 
@@ -52,14 +55,18 @@ export default function IouPopUp({
   onOpenChange,
   onCategoryAdded,
   fetchLoanData,
+  employeeData,
 }: LoanPopUpProps) {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
 
   // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [employeeData, setEmployeeData] = useState<Employee[]>([])
+  // const [employeeData, setEmployeeData] = useState<Employee[]>([])
   const [userId, setUserId] = useState<number | null>(null) // set to null initially
 
   React.useEffect(() => {
@@ -85,9 +92,7 @@ export default function IouPopUp({
     },
   })
 
-  useEffect(() => {
-    fetchEmployeeData()
-  }, [])
+
 
   useEffect(() => {
     if (userId !== null) {
@@ -97,19 +102,18 @@ export default function IouPopUp({
   }, [userId, form])
 
   // Fetch all Employee Data
-  const fetchEmployeeData = async () => {
-    try {
-      const employees = await getEmployee()
-      if (employees.data) {
-        setEmployeeData(employees.data)
-      } else {
-        setEmployeeData([])
-      }
-      console.log('Show The Employee Data :', employees.data)
-    } catch (error) {
-      console.error('Failed to fetch Employee Data :', error)
-    }
-  }
+  // const fetchEmployeeData = useCallback(async () => {
+  //   const employees = await getEmployee(token)
+  //   if (employees.data) {
+  //     setEmployeeData(employees.data)
+  //   } else {
+  //     setEmployeeData([])
+  //   }
+  //   console.log('Show The Employee Data :', employees.data)
+  // }, [token])
+  // useEffect(() => {
+  //   fetchEmployeeData()
+  // }, [fetchEmployeeData])
 
   const onSubmit = async (data: IouRecordCreateType) => {
     if (data.adjustedAmount >= data.amount) {
@@ -124,7 +128,7 @@ export default function IouPopUp({
 
     setIsSubmitting(true)
     try {
-      await createIou(data)
+      await createIou(data, token)
       toast({
         title: 'Success',
         description: 'IOU has been created successfully',
