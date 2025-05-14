@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { createVehicle } from '@/api/vehicle.api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 
 interface VehicleFormModalProps {
@@ -41,10 +41,11 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
   asset,
   employeeData,
 }) => {
-  //getting userData from jotai atom component
   useInitializeUser()
 
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+
   const {
     register,
     handleSubmit,
@@ -58,19 +59,23 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       vehicleDescription: '',
       purchaseDate: new Date(),
       assetId: 0,
-      employeeId: 0,
+      employeeid: 0,
+      createdBy: userData?.userId || 0,
     },
   })
+  console.log('Created By:', userData?.userId)
 
   const handleFormSubmit = async (data: CreateVehicleType) => {
     const formattedData = {
       ...data,
       costCenterId: Number(data.costCenterId),
       assetId: Number(data.assetId),
-      employeeId: Number(data.employeeId),
+      employeeid: Number(data.employeeid),
+      createdBy: userData?.userId || 0,
     }
 
     try {
+      console.log('Form data:', formattedData)
       await createVehicle(formattedData, token)
       reset()
       onClose()
@@ -80,7 +85,13 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       alert('Failed to create vehicle. Please try again later.')
     }
   }
+  console.log('Form state errors:', errors)
+  const watch = (fieldName: string) => {
+    const values = control._formValues || {};
+    return values[fieldName];
+  };
 
+  // console.log('Form values:', form.getValues())
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTrigger asChild></DialogTrigger>
@@ -151,13 +162,16 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             </label>
             <Input
               type="date"
-              {...register('purchaseDate')}
+              {...register('purchaseDate', { required: "Purchase Date is required" })}
               className="mt-1 w-full"
             />
             {errors.purchaseDate && (
               <p className="text-red-500 text-sm">
                 {errors.purchaseDate.message}
               </p>
+            )}
+            {!errors.purchaseDate && !watch('purchaseDate') && (
+              <p className="text-red-500 text-sm">Please select a purchase date to submit the form</p>
             )}
           </div>
 
@@ -205,7 +219,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
 
             <Controller
               control={control}
-              name="employeeId"
+              name="employeeid"
               render={({ field }) => (
                 <CustomCombobox
                   items={employeeData.map(
@@ -234,9 +248,9 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               )}
             />
 
-            {errors.employeeId && (
+            {errors.employeeid && (
               <p className="text-red-500 text-sm">
-                {errors.employeeId.message}
+                {errors.employeeid.message}
               </p>
             )}
           </div>
@@ -250,14 +264,13 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             >
               Close
             </Button>
-            <Button type="submit" variant="default" disabled={isSubmitting}>
+            <Button type="submit" variant="default" disabled={isSubmitting || !watch('purchaseDate')}>
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  )
+    </Dialog>  )
 }
 
 export default VehicleFormModal
