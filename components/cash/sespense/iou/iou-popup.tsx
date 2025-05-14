@@ -59,6 +59,7 @@ export default function IouPopUp({
 }: LoanPopUpProps) {
   //getting userData from jotai atom component
   useInitializeUser()
+
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
