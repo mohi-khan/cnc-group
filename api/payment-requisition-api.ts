@@ -34,13 +34,12 @@ export async function getAllAdvance(data: { token: string }) {
   })
 }
 
-export async function getAllEmployees() {
-  // console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
+export async function getAllEmployees(token: string) {
   return fetchApi<Employee[]>({
     url: `api/employee/getEmployees`,
     method: 'GET',
     headers: {
-      // Authorization: `${data.token}`,
+      Authorization: `${token}`,
     },
   })
 }
