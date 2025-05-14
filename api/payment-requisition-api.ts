@@ -15,7 +15,7 @@ export async function getAllPaymentRequisition(data: {
 }) {
   console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
   return fetchApi<GetPaymentOrder[]>({
-    url: `api/purchase/getPurchaseData?company=73,75,77`,
+    url: `api/purchase/getPurchaseData?company=${data.companyId}`,
     method: 'GET',
     headers: {
       Authorization: `${data.token}`,

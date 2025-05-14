@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import PaymentRequisitionList from './payment-requisition-list'
-import { GetPaymentOrder, PurchaseEntryType } from '@/utils/type'
+import { GetPaymentOrder } from '@/utils/type'
 import {
-  createPaymentRequisition,
   getAllPaymentRequisition,
 } from '@/api/payment-requisition-api'
 import { PaymentRequisitionPopup } from './payment-requisition-popup'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
@@ -16,6 +15,8 @@ const PaymentRequisition = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
+  const [userData] = useAtom(userDataAtom)
+  console.log("🚀 ~ PaymentRequisition ~ userData:", userData)
 
   const router = useRouter()
 
@@ -27,10 +28,12 @@ const PaymentRequisition = () => {
 
   const fetchRequisitions = useCallback(async () => {
     if (!token) return
+    const companyId = userData?.userCompanies?.map(company => company?.company?.companyId).join(',')
+    if (!companyId) return
     try {
       setLoading(true)
       const data = await getAllPaymentRequisition({
-        companyId: 75,
+        companyId: parseInt(companyId),
         token: token,
       })
       if (data?.error?.status === 401) {
