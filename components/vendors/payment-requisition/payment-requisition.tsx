@@ -46,8 +46,9 @@ const PaymentRequisition = () => {
         return
       } else {
         const filteredRequisitions =
-          data.data?.filter((req) => req.status !== 'Invoice Created') || []
+        data.data?.filter((req) => req.status !== 'Invoice Created') || []
         setRequisitions(filteredRequisitions)
+        console.log("🚀 ~ fetchRequisitions ~ filteredRequisitions:", filteredRequisitions)
         console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
       }
     } catch (err) {
