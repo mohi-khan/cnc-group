@@ -1161,7 +1161,7 @@ export const requisitionAdvanceSchema = z.object({
   requestedDate: z.coerce.date().optional(), // Auto-defaults to current date if missing
   advanceAmount: z.number().positive(), // Must be a positive number
   approvedAmount: z.number().min(0).optional(), // Cannot be negative, defaults to 0
-  currency: z.string().max(10), // Currency as string (ISO code like "USD", "BDT")
+  currency: z.number(), // Currency as string (ISO code like "USD", "BDT")
   paymentStatus: z.enum(['PENDING', 'PAID', 'REJECTED']).default('PENDING'), // Enum validation
   approvalStatus: z
     .enum(['PENDING', 'APPROVED', 'REJECTED'])

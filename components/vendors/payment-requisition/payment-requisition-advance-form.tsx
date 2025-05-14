@@ -23,6 +23,7 @@ import {
 import { createAdvance, getAllEmployees } from '@/api/payment-requisition-api'
 import { useToast } from '@/hooks/use-toast'
 import {
+  CurrencyType,
   type Employee,
   requisitionAdvanceSchema,
   type RequisitionAdvanceType,
@@ -32,6 +33,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useRouter } from 'next/navigation'
+import { getAllCurrency } from '@/api/common-shared-api'
 
 interface PaymentRequisitionAdvanceFormProps {
   requisition?: any
@@ -54,6 +56,7 @@ export default function PaymentRequisitionAdvanceForm({
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   const getCurrentUser = () => {
     try {
@@ -67,7 +70,7 @@ export default function PaymentRequisitionAdvanceForm({
   const fetchEmployees = useCallback(async () => {
     if (!token) return
     try {
-      const response = await getAllEmployees()
+      const response = await getAllEmployees(token)
       console.log('Raw API response:', response) // Log the entire response to see its structure
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
@@ -91,11 +94,41 @@ export default function PaymentRequisitionAdvanceForm({
     } catch (error) {
       console.error('Error fetching employees:', error)
     }
-  }, [])
+  }, [token])
+
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllCurrency(token)
+      console.log('Raw API response:', response) // Log the entire response to see its structure
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error fetching currency:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: response.error?.message || 'Failed to fetch currency',
+        })
+        return
+      } else if (response && response.data) {
+        console.log('Employee data structure:', response.data[0]) // Log the first employee to see structure
+        setCurrency(response.data)
+        console.log('Employees data set:', response.data)
+      } else {
+        console.error('Invalid response format from getAllCurrency:', response)
+      }
+    } catch (error) {
+      console.error('Error fetching currency:', error)
+    }
+  }, [token])
 
   useEffect(() => {
     fetchEmployees()
-  }, [fetchEmployees])
+    fetchCurrency()
+  }, [fetchEmployees, fetchCurrency])
 
   const defaultValues: Partial<RequisitionAdvanceType> = {
     requisitionNo: requisition?.poNo || '',
@@ -105,7 +138,7 @@ export default function PaymentRequisitionAdvanceForm({
     createdBy: userData?.userId,
     requestedDate: new Date(),
     advanceAmount: 0,
-    currency: 'USD',
+    currency: 0,
     checkName: '',
     remarks: '',
   }
@@ -144,7 +177,6 @@ export default function PaymentRequisitionAdvanceForm({
     setIsSubmitting(true)
     try {
       const response = await createAdvance(values, token)
-
       if (response.error) {
         toast({
           title: 'Error',
@@ -256,24 +288,51 @@ export default function PaymentRequisitionAdvanceForm({
             control={form.control}
             name="currency"
             render={({ field }) => (
+              // <FormItem>
+              //   <FormLabel>Currency</FormLabel>
+              //   <Select
+              //     onValueChange={field.onChange}
+              //     defaultValue={field.value}
+              //   >
+              //     <FormControl>
+              //       <SelectTrigger>
+              //         <SelectValue placeholder="Select currency" />
+              //       </SelectTrigger>
+              //     </FormControl>
+              //     <SelectContent>
+              //       <SelectItem value="USD">USD</SelectItem>
+              //       <SelectItem value="EUR">EUR</SelectItem>
+              //       <SelectItem value="GBP">GBP</SelectItem>
+              //       <SelectItem value="BDT">BDT</SelectItem>
+              //     </SelectContent>
+              //   </Select>
+              //   <FormMessage />
+              // </FormItem>
               <FormItem>
                 <FormLabel>Currency</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="BDT">BDT</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <CustomCombobox
+                    items={currency.map((e) => ({
+                      id: Number(e.currencyId),
+                      name: e.currencyCode,
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: Number(field.value),
+                            name:
+                              currency.find(
+                                (e) => Number(e.currencyId) === Number(field.value)
+                              )?.currencyCode || '',
+                          }
+                        : null
+                    }
+                    onChange={(value) => {
+                      console.log('Selected currency ID:', value?.id)
+                      field.onChange(value?.id || '')
+                    }}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

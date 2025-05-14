@@ -15,7 +15,7 @@ export async function getAllPaymentRequisition(data: {
 }) {
   console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
   return fetchApi<GetPaymentOrder[]>({
-    url: `api/purchase/getPurchaseData?company=73,75,77`,
+    url: `api/purchase/getPurchaseData?company=${data.companyId}`,
     method: 'GET',
     headers: {
       Authorization: `${data.token}`,
@@ -34,13 +34,12 @@ export async function getAllAdvance(data: { token: string }) {
   })
 }
 
-export async function getAllEmployees() {
-  // console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
+export async function getAllEmployees(token: string) {
   return fetchApi<Employee[]>({
     url: `api/employee/getEmployees`,
     method: 'GET',
     headers: {
-      // Authorization: `${data.token}`,
+      Authorization: `${token}`,
     },
   })
 }

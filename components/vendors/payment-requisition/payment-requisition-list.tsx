@@ -164,8 +164,7 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                     Create Advance
                   </Button>
                 )}
-                {(req.status === 'Invoice Approved' ||
-                  req.status === 'Purchase Order') && (
+                {req.status === 'Invoice Approved' && (
                   <Button
                     size="sm"
                     className="ml-3"
@@ -189,7 +188,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                   <div className="text-right">
                     <div className="flex items-center justify-end">
                       {/* date */}
-                      <span className="text-sm mr-2">{new Date(req.PurDate).toISOString().split('T')[0]}</span>
+                      <span className="text-sm mr-2">
+                        {new Date(req.PurDate).toISOString().split('T')[0]}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -202,7 +203,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                 <div className="flex mb-6">
                   <div className="flex-1">
                     {/* amoutn word */}
-                    <p className="flex-1 pb-1 pt-2 ">{toWords(req.amount)} only</p>
+                    <p className="flex-1 pb-1 pt-2 ">
+                      {toWords(req.amount)} only
+                    </p>
                   </div>
                   <div className="px-2 py-1 flex items-center whitespace-nowrap ml-5">
                     {/* amount */}
