@@ -310,28 +310,28 @@ export function PaymentRequisitionPopup({
     }
   }
 
-  const addEntry = () => {
-    const currentEntries = form.getValues('journalDetails')
-    form.setValue('journalDetails', [
-      ...currentEntries,
-      {
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        createdBy: 60,
-      },
-    ])
-  }
+  // const addEntry = () => {
+  //   const currentEntries = form.getValues('journalDetails')
+  //   form.setValue('journalDetails', [
+  //     ...currentEntries,
+  //     {
+  //       accountId: 0,
+  //       debit: 0,
+  //       credit: 0,
+  //       createdBy: 60,
+  //     },
+  //   ])
+  // }
 
-  const removeEntry = (index: number) => {
-    const currentEntries = form.getValues('journalDetails')
-    if (currentEntries.length > 2) {
-      form.setValue(
-        'journalDetails',
-        currentEntries.filter((_, i) => i !== index)
-      )
-    }
-  }
+  // const removeEntry = (index: number) => {
+  //   const currentEntries = form.getValues('journalDetails')
+  //   if (currentEntries.length > 2) {
+  //     form.setValue(
+  //       'journalDetails',
+  //       currentEntries.filter((_, i) => i !== index)
+  //     )
+  //   }
+  // }
 
   // Render different forms based on status
   const renderFormContent = () => {

@@ -1098,6 +1098,7 @@ export interface GetPaymentOrder {
   purAttn: string
   reqNo: string
   vendorName: string
+  currency: string
   amount: string
   preparedBy: string
   checkedBy: string

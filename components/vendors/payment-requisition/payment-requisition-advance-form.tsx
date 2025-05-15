@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { createAdvance, getAllEmployees } from '@/api/payment-requisition-api'
 import { useToast } from '@/hooks/use-toast'
 import {
+  CurrencyType,
   type Employee,
   requisitionAdvanceSchema,
   type RequisitionAdvanceType,
@@ -25,6 +26,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useRouter } from 'next/navigation'
+import { getAllCurrency } from '@/api/common-shared-api'
 
 interface PaymentRequisitionAdvanceFormProps {
   requisition?: any
@@ -47,6 +49,7 @@ export default function PaymentRequisitionAdvanceForm({
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   console.log('from requisition advance form', requisition)
 
@@ -79,18 +82,48 @@ export default function PaymentRequisitionAdvanceForm({
     }
   }, [token])
 
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllCurrency(token)
+      console.log('Raw API response:', response) // Log the entire response to see its structure
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error fetching currency:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: response.error?.message || 'Failed to fetch currency',
+        })
+        return
+      } else if (response && response.data) {
+        console.log('currency data structure:', response.data[0]) // Log the first currency to see structure
+        setCurrency(response.data)
+        console.log('currency data set:', response.data)
+      } else {
+        console.error('Invalid response format from getAllcurrency:', response)
+      }
+    } catch (error) {
+      console.error('Error fetching currency:', error)
+    }
+  }, [token])
+
   useEffect(() => {
+    fetchCurrency()
     fetchEmployees()
-  }, [fetchEmployees])
+  }, [fetchEmployees, fetchCurrency])
 
   const defaultValues: Partial<RequisitionAdvanceType> = {
-    requisitionNo: requisition?.poNo || '',
+    requisitionNo: '',
     poId: requisition?.id || 0,
     vendorId: requisition?.vendorId || 0,
-    requestedBy: 0,
+    requestedBy: undefined,
     createdBy: userData?.userId,
     requestedDate: new Date(),
-    advanceAmount: 0,
+    advanceAmount: undefined,
     currency: requisition?.currency || '',
     checkName: '',
     remarks: '',
@@ -167,13 +200,12 @@ export default function PaymentRequisitionAdvanceForm({
               <FormItem>
                 <FormLabel>Requisition No</FormLabel>
                 <FormControl>
-                  <Input {...field} readOnly={!!requisition} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="poId"
@@ -195,7 +227,6 @@ export default function PaymentRequisitionAdvanceForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="vendorId"
@@ -213,7 +244,6 @@ export default function PaymentRequisitionAdvanceForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="advanceAmount"
@@ -226,8 +256,13 @@ export default function PaymentRequisitionAdvanceForm({
                     step="0.01"
                     {...field}
                     onChange={(e) => {
-                      const amount = Number.parseFloat(e.target.value) || 0
-                      field.onChange(amount)
+                      const value = e.target.value
+                      if (!value) {
+                        field.onChange(undefined)
+                      } else {
+                        const amount = Number.parseFloat(value) || 0
+                        field.onChange(amount)
+                      }
                     }}
                     value={field.value || ''}
                   />
@@ -239,30 +274,24 @@ export default function PaymentRequisitionAdvanceForm({
           <FormField
             control={form.control}
             name="currency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Currency</FormLabel>
-                <FormControl>
-                  <Input {...field} readOnly />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const selectedCurrency = currency.find(
+                (c) => String(c.currencyId) === String(field.value)
+              )
+              return (
+                <FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <FormControl>
+                    <Input
+                      value={selectedCurrency?.currencyCode || ''}
+                      readOnly
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
-          <FormField
-            control={form.control}
-            name="requisitionNo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Requisition No</FormLabel>
-                <FormControl>
-                  <Input {...field} readOnly={!!requisition} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="requestedDate"
@@ -290,7 +319,6 @@ export default function PaymentRequisitionAdvanceForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="requestedBy"
@@ -315,8 +343,11 @@ export default function PaymentRequisitionAdvanceForm({
                         : null
                     }
                     onChange={(value) => {
-                      console.log('Selected employee ID:', value?.id)
-                      field.onChange(value?.id || '')
+                      if (!value) {
+                        field.onChange(undefined)
+                      } else {
+                        field.onChange(value?.id || '')
+                      }
                     }}
                   />
                 </FormControl>
@@ -345,9 +376,6 @@ export default function PaymentRequisitionAdvanceForm({
         />
 
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button">
-            Cancel
-          </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </Button>

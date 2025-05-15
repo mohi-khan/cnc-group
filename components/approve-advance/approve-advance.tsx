@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { use, useCallback, useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -13,23 +13,23 @@ import type { ApproveAdvanceType } from '@/utils/type'
 import { getAllAdvance, approveAdvance } from '@/api/approve-advance-api'
 import { Button } from '../ui/button'
 import { toast } from '@/hooks/use-toast'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const ApproveAdvance = () => {
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    // This ensures it's only run on client side
-    const mainToken = localStorage.getItem('authToken')
     const parsedUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-
-    setToken(`Bearer ${mainToken}`)
     setUser(parsedUser)
-  }, [])
+  }, [token])
 
   const fetchAdvances = useCallback(async () => {
     if (!token) return
@@ -48,12 +48,6 @@ const ApproveAdvance = () => {
       setIsLoading(false)
     }
   }, [token])
-
-  useEffect(() => {
-    if (token) {
-      fetchAdvances()
-    }
-  }, [fetchAdvances, token])
 
   const handleApproveClick = async (advance: ApproveAdvanceType) => {
     if (!token || !user) return
@@ -90,6 +84,46 @@ const ApproveAdvance = () => {
       setProcessingId(null)
     }
   }
+
+  const handleRejectClick = async (advance: ApproveAdvanceType) => {
+    if (!token || !user) return
+
+    try {
+      setProcessingId(advance.id.toString())
+
+      const approvalData = {
+        invoiceId: advance.id.toString(),
+        approvalStatus: 'REJECTED',
+        approvedBy: user?.employeeId ? String(user.employeeId) : '1',
+      }
+
+      const response = await approveAdvance(approvalData, token)
+
+      if ((response as any).success) {
+        await fetchAdvances()
+        toast({
+          title: 'Advance Approved',
+          description: `Successfully rejected advance request ${advance.reqno}`,
+        })
+      }
+    } catch (err) {
+      console.error('Error rejecting advance:', err)
+      toast({
+        title: 'Rejection Failed',
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Failed to reject advance request',
+        variant: 'destructive',
+      })
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  useEffect(() => {
+    fetchAdvances()
+  }, [fetchAdvances, token])
 
   return (
     <div className="w-[96%] mx-auto">
@@ -152,6 +186,17 @@ const ApproveAdvance = () => {
                         {processingId === advance.id.toString()
                           ? 'Processing...'
                           : 'Approve'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-2"
+                        onClick={() => handleRejectClick(advance)}
+                        disabled={processingId === advance.id.toString()}
+                      >
+                        {processingId === advance.id.toString()
+                          ? 'Processing...'
+                          : 'Reject'}
                       </Button>
                     </TableCell>
                   </TableRow>
