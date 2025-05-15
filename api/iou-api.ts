@@ -8,12 +8,13 @@ import {
 
 //Create IOU Data Push in DB
 
-export async function createIou(data: IouRecordCreateType) {
+export async function createIou(data: IouRecordCreateType, token: string) {
   return fetchApi<IouRecordCreateType[]>({
     url: 'api/iou/createIou',
     method: 'POST',
     body: data,
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })
@@ -43,12 +44,13 @@ export async function getEmployee() {
 }
 
 //Create IOU Data Push in DB
-export async function createAdjustment(data: IouAdjustmentCreateType) {
+export async function createAdjustment(data: IouAdjustmentCreateType, token: string) {
   return fetchApi<IouAdjustmentCreateType[]>({
     url: 'api/iou/createIouAdj',
     method: 'POST',
     body: data,
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

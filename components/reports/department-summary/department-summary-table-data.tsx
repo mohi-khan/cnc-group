@@ -2,13 +2,26 @@
 import React from 'react'
 import { CostCenterSummaryType, DepartmentSummaryType } from '@/utils/type'
 import Loader from '@/utils/loader'
+import { start } from 'repl'
+import { de } from 'date-fns/locale'
 
 interface Props {
   data: DepartmentSummaryType[]
   targetRef: React.RefObject<HTMLDivElement>
+  startDate: Date | undefined
+  endDate: Date | undefined
+  companyId: string
+  departmentId: string
 }
 
-const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
+const DepartmentSummaryTableData: React.FC<Props> = ({
+  data,
+  targetRef,
+  startDate,
+  endDate,
+  companyId,
+  departmentId,
+}) => {
   // Function to get the debit or credit value for a specific cost center and account name
   const getDebitCreditDifference = (
     departmentName: string,
@@ -17,7 +30,11 @@ const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
     const matchedData = data.filter(
       (item) =>
         item.departmentName === departmentName &&
-        item.accountName === accountName
+        item.accountName === accountName &&
+        startDate &&
+        endDate &&
+        companyId &&
+        departmentId
     )
     if (matchedData.length > 0) {
       // Return the difference between debit and credit
@@ -69,13 +86,18 @@ const DepartmentSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
                 ))}
               </tr>
             ))}
-            {data.length === 0 && (
+            {!startDate || !endDate || !companyId || !departmentId ? (              <tr>
+                <td className="border px-4 py-2 text-center" colSpan={4}>
+                  Please select start date, end date, company and department
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <tr>
                 <td className="border px-4 py-2 text-center" colSpan={4}>
                   <Loader />
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>

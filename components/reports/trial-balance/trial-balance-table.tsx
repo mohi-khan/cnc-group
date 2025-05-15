@@ -23,13 +23,13 @@ export default function TrialBalanceTable({
   startDate: Date | undefined
   endDate: Date | undefined
   companyId: string
-  }) {
+}) {
   //getting userData from jotai atom component
-    useInitializeUser()
-    const [userData] = useAtom(userDataAtom)
-    const [token] = useAtom(tokenAtom)
-  
-    const router = useRouter()
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const [trialBalanceDataLocal, setTrialBalanceDataLocal] = useState<
     TrialBalanceData[]
   >([])
@@ -43,15 +43,14 @@ export default function TrialBalanceTable({
     }
 
     try {
-     if(!token) return
+      if (!token) return
       const response = await getTrialBalance({
         fromdate: startDate.toISOString().split('T')[0],
         enddate: endDate.toISOString().split('T')[0],
         companyid: companyId,
-        token
+        token,
       })
       if (response.data) {
-        
         setTrialBalanceDataLocal(response.data)
         setTrialBalanceData(response.data)
         console.log('trial balance data : ', response.data)
@@ -67,7 +66,6 @@ export default function TrialBalanceTable({
   }, [startDate, endDate, companyId, setTrialBalanceData, token])
 
   useEffect(() => {
-   
     if (startDate && endDate && companyId) {
       fetchTrialBalanceTableData()
     }
@@ -84,13 +82,13 @@ export default function TrialBalanceTable({
   }
 
   const renderRows = (data: TrialBalanceData[], level = 0) => {
-    return data.map((item) => (
+    return data.map((item, index) => (
       <React.Fragment key={item.id}>
         <div
           onClick={() => toggleRowExpansion(item.id)}
           className={`grid grid-cols-12 gap-4 cursor-pointer p-2 border-b hover:bg-gray-100 ${
             expandedRows.has(item.id) ? 'font-bold bg-gray-50' : 'font-normal'
-          }`}
+          } ${index % 2 === 0 ? 'bg-gray-50' : ''}`}
         >
           <div className="flex justify-center items-left">
             {item.children && item.children.length > 0 && (
@@ -159,7 +157,6 @@ export default function TrialBalanceTable({
       </React.Fragment>
     ))
   }
-
   return (
     <div ref={targetRef}>
       <Card className="border rounded-lg">
@@ -214,11 +211,15 @@ export default function TrialBalanceTable({
             </Card>
           </div>
           <div>
-            {trialBalanceDataLocal.length > 0 ? (
+            {!startDate || !companyId ? (
+              <div className="text-center p-4 text-bold animate-pulse duration-1000">
+                Please select a date range and company
+              </div>
+            ) : trialBalanceDataLocal.length > 0 ? (
               renderRows(trialBalanceDataLocal)
             ) : (
               <div className="text-center p-4">
-                <Loader />{' '}
+                <Loader />
               </div>
             )}
           </div>

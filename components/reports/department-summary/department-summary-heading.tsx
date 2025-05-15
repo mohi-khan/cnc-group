@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { format } from 'date-fns'
+import { format, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 
 import { Company, CompanyFromLocalstorage, Department, GetDepartment, User } from '@/utils/type'
@@ -49,8 +49,12 @@ const DeparmentSummaryHeading = ({
   const router = useRouter()
 
   // State variables
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
+  const [startDate, setStartDate] = useState<Date>(
+    subMonths(new Date(), 1) // Previous month's today
+  )
+  const [endDate, setEndDate] = useState<Date>(new Date()) // Today's date
+
+  const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [selectedCostCenterIds, setSelectedCostCenterIds] = useState<string[]>(
     []
@@ -175,7 +179,7 @@ const DeparmentSummaryHeading = ({
         </div>
 
         <div className="flex items-center gap-4 flex-1 justify-center">
-          <Popover
+          {/* <Popover
             open={isDropdownOpen}
             onOpenChange={(open) => setIsDropdownOpen(open)}
           >
@@ -254,7 +258,95 @@ const DeparmentSummaryHeading = ({
                 </div>
               </div>
             </PopoverContent>
-          </Popover>
+          </Popover> */}
+            <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-[230px] h-10 justify-start text-left truncate"
+                                  onClick={() => setIsDropdownOpen(true)}
+                                >
+                                  <CalendarIcon className="mr-2 h-5 w-5" />
+                                  {startDate && endDate
+                                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
+                                        endDate,
+                                        'dd/MM/yyyy'
+                                      )}`
+                                    : 'Select Date Range'}
+                                </Button>
+                              </PopoverTrigger>
+                  
+                              <PopoverContent className="w-auto p-4" align="start">
+                                <div className="flex flex-col gap-4">
+                                  {/* Start Date Picker */}
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">Start Date:</span>
+                                    <Popover
+                                      open={isStartPopoverOpen}
+                                      onOpenChange={setIsStartPopoverOpen}
+                                    >
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className={`w-[180px] h-10 justify-start text-left truncate ${
+                                            !startDate ? 'text-muted-foreground' : ''
+                                          }`}
+                                        >
+                                          <CalendarIcon className="mr-2 h-5 w-5" />
+                                          {startDate
+                                            ? format(startDate, 'dd/MM/yyyy')
+                                            : 'Select Start Date'}
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                          mode="single"
+                                          selected={startDate}
+                                          onSelect={(date) => {
+                                            if (date) setStartDate(date)
+                                            setIsStartPopoverOpen(false)
+                                          }}
+                                          className="rounded-md border"
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  </div>
+                  
+                                  {/* End Date Picker */}
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">End Date:</span>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className={`w-[180px] h-10 justify-start text-left truncate ${
+                                            !endDate ? 'text-muted-foreground' : ''
+                                          }`}
+                                        >
+                                          <CalendarIcon className="mr-2 h-5 w-5" />
+                                          {endDate
+                                            ? format(endDate, 'dd/MM/yyyy')
+                                            : 'Select End Date'}
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                          mode="single"
+                                          selected={endDate}
+                                          onSelect={(date) => {
+                                          if(date) setEndDate(date)
+                                            if (startDate && date) {
+                                              setIsDropdownOpen(false)
+                                            }
+                                          }}
+                                          className="rounded-md border"
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
 
           {/* selected company start here */}
           <Select

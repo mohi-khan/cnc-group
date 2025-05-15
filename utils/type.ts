@@ -313,8 +313,6 @@ const getFinancialYearSchema = z.object({
 
 export type GetFinancialYearType = z.infer<typeof getFinancialYearSchema>
 
-
-
 export interface CodeGroup {
   id: string
   code: string
@@ -339,12 +337,11 @@ export const chartOfAccountSchema = z.object({
     .string()
     .min(1, 'Account type is required')
     .max(64, 'Maximum 64 characters allowed'),
-    // parentAccountId: z.number().int().min(1,'Parent account ID is required'),  
-    parentAccountId: z
+  // parentAccountId: z.number().int().min(1,'Parent account ID is required'),
+  parentAccountId: z
     .number({ required_error: 'Parent Account is required' })
     .int()
     .positive('Parent Account is required'),
-  
 
   currencyId: z.number().int().positive('Currency is required'),
   isReconcilable: z.boolean().default(false),
@@ -1164,7 +1161,7 @@ export const requisitionAdvanceSchema = z.object({
   requestedDate: z.coerce.date().optional(), // Auto-defaults to current date if missing
   advanceAmount: z.number().positive(), // Must be a positive number
   approvedAmount: z.number().min(0).optional(), // Cannot be negative, defaults to 0
-  currency: z.string().max(10), // Currency as string (ISO code like "USD", "BDT")
+  currency: z.number(), // Currency as string (ISO code like "USD", "BDT")
   paymentStatus: z.enum(['PENDING', 'PAID', 'REJECTED']).default('PENDING'), // Enum validation
   approvalStatus: z
     .enum(['PENDING', 'APPROVED', 'REJECTED'])
@@ -1215,11 +1212,16 @@ export interface GetAllVehicleType {
 
 //Create Vehicle zod schema
 export const createVehicleSchema = z.object({
-  costCenterId: z.number().int().nullable(),
-  vehicleDescription: z.string().max(45).nullable(),
+  costCenterId: z.number().int().min(1, 'Cost center is required').nullable(),
+  vehicleDescription: z
+    .string()
+    .max(45)
+    .min(1, 'vehicleDescription is required')
+    .nullable(),
   purchaseDate: z.coerce.date().nullable(),
-  assetId: z.number().int().nullable(),
-  employeeId: z.number().int().nullable(),
+  assetId: z.number().int().min(1, 'Asset ID is required').nullable(),
+  employeeid: z.number().int(),
+  createdBy: z.number().int(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
 

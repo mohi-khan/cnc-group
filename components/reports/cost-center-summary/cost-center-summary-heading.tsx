@@ -14,15 +14,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { format } from 'date-fns'
+import { format, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 
-import { Company, CompanyFromLocalstorage, CostCenter, User } from '@/utils/type'
+import {
+  Company,
+  CompanyFromLocalstorage,
+  CostCenter,
+  User,
+} from '@/utils/type'
 import { getAllCompanies, getAllCostCenters } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-
 
 interface CostCenterSummaryHeadingProps {
   generatePdf: () => void
@@ -48,8 +52,11 @@ const CostCenterSummaryHeading = ({
   const router = useRouter()
 
   // State variables
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
+  const [startDate, setStartDate] = useState<Date>(
+    subMonths(new Date(), 1) // Previous month's today
+  )
+  const [endDate, setEndDate] = useState<Date>(new Date()) // Today's date
+  const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [selectedCostCenterIds, setSelectedCostCenterIds] = useState<string[]>(
     []
@@ -171,27 +178,32 @@ const CostCenterSummaryHeading = ({
         </div>
 
         <div className="flex items-center gap-4 flex-1 justify-center">
-          <Popover
-            open={isDropdownOpen}
-            onOpenChange={(open) => setIsDropdownOpen(open)}
-          >
+          <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className="w-[230px] h-10 justify-start text-left truncate"
+                onClick={() => setIsDropdownOpen(true)}
               >
                 <CalendarIcon className="mr-2 h-5 w-5" />
                 {startDate && endDate
-                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
+                      endDate,
+                      'dd/MM/yyyy'
+                    )}`
                   : 'Select Date Range'}
               </Button>
             </PopoverTrigger>
 
             <PopoverContent className="w-auto p-4" align="start">
               <div className="flex flex-col gap-4">
+                {/* Start Date Picker */}
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Start Date:</span>
-                  <Popover>
+                  <Popover
+                    open={isStartPopoverOpen}
+                    onOpenChange={setIsStartPopoverOpen}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -210,8 +222,8 @@ const CostCenterSummaryHeading = ({
                         mode="single"
                         selected={startDate}
                         onSelect={(date) => {
-                          setStartDate(date)
-                          setIsDropdownOpen(false)
+                          if (date) setStartDate(date)
+                          setIsStartPopoverOpen(false)
                         }}
                         className="rounded-md border"
                       />
@@ -219,6 +231,7 @@ const CostCenterSummaryHeading = ({
                   </Popover>
                 </div>
 
+                {/* End Date Picker */}
                 <div className="flex items-center gap-2">
                   <span className="font-medium">End Date:</span>
                   <Popover>
@@ -240,8 +253,10 @@ const CostCenterSummaryHeading = ({
                         mode="single"
                         selected={endDate}
                         onSelect={(date) => {
-                          setEndDate(date)
-                          setIsDropdownOpen(false)
+                          if (date) setEndDate(date)
+                          if (startDate && date) {
+                            setIsDropdownOpen(false)
+                          }
                         }}
                         className="rounded-md border"
                       />

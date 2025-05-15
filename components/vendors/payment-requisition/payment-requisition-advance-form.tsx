@@ -13,13 +13,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { createAdvance, getAllEmployees } from '@/api/payment-requisition-api'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -55,19 +48,12 @@ export default function PaymentRequisitionAdvanceForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [employees, setEmployees] = useState<Employee[]>([])
 
-  const getCurrentUser = () => {
-    try {
-      return { userId: userData?.userId }
-    } catch (error) {
-      console.error('Error getting current user:', error)
-      return
-    }
-  }
+  console.log('from requisition advance form', requisition)
 
   const fetchEmployees = useCallback(async () => {
     if (!token) return
     try {
-      const response = await getAllEmployees()
+      const response = await getAllEmployees(token)
       console.log('Raw API response:', response) // Log the entire response to see its structure
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
@@ -91,7 +77,7 @@ export default function PaymentRequisitionAdvanceForm({
     } catch (error) {
       console.error('Error fetching employees:', error)
     }
-  }, [])
+  }, [token])
 
   useEffect(() => {
     fetchEmployees()
@@ -105,7 +91,7 @@ export default function PaymentRequisitionAdvanceForm({
     createdBy: userData?.userId,
     requestedDate: new Date(),
     advanceAmount: 0,
-    currency: 'USD',
+    currency: requisition?.currency || '',
     checkName: '',
     remarks: '',
   }
@@ -144,7 +130,6 @@ export default function PaymentRequisitionAdvanceForm({
     setIsSubmitting(true)
     try {
       const response = await createAdvance(values, token)
-
       if (response.error) {
         toast({
           title: 'Error',
@@ -251,42 +236,27 @@ export default function PaymentRequisitionAdvanceForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="currency"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Currency</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="BDT">BDT</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input {...field} readOnly />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="checkName"
+            name="requisitionNo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Check Name</FormLabel>
+                <FormLabel>Requisition No</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} readOnly={!!requisition} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

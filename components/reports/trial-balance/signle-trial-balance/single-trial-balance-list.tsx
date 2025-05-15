@@ -18,7 +18,7 @@ export default function SingleTrialBalanceList({
   }
 
   return (
-    <div className="overflow-x-auto" ref={targetRef}>
+    <div className="overflow-x-auto mx-3 mb-3 shadow-md " ref={targetRef} >
       <table className="min-w-full bg-white border border-gray-300">
         <thead>
           <tr className="bg-gray-100">

@@ -119,26 +119,22 @@ export default function SingleTrialBalance() {
 
   const handleSearch = useCallback(
     async (accountcode: number, fromdate: string, todate: string) => {
-      try {
-        const response = await getGeneralLedgerByDate({
-          accountcode,
-          fromdate,
-          todate,
-          token
-        })
+      if (!token) return
+      const response = await getGeneralLedgerByDate({
+        accountcode,
+        fromdate,
+        todate,
+        token
+      })
 
-        if (response.error) {
-          console.error('Error fetching transactions:', response.error)
-        } else {
-          setTransactions(response.data || [])
-        }
-      } catch (error) {
-        console.error('Error fetching transactions:', error)
+      if (response.error) {
+        console.error('Error fetching transactions:', response.error)
+      } else {
+        setTransactions(response.data || [])
       }
     },
     [token]
   )
-
   useEffect(() => {
     if (id && formattedStartDate && formattedEndDate) {
       handleSearch(Number(id), formattedStartDate, formattedEndDate)

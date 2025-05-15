@@ -1,7 +1,7 @@
 'use client'
 import ProfitAndLossHeading from './profit-and-loss-heading'
 import ProfitAndLossTableData from './profit-and-loss-table-data'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { ProfitAndLossType } from '@/utils/type'
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
@@ -65,21 +65,22 @@ const ProfitAndLoss = () => {
     setCompanyId(newCompanyId)
   }
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (startDate && endDate && companyId) {
-      const fetchData = async () => {
-        const response = await getProfitAndLoss({
-          fromdate: startDate.toISOString().split('T')[0],
-          enddate: endDate.toISOString().split('T')[0],
-          companyId: companyId,
-          token: token,
-        })
-        setProfitAndLoss(response.data || [])
-        console.log('this is from Profit and loss data : ', response.data || [])
-      }
-      fetchData()
+      const response = await getProfitAndLoss({
+        fromdate: startDate.toISOString().split('T')[0],
+        enddate: endDate.toISOString().split('T')[0],
+        companyId: companyId,
+        token: token,
+      })
+      setProfitAndLoss(response.data || [])
+      console.log('this is from Profit and loss data : ', response.data || [])
     }
-  }, [startDate, endDate, companyId])
+  }, [startDate, endDate, companyId, token])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   return (
     <div>

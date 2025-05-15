@@ -6,9 +6,20 @@ import Loader from '@/utils/loader'
 interface Props {
   data: CostCenterSummaryType[]
   targetRef: React.RefObject<HTMLDivElement>
+  startDate?: Date
+  endDate?: Date
+  companyId?: string
+  costCenterId?: string
 }
 
-const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
+const CostCenterSummaryTableData: React.FC<Props> = ({
+  data,
+  targetRef,
+  startDate,
+  endDate,
+  companyId,
+  costCenterId,
+}) => {
   // Function to get the debit or credit value for a specific cost center and account name
   const getDebitCreditDifference = (
     costCenterName: string,
@@ -69,13 +80,19 @@ const CostCenterSummaryTableData: React.FC<Props> = ({ data, targetRef }) => {
                 ))}
               </tr>
             ))}
-            {data.length === 0 && (
+            {!startDate || !endDate || !companyId || !costCenterId ? (
+              <tr>
+                <td className="border px-4 py-2 text-center" colSpan={4}>
+                  Please select start date, end date, company and department
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
               <tr>
                 <td className="border px-4 py-2 text-center" colSpan={4}>
                   <Loader />
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
