@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type React from 'react'
-import type { GetPaymentOrder } from '@/utils/type'
+import type { CurrencyType, GetPaymentOrder } from '@/utils/type'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -25,6 +25,8 @@ import { approveInvoice } from '@/api/payment-requisition-api'
 import { PaymentRequisitionPopup } from './payment-requisition-popup'
 import { useReactToPrint } from 'react-to-print'
 import { toWords } from 'number-to-words'
+import { getAllCurrency } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 interface PaymentRequisitionListProps {
   requisitions: GetPaymentOrder[]
@@ -37,6 +39,8 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   token,
   onRefresh,
 }) => {
+  const router = useRouter()
+  // State variables
   const { toast } = useToast()
   const [isApproving, setIsApproving] = useState(false)
   const [selectedRequisition, setSelectedRequisition] =
@@ -44,6 +48,7 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false)
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<string>('')
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   const checkRef = useRef<HTMLDivElement>(null)
   const printCheckFn = useReactToPrint({ contentRef: checkRef })
@@ -58,6 +63,39 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
     setCurrentStatus(status)
     setPaymentPopupOpen(true)
   }
+
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllCurrency(token)
+      console.log('Raw API response:', response) // Log the entire response to see its structure
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error fetching currency:', response.error)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: response.error?.message || 'Failed to fetch currency',
+        })
+        return
+      } else if (response && response.data) {
+        console.log('currency data structure:', response.data[0]) // Log the first currency to see structure
+        setCurrency(response.data)
+        console.log('currency data set:', response.data)
+      } else {
+        console.error('Invalid response format from getAllcurrency:', response)
+      }
+    } catch (error) {
+      console.error('Error fetching currency:', error)
+    }
+  }, [token])
+
+  useEffect(() => {
+    fetchCurrency()
+  }, [fetchCurrency])
 
   const handleApproveInvoice = async () => {
     if (!selectedRequisition) return
@@ -127,7 +165,14 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
               <TableCell className="font-medium">{req.companyName}</TableCell>
               <TableCell>{req.poNo}</TableCell>
               <TableCell>{req.vendorName}</TableCell>
-              <TableCell>${req.amount}</TableCell>
+              <TableCell>
+                {req.amount}{' '}
+                {
+                  currency.find(
+                    (c) => String(c.currencyId) === String(req.currency)
+                  )?.currencyCode
+                }
+              </TableCell>
               <TableCell>
                 {new Date(req.PurDate).toLocaleDateString()}
               </TableCell>
