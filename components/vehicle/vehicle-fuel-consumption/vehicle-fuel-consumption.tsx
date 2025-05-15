@@ -75,7 +75,7 @@ const VehicleFuelConsumption = () => {
    useEffect(() => {
      fetchVehicleFuelConsumptionData()
      fetchVehicles()
-   }, [])
+   }, [fetchVehicleFuelConsumptionData, fetchVehicles])
 
   return (
     <div>

@@ -70,35 +70,35 @@ export default function Navbar() {
   }, [profileRef, companiesRef])
 
   // Middleware to check route access
-  const checkRouteAccess = (source: string) => {
-    // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
-    if (source.includes('/settings/') && user?.roleId !== 1) {
-      router.push('/unauthorized-access')
-      return false
-    }
-    if (
-      source.includes('/reports/') &&
-      (!user?.roleId || ![1,2,].includes(user.roleId))
-    ) {
-      router.push('/unauthorized-access')
-      return false
-    }
-    if (
-      source === '/bank/bank-voucher' &&
-      (!user?.roleId || ![1, 2].includes(user.roleId))
-    ) {
-      router.push('/unauthorized-access')
-      return false
-    }
-    if (
-      source === '/cash/cash-voucher' &&
-      (!user?.roleId || ![1, 2].includes(user.roleId))
-    ) {
-      router.push('/unauthorized-access')
-      return false
-    }
-    return true
-  }
+  // const checkRouteAccess = (source: string) => {
+  //   // If route contains 'settings' and user's roleId is not 2, redirect to unauthorized page
+  //   if (source.includes('/settings/') && user?.roleId !== 1) {
+  //     router.push('/unauthorized-access')
+  //     return false
+  //   }
+  //   if (
+  //     source.includes('/reports/') &&
+  //     (!user?.roleId || ![1,2,].includes(user.roleId))
+  //   ) {
+  //     router.push('/unauthorized-access')
+  //     return false
+  //   }
+  //   if (
+  //     source === '/bank/bank-voucher' &&
+  //     (!user?.roleId || ![1, 2].includes(user.roleId))
+  //   ) {
+  //     router.push('/unauthorized-access')
+  //     return false
+  //   }
+  //   if (
+  //     source === '/cash/cash-voucher' &&
+  //     (!user?.roleId || ![1, 2].includes(user.roleId))
+  //   ) {
+  //     router.push('/unauthorized-access')
+  //     return false
+  //   }
+  //   return true
+  // }
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -148,7 +148,7 @@ export default function Navbar() {
                                     key={itemIndex}
                                     href={item.source}
                                     onClick={(e) => {
-                                      if (!checkRouteAccess(item.source)) {
+                                      if (!(item.source)) {
                                         e.preventDefault()
                                       }
                                     }}
