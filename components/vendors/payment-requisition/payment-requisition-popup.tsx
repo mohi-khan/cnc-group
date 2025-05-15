@@ -44,6 +44,7 @@ export function PaymentRequisitionPopup({
 }: PaymentRequisitionPopupProps) {
   //getting userData from jotai atom component
   useInitializeUser()
+  console.log('dataaaaa', requisition)
   const [userData] = useAtom(userDataAtom)
 
   // State variables
@@ -244,6 +245,7 @@ export function PaymentRequisitionPopup({
         journalType: 'Bank Voucher',
         amountTotal: Number(totalDetailsAmount),
         createdBy: user?.userId ?? 60,
+        exchangeRate: values.journalEntry.exchangeRate || 1,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
@@ -342,9 +344,10 @@ export function PaymentRequisitionPopup({
             <BankVoucherMaster
               form={form}
               formState={formState}
+              requisition={requisition}
               setFormState={setFormState}
             />
-            <BankVoucherDetails form={form} formState={formState} />
+            <BankVoucherDetails form={form} formState={formState} requisition={requisition} />
             <BankVoucherSubmit form={form} onSubmit={onSubmit} />
           </>
         )
