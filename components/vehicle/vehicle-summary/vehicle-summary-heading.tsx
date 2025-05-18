@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { format } from 'date-fns'
+import { format, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 import { Employee, GetAllVehicleType } from '@/utils/type'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -33,16 +33,20 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
   generateExcel,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [start, setStart] = useState<Date | undefined>(startDate)
-  const [end, setEnd] = useState<Date | undefined>(endDate)
+  const [localStartDate, setLocalStartDate] = useState<Date>(
+    subMonths(new Date(), 1) // Previous month's today
+  )
+  const [localEndDate, setLocalEndDate] = useState<Date>(new Date()) // Today's date
+    const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
+
 
   return (
     <div>
       <div className="mt-4">
         <div className="flex flex-col p-4 border-b w-full gap-4">
           <div className="flex items-center justify-center gap-4">
-            <Popover
+            {/* <Popover
               open={isDropdownOpen}
               onOpenChange={(open) => setIsDropdownOpen(open)}
             >
@@ -119,7 +123,96 @@ const VehicleSummaryHeading: React.FC<VehicleSummaryHeadingProps> = ({
                   </div>
                 </div>
               </PopoverContent>
+            </Popover> */}
+            <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-[230px] h-10 justify-start text-left truncate"
+                  onClick={() => setIsDropdownOpen(true)}
+                >
+                  <CalendarIcon className="mr-2 h-5 w-5" />
+                  {localStartDate && localEndDate
+                    ? `${format(localStartDate, 'dd/MM/yyyy')} - ${format(
+                        localEndDate,
+                        'dd/MM/yyyy'
+                      )}`
+                    : 'Select Date Range'}
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent className="w-auto p-4" align="start">
+                <div className="flex flex-col gap-4">
+                  {/* Start Date Picker */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Start Date:</span>
+                    <Popover
+                      open={isStartPopoverOpen}
+                      onOpenChange={setIsStartPopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-[180px] h-10 justify-start text-left truncate ${
+                            !localStartDate ? 'text-muted-foreground' : ''
+                          }`}
+                        >
+                          <CalendarIcon className="mr-2 h-5 w-5" />
+                          {localStartDate
+                            ? format(localStartDate, 'dd/MM/yyyy')
+                            : 'Select Start Date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={localStartDate}
+                          onSelect={(date) => {
+                            if (date) setLocalStartDate(date)
+                            setIsStartPopoverOpen(false)
+                          }}
+                          className="rounded-md border"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* End Date Picker */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">End Date:</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-[180px] h-10 justify-start text-left truncate ${
+                            !localEndDate ? 'text-muted-foreground' : ''
+                          }`}
+                        >
+                          <CalendarIcon className="mr-2 h-5 w-5" />
+                          {localEndDate
+                            ? format(localEndDate, 'dd/MM/yyyy')
+                            : 'Select End Date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={localEndDate}
+                          onSelect={(date) => {
+                            if (date) setLocalEndDate(date)
+                            if (localStartDate && date) {
+                              setIsDropdownOpen(false)
+                            }
+                          }}
+                          className="rounded-md border"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </PopoverContent>
             </Popover>
+
             <CustomCombobox
               items={vehicles.map((vehicle) => ({
                 id: vehicle.vehicleNo.toString(),

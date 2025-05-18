@@ -20,9 +20,11 @@ import { useEffect } from 'react'
 export default function BankVoucherDetails({
   form,
   formState,
+  requisition
 }: {
   form: UseFormReturn<any>
   formState: FormStateType
+  requisition: any
 }) {
   // Destructure the formState to get the filteredChartOfAccounts, costCenters, departments, and partners
   const { fields, append, remove } = useFieldArray({

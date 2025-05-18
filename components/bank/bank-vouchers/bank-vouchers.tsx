@@ -64,7 +64,7 @@ export default function BankVoucher() {
         journalType: '',
         companyId: 0,
         locationId: 0,
-        currencyId: 0,
+        currencyId: 1,
         exchangeRate: 1,
         amountTotal: 0,
         payTo: '',
@@ -277,6 +277,7 @@ export default function BankVoucher() {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
+        currencyId: values.journalEntry.currencyId || 1,
         amountTotal: totalDetailsAmount,
         createdBy: user?.userId ?? 0,
       },
@@ -407,9 +408,10 @@ export default function BankVoucher() {
               <BankVoucherMaster
                 form={form}
                 formState={formState}
+                requisition={undefined}
                 setFormState={setFormState}
               />
-              <BankVoucherDetails form={form} formState={formState} />
+              <BankVoucherDetails form={form} formState={formState} requisition={undefined}/>
               <BankVoucherSubmit form={form} onSubmit={onSubmit} />
             </form>
           </Form>

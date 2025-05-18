@@ -7,8 +7,14 @@ import { GetAllVehicleType } from '@/utils/type'
 
 import VehiclePerformanceReportList from './vehicle-performance-table-list'
 import { usePDF } from 'react-to-pdf'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const VehiclePerformanceReport = () => {
+   //getting userData from jotai atom component
+      useInitializeUser()
+    
+      const [token] = useAtom(tokenAtom)
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   const { toPDF, targetRef } = usePDF({ filename: 'vehicle_performance_report.pdf' })
   
@@ -20,18 +26,17 @@ const VehiclePerformanceReport = () => {
 
 
   // Fetch all vehicles data
-  const fetchVehicles = async () => {
-    const vehicleData = await getAllVehicles()
+  const fetchVehicles = React.useCallback(async () => {
+    const vehicleData = await getAllVehicles(token)
     setVehicles(vehicleData.data || [])
     console.log('Show The Vehicle All Data :', vehicleData.data)
-  }
-
+  }, [token])
   
 
   useEffect(() => {
     fetchVehicles()
   
-  }, [])
+  }, [fetchVehicles])
 
   return (
     <div>

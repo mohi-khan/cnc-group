@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import VehicleSummaryHeading from './vehicle-summary-heading'
 import VehicleSummaryTableList from './vehicle-summary-table-list'
 import { GetAllVehicleType, VehicleSummaryType } from '@/utils/type'
@@ -10,10 +10,16 @@ import { toast } from '@/hooks/use-toast'
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 const VehicleSummary = () => {
+  //getting userData from jotai atom component
+    useInitializeUser()
+  
+    const [token] = useAtom(tokenAtom)
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-  const [token, setToken] = useState<string | null>(null)
+  // const [token, setToken] = useState<string | null>(null)
   const [vehicleSummary, setVehicleSummary] = useState<VehicleSummaryType[]>([])
   const [startDate, setStartDate] = useState<Date>(new Date('2023-01-01')) // Default start date
   const [endDate, setEndDate] = useState<Date>(new Date('2025-12-31')) // Default end date
@@ -22,27 +28,25 @@ const VehicleSummary = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'vehicle_summary.pdf' })
 
   // Retrieve token from localStorage safely
-  useEffect(() => {
-    const mainToken = localStorage.getItem('authToken')
-    if (mainToken) {
-      setToken(`Bearer ${mainToken}`)
-      console.log('🚀 ~ vehicle summary token:', mainToken)
-    }
-  }, [])
+  // useEffect(() => {
+  //   const mainToken = localStorage.getItem('authToken')
+  //   if (mainToken) {
+  //     setToken(`Bearer ${mainToken}`)
+  //     console.log('🚀 ~ vehicle summary token:', mainToken)
+  //   }
+  // }, [])
 
   // Fetch all vehicles
-  const fetchVehicles = async () => {
-    try {
-      const vehicleData = await getAllVehicles()
-      setVehicles(vehicleData.data || [])
-      console.log('Show The Vehicle All Data:', vehicleData.data)
-    } catch (error) {
-      console.error('Failed to fetch vehicles:', error)
-    }
-  }
-
+  const fetchVehicles = useCallback(async () => {
+    const vehicleData = await getAllVehicles(token)
+    setVehicles(vehicleData.data || [])
+    console.log('Show The Vehicle All Data:', vehicleData.data)
+  }, [token])
+  useEffect(() => {
+    fetchVehicles()
+  }, [fetchVehicles])
   // Fetch Vehicle Summary Data
-  const fetchGetVehicleSummary = async ({
+  const fetchGetVehicleSummary = useCallback(async ({
     token,
     startDate,
     endDate,
@@ -53,26 +57,17 @@ const VehicleSummary = () => {
     endDate: Date
     vehicleNo: number
   }) => {
-    try {
-      const response = await getVehicleSummary({ 
-        startDate: startDate.toISOString().split('T')[0], 
-        endDate: endDate.toISOString().split('T')[0], 
-        vehicleNo, 
-        token 
-      })
-      if (!response.data) throw new Error('No data received')
+    const response = await getVehicleSummary({ 
+      startDate: startDate.toISOString().split('T')[0], 
+      endDate: endDate.toISOString().split('T')[0], 
+      vehicleNo,
+      token
+    })
+    if (!response.data) throw new Error('No data received')
 
-      setVehicleSummary(response.data)
-      console.log('✅ Vehicle Summary data:', response.data)
-    } catch (error) {
-      console.error('❌ Error getting Vehicle Summary:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to load Vehicle Summary',
-      })
-      setVehicleSummary([])
-    }
-  }
+    setVehicleSummary(response.data)
+    console.log('✅ Vehicle Summary data:', response.data)
+  }, [])
 
   // Fetch data when token is available
   useEffect(() => {
@@ -80,7 +75,7 @@ const VehicleSummary = () => {
       fetchGetVehicleSummary({ token, startDate, endDate, vehicleNo: selectedVehicleNo })
       fetchVehicles()
     }
-  }, [token, selectedVehicleNo, startDate, endDate])
+  }, [ token,selectedVehicleNo, startDate, endDate,fetchGetVehicleSummary,fetchVehicles])
 
   // Generate PDF
   const generatePdf = () => {
