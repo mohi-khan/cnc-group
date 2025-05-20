@@ -8,11 +8,20 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Journal Management',
         items: [
           { name: 'Journal Entry', source: '/accounting/journal-voucher' },
-          { name: 'Journal Repeated Voucher', source: '/accounting/journal-repeated-voucher' },
-          { name: 'Journal Items', source: '/accounting/journal-items' },
-          { name: 'Reverse Entry', source: '/accounting/reverse-entry' },
+          { name: 'Cash Voucher', source: '/cash/cash-voucher' },
+          { name: 'Contra Vouchers', source: '/cash/contra-vouchers' },
+          { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
         ],
       },
+      // {
+      //   name: 'Journal Management',
+      //   items: [
+      //     { name: 'Journal Entry', source: '/accounting/journal-voucher' },
+      //     { name: 'Journal Repeated Voucher', source: '/accounting/journal-repeated-voucher' },
+      //     { name: 'Journal Items', source: '/accounting/journal-items' },
+      //     { name: 'Reverse Entry', source: '/accounting/reverse-entry' },
+      //   ],
+      // },
       {
         name: 'Books',
         items: [{ name: 'Day Books', source: '/accounting/day-books' }],
@@ -68,7 +77,7 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Vendor Management',
         items: [
-          { name: 'Bills', source: '/vendors/bills' },
+          { name: 'Invoice', source: '/vendors/invoice' },
           {
             name: 'Payment Requisition',
             source: '/vendors/payment-requisition',
@@ -129,14 +138,6 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Create Asset Category',
             source: '/assets/asset-category',
           },
-          {
-            name: 'Configure Depreciation',
-            source: '/assets/configure-depreciation',
-          },
-          {
-            name: 'Configure Asset Accounting',
-            source: '/assets/configure-asset-accounting',
-          },
           { name: 'Asset Depreciation', source: '/assets/asset-depreciation' },
           { name: 'Asset Report', source: '/assets/asset-report' },
         ],
@@ -170,7 +171,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/bank-reconciliation-report',
           },
           {
-            name: 'Bank Transactions',
+            name: 'Transactions Upload',
             source: '/bank/bank-transactions',
           },
           {
