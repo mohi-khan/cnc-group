@@ -80,7 +80,7 @@ export default function PaymentRequisitionAdvanceForm({
     } catch (error) {
       console.error('Error fetching employees:', error)
     }
-  }, [token])
+  }, [token,router,toast])
 
   const fetchCurrency = useCallback(async () => {
     if (!token) return
@@ -109,7 +109,7 @@ export default function PaymentRequisitionAdvanceForm({
     } catch (error) {
       console.error('Error fetching currency:', error)
     }
-  }, [token])
+  }, [token,router,toast])
 
   useEffect(() => {
     fetchCurrency()

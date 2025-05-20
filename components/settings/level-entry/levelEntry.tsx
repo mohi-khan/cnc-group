@@ -152,7 +152,7 @@ export default function LevelEntry() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }, [token])
+  }, [token,router])
 
   const fetchLevels = useCallback(async () => {
     const fetchLevels = await getAllLevel(token)
@@ -170,7 +170,7 @@ export default function LevelEntry() {
       setLevels(fetchLevels.data)
       console.log('🚀 ~ fetchLevels ~ fetchLevels.data:', fetchLevels.data)
     }
-  }, [token])
+  }, [token,router])
 
   useEffect(() => {
     fetchChartOfAccounts()

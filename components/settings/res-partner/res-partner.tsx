@@ -138,7 +138,7 @@ export default function ResPartners() {
     }
     // console.log('companies here', companies)
     // setIsLoading(false)
-  }, [token])
+  }, [token,router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -154,7 +154,7 @@ export default function ResPartners() {
       console.log('company', data.data)
       setCompanies(data.data)
     }
-  }, [token])
+  }, [token,router])
 
   React.useEffect(() => {
     fetchResPartners()

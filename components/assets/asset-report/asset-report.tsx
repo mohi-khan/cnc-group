@@ -91,11 +91,11 @@ const AssetReport = () => {
         variant: 'destructive',
       })
     }
-  }, [token])
+  }, [token,router])
 
   useEffect(() => {
     fetchAllCompanies()
-  }, [])
+  }, [fetchAllCompanies])
 
   return (
     <div className="w-[97%] mx-auto py-6">

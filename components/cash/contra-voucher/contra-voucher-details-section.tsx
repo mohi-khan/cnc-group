@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo, Fragment } from 'react'
+import React, { useEffect, useState, useMemo, Fragment, useCallback } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,7 +79,7 @@ export function ContraVoucherDetailsSection({
     }
   }, [entries.length, form])
 
-  const fetchChartOfAccounts = async () => {
+  const fetchChartOfAccounts = useCallback(async () => {
     const response = await getAllChartOfAccounts(token)
     if (response.error || !response.data) {
       toast({
@@ -90,19 +90,19 @@ export function ContraVoucherDetailsSection({
     } else {
       setChartOfAccounts(response.data)
     }
-  }
+  },[token])
 
-  const fetchBankAccounts = async () => {
-    const response = await getAllBankAccounts(token)
-    if (response.error || !response.data) {
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to fetch Bank Accounts',
-      })
-    } else {
-      setAccounts(response.data)
-    }
+  const fetchBankAccounts = useCallback(async () => {
+  const response = await getAllBankAccounts(token);
+  if (response.error || !response.data) {
+    toast({
+      title: 'Error',
+      description: response.error?.message || 'Failed to fetch Bank Accounts',
+    });
+  } else {
+    setAccounts(response.data);
   }
+}, [token]);
 
   const glAccountIdToChartName = useMemo(() => {
     const map: Record<number, { name: string; id: number }> = {}
@@ -115,7 +115,7 @@ export function ContraVoucherDetailsSection({
   useEffect(() => {
     fetchChartOfAccounts()
     fetchBankAccounts()
-  }, []) // Added fetchBankAccounts to dependencies
+  }, [fetchBankAccounts,fetchChartOfAccounts]) // Added fetchBankAccounts to dependencies
 
   const updateDisabledStates = (
     index: number,

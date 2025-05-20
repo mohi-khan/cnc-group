@@ -91,7 +91,7 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
     } catch (error) {
       console.error('Error fetching currency:', error)
     }
-  }, [token])
+  }, [token,router,toast])
 
   useEffect(() => {
     fetchCurrency()

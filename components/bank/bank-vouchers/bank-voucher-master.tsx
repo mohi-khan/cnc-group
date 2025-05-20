@@ -16,7 +16,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import type { CurrencyType, FormStateType } from '@/utils/type'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
 // Define the props for the BankVoucherMaster component
@@ -46,7 +46,7 @@ export default function BankVoucherMaster({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Function to fetch currency data
-  const fetchCurrency = async () => {
+  const fetchCurrency = useCallback(async () => {
     const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -58,7 +58,7 @@ export default function BankVoucherMaster({
       setCurrency(data.data)
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
-  }
+  },[token])
 
   useEffect(() => {
     fetchCurrency()
@@ -95,7 +95,7 @@ export default function BankVoucherMaster({
         form.setValue('journalEntry.currencyId', requisition.currency)
       }
     }
-  }, [requisition, form, formState.formType])
+  }, [requisition,fetchCurrency, form, formState.formType])
 
   return (
     <div className="grid grid-cols-3 gap-4">

@@ -82,7 +82,7 @@ export const BankReconciliation = () => {
       }
     }
     fetchBankAccounts()
-  }, [toast])
+  }, [toast,router,token])
 
   const fetchReconciliations = async (data: {
     bankAccount: string

@@ -56,7 +56,7 @@ const PaymentRequisition = () => {
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token,router,userData?.userCompanies])
 
   useEffect(() => {
     fetchRequisitions()

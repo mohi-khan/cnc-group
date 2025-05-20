@@ -138,7 +138,7 @@ export function NumberSeries() {
       setSeries(response.data)
     }
     setIsLoading(false)
-  }, [toast, token])
+  }, [toast, token,router])
 
   const fetchFinancialYears = React.useCallback(async () => {
     if (!token) return
@@ -161,7 +161,7 @@ export function NumberSeries() {
       setFynancialYear(response.data)
     }
     setIsLoading(false)
-  }, [toast, token])
+  }, [toast, token,router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -180,7 +180,7 @@ export function NumberSeries() {
     } else {
       setCompanies(data.data)
     }
-  }, [toast, token])
+  }, [toast, token,router])
 
   const fetchAllLocations = React.useCallback(async () => {
     if (!token) return
@@ -199,7 +199,7 @@ export function NumberSeries() {
     } else {
       setLocations(response.data)
     }
-  }, [toast, token])
+  }, [toast, token,router])
 
   React.useEffect(() => {
     fetchNumberSeries()

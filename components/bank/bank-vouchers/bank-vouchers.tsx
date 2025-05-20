@@ -22,7 +22,7 @@ import {
 
 import {
   createJournalEntryWithDetails,
-  getAllVoucher,
+getAllVoucher
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
 import { Popup } from '@/utils/popup'
@@ -39,6 +39,7 @@ import {
   getAllDepartments,
   getAllResPartners,
 } from '@/api/common-shared-api'
+import {  } from '@/api/journal-voucher-api'
 
 export default function BankVoucher() {
   //getting userData from jotai atom component
@@ -164,7 +165,7 @@ export default function BankVoucher() {
     }
 
     fetchInitialData()
-  }, [token])
+  }, [token,router])
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
@@ -174,7 +175,7 @@ export default function BankVoucher() {
     return data.map((location) => location.location.locationId)
   }, [])
   // fetch today's Voucher List from Database and populate the grid
-  async function getallVoucher(company: number[], location: number[]) {
+  const getallVoucher=React.useCallback(async(company: number[], location: number[])=> {
     if (!token) return
     let localVoucherGrid: JournalResult[] = []
     try {
@@ -198,7 +199,7 @@ export default function BankVoucher() {
       throw error
     }
     setVoucherGrid(localVoucherGrid)
-  }
+  },[token])
   // fetch today's Voucher List from Database and populate the grid
 
   React.useEffect(() => {
@@ -242,6 +243,7 @@ export default function BankVoucher() {
     formState.locations,
     getCompanyIds,
     getLocationIds,
+    getallVoucher,
     dataLoaded,
   ])
   //Calling function for fetching voucherlist to populate the form state variables

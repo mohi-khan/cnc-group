@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   type CompanyFromLocalstorage,
   type JournalQuery,
@@ -31,24 +31,7 @@ export default function ContraVoucherTable() {
   const [isLoading, setIsLoading] = useState(true)
 
   //getting user data from localStorage and setting it to state
-  useEffect(() => {
-    if (userData) {
-      setUser(userData)
-      setCompanies(userData.userCompanies)
-      setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
-
-      const companyIds = getCompanyIds(userData.userCompanies)
-      const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
-      fetchAllVoucher(companyIds, locationIds)
-    } else {
-      console.log('No user data found in localStorage')
-    }
-  }, [userData])
-
-  // Function to fetch all vouchers based on company and location IDs
-  async function fetchAllVoucher(company: number[], location: number[]) {
+  const fetchAllVoucher=useCallback(async(company: number[], location: number[])=> {
     setIsLoading(true)
     const voucherQuery: JournalQuery = {
       date: new Date().toISOString().split('T')[0],
@@ -69,8 +52,27 @@ export default function ContraVoucherTable() {
       setVouchers([])
     }
     setIsLoading(false)
-  }
+  },[token])
 
+  
+  useEffect(() => {
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+      console.log('Current user from localStorage:', userData)
+
+      const companyIds = getCompanyIds(userData.userCompanies)
+      const locationIds = getLocationIds(userData.userLocations)
+      console.log({ companyIds, locationIds })
+      fetchAllVoucher(companyIds, locationIds)
+    } else {
+      console.log('No user data found in localStorage')
+    }
+  }, [userData,fetchAllVoucher])
+
+  // Function to fetch all vouchers based on company and location IDs
+  
   // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)

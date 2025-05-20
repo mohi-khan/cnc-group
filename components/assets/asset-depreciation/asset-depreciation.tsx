@@ -138,7 +138,7 @@ export default function AssetDepreciation() {
     }
   }
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     if (!token) return
     try {
       const assetdata = await getAssets(token)
@@ -151,11 +151,11 @@ export default function AssetDepreciation() {
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
     }
-  }
+  },[token])
 
   useEffect(() => {
     fetchAssets()
-  }, [])
+  }, [fetchAssets])
 
   // Handle final submission to database
   const onSubmit = async () => {
@@ -223,6 +223,7 @@ export default function AssetDepreciation() {
               companyId: assetData.companyId,
               locationId: assetData.locationId, // Now we know this is defined
               currencyId: 1,
+              exchangeRate:1,
               amountTotal: depreciationAmount,
               notes: `Auto-generated for Asset Depreciation: ${assetData.name} on ${formData.depreciation_date}`,
               createdBy: userId, // Now we know userId is defined from the type guard above
@@ -329,12 +330,12 @@ export default function AssetDepreciation() {
         variant: 'destructive',
       })
     }
-  }, [token])
+  }, [token,router])
 
   useEffect(() => {
     fetchAllCompanies()
     // Empty dependency array ensures this only runs once on component mount
-  }, [])
+  }, [fetchAllCompanies])
 
   // Function to format date for display
   const formatDate = (dateString: string | Date) => {

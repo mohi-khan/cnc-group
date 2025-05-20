@@ -81,7 +81,7 @@ const CashFlowStatement = () => {
       }
       fetchData()
     }
-  }, [startDate, endDate, companyId])
+  }, [startDate, endDate, companyId,token])
 
   return (
     <div>

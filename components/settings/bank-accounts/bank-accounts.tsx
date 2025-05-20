@@ -146,7 +146,7 @@ export default function BankAccounts() {
     } else {
       setCurrency(fetchedCurrency.data)
     }
-  }, [token])
+  }, [token,toast])
 
   const fetchBankAccounts = React.useCallback(async () => {
     if (!token) return
@@ -165,7 +165,7 @@ export default function BankAccounts() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }, [toast])
+  }, [toast,router,token])
 
   const fetchGlAccounts = React.useCallback(async () => {
     if (!token) return
@@ -184,13 +184,13 @@ export default function BankAccounts() {
     } else {
       setGlAccounts(fetchedGlAccounts.data)
     }
-  }, [toast])
+  }, [toast,router,token])
 
   React.useEffect(() => {
     fetchGlAccounts()
     fetchBankAccounts()
     fetchCurrency()
-  }, [fetchBankAccounts, fetchGlAccounts])
+  }, [fetchBankAccounts, fetchGlAccounts,fetchCurrency])
 
   React.useEffect(() => {
     if (editingAccount) {

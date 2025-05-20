@@ -102,7 +102,7 @@ export default function CostCenterManagement() {
       setCostCenters(data.data)
     }
     setIsLoading(false)
-  }, [toast, token])
+  }, [toast, token,router])
 
   // get all currency api
     const fetchCurrency = React.useCallback(async () => {
@@ -121,7 +121,7 @@ export default function CostCenterManagement() {
       } else {
         setCurrency(fetchedCurrency.data)
       }
-    }, [token])
+    }, [token,toast])
 
   useEffect(() => {
     fetchCostCenters()
