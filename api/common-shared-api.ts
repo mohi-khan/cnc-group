@@ -86,6 +86,17 @@ export async function getAllResPartners(token: string) {
   })
 }
 
+export async function getResPartnersBySearch(search: string, token: string) {
+  return fetchApi<ResPartner[]>({
+    url: `api/res-partner/get-res-partners-by-search?search=${search}`,
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 // All Bank Accounts Get Api
 export async function getAllBankAccounts(token: string) {
   return fetchApi<BankAccount[]>({

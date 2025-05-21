@@ -23,33 +23,13 @@ import {
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
-import { CURRENCY_ITEMS } from '@/utils/constants'
-import { Button } from '@/components/ui/button'
 import { CustomCombobox } from '@/utils/custom-combobox'
-
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Pencil } from 'lucide-react'
-import { Label } from '@/components/ui/label'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import {
   HoverCard,
-  HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
 
@@ -281,7 +261,7 @@ export function ContraVoucherMasterSection({
 
                             // Reset exchange rate when currency changes or is cleared
                             if (newValue === null || newValue === 1) {
-                              form.setValue('journalEntry.exchangeRate', 0)
+                              form.setValue('journalEntry.exchangeRate', 1)
                             }
                           }}
                           placeholder="Select currency"

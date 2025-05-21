@@ -225,6 +225,7 @@ export default function AssetDepreciation() {
               currencyId: 1,
               exchangeRate:1,
               amountTotal: depreciationAmount,
+              exchangeRate: 1,
               notes: `Auto-generated for Asset Depreciation: ${assetData.name} on ${formData.depreciation_date}`,
               createdBy: userId, // Now we know userId is defined from the type guard above
             },
