@@ -18,6 +18,10 @@ import type {
   ResPartner,
 } from '@/utils/type'
 import type { UseFormReturn } from 'react-hook-form'
+import { ComboboxItem, CustomComboboxWithApi } from '@/utils/custom-combobox-with-api'
+import { useAtom } from 'jotai'
+import { tokenAtom } from '@/utils/user'
+import { getResPartnersBySearch } from '@/api/common-shared-api'
 
 // Defines the props for the CashVoucherDetails component
 interface CashVoucherDetailsProps {
@@ -41,6 +45,26 @@ export default function CashVoucherDetails({
   addDetailRow,
   onSubmit,
 }: CashVoucherDetailsProps) {
+  const [token] = useAtom(tokenAtom)
+
+  const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
+    try {
+      const response = await getResPartnersBySearch(query, token)
+      if (response.error || !response.data) {
+        console.error("Error fetching partners:", response.error)
+        return []
+      }
+
+      return response.data.map((partner) => ({
+        id: partner.id.toString(),
+        name: partner.name || "Unnamed Partner",
+      }))
+    } catch (error) {
+      console.error("Error fetching partners:", error)
+      return []
+    }
+  }
+
   return (
     <div className="mb-6">
       <Table className="border shadow-md">
@@ -195,26 +219,21 @@ export default function CashVoucherDetails({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <CustomCombobox
+                      <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
-                            name: partner.name || 'Unnamed Partner',
+                            name: partner.name || "Unnamed Partner",
                           }))}
                           value={
                             field.value
                               ? {
                                   id: field.value.toString(),
-                                  name:
-                                    partners.find((p) => p.id === field.value)
-                                      ?.name || '',
+                                  name: partners.find((p) => p.id === field.value)?.name || "",
                                 }
                               : null
                           }
-                          onChange={(value) =>
-                            field.onChange(
-                              value ? Number.parseInt(value.id, 10) : null
-                            )
-                          }
+                          onChange={(value) => field.onChange(value ? Number.parseInt(value.id, 10) : null)}
+                          searchFunction={searchPartners}
                         />
                       </FormControl>
                     </FormItem>

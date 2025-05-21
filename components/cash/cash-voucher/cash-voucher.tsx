@@ -310,7 +310,7 @@ export default function CashVoucher() {
   
   //Function to fetch partners from the API
   const fetchgetResPartner = useCallback(async () => {
-    const search = 'prog'
+    const search = ''
     setIsLoadingPartners(true)
     if (!token) return
     try {
