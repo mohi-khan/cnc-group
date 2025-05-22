@@ -38,6 +38,7 @@ import {
   getAllCostCenters,
   getAllDepartments,
   getAllResPartners,
+  getResPartnersBySearch,
 } from '@/api/common-shared-api'
 import {  } from '@/api/journal-voucher-api'
 
@@ -126,6 +127,7 @@ export default function BankVoucher() {
   // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
+      const search=''
       if (!token) return
       const [
         bankAccountsResponse,
@@ -137,7 +139,7 @@ export default function BankVoucher() {
         getAllBankAccounts(token),
         getAllChartOfAccounts(token),
         getAllCostCenters(token),
-        getAllResPartners(token),
+        getResPartnersBySearch(search, token),
         getAllDepartments(token),
       ])
       if (
@@ -413,7 +415,7 @@ export default function BankVoucher() {
                 requisition={undefined}
                 setFormState={setFormState}
               />
-              <BankVoucherDetails form={form} formState={formState} requisition={undefined}/>
+              <BankVoucherDetails form={form} formState={formState} requisition={undefined} partners={formState.partners} />
               <BankVoucherSubmit form={form} onSubmit={onSubmit} />
             </form>
           </Form>
@@ -436,4 +438,5 @@ export default function BankVoucher() {
       />
     </div>
   )
+
 }
