@@ -347,7 +347,7 @@ export function PaymentRequisitionPopup({
               requisition={requisition}
               setFormState={setFormState}
             />
-            <BankVoucherDetails form={form} formState={formState} requisition={requisition} />
+            <BankVoucherDetails form={form} partners={formState.partners} formState={formState} requisition={requisition} />
             <BankVoucherSubmit form={form} onSubmit={onSubmit} />
           </>
         )

@@ -201,7 +201,7 @@ export default function BankVoucher() {
       throw error
     }
     setVoucherGrid(localVoucherGrid)
-  },[token])
+  },[token, router])
   // fetch today's Voucher List from Database and populate the grid
 
   React.useEffect(() => {
