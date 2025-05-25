@@ -12,6 +12,7 @@ import {
   ResPartner,
   VoucherById,
 } from '@/utils/type'
+import { useCallback } from 'react'
 import { z } from 'zod'
 
 export type CostCenter = z.infer<typeof costCentersArraySchema>
@@ -31,14 +32,14 @@ export async function createJournalEntryWithDetails(
   })
 }
 // Get All Voucher Data
-export async function getAllVoucher(data: JournalQuery, token: string) {
+export const getAllVoucher=async(data: JournalQuery, token: string)=> {
   const queryParams = new URLSearchParams({
     date: data.date,
     companyId: JSON.stringify(data.companyId), // Convert array to JSON string
     locationId: JSON.stringify(data.locationId), // Convert array to JSON string
     voucherType: data.voucherType ?? '',
   }).toString()
-  console.log(queryParams)
+  
   return fetchApi({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',

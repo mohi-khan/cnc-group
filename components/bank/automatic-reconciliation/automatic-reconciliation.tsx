@@ -83,7 +83,7 @@ export default function AutomaticReconciliation() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast,token])
 
   const fetchReconciliations = async (data: {
     bankAccount: string

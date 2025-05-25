@@ -44,6 +44,7 @@ export function PaymentRequisitionPopup({
 }: PaymentRequisitionPopupProps) {
   //getting userData from jotai atom component
   useInitializeUser()
+  console.log('dataaaaa', requisition)
   const [userData] = useAtom(userDataAtom)
 
   // State variables
@@ -215,7 +216,7 @@ export function PaymentRequisitionPopup({
     if (isOpen) {
       fetchInitialData()
     }
-  }, [isOpen, toast])
+  }, [isOpen, toast,token])
 
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
@@ -244,6 +245,7 @@ export function PaymentRequisitionPopup({
         journalType: 'Bank Voucher',
         amountTotal: Number(totalDetailsAmount),
         createdBy: user?.userId ?? 60,
+        exchangeRate: values.journalEntry.exchangeRate || 1,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
@@ -310,28 +312,28 @@ export function PaymentRequisitionPopup({
     }
   }
 
-  const addEntry = () => {
-    const currentEntries = form.getValues('journalDetails')
-    form.setValue('journalDetails', [
-      ...currentEntries,
-      {
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        createdBy: 60,
-      },
-    ])
-  }
+  // const addEntry = () => {
+  //   const currentEntries = form.getValues('journalDetails')
+  //   form.setValue('journalDetails', [
+  //     ...currentEntries,
+  //     {
+  //       accountId: 0,
+  //       debit: 0,
+  //       credit: 0,
+  //       createdBy: 60,
+  //     },
+  //   ])
+  // }
 
-  const removeEntry = (index: number) => {
-    const currentEntries = form.getValues('journalDetails')
-    if (currentEntries.length > 2) {
-      form.setValue(
-        'journalDetails',
-        currentEntries.filter((_, i) => i !== index)
-      )
-    }
-  }
+  // const removeEntry = (index: number) => {
+  //   const currentEntries = form.getValues('journalDetails')
+  //   if (currentEntries.length > 2) {
+  //     form.setValue(
+  //       'journalDetails',
+  //       currentEntries.filter((_, i) => i !== index)
+  //     )
+  //   }
+  // }
 
   // Render different forms based on status
   const renderFormContent = () => {
@@ -342,9 +344,10 @@ export function PaymentRequisitionPopup({
             <BankVoucherMaster
               form={form}
               formState={formState}
+              requisition={requisition}
               setFormState={setFormState}
             />
-            <BankVoucherDetails form={form} formState={formState} />
+            <BankVoucherDetails form={form} partners={formState.partners} formState={formState} requisition={requisition} />
             <BankVoucherSubmit form={form} onSubmit={onSubmit} />
           </>
         )

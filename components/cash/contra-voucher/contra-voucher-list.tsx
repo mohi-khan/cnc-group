@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   type CompanyFromLocalstorage,
   type JournalQuery,
@@ -18,10 +18,10 @@ import { useRouter } from 'next/navigation'
 
 export default function ContraVoucherTable() {
   //getting userData from jotai atom component
-      useInitializeUser()
-      const [userData] = useAtom(userDataAtom)
-        const [token] = useAtom(tokenAtom)
-        const router = useRouter()
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   // State variables
   const [vouchers, setVouchers] = useState<JournalResult[]>([])
@@ -31,6 +31,30 @@ export default function ContraVoucherTable() {
   const [isLoading, setIsLoading] = useState(true)
 
   //getting user data from localStorage and setting it to state
+  const fetchAllVoucher=useCallback(async(company: number[], location: number[])=> {
+    setIsLoading(true)
+    const voucherQuery: JournalQuery = {
+      date: new Date().toISOString().split('T')[0],
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.ContraVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery, token)
+    if (response.data && Array.isArray(response.data)) {
+      console.log(
+        'contra voucher data line no 57 and i am from contra voucher list:',
+        response.data
+      )
+
+      setVouchers(response.data)
+    } else {
+      console.log('No voucher data available')
+      setVouchers([])
+    }
+    setIsLoading(false)
+  },[token])
+
+  
   useEffect(() => {
     if (userData) {
       setUser(userData)
@@ -45,32 +69,10 @@ export default function ContraVoucherTable() {
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData,fetchAllVoucher])
 
   // Function to fetch all vouchers based on company and location IDs
-  async function fetchAllVoucher(company: number[], location: number[]) {
-    setIsLoading(true)
-    const voucherQuery: JournalQuery = {
-      date: new Date().toISOString().split('T')[0],
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.ContraVoucher,
-    }
-    const response = await getAllVoucher(voucherQuery,token)
-    if (response.data && Array.isArray(response.data)) {
-      console.log(
-        'contra voucher data line no 57 and i am from contra voucher list:',
-        response.data
-      )
-
-      setVouchers(response.data)
-    } else {
-      console.log('No voucher data available')
-      setVouchers([])
-    }
-    setIsLoading(false)
-  }
-
+  
   // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)

@@ -74,7 +74,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
     } catch (error) {
       console.error('Failed to fetch Loan Data :', error)
     }
-  },[iouId])
+  },[iouId,token])
 
   useEffect(() => {
     fetchLoanData()

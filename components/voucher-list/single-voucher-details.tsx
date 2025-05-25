@@ -105,7 +105,7 @@ export default function SingleVoucherDetails() {
     }
 
     fetchVoucher()
-  }, [voucherid])
+  }, [voucherid,token])
 
   const handleReferenceEdit = (index: number, currentText: string) => {
     setEditingReferenceIndex(index)

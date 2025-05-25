@@ -22,7 +22,7 @@ import {
 
 import {
   createJournalEntryWithDetails,
-  getAllVoucher,
+getAllVoucher
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
 import { Popup } from '@/utils/popup'
@@ -38,7 +38,9 @@ import {
   getAllCostCenters,
   getAllDepartments,
   getAllResPartners,
+  getResPartnersBySearch,
 } from '@/api/common-shared-api'
+import {  } from '@/api/journal-voucher-api'
 
 export default function BankVoucher() {
   //getting userData from jotai atom component
@@ -64,7 +66,7 @@ export default function BankVoucher() {
         journalType: '',
         companyId: 0,
         locationId: 0,
-        currencyId: 0,
+        currencyId: 1,
         exchangeRate: 1,
         amountTotal: 0,
         payTo: '',
@@ -125,6 +127,7 @@ export default function BankVoucher() {
   // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
+      const search=''
       if (!token) return
       const [
         bankAccountsResponse,
@@ -136,7 +139,7 @@ export default function BankVoucher() {
         getAllBankAccounts(token),
         getAllChartOfAccounts(token),
         getAllCostCenters(token),
-        getAllResPartners(token),
+        getResPartnersBySearch(search, token),
         getAllDepartments(token),
       ])
       if (
@@ -164,7 +167,7 @@ export default function BankVoucher() {
     }
 
     fetchInitialData()
-  }, [token])
+  }, [token,router])
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
@@ -174,7 +177,7 @@ export default function BankVoucher() {
     return data.map((location) => location.location.locationId)
   }, [])
   // fetch today's Voucher List from Database and populate the grid
-  async function getallVoucher(company: number[], location: number[]) {
+  const getallVoucher=React.useCallback(async(company: number[], location: number[])=> {
     if (!token) return
     let localVoucherGrid: JournalResult[] = []
     try {
@@ -198,7 +201,7 @@ export default function BankVoucher() {
       throw error
     }
     setVoucherGrid(localVoucherGrid)
-  }
+  },[token, router])
   // fetch today's Voucher List from Database and populate the grid
 
   React.useEffect(() => {
@@ -242,6 +245,7 @@ export default function BankVoucher() {
     formState.locations,
     getCompanyIds,
     getLocationIds,
+    getallVoucher,
     dataLoaded,
   ])
   //Calling function for fetching voucherlist to populate the form state variables
@@ -277,6 +281,7 @@ export default function BankVoucher() {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher',
+        currencyId: values.journalEntry.currencyId || 1,
         amountTotal: totalDetailsAmount,
         createdBy: user?.userId ?? 0,
       },
@@ -407,9 +412,10 @@ export default function BankVoucher() {
               <BankVoucherMaster
                 form={form}
                 formState={formState}
+                requisition={undefined}
                 setFormState={setFormState}
               />
-              <BankVoucherDetails form={form} formState={formState} />
+              <BankVoucherDetails form={form} formState={formState} requisition={undefined} partners={formState.partners} />
               <BankVoucherSubmit form={form} onSubmit={onSubmit} />
             </form>
           </Form>
@@ -432,4 +438,5 @@ export default function BankVoucher() {
       />
     </div>
   )
+
 }

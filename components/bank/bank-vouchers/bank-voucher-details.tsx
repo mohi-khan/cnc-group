@@ -14,21 +14,54 @@ import {
 } from '@/components/ui/table'
 import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import type { FormStateType } from '@/utils/type'
+import type { FormStateType, ResPartner } from '@/utils/type'
 import { useEffect } from 'react'
+import { ComboboxItem, CustomComboboxWithApi } from '@/utils/custom-combobox-with-api'
+import { getResPartnersBySearch } from '@/api/common-shared-api'
+import { useAtom } from 'jotai'
+import { tokenAtom } from '@/utils/user'
 
 export default function BankVoucherDetails({
   form,
   formState,
+  requisition,
+  partners
 }: {
   form: UseFormReturn<any>
   formState: FormStateType
+  requisition: any
+  partners: ResPartner[]
 }) {
   // Destructure the formState to get the filteredChartOfAccounts, costCenters, departments, and partners
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'journalDetails',
   })
+
+  const [token] = useAtom(tokenAtom)
+  // const [partners, setPartners] = useState<ResPartner[]>([])
+
+  const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
+    try {
+      const response = await getResPartnersBySearch(query, token)
+      if (response.error || !response.data) {
+        console.error('Error fetching partners:', response.error)
+        return []
+      }
+      // else {
+      //   console.log('response.data', response.data)
+      //   setPartners(response.data)
+      // }
+
+      return response.data.map((partner) => ({
+        id: partner.id.toString(),
+        name: partner.name || 'Unnamed Partner',
+      }))
+    } catch (error) {
+      console.error('Error fetching partners:', error)
+      return []
+    }
+  }
 
   // Update amounts when rows are added or removed
   useEffect(() => {
@@ -176,8 +209,8 @@ export default function BankVoucherDetails({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <CustomCombobox
-                          items={formState.partners.map((partner) => ({
+                        <CustomComboboxWithApi
+                          items={partners.map((partner) => ({
                             id: partner.id.toString(),
                             name: partner.name || 'Unnamed Partner',
                           }))}
@@ -186,9 +219,8 @@ export default function BankVoucherDetails({
                               ? {
                                   id: field.value.toString(),
                                   name:
-                                    formState.partners.find(
-                                      (p) => p.id === field.value
-                                    )?.name || '',
+                                    partners.find((p) => p.id === field.value)
+                                      ?.name || '',
                                 }
                               : null
                           }
@@ -197,7 +229,7 @@ export default function BankVoucherDetails({
                               value ? Number.parseInt(value.id, 10) : null
                             )
                           }
-                          placeholder="Select partner"
+                          searchFunction={searchPartners}
                         />
                       </FormControl>
                     </FormItem>
@@ -264,10 +296,11 @@ export default function BankVoucherDetails({
           // Calculate the sum of all existing amounts
           const currentField =
             formState.formType === 'Credit' ? 'debit' : 'credit'
-            const usedAmount = currentDetails.reduce(
-            (sum: number, detail: Record<string, number>) => sum + (detail[currentField] || 0),
+          const usedAmount = currentDetails.reduce(
+            (sum: number, detail: Record<string, number>) =>
+              sum + (detail[currentField] || 0),
             0
-            )
+          )
 
           // Calculate the remaining amount
           const remainingAmount = totalAmount - usedAmount

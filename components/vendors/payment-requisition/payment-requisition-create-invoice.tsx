@@ -192,7 +192,7 @@ const PaymentRequisitionCreateInvoiceForm = ({
       })
       setVendors([])
     }
-  }, [toast, token])
+  }, [toast, token,router])
 
   useEffect(() => {
     getVendors()

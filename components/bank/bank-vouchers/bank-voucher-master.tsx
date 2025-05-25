@@ -16,7 +16,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import type { CurrencyType, FormStateType } from '@/utils/type'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
 // Define the props for the BankVoucherMaster component
@@ -28,13 +28,16 @@ interface BankVoucherMasterProps {
   }
   formState: FormStateType
   setFormState: React.Dispatch<React.SetStateAction<FormStateType>>
+  requisition: any
 }
 
 export default function BankVoucherMaster({
   form,
   formState,
   setFormState,
+  requisition,
 }: BankVoucherMasterProps) {
+  console.log('🚀 ~ requisition:', requisition)
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
@@ -43,7 +46,7 @@ export default function BankVoucherMaster({
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
   // Function to fetch currency data
-  const fetchCurrency = async () => {
+  const fetchCurrency = useCallback(async () => {
     const data = await getAllCurrency(token)
     if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -55,11 +58,44 @@ export default function BankVoucherMaster({
       setCurrency(data.data)
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
-  }
+  },[token])
 
   useEffect(() => {
     fetchCurrency()
-  }, [])
+
+    // Pre-populate fields if requisition data is available
+    if (requisition && Object.keys(requisition).length > 0) {
+      // Set company
+      if (requisition.companyid) {
+        form.setValue('journalEntry.companyId', requisition.companyid)
+      }
+
+      // Set amount
+      if (requisition.advanceamount) {
+        form.setValue(
+          'journalEntry.amountTotal',
+          Number.parseFloat(requisition.advanceamount)
+        )
+
+        // Update the first detail row if it exists
+        const detailsArray = form.getValues('journalDetails') || []
+        if (detailsArray.length > 0) {
+          const updatedDetails = [...detailsArray]
+          updatedDetails[0] = {
+            ...updatedDetails[0],
+            [formState.formType === 'Credit' ? 'debit' : 'credit']:
+              Number.parseFloat(requisition.advanceamount),
+          }
+          form.setValue('journalDetails', updatedDetails)
+        }
+      }
+
+      // Set currency
+      if (requisition.currency) {
+        form.setValue('journalEntry.currencyId', requisition.currency)
+      }
+    }
+  }, [requisition,fetchCurrency, form, formState.formType])
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -129,79 +165,6 @@ export default function BankVoucherMaster({
           </FormItem>
         )}
       />
-
-      {/* <FormField
-        control={form.control}
-        name="journalEntry.currencyId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <FormControl>
-              <div className="flex gap-2">
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div>
-                      <CustomCombobox
-                        items={currency.map((curr: CurrencyType) => ({
-                          id: curr.currencyId.toString(),
-                          name: curr.currencyCode || 'Unnamed Currency',
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                id: field.value.toString(),
-                                name:
-                                  currency.find(
-                                    (curr: CurrencyType) =>
-                                      curr.currencyId === field.value
-                                  )?.currencyCode || 'Unnamed Currency',
-                              }
-                            : null
-                        }
-                        onChange={(
-                          value: { id: string; name: string } | null
-                        ) =>
-                          field.onChange(
-                            value ? Number.parseInt(value.id, 10) : null
-                          )
-                        }
-                        placeholder="Select currency"
-                      />
-                    </div>
-                  </HoverCardTrigger>
-                </HoverCard>
-                {field.value && field.value !== 1 && (
-                  <FormField
-                    control={form.control}
-                    name="journalEntry.exchangeRate"
-                    render={({ field: exchangeField }) => (
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Exchange Rate"
-                          value={
-                            exchangeField.value === null
-                              ? ''
-                              : exchangeField.value
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value
-                            exchangeField.onChange(
-                              value === '' ? null : Number(value)
-                            )
-                          }}
-                          className="w-32"
-                        />
-                      </FormControl>
-                    )}
-                  />
-                )}
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      /> */}
       <FormField
         control={form.control}
         name="journalEntry.currencyId"

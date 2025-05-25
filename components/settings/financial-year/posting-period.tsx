@@ -75,7 +75,7 @@ const PostingPeriodManager = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [token])
+  }, [token,router])
 
   // Effect hook to fetch posting periods when token and selectedYearId are available
   const fetchPeriods = useCallback(async () => {
@@ -108,7 +108,7 @@ const PostingPeriodManager = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [token, selectedYearId])
+  }, [token, selectedYearId,router])
 
   // Only fetch financial years when token changes and is available
   useEffect(() => {
@@ -308,7 +308,7 @@ const PostingPeriodManager = () => {
             ) : (
               <div className="text-center py-8">
                 <p>
-                  Please select a financial year and click "Show Periods" to
+                  Please select a financial year and click &quot;Show Periods&quot; to
                   view posting periods.
                 </p>
               </div>

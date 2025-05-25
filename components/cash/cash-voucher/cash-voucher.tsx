@@ -38,6 +38,7 @@ import {
   getAllCostCenters,
   getAllDepartments,
   getAllResPartners,
+  getResPartnersBySearch,
 } from '@/api/common-shared-api'
 
 export default function CashVoucher() {
@@ -306,12 +307,14 @@ export default function CashVoucher() {
     }
   }, [token, router, setCostCenters])
 
+  
   //Function to fetch partners from the API
   const fetchgetResPartner = useCallback(async () => {
+    const search = ''
     setIsLoadingPartners(true)
     if (!token) return
     try {
-      const response = await getAllResPartners(token)
+      const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
         console.log('Unauthorized access')

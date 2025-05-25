@@ -121,14 +121,8 @@ export default function DepartmentManagement() {
       setDepartments(data.data)
     }
     setIsLoading(false)
-  }, [toast])
-
-  useEffect(() => {
-    fetchDepartments()
-    fetchCompany()
-  }, [fetchDepartments])
-
-  const fetchCompany = useCallback(async () => {
+  }, [toast,router,token])
+const fetchCompany = useCallback(async () => {
     if (!token) return
     const response = await getAllCompanies(token)
     if (response?.error?.status === 401) {
@@ -146,7 +140,13 @@ export default function DepartmentManagement() {
       setCompany([])
     }
     console.log('this is company is fetch by department components', response)
-  }, [])
+  }, [router,toast,token])
+  useEffect(() => {
+    fetchDepartments()
+    fetchCompany()
+  }, [fetchDepartments,fetchCompany])
+
+  
 
   React.useEffect(() => {
     if (userData) {

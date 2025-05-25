@@ -82,7 +82,7 @@ export default function BankReconciliationReport() {
       }
     }
     fetchBankAccounts()
-  }, [toast, token])
+  }, [router,toast, token])
 
   const fetchReconciliationsReport = async (data: {
     bankAccount: string

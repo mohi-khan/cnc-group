@@ -67,7 +67,7 @@ const VehicleSummary = () => {
 
     setVehicleSummary(response.data)
     console.log('✅ Vehicle Summary data:', response.data)
-  }, [token])
+  }, [])
 
   // Fetch data when token is available
   useEffect(() => {
@@ -75,7 +75,7 @@ const VehicleSummary = () => {
       fetchGetVehicleSummary({ token, startDate, endDate, vehicleNo: selectedVehicleNo })
       fetchVehicles()
     }
-  }, [ token,selectedVehicleNo, startDate, endDate])
+  }, [ token,selectedVehicleNo, startDate, endDate,fetchGetVehicleSummary,fetchVehicles])
 
   // Generate PDF
   const generatePdf = () => {

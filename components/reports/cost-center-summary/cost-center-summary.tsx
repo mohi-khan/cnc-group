@@ -108,7 +108,7 @@ const CostCenterSummary = () => {
       setCostCenterSummary([])
       console.log('No data received from getCostCenterSummary')
     }
-  }, [token, startDate, endDate, companyId, costCenterId, costCenterData])
+  }, [token, startDate, endDate, companyId, costCenterId])
   useEffect(() => {
     if (startDate && endDate && companyId) {
       fetchData()

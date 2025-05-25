@@ -15,7 +15,7 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 const DayBooks = () => {
   //getting userData from jotai atom component
@@ -93,11 +93,11 @@ const DayBooks = () => {
   }
 
   // Updated to accept a date parameter
-  async function getallVoucher(
+  const getallVoucher=useCallback(async(
     company: number[],
     location: number[],
     date: string
-  ) {
+  )=> {
     try {
       const voucherQuery: JournalQuery = {
         date: date,
@@ -115,7 +115,7 @@ const DayBooks = () => {
       setVoucherGrid([])
       throw error
     }
-  }
+  },[token])
 
   // Fetch voucher data whenever companies, locations, or the selected date changes
   useEffect(() => {
@@ -139,7 +139,7 @@ const DayBooks = () => {
     if (companies.length > 0 && locations.length > 0) {
       fetchVoucherData()
     }
-  }, [companies, locations, selectedDate, toast])
+  }, [companies, locations, selectedDate,getallVoucher, toast])
 
   const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No.' },

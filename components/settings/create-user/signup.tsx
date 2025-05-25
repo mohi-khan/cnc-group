@@ -160,7 +160,7 @@ export default function SignUp() {
     } else {
       setCompanies(fetchedCompanies.data)
     }
-  }, [toast, token])
+  }, [ token,router])
 
   const fetchAllLocations = useCallback(async () => {
     if (!token) return
@@ -181,7 +181,7 @@ export default function SignUp() {
       console.log('Fetched locations:', fetchedLocations.data)
       setLocations(fetchedLocations.data)
     }
-  }, [toast, token])
+  }, [ token,router])
 
   const fetchAllRoles = useCallback(async () => {
     if (!token) return
@@ -200,7 +200,7 @@ export default function SignUp() {
       console.log('Fetched roles:', fetchedRoles.data)
       setRoles(fetchedRoles.data)
     }
-  }, [toast, token])
+  }, [ token,router])
 
   useEffect(() => {
     fetchAllCompanies()
@@ -230,7 +230,7 @@ export default function SignUp() {
     }
 
     fetchData()
-  }, [])
+  }, [fetchAllCompanies,fetchAllLocations,fetchAllRoles])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

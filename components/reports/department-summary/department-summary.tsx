@@ -110,14 +110,14 @@ const DepartmentSummary = () => {
       setDepartmentSummary([])
       console.log('No data received from getCostCenterSummary')
     }
-  }, [startDate, endDate, companyId, departmentId])
+  }, [startDate, endDate, companyId, departmentId,token])
 
   useEffect(() => {
     if (startDate && endDate && companyId && departmentId) {
       fetchData()
       fetchAllCostCenter()
     }
-  }, [startDate, endDate, companyId, departmentId, fetchData])
+  }, [startDate, endDate, companyId, departmentId, fetchData,fetchAllCostCenter])
   return (
     <div>
       <DeparmentSummaryHeading

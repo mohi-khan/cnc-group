@@ -58,7 +58,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
 
   useEffect(() => {
     async function fetchAccounts() {
-      const response = await getAllChartOfAccounts()
+      const response = await getAllChartOfAccounts(token)
       if (response.error) {
         console.error('Error fetching accounts:', response.error)
         toast({
@@ -71,7 +71,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       }
     }
     fetchAccounts()
-  }, [])
+  }, [token])
 
   const addBudgetLine = () => {
     setBudgetLines([

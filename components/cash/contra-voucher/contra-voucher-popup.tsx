@@ -9,6 +9,7 @@ import { Form } from '@/components/ui/form'
 import { Plus } from 'lucide-react'
 
 import {
+  exchangeSchema,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   VoucherTypes,
@@ -67,7 +68,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         companyId: 0,
         locationId: 0,
         currencyId: 0,
-        exchangeRate: 0,
+        exchangeRate: 1,
         amountTotal: 0,
         createdBy: userData?.userId,
       },
@@ -109,6 +110,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
       journalEntry: {
         ...data.journalEntry,
         amountTotal,
+        exchangRate: data.journalEntry.exchangeRate || 1,
       },
     }
 
