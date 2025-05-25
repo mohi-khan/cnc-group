@@ -1483,3 +1483,22 @@ export interface User {
   active: boolean
   roleName: string
 }
+
+export type SalesInvoiceType = {
+  id: number
+  LCPINo: string
+  date: string // or Date if you're storing it as a JavaScript Date object
+  shipper: string
+  consignee: string
+  client: string
+  address: string
+  consignAddress: string
+  apporvedBy: string
+  approvalDate: string // or Date
+  invoiceAmount: number
+  res_partnerId: number
+  res_partnerName: string
+  companyId: number
+  companyName: string
+  currencyName: string
+}
