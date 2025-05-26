@@ -3,7 +3,7 @@ import InvoicesList from './invoices-list'
 
 const Invoices = () => {
     return <div>
-      <InvoicesList />
+      <InvoicesList  />
   </div>
 }
 
