@@ -1502,4 +1502,5 @@ export type SalesInvoiceType = {
   companyId: number
   companyName: string
   currencyName: string
+  currencyId: number
 }
