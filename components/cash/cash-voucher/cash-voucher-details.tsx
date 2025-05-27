@@ -85,7 +85,7 @@ export default function CashVoucherDetails({
               <TableCell>
                 <FormField
                   control={form.control}
-                  name={`journalDetails.type`}
+                  name={`journalDetails.${index}.type`}
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
@@ -219,20 +219,26 @@ export default function CashVoucherDetails({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                      <CustomComboboxWithApi
+                        <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
-                            name: partner.name || "Unnamed Partner",
+                            name: partner.name || 'Unnamed Partner',
                           }))}
                           value={
                             field.value
                               ? {
                                   id: field.value.toString(),
-                                  name: partners.find((p) => p.id === field.value)?.name || "",
+                                  name:
+                                    partners.find((p) => p.id === field.value)
+                                      ?.name || '',
                                 }
                               : null
                           }
-                          onChange={(value) => field.onChange(value ? Number.parseInt(value.id, 10) : null)}
+                          onChange={(value) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
                           searchFunction={searchPartners}
                         />
                       </FormControl>

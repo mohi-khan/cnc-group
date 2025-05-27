@@ -145,7 +145,7 @@ const IouList: React.FC<LoanListProps> = ({
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                <TableHead>
+                {/* <TableHead>
                   <Button
                     variant="ghost"
                     onClick={() => requestSort('adjustedAmount')}
@@ -153,19 +153,19 @@ const IouList: React.FC<LoanListProps> = ({
                     Adj.Amount
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
-                </TableHead>
+                </TableHead> */}
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('notes')}>
                     Notes
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                <TableHead>
+                {/* <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('status')}>
                     Status
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
-                </TableHead>
+                </TableHead> */}
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -185,22 +185,10 @@ const IouList: React.FC<LoanListProps> = ({
                       ? 'Invalid Date'
                       : new Date(loan.dueDate).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>{loan.adjustedAmount}</TableCell>
+                  {/* <TableCell>{loan.adjustedAmount}</TableCell> */}
 
                   <TableCell>{loan.notes}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        loan.status === 'inactive'
-                          ? 'text-red-500 capitalize'
-                          : loan.status === 'active'
-                            ? 'text-green-500 capitalize'
-                            : 'text-gray-800'
-                      }
-                    >
-                      {loan.status}
-                    </span>
-                  </TableCell>
+                 
 
                   <TableCell>
                     <Button

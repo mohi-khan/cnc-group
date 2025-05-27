@@ -10,13 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {  ResPartner } from '@/utils/type'
+import { ResPartner } from '@/utils/type'
 import { FileText } from 'lucide-react'
-import { getAllResPartners } from '@/api/common-shared-api'
+import {
+  getAllResPartners,
+  getResPartnersBySearch,
+} from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-
+import {
+  ComboboxItem,
+  CustomComboboxWithApi,
+} from '@/utils/custom-combobox-with-api'
 
 interface PartnerLedgerFindProps {
   onSearch: (partnercode: number, fromdate: string, todate: string) => void
@@ -39,24 +45,81 @@ export default function PartneredgerFind({
   const [toDate, setToDate] = useState<string>('')
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
   const [partners, setPartners] = useState<ResPartner[]>([])
+  const [isLoadingPartners, setIsLoadingPartners] = useState(true)
 
-  const fetchAllResPartners = useCallback(async () => {
+  // const fetchAllResPartners = useCallback(async () => {
+  //   if (!token) return
+  //   const fetchedPartners = await getAllResPartners(token)
+  //   if (fetchedPartners.error || !fetchedPartners.data) {
+  //     console.error('Error getting chart of accounts:', fetchedPartners.error)
+  //     toast({
+  //       title: 'Error',
+  //       description:
+  //         fetchedPartners.error?.message || 'Failed to get chart of accounts',
+  //     })
+  //   } else {
+  //     setPartners(fetchedPartners.data)
+  //   }
+  // }, [token])
+  // useEffect(() => {
+  //   fetchAllResPartners()
+  // }, [fetchAllResPartners])
+
+  const fetchgetResPartner = useCallback(async () => {
+    const search = ''
+    setIsLoadingPartners(true)
     if (!token) return
-    const fetchedPartners = await getAllResPartners(token)
-    if (fetchedPartners.error || !fetchedPartners.data) {
-      console.error('Error getting chart of accounts:', fetchedPartners.error)
+    try {
+      const response = await getResPartnersBySearch(search, token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting partners:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to load partners',
+        })
+        setPartners([])
+        return
+      } else {
+        console.log('Fetched Partners:', response.data)
+        setPartners(response.data)
+      }
+    } catch (error) {
+      console.error('Error getting partners:', error)
       toast({
         title: 'Error',
-        description:
-          fetchedPartners.error?.message || 'Failed to get chart of accounts',
+        description: 'Failed to load partners',
       })
-    } else {
-      setPartners(fetchedPartners.data)
+      setPartners([])
+    } finally {
+      setIsLoadingPartners(false)
     }
-  }, [token])
+  }, [token, router, setPartners])
+
   useEffect(() => {
-    fetchAllResPartners()
-  }, [fetchAllResPartners])
+    fetchgetResPartner()
+  }, [fetchgetResPartner])
+
+  const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
+    try {
+      const response = await getResPartnersBySearch(query, token)
+      if (response.error || !response.data) {
+        console.error('Error fetching partners:', response.error)
+        return []
+      }
+
+      return response.data.map((partner) => ({
+        id: partner.id.toString(),
+        name: partner.name || 'Unnamed Partner',
+      }))
+    } catch (error) {
+      console.error('Error fetching partners:', error)
+      return []
+    }
+  }
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
@@ -110,7 +173,7 @@ export default function PartneredgerFind({
             className="px-3 py-2 border rounded-md"
           />
         </div>
-        <Select
+        {/* <Select
           value={selectedAccountCode}
           onValueChange={setSelectedAccountCode}
         >
@@ -130,7 +193,29 @@ export default function PartneredgerFind({
               </SelectItem>
             )}
           </SelectContent>
-        </Select>
+        </Select> */}
+        <CustomComboboxWithApi
+          items={partners.map((partner) => ({
+            id: partner.id.toString(),
+            name: partner.name || 'Unnamed Partner',
+          }))}
+          value={
+            selectedAccountCode
+              ? {
+                  id: selectedAccountCode,
+                  name:
+                    partners.find(
+                      (p) => p.id.toString() === selectedAccountCode
+                    )?.name || '',
+                }
+              : null
+          }
+          onChange={(value) =>
+            setSelectedAccountCode(value ? value.id.toString() : '')
+          }
+          searchFunction={searchPartners}
+        />
+
         <Button onClick={handleSearch}>Show</Button>
       </div>
       <div className="flex items-center gap-2">
@@ -197,4 +282,3 @@ export default function PartneredgerFind({
     </div>
   )
 }
-

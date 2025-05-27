@@ -24,17 +24,26 @@ const Iou = () => {
   // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
     if (!token) return
-    setIsLoading(true)
-    const loansdata = await getLoanData(token)
-    if (loansdata.data) {
-      setLoanData(loansdata.data)
-    } else {
+    try {
+      setIsLoading(true)
+      const loansdata = await getLoanData(token)
+      if (loansdata?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
+        return
+      } else if (loansdata.error || !loansdata.data) {
+        console.error('Error fetching loans:', loansdata.error)
+        setLoanData([])
+      } else {
+        setLoanData(loansdata.data)
+      }
+    } catch (err) {
+      console.error('Error:', err instanceof Error ? err.message : 'An error occurred')
       setLoanData([])
+    } finally {
+      setIsLoading(false)
     }
-    console.log('Show The Loan  All Data :', loansdata.data)
-    setIsLoading(false)
-  }, [token])
-
+  }, [token, router])
   // Fetch all Employee Data
   const fetchEmployeeData = useCallback(async () => {
     if (!token) return
