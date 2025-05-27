@@ -34,6 +34,7 @@ import {
   type Employee,
   IouRecordCreateSchema,
   type IouRecordCreateType,
+  LocationData,
 } from '@/utils/type'
 
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
@@ -42,6 +43,7 @@ import { getEmployee } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
 import { createIou } from '@/api/iou-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { CompanyType } from '@/api/company-api'
 
 interface LoanPopUpProps {
   isOpen: boolean
@@ -49,6 +51,8 @@ interface LoanPopUpProps {
   onCategoryAdded: () => void
   employeeData: Employee[] // Type for employeeData
   fetchLoanData: () => Promise<void> // Type for the fetchLoanData function
+  getCompany: CompanyType[]
+  getLoaction: LocationData[]
 }
 
 export default function IouPopUp({
@@ -57,6 +61,8 @@ export default function IouPopUp({
   onCategoryAdded,
   fetchLoanData,
   employeeData,
+  getCompany,
+  getLoaction,
 }: LoanPopUpProps) {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -86,6 +92,9 @@ export default function IouPopUp({
       amount: 0,
       adjustedAmount: 0,
       employeeId: 1,
+      companyId: getCompany.length > 0 ? getCompany[0].companyId : undefined,
+      locationId:
+        getLoaction.length > 0 ? getLoaction[0].locationId : undefined,
       dateIssued: new Date(),
       dueDate: new Date(),
       status: 'active',
@@ -183,9 +192,10 @@ export default function IouPopUp({
                       field.value
                         ? {
                             id: field.value.toString(),
-                            name: employeeData.find(
-                              (employee) => employee.id === field.value
-                            )?.employeeName || 'Select employee',
+                            name:
+                              employeeData.find(
+                                (employee) => employee.id === field.value
+                              )?.employeeName || 'Select employee',
                           }
                         : null
                     }
@@ -193,7 +203,73 @@ export default function IouPopUp({
                       field.onChange(value ? Number(value.id) : null)
                     }
                     placeholder="Select an employee"
-                  />                  <FormMessage />
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company</FormLabel>
+                  <CustomCombobox
+                    items={getCompany.map((company) => ({
+                      id: company.companyId?.toString() ?? '',
+                      name: company.companyName,
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getCompany.find(
+                                (company) =>
+                                  Number(company.companyId) === field.value
+                              )?.companyName || 'Select company',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(value ? Number(value.id) : null)
+                    }
+                    placeholder="Select a company"
+                  />{' '}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="locationId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <CustomCombobox
+                    items={getLoaction.map((location) => ({
+                      id: location.locationId.toString(),
+                      name: location.branchName,
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name:
+                              getLoaction.find(
+                                (location) =>
+                                  Number(location.locationId) === field.value
+                              )?.branchName || 'Select location',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(value ? Number(value.id) : null)
+                    }
+                    placeholder="Select a location"
+                  />
+                  <FormMessage />
                 </FormItem>
               )}
             />
