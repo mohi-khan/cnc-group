@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown } from 'lucide-react'
-import type { Employee, IouRecordGetType } from '@/utils/type'
+import type { Employee, IouRecordGetType, LocationData } from '@/utils/type'
 
 import Loader from '@/utils/loader'
 import IouAdjPopUp from './iou-adj-popup'
@@ -24,18 +24,23 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { CompanyType } from '@/api/company-api'
 
 interface LoanListProps {
   onAddCategory: () => void
   loanAllData: IouRecordGetType[]
   isLoading: boolean
   employeeData: Employee[]
+  getCompany: CompanyType[]
+  getLoaction: LocationData[]
 }
 const IouList: React.FC<LoanListProps> = ({
   onAddCategory,
   loanAllData,
   isLoading,
   employeeData,
+  getCompany,
+  getLoaction,
 }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof IouRecordGetType
@@ -53,6 +58,16 @@ const IouList: React.FC<LoanListProps> = ({
   const getEmployeeName = (employeeId: number) => {
     const employee = employeeData.find((emp) => emp.id === employeeId)
     return employee ? employee.employeeName : 'Unknown Employee'
+  }
+
+  const getCompanyName = (companyId: number) => {
+    const company = getCompany.find((comp) => comp.companyId === companyId)
+    return company ? company.companyName : 'Unknown Company'
+  }
+
+  const getLocationName = (locationId: number) => {
+    const location = getLoaction.find((loc) => loc.locationId === locationId)
+    return location ? location.branchName : 'Unknown Location'
   }
 
   const sortedLoanData = useMemo(() => {
@@ -122,6 +137,24 @@ const IouList: React.FC<LoanListProps> = ({
                   </Button>
                 </TableHead>
                 <TableHead>
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort('companyId')}
+                  >
+                   Company Name
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort('locationId')}
+                  >
+                   Location Name
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('amount')}>
                     Amount
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -145,27 +178,14 @@ const IouList: React.FC<LoanListProps> = ({
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                {/* <TableHead>
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('adjustedAmount')}
-                  >
-                    Adj.Amount
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead> */}
+                
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('notes')}>
                     Notes
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                {/* <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort('status')}>
-                    Status
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead> */}
+               
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -173,6 +193,9 @@ const IouList: React.FC<LoanListProps> = ({
               {paginatedLoanData.map((loan) => (
                 <TableRow key={loan.iouId}>
                   <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
+                  
+                  <TableCell>{getCompanyName(loan.companyId)}</TableCell>
+                  <TableCell>{getLocationName(loan.locationId)}</TableCell>
                   <TableCell>{loan.amount}</TableCell>
 
                   <TableCell>
@@ -185,8 +208,8 @@ const IouList: React.FC<LoanListProps> = ({
                       ? 'Invalid Date'
                       : new Date(loan.dueDate).toLocaleDateString()}
                   </TableCell>
-                  {/* <TableCell>{loan.adjustedAmount}</TableCell> */}
-
+                         
+                 
                   <TableCell>{loan.notes}</TableCell>
                  
 

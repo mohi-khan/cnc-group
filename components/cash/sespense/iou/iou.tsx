@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback } from 'react'
 import IouList from './iou-list'
 import IouPopUp from './iou-popup'
 import { getLoanData } from '@/api/iou-api'
-import { Employee, IouRecordGetType } from '@/utils/type'
-import { getEmployee } from '@/api/common-shared-api'
+import { Employee, IouRecordGetType, LocationData } from '@/utils/type'
+import { getAllCompanies, getAllLocations, getEmployee } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { CompanyType } from '@/api/company-api'
 
 const Iou = () => {
   //getting userData from jotai atom component
@@ -20,6 +21,9 @@ const Iou = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
+    const [getCompany, setGetCompany] = useState<CompanyType[]>([])
+     const [getLoaction, setGetLocation] = useState<LocationData[]>([]) 
+    
 
   // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
@@ -56,10 +60,34 @@ const Iou = () => {
     console.log('Show The Employee Data :', employees.data)
   }, [token])
 
+  // Fetch all Company Data
+   const fetchCompnay = useCallback(async () => {
+      if (!token) return
+      const response = await getAllCompanies(token)
+      setGetCompany(response.data || [])
+      console.log(
+        'fetchAssetCategories category names asset tsx file:',
+        response.data
+      )
+    }, [token])  
+
+    // Fetch all Location Data
+     const fetchLocation = useCallback(async () => {
+    if (!token) return
+    const response = await getAllLocations(token)
+    setGetLocation(response.data ?? [])
+    console.log(
+      'fetchAssetCategories category names asset tsx file:',
+      response.data
+    )
+  }, [token])
+
   useEffect(() => {
     fetchLoanData()
     fetchEmployeeData()
-  }, [fetchLoanData, fetchEmployeeData, token])
+    fetchCompnay()
+    fetchLocation()
+  }, [fetchLoanData, fetchEmployeeData, fetchCompnay,fetchLocation, token])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)
@@ -76,6 +104,9 @@ const Iou = () => {
         loanAllData={loanData}
         isLoading={isLoading}
         employeeData={employeeData}
+        getCompany={getCompany}
+        getLoaction={getLoaction}
+       
       />
       <IouPopUp
         isOpen={isPopupOpen}
@@ -83,6 +114,8 @@ const Iou = () => {
         onCategoryAdded={handleCategoryAdded}
         fetchLoanData={fetchLoanData}
         employeeData={employeeData}
+         getCompany={getCompany}
+         getLoaction={getLoaction}
       />
     </div>
   )
