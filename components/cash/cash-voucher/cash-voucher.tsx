@@ -186,25 +186,6 @@ export default function CashVoucher() {
     console.log('cash Chart of Accounts:', isCashCoa)
   }, [chartOfAccounts])
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (field === 'company') {
-      // Reset location when company changes
-      setFormData((prev) => ({ ...prev, location: '' }))
-      // Find the selected company and update locations
-      const selectedCompany = companies.find(
-        (c: any) => c.companyName === value
-      )
-      if (selectedCompany) {
-        setLocations(
-          locations.filter(
-            (l) => l.location.companyId === selectedCompany.company.companyId
-          )
-        )
-      }
-    }
-  }
-
   //Function to fetch chart of accounts from the API
   const fetchChartOfAccounts = useCallback(async () => {
     setIsLoadingAccounts(true)
@@ -307,7 +288,6 @@ export default function CashVoucher() {
     }
   }, [token, router, setCostCenters])
 
-  
   //Function to fetch partners from the API
   const fetchgetResPartner = useCallback(async () => {
     const search = ''
@@ -382,7 +362,7 @@ export default function CashVoucher() {
           taxId: null,
           resPartnerId: null,
           notes: '',
-          type: 'Payment',
+          type: '',
           createdBy: 0,
         },
       ],
@@ -430,7 +410,7 @@ export default function CashVoucher() {
       journalDetails: [
         ...updatedValues.journalDetails, // Spread existing journalDetails
         {
-          accountId: filteredChartOfAccounts[0]?.accountId , // Ensure accountId is always a number (default to 0 if undefined)
+          accountId: cashCoa[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
           departmentId: null,
           debit: updatedValues.journalDetails.reduce(
             (sum, detail) =>
@@ -499,7 +479,7 @@ export default function CashVoucher() {
             taxId: null,
             resPartnerId: null,
             notes: '',
-            type: 'Payment',
+            type: form.watch('journalDetails.0.type'),
             createdBy: 0,
           },
         ],
@@ -517,13 +497,16 @@ export default function CashVoucher() {
         taxId: null,
         resPartnerId: null,
         notes: '',
-        type: 'Payment',
+        type: form.watch('journalDetails.0.type'),
         createdBy: 0,
       })
     }
   }
   //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray<
+    JournalEntryWithDetails,
+    'journalDetails'
+  >({
     control: form.control,
     name: 'journalDetails',
   })
@@ -541,29 +524,9 @@ export default function CashVoucher() {
       taxId: null,
       resPartnerId: null,
       notes: '',
-      type: 'Payment',
+      type: form.watch('journalDetails.0.type'),
       createdBy: 0,
     })
-  }
-
-  const handleDelete = (voucherNo: string) => {
-    setVoucherList(voucherList.filter((v) => v.voucherno !== voucherNo))
-  }
-
-  const handleReverse = (voucherno: string) => {
-    setVoucherList(
-      voucherList.map((v) =>
-        v.voucherno === voucherno ? { ...v, status: 'Draft' } : v
-      )
-    )
-  }
-
-  const handlePost = (voucherno: string) => {
-    setVoucherList(
-      voucherList.map((v) =>
-        v.voucherno === voucherno ? { ...v, status: 'Posted' } : v
-      )
-    )
   }
 
   //columns is used to define the columns for the voucher list table

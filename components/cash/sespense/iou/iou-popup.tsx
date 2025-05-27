@@ -41,6 +41,7 @@ import { useAtom } from 'jotai'
 import { getEmployee } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
 import { createIou } from '@/api/iou-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface LoanPopUpProps {
   isOpen: boolean
@@ -89,11 +90,9 @@ export default function IouPopUp({
       dueDate: new Date(),
       status: 'active',
       notes: '',
-      createdBy: userId ?? undefined, // set to undefined initially or when userId is not available
+      createdBy: userData?.userId, // set to undefined initially or when userId is not available
     },
   })
-
-
 
   useEffect(() => {
     if (userId !== null) {
@@ -101,20 +100,6 @@ export default function IouPopUp({
       form.setValue('createdBy', userId)
     }
   }, [userId, form])
-
-  // Fetch all Employee Data
-  // const fetchEmployeeData = useCallback(async () => {
-  //   const employees = await getEmployee(token)
-  //   if (employees.data) {
-  //     setEmployeeData(employees.data)
-  //   } else {
-  //     setEmployeeData([])
-  //   }
-  //   console.log('Show The Employee Data :', employees.data)
-  // }, [token])
-  // useEffect(() => {
-  //   fetchEmployeeData()
-  // }, [fetchEmployeeData])
 
   const onSubmit = async (data: IouRecordCreateType) => {
     if (data.adjustedAmount >= data.amount) {
@@ -149,6 +134,7 @@ export default function IouPopUp({
       setIsSubmitting(false)
     }
   }
+  console.log('Form values:', form.getValues())
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -184,66 +170,30 @@ export default function IouPopUp({
 
             <FormField
               control={form.control}
-              name="adjustedAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adjusted Amount</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      step="0.01"
-                      placeholder="Enter adjusted amount"
-                      onChange={(e) => {
-                        const adjustedValue =
-                          Number.parseFloat(e.target.value) || 0
-                        field.onChange(adjustedValue)
-
-                        // Custom validation for adjustedAmount
-                        if (adjustedValue >= form.getValues('amount')) {
-                          form.setError('adjustedAmount', {
-                            type: 'manual',
-                            message:
-                              'Adjusted amount must be less than the amount.',
-                          })
-                        } else {
-                          form.clearErrors('adjustedAmount')
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="employeeId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Employee</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an employee" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employeeData.map((employee) => (
-                        <SelectItem
-                          key={employee.id}
-                          value={employee.id.toString()}
-                        >
-                          {employee.employeeName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <CustomCombobox
+                    items={employeeData.map((employee) => ({
+                      id: employee.id.toString(),
+                      name: employee.employeeName,
+                    }))}
+                    value={
+                      field.value
+                        ? {
+                            id: field.value.toString(),
+                            name: employeeData.find(
+                              (employee) => employee.id === field.value
+                            )?.employeeName || 'Select employee',
+                          }
+                        : null
+                    }
+                    onChange={(value: { id: string; name: string } | null) =>
+                      field.onChange(value ? Number(value.id) : null)
+                    }
+                    placeholder="Select an employee"
+                  />                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -285,28 +235,6 @@ export default function IouPopUp({
                       }
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

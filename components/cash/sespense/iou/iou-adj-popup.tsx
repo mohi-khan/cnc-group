@@ -39,6 +39,9 @@ import {
 } from '@/components/ui/select'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { CustomCombobox } from '@/utils/custom-combobox'
+
+const adjtype = ['Active', 'Inactive']
 
 interface IouAdjPopUpProps {
   isOpen: boolean
@@ -51,10 +54,10 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
   onOpenChange,
   iouId,
 }) => {
-   //getting userData from jotai atom component
-    useInitializeUser()
-  
-    const [token] = useAtom(tokenAtom)
+  //getting userData from jotai atom component
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [currentLoanAmount, setCurrentLoanAmount] = useState(0)
@@ -74,7 +77,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
     } catch (error) {
       console.error('Failed to fetch Loan Data :', error)
     }
-  },[iouId,token])
+  }, [iouId, token])
 
   useEffect(() => {
     fetchLoanData()
@@ -198,15 +201,27 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                 <FormItem>
                   <FormLabel>Adjustment Type</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select adjustment type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Refund">Refund</SelectItem>
-                        <SelectItem value="Adjustment">Adjustment</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <CustomCombobox
+                      items={adjtype.map((type) => ({
+                        id: type.toLowerCase(),
+                        name: type,
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              id: field.value,
+                              name:
+                                adjtype.find(
+                                  (type) => type.toLowerCase() === field.value
+                                ) || 'Select Adjustment type',
+                            }
+                          : null
+                      }
+                      onChange={(value: { id: string; name: string } | null) =>
+                        field.onChange(value ? value.id : null)
+                      }
+                      placeholder="Select Adjustmen type"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
