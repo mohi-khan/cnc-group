@@ -1,6 +1,6 @@
 'use client'
 
-import { getAllCurrency } from '@/api/common-shared-api'
+import { getAllCurrency, getEmployee } from '@/api/common-shared-api'
 import {
   FormControl,
   FormField,
@@ -16,6 +16,7 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import type {
   CompanyFromLocalstorage,
   CurrencyType,
+  Employee,
   LocationFromLocalstorage,
 } from '@/utils/type'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
@@ -43,6 +44,7 @@ export default function CashVoucherMaster({
 
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
+    const [employeeData, setEmployeeData] = useState<Employee[]>([])
 
   // Function to fetch currency data
   const fetchCurrency = useCallback(async () => {
@@ -64,9 +66,22 @@ export default function CashVoucherMaster({
     }
   }, [token, router])
 
+   const fetchEmployeeData = useCallback(async () => {
+      if (!token) return
+      const employees = await getEmployee(token)
+      if (employees.data) {
+        setEmployeeData(employees.data)
+      } else {
+        setEmployeeData([])
+      }
+      console.log('Show The Employee Data :', employees.data)
+    }, [token])
+
   useEffect(() => {
     fetchCurrency()
-  }, [fetchCurrency])
+    fetchEmployeeData()
+  }, [fetchCurrency, fetchEmployeeData])
+  
 
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -134,84 +149,82 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
-      <div className="flex flex-col mt-2 ml-10">
-        <FormField
-          control={form.control}
-          name="journalEntry.currencyId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <FormControl>
-                <div className="flex gap-2">
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div>
-                        <CustomCombobox
-                          items={currency.map((curr: CurrencyType) => ({
-                            id: curr.currencyId.toString(),
-                            name: curr.currencyCode || 'Unnamed Currency',
-                          }))}
-                          value={
-                            field.value
-                              ? {
-                                  id: field.value.toString(),
-                                  name:
-                                    currency.find(
-                                      (curr: CurrencyType) =>
-                                        curr.currencyId === field.value
-                                    )?.currencyCode || 'Unnamed Currency',
-                                }
-                              : null
-                          }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) => {
-                            const newValue = value
-                              ? Number.parseInt(value.id, 10)
-                              : null
-                            field.onChange(newValue)
+      <FormField
+        control={form.control}
+        name="journalEntry.currencyId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Currency</FormLabel>
+            <FormControl>
+              <div className="flex gap-2 ">
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div>
+                      <CustomCombobox
+                        items={currency.map((curr: CurrencyType) => ({
+                          id: curr.currencyId.toString(),
+                          name: curr.currencyCode || 'Unnamed Currency',
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  currency.find(
+                                    (curr: CurrencyType) =>
+                                      curr.currencyId === field.value
+                                  )?.currencyCode || 'Unnamed Currency',
+                              }
+                            : null
+                        }
+                        onChange={(
+                          value: { id: string; name: string } | null
+                        ) => {
+                          const newValue = value
+                            ? Number.parseInt(value.id, 10)
+                            : null
+                          field.onChange(newValue)
 
-                            // Reset exchange rate when currency changes or is cleared
-                            if (newValue === null || newValue === 1) {
-                              form.setValue('journalEntry.exchangeRate', 0)
-                            }
+                          // Reset exchange rate when currency changes or is cleared
+                          if (newValue === null || newValue === 1) {
+                            form.setValue('journalEntry.exchangeRate', 0)
+                          }
+                        }}
+                        placeholder="Select currency"
+                      />
+                    </div>
+                  </HoverCardTrigger>
+                </HoverCard>
+                {/* Only show exchange rate field when a non-default currency is selected */}
+                {field.value && field.value !== 1 ? (
+                  <FormField
+                    control={form.control}
+                    name="journalEntry.exchangeRate"
+                    render={({ field: exchangeField }) => (
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter exchange rate"
+                          value={exchangeField.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            exchangeField.onChange(
+                              value === '' ? null : Number(value)
+                            )
                           }}
-                          placeholder="Select currency"
+                          className="w-40 ml-5"
                         />
-                      </div>
-                    </HoverCardTrigger>
-                  </HoverCard>
-                  {/* Only show exchange rate field when a non-default currency is selected */}
-                  {field.value && field.value !== 1 ? (
-                    <FormField
-                      control={form.control}
-                      name="journalEntry.exchangeRate"
-                      render={({ field: exchangeField }) => (
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter exchange rate"
-                            value={exchangeField.value ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              exchangeField.onChange(
-                                value === '' ? null : Number(value)
-                              )
-                            }}
-                            className="w-40 ml-5"
-                          />
-                        </FormControl>
-                      )}
-                    />
-                  ) : null}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormMessage />
-      </div>
+                      </FormControl>
+                    )}
+                  />
+                ) : null}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormMessage />
       <FormField
         control={form.control}
         name="journalEntry.date"
@@ -234,14 +247,49 @@ export default function CashVoucherMaster({
         name="journalEntry.payTo"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Pay To</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                value={field.value ?? ''}
-                placeholder="Enter payee name"
-              />
-            </FormControl>
+            <FormLabel>Receiver Name</FormLabel>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <CustomCombobox
+                  items={employeeData.map((employee) => ({
+                    id: employee.id.toString(),
+                    name: employee.employeeName,
+                  }))}
+                  value={
+                    field.value && !form.watch('journalEntry.payToText') ? {
+                      id: field.value,
+                      name: field.value
+                    } : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) => {
+                    if (value) {
+                      field.onChange(value.name)
+                      form.setValue('journalEntry.payTo', value.name)
+                      form.setValue('journalEntry.payToText', '')
+                    }
+                  }}
+                  placeholder="Select a receiver name"
+                  disabled={!!form.watch('journalEntry.payToText')}
+                />
+              </div>
+              <div className="flex-1">
+                <FormControl>
+                  <Input
+                    placeholder="Enter receiver name"
+                    value={form.watch('journalEntry.payToText') || ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      form.setValue('journalEntry.payToText', value)
+                      field.onChange(value)
+                      if (value) {
+                        form.setValue('journalEntry.payTo', '')
+                      }
+                    }}
+                    // disabled={!!form.watch('journalEntry.payTo') && !form.watch('journalEntry.payToText')}
+                  />
+                </FormControl>
+              </div>
+            </div>
             <FormMessage />
           </FormItem>
         )}
