@@ -1508,3 +1508,31 @@ export type SalesInvoiceType = {
   currencyName: string
   currencyId: number
 }
+
+// Cash Report type
+export type GetCashReport = {
+  openingBal: {
+    balance: number | null;
+  }[];
+  transactionData: {
+    date: string;
+    voucherId: number;
+    currentAccountId: number;
+    currentAccountName: string;
+    debit: number;
+    credit: number;
+    oppositeAccountId: number;
+    oppositeAccountName: string;
+    narration: string;
+  }[];
+  closingBal: {
+    balance: string;
+  }[];
+  IouBalance: {
+    iouId: number;
+    amount: number;
+    dateIssued: string;
+    employeeId: number;
+    totalAdjusted: string | null;
+  }[];
+};

@@ -1,4 +1,5 @@
 import { fetchApi } from '@/utils/http'
+import { GetCashReport } from '@/utils/type'
 
 export interface CashReportParams {
   fromDate: string
@@ -8,8 +9,8 @@ export interface CashReportParams {
 }
 
 export async function getCashReport(params: CashReportParams, token: string) {
-  return fetchApi<any>({
-    url: `api/cash/cashReport?fromDate=2025-05-01&endDate=2025-06-30&companyId=3&location=1`,
+  return fetchApi<GetCashReport>({
+   url: `api/cash/cashReport?fromDate=${params.fromDate}&endDate=${params.endDate}&companyId=${params.companyId}&location=${params.location}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,
