@@ -117,7 +117,7 @@ export default function CashVoucherDetails({
             <TableHead>Type</TableHead>
             <TableHead>Account Name</TableHead>
             <TableHead>Cost Center</TableHead>
-            <TableHead>Department</TableHead>
+            <TableHead>Unit</TableHead>
             <TableHead>Partner Name</TableHead>
             <TableHead>Remarks</TableHead>
             <TableHead>Amount</TableHead>

@@ -305,7 +305,7 @@ export function ContraVoucherDetailsSection({
                   // Map each account to an object with id and name.
                   items={accounts.map((account) => ({
                     id: account.id,
-                    name: `${account.accountName} - ${account.accountNumber}`,
+                    name: `${account.bankName}-${account.accountName} - ${account.accountNumber}`,
                   }))}
                   // When a value is selected, find the corresponding account and set the field’s value.
                   value={
@@ -316,7 +316,12 @@ export function ContraVoucherDetailsSection({
                             accounts.find(
                               (account) =>
                                 Number(account.id) === Number(field.value)
-                            )?.accountName +
+                            )?.bankName +
+                              '-' +
+                              accounts.find(
+                                (account) =>
+                                  Number(account.id) === Number(field.value)
+                              )?.accountName +
                               ' - ' +
                               accounts.find(
                                 (account) =>

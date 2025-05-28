@@ -49,7 +49,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Cash Management',
         items: [
           { name: 'Cash Voucher', source: '/cash/cash-voucher' },
-          { name: 'Cash Reports', source: '/cash/cash-reports' },
+          { name: 'Cash Reports', source: '/cash/cash-report' },
           { name: 'Contra Vouchers', source: '/cash/contra-vouchers' },
         ],
       },
