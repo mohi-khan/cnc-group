@@ -2,9 +2,9 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { useCallback, useEffect, useState } from 'react'
 import { getCashReport } from '@/api/cash-report-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { Employee, GetCashReport, LocationData } from '@/utils/type'
+import { CompanyFromLocalstorage, Employee, GetCashReport, LocationData, LocationFromLocalstorage, User } from '@/utils/type'
 import {
   Table,
   TableBody,
@@ -14,37 +14,32 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Label } from '@/components/ui/label'
-import {
-  getAllCompanies,
-  getAllLocations,
-  getEmployee,
-} from '@/api/common-shared-api'
+import { getEmployee } from '@/api/common-shared-api'
 import { CompanyType } from '@/api/company-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 export default function CashReport() {
   useInitializeUser()
-
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const [cashReport, setCashReport] = useState<GetCashReport[]>([])
   const [fromDate, setFromDate] = useState<string>('2025-05-01')
   const [endDate, setEndDate] = useState<string>('2025-06-30')
-  const [companyId, setCompanyId] = useState<number>(0)
-  const [location, setLocation] = useState<number>(0)
-  const [companies, setCompanies] = useState<CompanyType[]>([])
-  const [locations, setLocations] = useState<LocationData[]>([])
+  const [companyId, setCompanyId] = useState<number | undefined>()
+  const [location, setLocation] = useState<number>()
+   const [user, setUser] = useState<User | null>(null)
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
 
-  const fetchCompanies = useCallback(async () => {
-    if (!token) return
-    const response = await getAllCompanies(token)
-    setCompanies(response.data as CompanyType[])
-  }, [token])
-
-  const fetchLocations = useCallback(async () => {
-    if (!token) return
-    const response = await getAllLocations(token)
-    setLocations(response.data as LocationData[])
-  }, [token])
+ useEffect(() => {
+    if (userData) {
+      setUser(userData)
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+      console.log('Current user from localStorage:', userData)
+    }
+  }, [userData])
 
   const fetchEmployees = useCallback(async () => {
     if (!token) return
@@ -57,8 +52,8 @@ export default function CashReport() {
     const CashReportParams = {
       fromDate,
       endDate,
-      companyId,
-      location,
+      companyId: companyId !== undefined ? companyId : 0,
+      location: location !== undefined ? location : 0,
     }
     const respons = await getCashReport(CashReportParams, token)
     setCashReport(
@@ -76,10 +71,8 @@ export default function CashReport() {
   }, [fetchCashReport])
 
   useEffect(() => {
-    fetchCompanies()
-    fetchLocations()
     fetchEmployees()
-  }, [fetchCompanies, fetchLocations, fetchEmployees])
+  }, [fetchEmployees])
 
   const getEmployeeName = (id: number) => {
     const employee = employees.find((emp) => Number(emp.id) === id)
@@ -111,33 +104,41 @@ export default function CashReport() {
         </div>
         <div className="space-y-2">
           <Label className="text-sm font-medium">Company</Label>
-          <select
-            value={companyId}
-            onChange={(e) => setCompanyId(Number(e.target.value))}
-            className="w-full p-1 border rounded"
-          >
-            <option value={0}>Select Company</option>
-            {companies.map((company) => (
-              <option key={company.companyId} value={company.companyId}>
-                {company.companyName}
-              </option>
-            ))}
-          </select>
+          <CustomCombobox
+            value={
+              companies
+                .map((company) => ({
+                  id: company.company?.companyId ?? 0,
+                  name: company.company?.companyName,
+                }))
+                .find((item) => item.id === Number(companyId)) || null
+            }
+            onChange={(item) => setCompanyId(item ? Number(item.id) : 0)}
+            items={companies.map((company) => ({
+              id: company.company?.companyId !== undefined ? company.company.companyId : 0,
+              name: company.company?.companyName,
+            }))}
+            placeholder="Select Company"
+          />
         </div>
         <div className="space-y-2">
           <Label className="text-sm font-medium">Location</Label>
-          <select
-            value={location}
-            onChange={(e) => setLocation(Number(e.target.value))}
-            className="w-full p-1 border rounded"
-          >
-            <option value={0}>Select Location</option>
-            {locations.map((loc) => (
-              <option key={loc.locationId} value={loc.locationId}>
-                {loc.address}
-              </option>
-            ))}
-          </select>
+          <CustomCombobox
+            value={
+              locations
+                .map((location) => ({
+                  id: location.location?.locationId ?? 0,
+                  name: location.location?.address,
+                }))
+                .find((item) => item.id === location) || null
+            }
+            onChange={(item) => setLocation(item ? Number(item.id) : 0)}
+            items={locations.map((location) => ({
+              id: location.location?.locationId !== undefined ? location.location?.locationId : 0,
+              name: location.location?.address,
+            }))}
+            placeholder="Select Location"
+          />{' '}
         </div>
       </div>
       <Card>
@@ -232,22 +233,27 @@ export default function CashReport() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="p-2">Employee</TableHead>
-                        <TableHead className="p-2">Due Date</TableHead>
                         <TableHead className="p-2">IOU ID</TableHead>
+                        <TableHead className="p-2">Employee</TableHead>
+                        <TableHead className="p-2">Date</TableHead>
                         <TableHead className="p-2">Amount</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {report.IouBalance?.map((iou, i) => (
                         <TableRow key={i}>
+                          <TableCell className="p-2">{iou.iouId}</TableCell>
                           <TableCell className="p-2">
                             {getEmployeeName(iou.employeeId)}
                           </TableCell>
                           <TableCell className="p-2">
-                            {iou.dateIssued}
+                            {
+                              new Date(iou.dateIssued)
+                                .toISOString()
+                                .split('T')[0]
+                            }
                           </TableCell>
-                          <TableCell className="p-2">{iou.iouId}</TableCell>
+
                           <TableCell className="p-2">{iou.amount}</TableCell>
                         </TableRow>
                       ))}
