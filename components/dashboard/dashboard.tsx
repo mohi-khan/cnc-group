@@ -603,12 +603,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="grid grid-cols-4 gap-4 col-span-3 ">
+        <div className="grid grid-cols-4 w-fit gap-4 col-span-3">
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Month Revenue
                   </CardTitle>
                 </CardHeader>
@@ -653,15 +653,14 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Month Cost
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {' '}
                     ${totalExpense?.toLocaleString()}
                   </div>
                   <p
@@ -701,9 +700,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Month Gross Margin
                   </CardTitle>
                 </CardHeader>
@@ -748,9 +747,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Month Net Margin
                   </CardTitle>
                 </CardHeader>
@@ -794,9 +793,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Financial Year Revenue
                   </CardTitle>
                 </CardHeader>
@@ -838,9 +837,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Financial Year Cost
                   </CardTitle>
                 </CardHeader>
@@ -884,9 +883,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Financial Year Gross Margin
                   </CardTitle>
                 </CardHeader>
@@ -930,9 +929,9 @@ export default function Dashboard() {
 
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Card className="cursor-pointer w-72">
+              <Card className="cursor-pointer">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-serif">
+                  <CardTitle className="text-base ">
                     Current Financial Year Net Margin
                   </CardTitle>
                 </CardHeader>
