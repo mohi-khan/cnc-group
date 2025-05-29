@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Printer, RotateCcw, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { toWords } from 'number-to-words'
-
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -59,7 +58,7 @@ export default function SingleVoucherDetails() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
-   const [token] = useAtom(tokenAtom)
+  const [token] = useAtom(tokenAtom)
 
   // State variables
   const { voucherid } = useParams()
@@ -82,9 +81,9 @@ export default function SingleVoucherDetails() {
 
   useEffect(() => {
     async function fetchVoucher() {
-      if (!voucherid) return
+      if (!voucherid || !token) return
       try {
-        const response = await getSingleVoucher(voucherid as string,token)
+        const response = await getSingleVoucher(voucherid as string, token)
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -105,7 +104,7 @@ export default function SingleVoucherDetails() {
     }
 
     fetchVoucher()
-  }, [voucherid,token])
+  }, [voucherid, token])
 
   const handleReferenceEdit = (index: number, currentText: string) => {
     setEditingReferenceIndex(index)
@@ -157,7 +156,11 @@ export default function SingleVoucherDetails() {
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(Number(voucherid), createdId, token)
+      const response = await reverseJournalVoucher(
+        Number(voucherid),
+        createdId,
+        token
+      )
 
       if (!response.data || response.error) {
         toast({
@@ -288,71 +291,39 @@ export default function SingleVoucherDetails() {
                 <TableHeader className="bg-slate-200 shadow-md">
                   <TableRow>
                     <TableHead>Accounts</TableHead>
-                    {isContraVoucher ? (
-                      <>
-                        <TableHead>Bank Account</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead>Debit</TableHead>
-                        <TableHead>Credit</TableHead>
-                      </>
-                    ) : (
-                      <>
-                        <TableHead>Cost Center</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Partner</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead>Debit</TableHead>
-                        <TableHead>Credit</TableHead>
-                      </>
-                    )}
+                    <TableHead>Bank Account</TableHead>
+                    <TableHead>Cost Center</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Partner</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead>Debit</TableHead>
+                    <TableHead>Credit</TableHead>
                     <TableHead className="no-print">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.map((item, index) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.accountsname}</TableCell>
-                      {isContraVoucher ? (
-                        <>
-                          <TableCell>{item.bankaccount}</TableCell>
-                          <TableCell>
-                            {editingReferenceIndex === index ? (
-                              <Input
-                                type="text"
-                                value={editingReferenceText}
-                                onChange={(e) =>
-                                  setEditingReferenceText(e.target.value)
-                                }
-                              />
-                            ) : (
-                              item.notes
-                            )}
-                          </TableCell>
-                          <TableCell>{item.debit}</TableCell>
-                          <TableCell>{item.credit}</TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell>{item.costcenter}</TableCell>
-                          <TableCell>{item.department}</TableCell>
-                          <TableCell>{item.partner}</TableCell>
-                          <TableCell>
-                            {editingReferenceIndex === index ? (
-                              <Input
-                                type="text"
-                                value={editingReferenceText}
-                                onChange={(e) =>
-                                  setEditingReferenceText(e.target.value)
-                                }
-                              />
-                            ) : (
-                              item.notes
-                            )}
-                          </TableCell>
-                          <TableCell>{item.debit}</TableCell>
-                          <TableCell>{item.credit}</TableCell>
-                        </>
-                      )}
+                      <TableCell>{item.accountsname || "N/A"}</TableCell>
+                      <TableCell>{item.bankaccount || 'N/A'}</TableCell>
+                      <TableCell>{item.costcenter || "N/A"}</TableCell>
+                      <TableCell>{item.department || "N/A"}</TableCell>
+                      <TableCell>{item.partner || "N/A"}</TableCell>
+                      <TableCell>
+                        {editingReferenceIndex === index ? (
+                          <Input
+                            type="text"
+                            value={editingReferenceText}
+                            onChange={(e) =>
+                              setEditingReferenceText(e.target.value)
+                            }
+                          />
+                        ) : (
+                          item.notes
+                        )}
+                      </TableCell>
+                      <TableCell>{item.debit}</TableCell>
+                      <TableCell>{item.credit}</TableCell>
                       <TableCell className="no-print">
                         {editingReferenceIndex === index ? (
                           <Button
@@ -385,15 +356,11 @@ export default function SingleVoucherDetails() {
               {/* Total Debit Amount */}
               <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
                 <span className="font-medium">Total:</span>
-                <span>
-                  {data
-                    .reduce(
-                      (total, item) =>
-                        total + Number.parseFloat(String(item.debit || '0')),
-                      0
-                    )
-                    .toFixed(2)}
-                </span>
+                <span>{data[data.length - 1].totalamount} {data[data.length-1].currency}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
+                <span className="font-medium">Total:</span>
+                <span className='capitalize'>{toWords(data[data.length - 1].totalamount)} {data[data.length-1].currency} only</span>
               </div>
               <div className="flex justify-between mt-20">
                 <h1 className="border-t-2 border-black pt-2">

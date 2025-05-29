@@ -115,7 +115,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center justify-between">
             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
-              <Link href={'/dashboard'}>Dashboard</Link>
+              <Link href={'/dashboard'} className='font-medium text-gray-900 text-sm'>Dashboard</Link>
               {MENU_ITEMS.map((menuItem, index) => (
                 <div
                   key={index}
