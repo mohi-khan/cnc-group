@@ -242,7 +242,7 @@ export function JournalVoucherDetailsSection({
         <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
           <div>Account Name</div>
           <div>Cost Center</div>
-          <div>Department</div>
+          <div>Unit</div>
           <div>Debit</div>
           <div>Credit</div>
           <div>Notes</div>
@@ -330,7 +330,7 @@ export function JournalVoucherDetailsSection({
                     <CustomCombobox
                       items={departments.map((department) => ({
                         id: department.departmentID.toString(),
-                        name: department.departmentName || 'Unnamed Department',
+                        name: department.departmentName || 'Unnamed Unit',
                       }))}
                       value={
                         field.value
@@ -348,6 +348,7 @@ export function JournalVoucherDetailsSection({
                           value ? Number.parseInt(value.id, 10) : null
                         )
                       }
+                      placeholder="Select unit"
                     />
                   </FormControl>
                 </FormItem>
