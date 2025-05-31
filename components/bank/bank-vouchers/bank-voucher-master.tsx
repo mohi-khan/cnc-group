@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { getAllCurrency } from '@/api/common-shared-api'
+import { getAllCurrency, getEmployee } from '@/api/common-shared-api'
 import {
   FormControl,
   FormField,
@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import type { CurrencyType, FormStateType } from '@/utils/type'
+import type { CurrencyType, Employee, FormStateType } from '@/utils/type'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useCallback, useEffect, useState } from 'react'
@@ -25,6 +25,7 @@ interface BankVoucherMasterProps {
     control: any
     getValues: any
     setValue: any
+    watch: (field: string) => any
   }
   formState: FormStateType
   setFormState: React.Dispatch<React.SetStateAction<FormStateType>>
@@ -44,7 +45,7 @@ export default function BankVoucherMaster({
 
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
-
+ const [employeeData, setEmployeeData] = useState<Employee[]>([])
   // Function to fetch currency data
   const fetchCurrency = useCallback(async () => {
     const data = await getAllCurrency(token)
@@ -60,8 +61,20 @@ export default function BankVoucherMaster({
     }
   },[token])
 
+  const fetchEmployeeData = useCallback(async () => {
+    if (!token) return
+    const employees = await getEmployee(token)
+    if (employees.data) {
+      setEmployeeData(employees.data)
+    } else {
+      setEmployeeData([])
+    }
+    console.log('Show The Employee Data :', employees.data)
+  }, [token])
+
   useEffect(() => {
     fetchCurrency()
+    fetchEmployeeData()
 
     // Pre-populate fields if requisition data is available
     if (requisition && Object.keys(requisition).length > 0) {
@@ -95,7 +108,7 @@ export default function BankVoucherMaster({
         form.setValue('journalEntry.currencyId', requisition.currency)
       }
     }
-  }, [requisition,fetchCurrency, form, formState.formType])
+  }, [requisition,fetchCurrency, form, formState.formType, fetchEmployeeData])
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -274,12 +287,19 @@ export default function BankVoucherMaster({
               ? {
                   id: formState.selectedBankAccount.id.toString(),
                   name:
-                    formState.bankAccounts.find(
+                    `${formState.bankAccounts.find(
                       (a) =>
                         formState.selectedBankAccount &&
                         a.id === formState.selectedBankAccount.id
-                    )?.accountName || '',
-                }
+                    )?.bankName} - ${formState.bankAccounts.find(
+                      (a) =>
+                        formState.selectedBankAccount &&
+                        a.id === formState.selectedBankAccount.id
+                    )?.accountName} - ${formState.bankAccounts.find(
+                      (a) =>
+                        formState.selectedBankAccount &&
+                        a.id === formState.selectedBankAccount.id
+                    )?.accountNumber}` || '',                }
               : null
           }
           onChange={(value) => {
@@ -311,10 +331,10 @@ export default function BankVoucherMaster({
         name="journalEntry.notes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Check Number</FormLabel>
+            <FormLabel>Cheque Number</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter check number"
+                placeholder="Enter cheque number"
                 {...field}
                 onChange={(e) => field.onChange(e.target.value)}
               />
@@ -373,7 +393,7 @@ export default function BankVoucherMaster({
           </FormItem>
         )}
       />
-      <FormField
+      {/* <FormField
         control={form.control}
         name="journalEntry.payTo"
         render={({ field }) => (
@@ -386,6 +406,60 @@ export default function BankVoucherMaster({
                 placeholder="Enter payee name"
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      /> */}
+      <FormField
+        control={form.control}
+        name="journalEntry.payTo"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Receiver Name</FormLabel>
+            <div className="flex gap-4">
+              {/* Combobox Section */}
+              <div className="flex-1">
+                <CustomCombobox
+                  items={employeeData.map((employee) => ({
+                    id: employee.id.toString(),
+                    name: employee.employeeName,
+                  }))}
+                  value={
+                    field.value && !form.watch('journalEntry.payToText')
+                      ? {
+                          id: field.value,
+                          name: field.value,
+                        }
+                      : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) => {
+                    if (value) {
+                      field.onChange(value.name)
+                      form.setValue('journalEntry.payTo', value.name)
+                      form.setValue('journalEntry.payToText', '') // clear manual input
+                    }
+                  }}
+                  placeholder="Select a receiver name"
+                  disabled={!!form.watch('journalEntry.payToText')}
+                />
+              </div>
+
+              {/* Manual Text Input Section */}
+              <div className="flex-1">
+                <FormControl>
+                  <Input
+                    placeholder="Enter receiver name"
+                    value={form.watch('journalEntry.payToText') || ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      form.setValue('journalEntry.payToText', value)
+                      form.setValue('journalEntry.payTo', value) // <- ensures value goes to DB
+                      field.onChange(value)
+                    }}
+                  />
+                </FormControl>
+              </div>
+            </div>
             <FormMessage />
           </FormItem>
         )}

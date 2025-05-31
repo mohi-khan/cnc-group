@@ -83,7 +83,7 @@ export default function BankVoucherDetails({
           <TableRow>
             <TableHead>Account Name</TableHead>
             <TableHead>Cost Center</TableHead>
-            <TableHead>Department</TableHead>
+            <TableHead>Unit</TableHead>
             <TableHead>Partner Name</TableHead>
             <TableHead>Remarks</TableHead>
             <TableHead>Amount</TableHead>
@@ -177,7 +177,7 @@ export default function BankVoucherDetails({
                           items={formState.departments.map((department) => ({
                             id: department.departmentID.toString(),
                             name:
-                              department.departmentName || 'Unnamed Department',
+                              department.departmentName || 'Unnamed Unit',
                           }))}
                           value={
                             field.value
@@ -195,7 +195,7 @@ export default function BankVoucherDetails({
                               value ? Number.parseInt(value.id, 10) : null
                             )
                           }
-                          placeholder="Select department"
+                          placeholder="Select Unit"
                         />
                       </FormControl>
                     </FormItem>

@@ -44,7 +44,7 @@ export default function CashVoucherMaster({
 
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
-    const [employeeData, setEmployeeData] = useState<Employee[]>([])
+  const [employeeData, setEmployeeData] = useState<Employee[]>([])
 
   // Function to fetch currency data
   const fetchCurrency = useCallback(async () => {
@@ -66,22 +66,21 @@ export default function CashVoucherMaster({
     }
   }, [token, router])
 
-   const fetchEmployeeData = useCallback(async () => {
-      if (!token) return
-      const employees = await getEmployee(token)
-      if (employees.data) {
-        setEmployeeData(employees.data)
-      } else {
-        setEmployeeData([])
-      }
-      console.log('Show The Employee Data :', employees.data)
-    }, [token])
+  const fetchEmployeeData = useCallback(async () => {
+    if (!token) return
+    const employees = await getEmployee(token)
+    if (employees.data) {
+      setEmployeeData(employees.data)
+    } else {
+      setEmployeeData([])
+    }
+    console.log('Show The Employee Data :', employees.data)
+  }, [token])
 
   useEffect(() => {
     fetchCurrency()
     fetchEmployeeData()
   }, [fetchCurrency, fetchEmployeeData])
-  
 
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -242,6 +241,7 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="journalEntry.payTo"
@@ -249,6 +249,7 @@ export default function CashVoucherMaster({
           <FormItem>
             <FormLabel>Receiver Name</FormLabel>
             <div className="flex gap-4">
+              {/* Combobox Section */}
               <div className="flex-1">
                 <CustomCombobox
                   items={employeeData.map((employee) => ({
@@ -256,22 +257,26 @@ export default function CashVoucherMaster({
                     name: employee.employeeName,
                   }))}
                   value={
-                    field.value && !form.watch('journalEntry.payToText') ? {
-                      id: field.value,
-                      name: field.value
-                    } : null
+                    field.value && !form.watch('journalEntry.payToText')
+                      ? {
+                          id: field.value,
+                          name: field.value,
+                        }
+                      : null
                   }
                   onChange={(value: { id: string; name: string } | null) => {
                     if (value) {
                       field.onChange(value.name)
                       form.setValue('journalEntry.payTo', value.name)
-                      form.setValue('journalEntry.payToText', '')
+                      form.setValue('journalEntry.payToText', '') // clear manual input
                     }
                   }}
                   placeholder="Select a receiver name"
                   disabled={!!form.watch('journalEntry.payToText')}
                 />
               </div>
+
+              {/* Manual Text Input Section */}
               <div className="flex-1">
                 <FormControl>
                   <Input
@@ -280,12 +285,9 @@ export default function CashVoucherMaster({
                     onChange={(e) => {
                       const value = e.target.value
                       form.setValue('journalEntry.payToText', value)
+                      form.setValue('journalEntry.payTo', value) // <- ensures value goes to DB
                       field.onChange(value)
-                      if (value) {
-                        form.setValue('journalEntry.payTo', '')
-                      }
                     }}
-                    // disabled={!!form.watch('journalEntry.payTo') && !form.watch('journalEntry.payToText')}
                   />
                 </FormControl>
               </div>
@@ -294,6 +296,7 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
+
       <div className="col-span-4">
         <FormField
           control={form.control}
