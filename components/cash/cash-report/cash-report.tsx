@@ -19,6 +19,8 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import CashReportHeading from './cash-report-heading'
 import CashReportList from './cash-report-list'
 import { usePDF } from 'react-to-pdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 // TODO: Replace this stub with your actual CashReportHeading implementation or import from the correct file.
 
@@ -36,7 +38,7 @@ export default function CashReport() {
   const [user, setUser] = useState<User | null>(null)
   const [employees, setEmployees] = useState<Employee[]>([])
   const { toPDF, targetRef } = usePDF({ filename: 'cash_report.pdf' })
-  
+
   const generatePdf = () => {
     toPDF()
   }
@@ -77,11 +79,90 @@ export default function CashReport() {
 
   useEffect(() => {
     fetchCashReport()
-  }, [fetchCashReport])
-
-  useEffect(() => {
     fetchEmployees()
-  }, [fetchEmployees])
+  }, [fetchCashReport, fetchEmployees])
+
+  const exportToExcel = (data: GetCashReport[], fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Cash Report')
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+    const blob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+    saveAs(blob, `${fileName}.xlsx`)
+  }
+
+  const flattenData = (data: GetCashReport[]): any[] => {
+      return data.flatMap((report) => {
+        const rows = [];
+  
+        // Add opening balance
+        if (report.openingBal && report.openingBal.length > 0) {
+          rows.push({
+            date: '',
+            voucherId: '',
+            currentAccountName: 'Opening Balance',
+            debit: '',
+            credit: '',
+            oppositeAccountName: '',
+            narration: '',
+            balance: report.openingBal[0].balance
+          });
+        }
+  
+        // Add transaction data
+        report.transactionData.forEach((transaction) => {
+          rows.push({
+            date: transaction.date,
+            voucherId: transaction.voucherId,
+            currentAccountName: transaction.currentAccountName,
+            debit: transaction.debit,
+            credit: transaction.credit,
+            oppositeAccountName: transaction.oppositeAccountName,
+            narration: transaction.narration
+          });
+        });
+  
+        // Add closing balance
+        if (report.closingBal && report.closingBal.length > 0) {
+          rows.push({
+            date: '',
+            voucherId: '',
+            currentAccountName: 'Closing Balance',
+            debit: '',
+            credit: '',
+            oppositeAccountName: '',
+            narration: '',
+            balance: report.closingBal[0].balance
+          });
+        }
+  
+        // Add IOU balances
+        report.IouBalance.forEach((iou) => {
+          rows.push({
+            date: iou.dateIssued,
+            voucherId: iou.iouId,
+            currentAccountName: 'IOU Balance',
+            debit: iou.amount,
+            credit: iou.totalAdjusted || '',
+            oppositeAccountName: `Employee ID: ${iou.employeeId}`,
+            narration: 'IOU Transaction'
+          });
+        });
+  
+        return rows;
+      });
+    }
+  
+
+
+  const generateExcel = () => {
+    exportToExcel(cashReport, 'cash-report')
+  }
 
   const getEmployeeName = (id: number) => {
     const employee = employees.find((emp) => Number(emp.id) === id)
@@ -93,7 +174,6 @@ export default function CashReport() {
       <h1 className="text-3xl font-bold mb-4 text-center">Cash Report</h1>
 
       <CashReportHeading
-        
         generatePdf={generatePdf}
         fromDate={fromDate}
         setFromDate={setFromDate}
@@ -107,6 +187,7 @@ export default function CashReport() {
         setCompanyId={setCompanyId}
         location={location}
         setLocation={setLocation}
+        generateExcel={generateExcel}
       />
       <CashReportList
         targetRef={targetRef}
@@ -116,10 +197,7 @@ export default function CashReport() {
         companyId={companyId}
         location={location}
         getEmployeeName={getEmployeeName}
-        
-        
       />
-   
-        </div>
+    </div>
   )
 }
