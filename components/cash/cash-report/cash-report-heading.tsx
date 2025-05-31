@@ -19,6 +19,7 @@ type CashReportHeadingProps = {
   setLocation: (id: number) => void
   companyId?: number
   generatePdf: () => void
+  generateExcel: () => void
 }
 
 const CashReportHeading: React.FC<CashReportHeadingProps> = ({
@@ -33,6 +34,7 @@ const CashReportHeading: React.FC<CashReportHeadingProps> = ({
   location,
   setLocation,
   generatePdf,
+  generateExcel,
 }) => {
   return (
     <div className="grid grid-cols-6 gap-8 mb-4 px-4 mx-20">
@@ -47,7 +49,7 @@ const CashReportHeading: React.FC<CashReportHeadingProps> = ({
           <span className="font-medium">PDF</span>
         </Button>
         <Button
-          onClick={() => {}}
+          onClick={generateExcel}
           variant="ghost"
           size="sm"
           className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
