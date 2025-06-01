@@ -42,6 +42,7 @@ export function ContraVoucherDetailsSection({
   // State variables
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
+  const [cashCoa, setCashCoa] = React.useState<AccountsHead[]>([])
   const [disabledStates, setDisabledStates] = useState<
     Record<number, { bank: boolean; account: boolean }>
   >({})
@@ -91,6 +92,19 @@ export function ContraVoucherDetailsSection({
       setChartOfAccounts(response.data)
     }
   },[token])
+
+    React.useEffect(() => {
+      const filteredCoa = chartOfAccounts?.filter((account) => {
+        return account.isGroup === false
+      })
+  
+      const isCashCoa = chartOfAccounts?.filter((account) => {
+        return account.isCash === true
+      })
+      setCashCoa(isCashCoa || [])
+      console.log("Filtered Chart of Accounts:", filteredCoa)
+      console.log("cash Chart of Accounts:", isCashCoa)
+    }, [chartOfAccounts])
 
   const fetchBankAccounts = useCallback(async () => {
   const response = await getAllBankAccounts(token);
@@ -238,7 +252,7 @@ export function ContraVoucherDetailsSection({
 
     let newEntry = {
       bankaccountid: 0,
-      accountId: 0,
+      accountId: cashCoa[0]?.accountId,
       debit: 0,
       credit: 0,
       notes: '',

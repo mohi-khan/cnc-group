@@ -257,12 +257,12 @@ export default function BankVoucherMaster({
         <FormLabel>Type</FormLabel>
         <CustomCombobox
           items={[
-            { id: 'Credit', name: 'Credit' },
-            { id: 'Debit', name: 'Debit' },
+            { id: 'Credit', name: 'Payment' },
+            { id: 'Debit', name: 'Receipt' },
           ]}
           value={{
             id: String(formState.formType),
-            name: String(formState.formType),
+            name: formState.formType === 'Credit' ? 'Payment' : 'Receipt',
           }}
           onChange={(value) =>
             setFormState({

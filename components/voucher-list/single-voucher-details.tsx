@@ -295,72 +295,98 @@ export default function SingleVoucherDetails() {
                     <TableHead>Cost Center</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Partner</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead>Debit</TableHead>
-                    <TableHead>Credit</TableHead>
+                    <TableHead>
+                      {data[0].journaltype === VoucherTypes.BankVoucher
+                        ? 'Cheque No.'
+                        : 'Notes'}
+                    </TableHead>
+                    {data[0].journaltype === VoucherTypes.CashVoucher ? (
+                      <TableHead>Amount</TableHead>
+                    ) : (
+                      <>
+                        <TableHead>Debit</TableHead>
+                        <TableHead>Credit</TableHead>
+                      </>
+                    )}
                     <TableHead className="no-print">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((item, index) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.accountsname || "N/A"}</TableCell>
-                      <TableCell>{item.bankaccount || 'N/A'}</TableCell>
-                      <TableCell>{item.costcenter || "N/A"}</TableCell>
-                      <TableCell>{item.department || "N/A"}</TableCell>
-                      <TableCell>{item.partner || "N/A"}</TableCell>
-                      <TableCell>
-                        {editingReferenceIndex === index ? (
-                          <Input
-                            type="text"
-                            value={editingReferenceText}
-                            onChange={(e) =>
-                              setEditingReferenceText(e.target.value)
-                            }
-                          />
+                  {(data[0].journaltype === VoucherTypes.CashVoucher
+                    ? [data[0]] // Only the first item
+                    : data
+                  ) // All items
+                    .map((item, index) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.accountsname || 'N/A'}</TableCell>
+                        <TableCell>{item.bankaccount || 'N/A'}</TableCell>
+                        <TableCell>{item.costcenter || 'N/A'}</TableCell>
+                        <TableCell>{item.department || 'N/A'}</TableCell>
+                        <TableCell>{item.partner || 'N/A'}</TableCell>
+                        <TableCell>
+                          {editingReferenceIndex === index ? (
+                            <Input
+                              type="text"
+                              value={editingReferenceText}
+                              onChange={(e) =>
+                                setEditingReferenceText(e.target.value)
+                              }
+                            />
+                          ) : (
+                            item.notes
+                          )}
+                        </TableCell>
+                        {data[0].journaltype === VoucherTypes.CashVoucher ? (
+                          <TableCell>{item.totalamount}</TableCell>
                         ) : (
-                          item.notes
+                          <>
+                            <TableCell>{item.debit}</TableCell>
+                            <TableCell>{item.credit}</TableCell>
+                          </>
                         )}
-                      </TableCell>
-                      <TableCell>{item.debit}</TableCell>
-                      <TableCell>{item.credit}</TableCell>
-                      <TableCell className="no-print">
-                        {editingReferenceIndex === index ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleReferenceSave}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleReferenceEdit(index, item.notes)
-                            }
-                          >
-                            Edit
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableCell className="no-print">
+                          {editingReferenceIndex === index ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleReferenceSave}
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleReferenceEdit(index, item.notes)
+                              }
+                            >
+                              Edit
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
-              <div className="mt-6 grid grid-cols-[120px,1fr] gap-2">
+              <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Reference:</span>
                 <span>{data[data.length - 1].notes}</span>
               </div>
               {/* Total Debit Amount */}
-              <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
-                <span className="font-medium">Total:</span>
-                <span>{data[data.length - 1].totalamount} {data[data.length-1].currency}</span>
+              <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
+                <span className="font-medium">Amount:</span>
+                <span>
+                  {data[data.length - 1].totalamount}{' '}
+                  {data[data.length - 1].currency}
+                </span>
               </div>
-              <div className="mt-4 grid grid-cols-[120px,1fr] gap-2">
-                <span className="font-medium">Total:</span>
-                <span className='capitalize'>{toWords(data[data.length - 1].totalamount)} {data[data.length-1].currency} only</span>
+              <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
+                <span className="font-medium">Amount in word:</span>
+                <span className="capitalize">
+                  {toWords(data[data.length - 1].totalamount)}{' '}
+                  {data[data.length - 1].currency} only
+                </span>
               </div>
               <div className="flex justify-between mt-20">
                 <h1 className="border-t-2 border-black pt-2">

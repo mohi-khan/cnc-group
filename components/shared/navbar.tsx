@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, User2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
@@ -172,41 +172,6 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center ml-4">
-            <div className="relative mr-4" ref={companiesRef}>
-              <button
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
-                onClick={() => setIsCompaniesOpen(!isCompaniesOpen)}
-              >
-                Companies
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </button>
-              {isCompaniesOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
-                  <div
-                    className="py-1 rounded-md bg-white shadow-xs"
-                    role="menu"
-                    aria-orientation="vertical"
-                  >
-                    {companies?.length > 0 ? (
-                      companies?.map((company) => (
-                        <Link
-                          key={company?.company.companyId}
-                          href={`/company/${company.company.companyId}`}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          role="menuitem"
-                        >
-                          {company?.company.companyName}
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="px-4 py-2 text-sm text-gray-500">
-                        No companies available
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
             <div className="relative" ref={profileRef}>
               <button
                 className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
@@ -215,12 +180,8 @@ export default function Navbar() {
                 aria-haspopup="true"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
-                <Image
-                  src="/placeholder.svg?height=40&width=40"
-                  width={40}
-                  height={40}
-                  className="rounded-full border"
-                  alt="Profile"
+                <User2
+                  className="h-9 w-9 text-gray-600 border border-gray-600 p-1 rounded-full"
                 />
               </button>
               {isProfileOpen && (
