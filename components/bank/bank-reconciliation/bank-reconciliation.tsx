@@ -94,7 +94,7 @@ export const BankReconciliation = () => {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
-        console.log('Fetching reconciliations with:', data) // Debug log
+        console.log('Fetching reconciliations with:', data)
         const response = await getBankReconciliations(
           Number.parseInt(data.bankAccount),
           data.fromDate,
@@ -112,12 +112,12 @@ export const BankReconciliation = () => {
               response.error?.message || 'Failed to get gl bank accounts',
           })
         } else {
-          setReconciliations(response.data || [])
+          // Filter out reconciled items
+          const unReconciledItems = response.data.filter(item => !item.reconciled)
+          setReconciliations(unReconciledItems || [])
         }
-        // console.log('Received reconciliations:', response.data) // Debug log
-        // setReconciliations(response.data || [])
       } catch (error) {
-        console.error('Error fetching reconciliations:', error) // Debug log
+        console.error('Error fetching reconciliations:', error)
         toast({
           title: 'Error',
           description: 'Failed to fetch reconciliations',
@@ -127,7 +127,7 @@ export const BankReconciliation = () => {
         setLoading(false)
       }
     } else {
-      console.log('Missing required data:', data) // Debug log
+      console.log('Missing required data:', data)
       setReconciliations([])
     }
   }
@@ -143,12 +143,14 @@ export const BankReconciliation = () => {
       // Update both reconciled status and comments in a single API call
       await updateBankReconciliation(id, reconciled, comments, token)
 
-      // Update local state
-      setReconciliations((prevReconciliations) =>
-        prevReconciliations.map((r) =>
-          r.id === id ? { ...r, reconciled, comments } : r
-        )
-      )
+      // Remove the reconciled item from the list if reconciled is true
+      // setReconciliations((prevReconciliations) =>
+      //   reconciled
+      //     ? prevReconciliations.filter((r) => r.id !== id)
+      //     : prevReconciliations.map((r) =>
+      //         r.id === id ? { ...r, reconciled, comments } : r
+      //       )
+      // )
       setEditingId(null)
       toast({
         title: 'Success',
@@ -180,8 +182,8 @@ export const BankReconciliation = () => {
               [field]:
                 field === 'reconciled'
                   ? value
-                    ? 1
-                    : 0 // Convert to 1 or 0 for reconciled field
+                    ? true
+                    : false
                   : value,
             }
           : r
