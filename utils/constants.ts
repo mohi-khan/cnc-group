@@ -162,6 +162,10 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Reconciliation',
         items: [
+           {
+            name: 'Entry Bank Transaction',
+            source: '/bank/entry-bank-transaction',
+          },
           {
             name: 'Bank Reconciliation',
             source: '/bank/bank-reconciliation',

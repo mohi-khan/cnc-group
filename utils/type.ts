@@ -1324,6 +1324,7 @@ export const createBankTransactionSchema = z.object({
   description: z.string().optional(),
   amount: z.string(),
   currency: z.string(),
+  checkNo: z.string().optional(),
   status: z.enum(['Matched', 'Unmatched', 'Pending']).default('Pending'),
 })
 

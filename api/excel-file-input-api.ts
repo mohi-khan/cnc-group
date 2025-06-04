@@ -19,3 +19,14 @@ export async function createBankTransactions(data: BankTransactionData[] | any[]
     },
   })
 }
+
+export async function getAllCurrency() {
+  return fetchApi<BankTransactionData[]>({
+    url: 'api/bank-transactions/get-bank-transactions',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${localStorage.getItem('token')}`,
+    },
+  })
+}
