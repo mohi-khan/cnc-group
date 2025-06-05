@@ -52,6 +52,7 @@ import { useRouter } from 'next/navigation'
 import {
   type BankTransactionData,
   createBankTransactions,
+  getAllBankTransactions,
 } from '@/api/excel-file-input-api'
 import {
   type BankAccount,
@@ -145,7 +146,8 @@ export default function EntryBankTransaction() {
     if (!token) return
     setIsLoading(true)
     try {
-      const response = await getAllCurrency(token)
+      const response = await getAllBankTransactions(token)
+      console.log("🚀 ~ fetchTransactions ~ response:", response)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
         return
@@ -196,6 +198,7 @@ export default function EntryBankTransaction() {
       setIsLoading(false)
     }
   }, [toast, router, token])
+  
   useEffect(() => {
     fetchTransactions()
     fetchCurrencies()
@@ -431,7 +434,6 @@ export default function EntryBankTransaction() {
               <FormField
                 control={form.control}
                 name="bankId"
-                type="number"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Bank Account Details</FormLabel>
