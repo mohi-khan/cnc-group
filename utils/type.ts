@@ -1317,7 +1317,7 @@ export type FundPositionType = z.infer<typeof FundPositionSchema>
 
 //bank-transactions
 export const createBankTransactionSchema = z.object({
-  bankId: z.string().optional(),
+  bankId: z.number().optional(),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: 'Invalid date format',
   }),
