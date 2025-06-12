@@ -1518,6 +1518,7 @@ export type GetCashReport = {
   transactionData: {
     date: string;
     voucherId: number;
+    voucherNo: string;
     currentAccountId: number;
     currentAccountName: string;
     debit: number;
