@@ -318,6 +318,8 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { GetCashReport } from '@/utils/type'
+import { VoucherTypes } from '@/utils/type'
+import Link from 'next/link'
 
 interface CashReportProps {
   cashReport: GetCashReport[]
@@ -334,6 +336,7 @@ const CashReportList: React.FC<CashReportProps> = ({
   getEmployeeName,
   targetRef,
 }) => {
+  const linkGenerator = (voucherId: number) => `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.CashVoucher}`
   return (
     <div ref={targetRef}>
       <Card>
@@ -365,13 +368,16 @@ const CashReportList: React.FC<CashReportProps> = ({
                           .map((transaction, i) => (
                             <TableRow key={i}>
                               <TableCell className="p-2">
-                                {transaction.voucherNo}
+                               <Link href={linkGenerator(transaction.voucherId)}>
+                                  {transaction.voucherNo}
+                                </Link>
+
                               </TableCell>
                               <TableCell className="p-2">
                                 {transaction.date}
                               </TableCell>
                               <TableCell className="p-2">
-                                {transaction.oppositeAccountName}
+                                {transaction.narration}
                               </TableCell>
                               <TableCell className="p-2">
                                 {transaction.debit}
@@ -399,13 +405,16 @@ const CashReportList: React.FC<CashReportProps> = ({
                           .map((transaction, i) => (
                             <TableRow key={i}>
                               <TableCell className="p-2">
-                                {transaction.voucherNo}
+                               <Link href={linkGenerator(transaction.voucherId)}>
+                                  {transaction.voucherNo}
+                                </Link>
+
                               </TableCell>
                               <TableCell className="p-2">
                                 {transaction.date}
                               </TableCell>
                               <TableCell className="p-2">
-                                {transaction.oppositeAccountName}
+                                {transaction.narration}
                               </TableCell>
                               <TableCell className="p-2">
                                 {transaction.credit}
@@ -424,8 +433,8 @@ const CashReportList: React.FC<CashReportProps> = ({
                 </div>
 
                 <div className="border rounded p-2 ml-auto w-1/2">
-                  <h3 className="font-bold mb-1">IOU List</h3>
-                  <Table>
+                  {/* <h3 className="font-bold mb-1">IOU List</h3> */}
+                  {/* <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="p-2">IOU ID</TableHead>
@@ -453,9 +462,10 @@ const CashReportList: React.FC<CashReportProps> = ({
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                  </Table> */}
+
                   <div className="mt-1 font-bold">
-                    Total IOU:{' '}
+                    Total IOU:
                     {report.IouBalance?.reduce(
                       (sum, iou) => sum + (iou.amount || 0),
                       0
