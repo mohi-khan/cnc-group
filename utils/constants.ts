@@ -162,8 +162,8 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Reconciliation',
         items: [
-           {
-            name: 'Entry Bank Transaction',
+          {
+            name: 'Bank Book Entry',
             source: '/bank/entry-bank-transaction',
           },
           {

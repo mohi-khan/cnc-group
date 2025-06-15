@@ -216,7 +216,7 @@ export default function BankVoucherMaster({
 
                           // Reset exchange rate when currency changes or is cleared
                           if (newValue === null || newValue === 1) {
-                            form.setValue('journalEntry.exchangeRate', 0)
+                            form.setValue('journalEntry.exchangeRate', 1)
                           }
                         }}
                         placeholder="Select currency"

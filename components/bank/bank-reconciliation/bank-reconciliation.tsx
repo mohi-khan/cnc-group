@@ -274,6 +274,7 @@ export const BankReconciliation = () => {
           <TableHeader className="bg-slate-200 shadow-md">
             <TableRow>
               <TableHead>Voucher ID</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead>Check No</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Type</TableHead>
@@ -293,9 +294,11 @@ export const BankReconciliation = () => {
               reconciliations.map((reconciliation) => (
                 <TableRow key={reconciliation.id}>
                   <TableCell>{reconciliation.voucherId}</TableCell>
+                  <TableCell>{reconciliation.date}</TableCell>
                   <TableCell>{reconciliation.checkNo}</TableCell>
                   <TableCell>{reconciliation.amount}</TableCell>
                   <TableCell>{reconciliation.type}</TableCell>
+
                   {/* Update the Checkbox in the table */}
                   <TableCell>
                     {editingId === reconciliation.id ? (
