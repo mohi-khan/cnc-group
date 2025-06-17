@@ -106,6 +106,19 @@ export default function BankVoucher() {
   })
   // Retrivin user data and set companies and locations based on user Data
   React.useEffect(() => {
+  
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+    
     if (userData) {
       setFormState((prevState) => ({
         ...prevState,
@@ -122,6 +135,8 @@ export default function BankVoucher() {
       console.log('No user data found in localStorage')
       // router.push('/unauthorized-access')
     }
+    checkUserData()
+   
   }, [router, userData])
   //Check If user have the previlage
   // Initialze all the Combo Box in the system

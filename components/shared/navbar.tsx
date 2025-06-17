@@ -36,6 +36,7 @@ export default function Navbar() {
 
   const handleSignOut = () => {
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('authToken')
     setIsProfileOpen(false)
     router.push('/')
   }
@@ -115,7 +116,12 @@ export default function Navbar() {
           </div>
           <div className="flex items-center justify-between">
             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
-              <Link href={'/dashboard'} className='font-medium text-gray-900 text-sm'>Dashboard</Link>
+              <Link
+                href={'/dashboard'}
+                className="font-medium text-gray-900 text-sm"
+              >
+                Dashboard
+              </Link>
               {MENU_ITEMS.map((menuItem, index) => (
                 <div
                   key={index}
@@ -148,7 +154,7 @@ export default function Navbar() {
                                     key={itemIndex}
                                     href={item.source}
                                     onClick={(e) => {
-                                      if (!(item.source)) {
+                                      if (!item.source) {
                                         e.preventDefault()
                                       }
                                     }}
@@ -180,9 +186,7 @@ export default function Navbar() {
                 aria-haspopup="true"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
-                <User2
-                  className="h-9 w-9 text-gray-600 border border-gray-600 p-1 rounded-full"
-                />
+                <User2 className="h-9 w-9 text-gray-600 border border-gray-600 p-1 rounded-full" />
               </button>
               {isProfileOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
