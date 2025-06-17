@@ -239,7 +239,7 @@ const InvoicesList = () => {
             analyticTags: null,
             taxId: null,
             resPartnerId: invoice.res_partnerId || null,
-            notes: `Payment for Invoice ${invoice.LCPINo}`,
+            notes: `Receipt Invoice ${invoice.LCPINo}`,
             createdBy: userData?.userId || 0,
           },
         ],
@@ -257,7 +257,9 @@ const InvoicesList = () => {
   // Add useEffect to validate amount changes
   useEffect(() => {
     if (originalInvoiceAmount > 0 && watchedAmount > originalInvoiceAmount) {
-      setAmountError(`You cannot input greater than existing amount (${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')})`)
+      setAmountError(
+        `You cannot input greater than existing amount (${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')})`
+      )
     } else {
       setAmountError('')
     }
@@ -270,7 +272,9 @@ const InvoicesList = () => {
   ) => {
     // Add amount validation check
     if (values.journalEntry.amountTotal > originalInvoiceAmount) {
-      setValidationError(`Amount cannot be greater than the original invoice amount of ${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')}`)
+      setValidationError(
+        `Amount cannot be greater than the original invoice amount of ${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')}`
+      )
       return
     }
 
@@ -591,10 +595,6 @@ const InvoicesList = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {/* <p className="text-sm text-muted-foreground mb-4">
-              Create a bank voucher for invoice payment. The form is
-              pre-populated with invoice details.
-            </p> */}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((values) =>
@@ -608,25 +608,25 @@ const InvoicesList = () => {
                   </div>
                 )}
                 {amountError && (
-                  <div className="text-red-500 text-sm mb-4">
-                    {amountError}
-                  </div>
+                  <div className="text-red-500 text-sm mb-4">{amountError}</div>
                 )}
                 <BankVoucherMaster
                   form={form}
                   formState={formState}
                   requisition={undefined}
                   setFormState={setFormState}
-                  disableJournalType={true} // Add this prop to disable the type field
+                  disableJournalType={true} // Disable Type field when coming from invoice
                 />
                 <BankVoucherDetails
                   form={form}
                   formState={formState}
                   requisition={undefined}
                   partners={formState.partners}
+                  isFromInvoice={true} // Add this when coming from invoice
+                  invoicePartnerName={selectedInvoice?.res_partnerName || ''} // Add partner name from invoice
                 />
-                <BankVoucherSubmit 
-                  form={form} 
+                <BankVoucherSubmit
+                  form={form}
                   onSubmit={onSubmit}
                   disabled={!!amountError} // Disable submit if there's an amount error
                 />
@@ -680,7 +680,6 @@ const InvoicesList = () => {
 }
 
 export default InvoicesList
-
 
 // 'use client'
 // import React, { useEffect, useState } from 'react'
@@ -752,6 +751,7 @@ export default InvoicesList
 //   const [validationError, setValidationError] = useState<string | null>(null)
 //   const [currentPage, setCurrentPage] = useState(1)
 //   const [rowsPerPage] = useState(10)
+//   const [originalInvoiceAmount, setOriginalInvoiceAmount] = useState<number>(0)
 
 //   // Bank voucher form setup
 //   const form = useForm<JournalEntryWithDetails>({
@@ -896,15 +896,16 @@ export default InvoicesList
 //   const handleReceiptClick = React.useCallback(
 //     (invoice: SalesInvoiceType) => {
 //       setSelectedInvoice(invoice)
+//       setOriginalInvoiceAmount(invoice.invoiceAmount) // Store original amount
 
 //       // Pre-populate the bank voucher form with invoice data
 //       form.reset({
 //         journalEntry: {
 //           date: new Date().toISOString().split('T')[0],
-//           journalType: 'Bank Voucher',
+//           journalType: 'Bank Voucher', // Changed from 'Bank Voucher' to 'Receipt'
 //           companyId: invoice.companyId || 0,
-//           locationId: 0, // You might want to map this from invoice data
-//           currencyId: invoice.currencyId, // Map from invoice.currencyName if needed
+//           locationId: 0,
+//           currencyId: invoice.currencyId,
 //           exchangeRate: 1,
 //           amountTotal: invoice.invoiceAmount,
 //           payTo: invoice.apporvedBy || '',
@@ -932,11 +933,34 @@ export default InvoicesList
 //     [form, userData]
 //   )
 
+//   // Add this after the form setup
+//   const watchedAmount = form.watch('journalEntry.amountTotal')
+//   const [amountError, setAmountError] = useState<string>('')
+
+//   // Add useEffect to validate amount changes
+//   useEffect(() => {
+//     if (originalInvoiceAmount > 0 && watchedAmount > originalInvoiceAmount) {
+//       setAmountError(
+//         `You cannot input greater than existing amount (${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')})`
+//       )
+//     } else {
+//       setAmountError('')
+//     }
+//   }, [watchedAmount, originalInvoiceAmount, selectedInvoice?.currencyName])
+
 //   // Bank voucher submission logic
 //   const onSubmit = async (
 //     values: JournalEntryWithDetails,
 //     status: 'Draft' | 'Posted'
 //   ) => {
+//     // Add amount validation check
+//     if (values.journalEntry.amountTotal > originalInvoiceAmount) {
+//       setValidationError(
+//         `Amount cannot be greater than the original invoice amount of ${formatCurrency(originalInvoiceAmount, selectedInvoice?.currencyName || 'USD')}`
+//       )
+//       return
+//     }
+
 //     const totalDetailsAmount = values.journalDetails.reduce(
 //       (sum, detail) => sum + (detail.debit || detail.credit || 0),
 //       0
@@ -957,7 +981,7 @@ export default InvoicesList
 //         ...values.journalEntry,
 //         state: status === 'Draft' ? 0 : 1,
 //         notes: values.journalEntry.notes || '',
-//         journalType: 'Bank Voucher',
+//         journalType: 'Bank Voucher', // Changed from 'Bank Voucher' to 'Receipt'
 //         currencyId: values.journalEntry.currencyId || 1,
 //         amountTotal: totalDetailsAmount,
 //         createdBy: userData?.userId ?? 0,
@@ -1250,7 +1274,7 @@ export default InvoicesList
 //         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
 //           <DialogHeader>
 //             <DialogTitle>
-//               Create Bank Voucher - Invoice {selectedInvoice?.LCPINo}
+//               Create Receipt - Invoice {selectedInvoice?.LCPINo}
 //             </DialogTitle>
 //           </DialogHeader>
 //           <div className="mt-4">
@@ -1270,19 +1294,29 @@ export default InvoicesList
 //                     {validationError}
 //                   </div>
 //                 )}
+//                 {amountError && (
+//                   <div className="text-red-500 text-sm mb-4">{amountError}</div>
+//                 )}
 //                 <BankVoucherMaster
 //                   form={form}
 //                   formState={formState}
 //                   requisition={undefined}
 //                   setFormState={setFormState}
+//                   disableJournalType={true} // Add this prop to disable the type field
 //                 />
 //                 <BankVoucherDetails
 //                   form={form}
 //                   formState={formState}
 //                   requisition={undefined}
 //                   partners={formState.partners}
+//                   isFromInvoice={true} // Add this when coming from invoice
+//                   invoicePartnerName={selectedInvoice?.res_partnerName || ''} // Add this to show partner name
 //                 />
-//                 <BankVoucherSubmit form={form} onSubmit={onSubmit} />
+//                 <BankVoucherSubmit
+//                   form={form}
+//                   onSubmit={onSubmit}
+//                   disabled={!!amountError} // Disable submit if there's an amount error
+//                 />
 //               </form>
 //             </Form>
 //           </div>
@@ -1333,4 +1367,3 @@ export default InvoicesList
 // }
 
 // export default InvoicesList
-
