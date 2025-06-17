@@ -61,8 +61,9 @@ import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CompanyType } from '@/api/company-api'
 import { getAllCompanies } from '@/api/common-shared-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -84,8 +85,9 @@ const costBreakdownData = [
 export default function Dashboard() {
   //getting userData from jotai atom component
   useInitializeUser()
-
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
 
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
@@ -372,6 +374,18 @@ export default function Dashboard() {
   }, [fundPositionData])
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+    checkUserData()
+
     fetchFundPosition()
     fetchRequisitions()
     fetchAdvances()

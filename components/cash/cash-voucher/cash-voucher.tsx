@@ -1,13 +1,13 @@
+'use client'
 
-
-
-"use client"
-
-import React, { useCallback, useEffect, useState } from "react"
-import { Form } from "@/components/ui/form"
-import { useRouter } from "next/navigation"
-import { createJournalEntryWithDetails, getAllVoucher } from "@/api/vouchers-api"
-import { toast } from "@/hooks/use-toast"
+import React, { useCallback, useEffect, useState } from 'react'
+import { Form } from '@/components/ui/form'
+import { useRouter } from 'next/navigation'
+import {
+  createJournalEntryWithDetails,
+  getAllVoucher,
+} from '@/api/vouchers-api'
+import { toast } from '@/hooks/use-toast'
 import {
   type AccountsHead,
   type CompanyFromLocalstorage,
@@ -23,22 +23,22 @@ import {
   type User,
   type Voucher,
   VoucherTypes,
-} from "@/utils/type"
+} from '@/utils/type'
 
-import { useFieldArray, useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import type { z } from "zod"
-import CashVoucherMaster from "./cash-voucher-master"
-import CashVoucherDetails from "./cash-voucher-details"
-import VoucherList from "@/components/voucher-list/voucher-list"
-import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
-import { useAtom } from "jotai"
+import { useFieldArray, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
+import CashVoucherMaster from './cash-voucher-master'
+import CashVoucherDetails from './cash-voucher-details'
+import VoucherList from '@/components/voucher-list/voucher-list'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useAtom } from 'jotai'
 import {
   getAllChartOfAccounts,
   getAllCostCenters,
   getAllDepartments,
   getResPartnersBySearch,
-} from "@/api/common-shared-api"
+} from '@/api/common-shared-api'
 
 export default function CashVoucher() {
   //getting userData from jotai atom component
@@ -50,24 +50,32 @@ export default function CashVoucher() {
   // State variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [user, setUser] = useState<User | null>(null)
-  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>([])
-  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>([])
+  const [companies, setCompanies] = React.useState<CompanyFromLocalstorage[]>(
+    []
+  )
+  const [locations, setLocations] = React.useState<LocationFromLocalstorage[]>(
+    []
+  )
   const [vouchers, setVouchers] = React.useState<JournalEntryWithDetails[]>([])
   const [voucherList, setVoucherList] = useState<Voucher[]>([])
   const [formData, setFormData] = useState<FormData>({
-    date: "",
-    company: "",
-    location: "",
-    currency: "",
+    date: '',
+    company: '',
+    location: '',
+    currency: '',
   })
   const [isLoading, setIsLoading] = useState(true)
-  const [currentVoucherType, setCurrentVoucherType] = useState<string>("")
+  const [currentVoucherType, setCurrentVoucherType] = useState<string>('')
 
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
+    []
+  )
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
   const [departments, setDepartments] = React.useState<GetDepartment[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
-  const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<AccountsHead[]>([])
+  const [filteredChartOfAccounts, setFilteredChartOfAccounts] = React.useState<
+    AccountsHead[]
+  >([])
   const [cashCoa, setCashCoa] = React.useState<AccountsHead[]>([])
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true)
   const [isLoadingLocations, setIsLoadingLocations] = useState(true)
@@ -81,10 +89,23 @@ export default function CashVoucher() {
 
   //Function to get user data from localStorage and set it to state
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     setIsLoadingCompanies(true)
     setIsLoadingLocations(true)
     if (userData) {
-      console.log("🚀 ~ useEffect ~ userData:", userData)
+      console.log('🚀 ~ useEffect ~ userData:', userData)
       setUser(userData)
       if (userData?.userCompanies?.length > 0) {
         setCompanies(userData.userCompanies)
@@ -92,13 +113,13 @@ export default function CashVoucher() {
       if (userData?.userLocations?.length > 0) {
         setLocations(userData.userLocations)
       }
-      if (!userData.voucherTypes.includes("Cash Voucher")) {
-        router.push("/unauthorized-access")
+      if (!userData.voucherTypes.includes('Cash Voucher')) {
+        router.push('/unauthorized-access')
       }
     } else {
       toast({
-        title: "Error",
-        description: "Failed to load user data",
+        title: 'Error',
+        description: 'Failed to load user data',
       })
     }
   }, [router, userData])
@@ -117,7 +138,7 @@ export default function CashVoucher() {
     async (company: number[], location: number[]) => {
       try {
         const voucherQuery: JournalQuery = {
-          date: new Date().toISOString().split("T")[0],
+          date: new Date().toISOString().split('T')[0],
           companyId: company,
           locationId: location,
           voucherType: VoucherTypes.CashVoucher,
@@ -126,17 +147,17 @@ export default function CashVoucher() {
         const response = await getAllVoucher(voucherQuery, token)
         // Check for errors in the response. if no errors, set the voucher grid data
         if (!response.data) {
-          throw new Error("No data received from server")
+          throw new Error('No data received from server')
         }
         setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-        console.log("Voucher data:", response.data)
+        console.log('Voucher data:', response.data)
       } catch (error) {
-        console.error("Error getting Voucher Data:", error)
+        console.error('Error getting Voucher Data:', error)
         setVoucherGrid([])
         throw error
       }
     },
-    [token, setVoucherGrid],
+    [token, setVoucherGrid]
   )
   //Function to fetch all vouchers when companies and locations change
   // useEffect is used to fetch all vouchers when companies and locations change
@@ -148,10 +169,10 @@ export default function CashVoucher() {
       const mylocations = getLocationIds(locations)
       await getallVoucher(mycompanies, mylocations)
     } catch (error) {
-      console.error("Error fetching voucher data:", error)
+      console.error('Error fetching voucher data:', error)
       toast({
-        title: "Error",
-        description: "Failed to load voucher data. Please try again.",
+        title: 'Error',
+        description: 'Failed to load voucher data. Please try again.',
       })
     } finally {
       setIsLoading(false)
@@ -175,8 +196,8 @@ export default function CashVoucher() {
     })
     setFilteredChartOfAccounts(filteredCoa || [])
     setCashCoa(isCashCoa || [])
-    console.log("Filtered Chart of Accounts:", filteredCoa)
-    console.log("cash Chart of Accounts:", isCashCoa)
+    console.log('Filtered Chart of Accounts:', filteredCoa)
+    console.log('cash Chart of Accounts:', isCashCoa)
   }, [chartOfAccounts])
 
   //Function to fetch chart of accounts from the API
@@ -186,26 +207,27 @@ export default function CashVoucher() {
     try {
       const response = await getAllChartOfAccounts(token)
       if (response?.error?.status === 401) {
-        router.push("/unauthorized-access")
-        console.log("Unauthorized access")
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
         return
       } else if (response.error || !response.data) {
-        console.error("Error getting chart of accounts:", response.error)
+        console.error('Error getting chart of accounts:', response.error)
         toast({
-          title: "Error",
-          description: response.error?.message || "Failed to load chart of accounts",
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to load chart of accounts',
         })
         setChartOfAccounts([])
         return
       } else {
-        console.log("Fetched Chart of Accounts:", response.data)
+        console.log('Fetched Chart of Accounts:', response.data)
         setChartOfAccounts(response.data)
       }
     } catch (error) {
-      console.error("Error getting chart of accounts:", error)
+      console.error('Error getting chart of accounts:', error)
       toast({
-        title: "Error",
-        description: "Failed to load chart of accounts",
+        title: 'Error',
+        description: 'Failed to load chart of accounts',
       })
       setChartOfAccounts([])
     } finally {
@@ -220,14 +242,15 @@ export default function CashVoucher() {
     try {
       const response = await getAllDepartments(token)
       if (response?.error?.status === 401) {
-        router.push("/unauthorized-access")
-        console.log("Unauthorized access")
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
         return
       } else if (response.error || !response.data) {
-        console.error("Error getting chart of accounts:", response.error)
+        console.error('Error getting chart of accounts:', response.error)
         toast({
-          title: "Error",
-          description: response.error?.message || "Failed to load chart of accounts",
+          title: 'Error',
+          description:
+            response.error?.message || 'Failed to load chart of accounts',
         })
         setDepartments([])
         return
@@ -235,10 +258,10 @@ export default function CashVoucher() {
         setDepartments(response.data)
       }
     } catch (error) {
-      console.error("Error getting chart of accounts:", error)
+      console.error('Error getting chart of accounts:', error)
       toast({
-        title: "Error",
-        description: "Failed to load chart of accounts",
+        title: 'Error',
+        description: 'Failed to load chart of accounts',
       })
       setDepartments([])
     } finally {
@@ -253,14 +276,14 @@ export default function CashVoucher() {
     try {
       const response = await getAllCostCenters(token)
       if (response?.error?.status === 401) {
-        router.push("/unauthorized-access")
-        console.log("Unauthorized access")
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
         return
       } else if (response.error || !response.data) {
-        console.error("Error getting cost centers:", response.error)
+        console.error('Error getting cost centers:', response.error)
         toast({
-          title: "Error",
-          description: response.error?.message || "Failed to load cost centers",
+          title: 'Error',
+          description: response.error?.message || 'Failed to load cost centers',
         })
         setCostCenters([])
         return
@@ -268,10 +291,10 @@ export default function CashVoucher() {
         setCostCenters(response.data)
       }
     } catch (error) {
-      console.error("Error getting cost centers:", error)
+      console.error('Error getting cost centers:', error)
       toast({
-        title: "Error",
-        description: "Failed to load cost centers",
+        title: 'Error',
+        description: 'Failed to load cost centers',
       })
       setCostCenters([])
     } finally {
@@ -281,32 +304,32 @@ export default function CashVoucher() {
 
   //Function to fetch partners from the API
   const fetchgetResPartner = useCallback(async () => {
-    const search = ""
+    const search = ''
     setIsLoadingPartners(true)
     if (!token) return
     try {
       const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
-        router.push("/unauthorized-access")
-        console.log("Unauthorized access")
+        router.push('/unauthorized-access')
+        console.log('Unauthorized access')
         return
       } else if (response.error || !response.data) {
-        console.error("Error getting partners:", response.error)
+        console.error('Error getting partners:', response.error)
         toast({
-          title: "Error",
-          description: response.error?.message || "Failed to load partners",
+          title: 'Error',
+          description: response.error?.message || 'Failed to load partners',
         })
         setPartners([])
         return
       } else {
-        console.log("Fetched Partners:", response.data)
+        console.log('Fetched Partners:', response.data)
         setPartners(response.data)
       }
     } catch (error) {
-      console.error("Error getting partners:", error)
+      console.error('Error getting partners:', error)
       toast({
-        title: "Error",
-        description: "Failed to load partners",
+        title: 'Error',
+        description: 'Failed to load partners',
       })
       setPartners([])
     } finally {
@@ -319,12 +342,17 @@ export default function CashVoucher() {
     fetchgetAllCostCenters()
     fetchgetResPartner()
     fetchDepartments()
-  }, [fetchChartOfAccounts, fetchgetAllCostCenters, fetchgetResPartner, fetchDepartments])
+  }, [
+    fetchChartOfAccounts,
+    fetchgetAllCostCenters,
+    fetchgetResPartner,
+    fetchDepartments,
+  ])
 
   // Function to handle voucher type change from details component
   const handleVoucherTypeChange = (voucherType: string) => {
     setCurrentVoucherType(voucherType)
-    console.log("Voucher type changed to:", voucherType)
+    console.log('Voucher type changed to:', voucherType)
   }
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
@@ -333,15 +361,15 @@ export default function CashVoucher() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: new Date().toISOString().split("T")[0],
-        journalType: "",
+        date: new Date().toISOString().split('T')[0],
+        journalType: '',
         companyId: 0,
         locationId: 0,
         currencyId: 0,
         amountTotal: 0,
         exchangeRate: 1,
-        payTo: "",
-        notes: "",
+        payTo: '',
+        notes: '',
         createdBy: 0,
       },
       journalDetails: [
@@ -354,8 +382,8 @@ export default function CashVoucher() {
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
-          notes: "",
-          type: "Receipt",
+          notes: '',
+          type: 'Receipt',
           createdBy: 0,
         },
       ],
@@ -363,26 +391,29 @@ export default function CashVoucher() {
   })
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
-  const onSubmit = async (values: z.infer<typeof JournalEntryWithDetailsSchema>, status: "Draft" | "Posted") => {
-    console.log("Before Any edit", values)
-    console.log("Current voucher type:", currentVoucherType)
+  const onSubmit = async (
+    values: z.infer<typeof JournalEntryWithDetailsSchema>,
+    status: 'Draft' | 'Posted'
+  ) => {
+    console.log('Before Any edit', values)
+    console.log('Current voucher type:', currentVoucherType)
 
     if (userData) {
-      console.log("Current userId from localStorage:", userData.userId)
+      console.log('Current userId from localStorage:', userData.userId)
       setUser(userData)
     }
     // Calculate the total amount
     const totalAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || 0) + (detail.credit || 0),
-      0,
+      0
     )
     // Update the total Amount
     const updatedValues = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        state: status === "Draft" ? 0 : 1, // 0 for Draft, 1 for Posted
-        notes: values.journalEntry.notes || "", // Ensure notes is always a string
+        state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
+        notes: values.journalEntry.notes || '', // Ensure notes is always a string
         journalType: 'Cash Voucher', // Use the dynamic voucher type
         amountTotal: totalAmount, // Set the calculated total amount
         exchangeRate: values.journalEntry.exchangeRate || 1,
@@ -390,11 +421,11 @@ export default function CashVoucher() {
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        notes: detail.notes || "", // Ensure notes is always a string for each detail
+        notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
       })),
     }
-    console.log("After Adding created by", updatedValues)
+    console.log('After Adding created by', updatedValues)
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithCash = {
       ...updatedValues,
@@ -404,51 +435,59 @@ export default function CashVoucher() {
           accountId: cashCoa[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
           departmentId: null,
           debit: updatedValues.journalDetails.reduce(
-            (sum, detail) => sum + (detail.type === "Receipt" ? detail.credit : 0),
-            0,
+            (sum, detail) =>
+              sum + (detail.type === 'Receipt' ? detail.credit : 0),
+            0
           ),
           credit: updatedValues.journalDetails.reduce(
-            (sum, detail) => sum + (detail.type === "Payment" ? detail.debit : 0),
-            0,
+            (sum, detail) =>
+              sum + (detail.type === 'Payment' ? detail.debit : 0),
+            0
           ),
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
           bankaccountid: null,
-          notes: updatedValues.journalEntry.notes || "", // Ensure notes is always a string
+          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
           createdBy: user?.userId || 0,
         },
       ],
     }
 
-    console.log("Submitted values:", JSON.stringify(updateValueswithCash, null, 2))
+    console.log(
+      'Submitted values:',
+      JSON.stringify(updateValueswithCash, null, 2)
+    )
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(updateValueswithCash, token)
+    const response = await createJournalEntryWithDetails(
+      updateValueswithCash,
+      token
+    )
     // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({
-        title: "Error",
-        description: response.error?.message || "Error creating Journal",
+        title: 'Error',
+        description: response.error?.message || 'Error creating Journal',
       })
     } else {
       const mycompanies = getCompanyIds(companies)
       const mylocations = getLocationIds(locations)
       getallVoucher(mycompanies, mylocations)
-      console.log("Voucher is created successfully", response.data)
+      console.log('Voucher is created successfully', response.data)
       toast({
-        title: "Success",
-        description: "Voucher is created successfully",
+        title: 'Success',
+        description: 'Voucher is created successfully',
       })
       // Reset the form after successful submission
       form.reset({
         journalEntry: {
-          date: new Date().toISOString().split("T")[0],
-          journalType: "",
+          date: new Date().toISOString().split('T')[0],
+          journalType: '',
           companyId: 0,
           locationId: 0,
           currencyId: 0,
           amountTotal: 0,
-          notes: "",
+          notes: '',
           createdBy: 0,
         },
         journalDetails: [
@@ -461,8 +500,8 @@ export default function CashVoucher() {
             analyticTags: null,
             taxId: null,
             resPartnerId: null,
-            notes: "",
-            type: "Receipt", // Default type set to 'Receipt'
+            notes: '',
+            type: 'Receipt', // Default type set to 'Receipt'
             createdBy: 0,
           },
         ],
@@ -479,18 +518,21 @@ export default function CashVoucher() {
         analyticTags: null,
         taxId: null,
         resPartnerId: null,
-        notes: "",
-        type: "Receipt", // Default type set to 'Receipt'
+        notes: '',
+        type: 'Receipt', // Default type set to 'Receipt'
         createdBy: 0,
       })
       // Reset voucher type to default
-      setCurrentVoucherType("")
+      setCurrentVoucherType('')
     }
   }
   //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
-  const { fields, append, remove } = useFieldArray<JournalEntryWithDetails, "journalDetails">({
+  const { fields, append, remove } = useFieldArray<
+    JournalEntryWithDetails,
+    'journalDetails'
+  >({
     control: form.control,
-    name: "journalDetails",
+    name: 'journalDetails',
   })
 
   //Function to add a new row to the journalDetails array
@@ -505,35 +547,39 @@ export default function CashVoucher() {
       analyticTags: null,
       taxId: null,
       resPartnerId: null,
-      notes: "",
-      type: currentVoucherType , // Default to Receipt
+      notes: '',
+      type: currentVoucherType, // Default to Receipt
       createdBy: 0,
     })
-    
   }
 
   //columns is used to define the columns for the voucher list table
   const columns = [
-    { key: "voucherno" as const, label: "Voucher No." },
-    { key: "companyname" as const, label: "Company Name" },
-    { key: "currency" as const, label: "Currency" },
-    { key: "location" as const, label: "Location" },
-    { key: "date" as const, label: "Date" },
-    { key: "notes" as const, label: "Remarks" },
-    { key: "totalamount" as const, label: "Total Amount" },
-    { key: "state" as const, label: "Status" },
+    { key: 'voucherno' as const, label: 'Voucher No.' },
+    { key: 'companyname' as const, label: 'Company Name' },
+    { key: 'currency' as const, label: 'Currency' },
+    { key: 'location' as const, label: 'Location' },
+    { key: 'date' as const, label: 'Date' },
+    { key: 'notes' as const, label: 'Remarks' },
+    { key: 'totalamount' as const, label: 'Total Amount' },
+    { key: 'state' as const, label: 'Status' },
   ]
 
   return (
     <div className="w-full mx-auto">
       <div className="w-full mb-10 p-8">
         <h1 className="text-2xl font-bold mb-6">
-          Cash Vouchers {currentVoucherType !== "Mixed" && `(${currentVoucherType})`}
+          Cash Vouchers{' '}
+          {currentVoucherType !== 'Mixed' && `(${currentVoucherType})`}
         </h1>
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <CashVoucherMaster form={form} companies={companies} locations={locations} />
+            <CashVoucherMaster
+              form={form}
+              companies={companies}
+              locations={locations}
+            />
 
             <CashVoucherDetails
               form={form}
