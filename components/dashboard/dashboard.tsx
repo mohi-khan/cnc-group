@@ -202,8 +202,8 @@ export default function Dashboard() {
   //  Get Expense data yearly
   const fetchExpenseDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getExpenseData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -236,8 +236,8 @@ export default function Dashboard() {
   // Get Income Data  yearly
   const fetchIncomeDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getIncomeData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -268,8 +268,8 @@ export default function Dashboard() {
   //Get getGPData yearly
   const fetchGPDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getGPData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -316,9 +316,9 @@ export default function Dashboard() {
 
   //Get Cost Breakdown Data
   const fetchCostBreakdown = React.useCallback(async () => {
-    const departmentId = 16 // Default to 0 if no department is selected
+    const departmentId = 3 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
-    const endDate = '2025-03-31' // Example endDate
+    const endDate = '2025-12-31' // Example endDate
     const companyId = 3 // Example companyId
 
     const response = await getCostBreakdown(
@@ -336,6 +336,40 @@ export default function Dashboard() {
     }
     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
   }, [])
+
+  const processedFundPositionData = React.useMemo(() => {
+    if (!fundPositionData) return []
+
+    console.log('Processing fund position data:', fundPositionData)
+
+    const dates = ['01/01/2025', '12/01/2025'] // We know there are two dates
+
+    return dates.map((date) => {
+      const cashBalance = fundPositionData.cashBalance
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      const bankBalance = fundPositionData.BankBalance.flat()
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
+
+      console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
+
+      const [month, day, year] = date.split('/')
+      return {
+        date: `${month}/${day}`,
+        cashBalance,
+        bankBalance,
+        netBalance: cashBalance + bankBalance,
+      }
+    })
+  }, [fundPositionData])
 
   React.useEffect(() => {
     fetchFundPosition()
@@ -366,41 +400,8 @@ export default function Dashboard() {
     fetchNPDataYearly,
     fetchDepartments,
     fetchCostBreakdown,
-    fetchAllCompany
+    fetchAllCompany,
   ])
-  const processedFundPositionData = React.useMemo(() => {
-    if (!fundPositionData) return []
-
-    console.log('Processing fund position data:', fundPositionData)
-
-    const dates = ['03/03/2025', '02/28/2025'] // We know there are two dates
-
-    return dates.map((date) => {
-      const cashBalance = fundPositionData.cashBalance
-        .filter((item) => item.date === date)
-        .reduce(
-          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
-          0
-        )
-
-      const bankBalance = fundPositionData.BankBalance.flat()
-        .filter((item) => item.date === date)
-        .reduce(
-          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
-          0
-        )
-
-      console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
-
-      const [month, day, year] = date.split('/')
-      return {
-        date: `${month}/${day}`,
-        cashBalance,
-        bankBalance,
-        netBalance: cashBalance + bankBalance,
-      }
-    })
-  }, [fundPositionData])
 
   console.log('Processed fund position data:', processedFundPositionData)
 
@@ -576,15 +577,18 @@ export default function Dashboard() {
               placeholder="Select company"
             />
           </Select>
-
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              31/03/17
-            </Button>
+            <input
+              type="date"
+              className="px-3 py-1 border rounded-md text-sm"
+              defaultValue="2017-03-31"
+            />
             <ChevronDown className="h-4 w-4" />
-            <Button variant="outline" size="sm">
-              31/12/20
-            </Button>
+            <input
+              type="date"
+              className="px-3 py-1 border rounded-md text-sm"
+              defaultValue="2020-12-31"
+            />
           </div>
         </div>
       </div>
