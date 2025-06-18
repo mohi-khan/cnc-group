@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast'
 import {
   getBankReconciliations,
   updateBankReconciliation,
+  markTrueBankReconciliations,
 } from '@/api/bank-reconciliation-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
@@ -50,6 +51,8 @@ export const BankReconciliation = () => {
   >([])
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [selectAll, setSelectAll] = useState(false)
   const { toast } = useToast()
   const form = useForm({
     defaultValues: {
@@ -129,6 +132,9 @@ export const BankReconciliation = () => {
             (item) => !item.reconciled
           )
           setReconciliations(unReconciledItems || [])
+          // Reset selections when new data is loaded
+          setSelectedIds([])
+          setSelectAll(false)
         }
       } catch (error) {
         console.error('Error fetching reconciliations:', error)
@@ -143,6 +149,69 @@ export const BankReconciliation = () => {
     } else {
       console.log('Missing required data:', data)
       setReconciliations([])
+      setSelectedIds([])
+      setSelectAll(false)
+    }
+  }
+
+  // Handle individual checkbox selection
+  const handleIndividualSelection = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id])
+    } else {
+      setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
+      setSelectAll(false)
+    }
+  }
+
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked)
+    if (checked) {
+      setSelectedIds(reconciliations.map((r) => r.id))
+    } else {
+      setSelectedIds([])
+    }
+  }
+
+  // Update select all state when individual selections change
+  useEffect(() => {
+    if (reconciliations.length > 0) {
+      setSelectAll(selectedIds.length === reconciliations.length)
+    }
+  }, [selectedIds, reconciliations])
+
+  // Handle bulk reconciliation update
+  const handleBulkReconciliation = async () => {
+    if (selectedIds.length === 0) {
+      toast({
+        title: 'Warning',
+        description: 'Please select at least one item to reconcile',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setLoading(true)
+      await markTrueBankReconciliations(selectedIds, token)
+
+      toast({
+        title: 'Success',
+        description: `${selectedIds.length} reconciliation(s) updated successfully`,
+      })
+
+      // Refresh the data after successful update
+      const formData = form.getValues()
+      await fetchReconciliations({ ...formData, token })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update reconciliations',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -157,14 +226,6 @@ export const BankReconciliation = () => {
       // Update both reconciled status and comments in a single API call
       await updateBankReconciliation(id, reconciled, comments, token)
 
-      // Remove the reconciled item from the list if reconciled is true
-      // setReconciliations((prevReconciliations) =>
-      //   reconciled
-      //     ? prevReconciliations.filter((r) => r.id !== id)
-      //     : prevReconciliations.map((r) =>
-      //         r.id === id ? { ...r, reconciled, comments } : r
-      //       )
-      // )
       setEditingId(null)
       toast({
         title: 'Success',
@@ -205,7 +266,6 @@ export const BankReconciliation = () => {
     setEditingId(id === editingId ? null : id)
   }
 
-  // Helper function to update local reconciliation data while editing
   return (
     <Form {...form}>
       <form
@@ -279,6 +339,19 @@ export const BankReconciliation = () => {
           </Button>
         </div>
 
+        {/* Bulk Action Button */}
+        {reconciliations.length > 0 && (
+          <div className="mb-4 flex justify-end">
+            <Button
+              type="button"
+              onClick={handleBulkReconciliation}
+              disabled={selectedIds.length === 0 || loading}
+            >
+              Mark Selected as Reconciled ({selectedIds.length})
+            </Button>
+          </div>
+        )}
+
         <Table className="mt-4 shadow-md border">
           <TableHeader className="bg-slate-200 shadow-md">
             <TableRow>
@@ -287,7 +360,17 @@ export const BankReconciliation = () => {
               <TableHead>Check No</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Reconciled</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-2">
+                  Reconciled
+                  <Checkbox
+                    checked={selectAll}
+                    onCheckedChange={handleSelectAll}
+                    disabled={reconciliations.length === 0}
+                    className='border border-black'
+                  />
+                </div>
+              </TableHead>
               <TableHead>Comments</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -295,7 +378,7 @@ export const BankReconciliation = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={8} className="text-center">
                   Loading...
                 </TableCell>
               </TableRow>
@@ -308,26 +391,20 @@ export const BankReconciliation = () => {
                   <TableCell>{reconciliation.amount}</TableCell>
                   <TableCell>{reconciliation.type}</TableCell>
 
-                  {/* Update the Checkbox in the table */}
+                  {/* Reconciled column - always checkbox, used for selection */}
                   <TableCell>
-                    {editingId === reconciliation.id ? (
-                      <Checkbox
-                        checked={reconciliation.reconciled === true}
-                        onCheckedChange={(checked) =>
-                          updateLocalReconciliation(
-                            reconciliation.id,
-                            'reconciled',
-                            checked ? 1 : 0,
-                            token
-                          )
-                        }
-                      />
-                    ) : reconciliation.reconciled === true ? (
-                      'Yes'
-                    ) : (
-                      'No'
-                    )}
+                    <Checkbox
+                      checked={selectedIds.includes(reconciliation.id)}
+                      onCheckedChange={(checked) =>
+                        handleIndividualSelection(
+                          reconciliation.id,
+                          checked as boolean
+                        )
+                      }
+                    />
                   </TableCell>
+
+                  {/* Comments column - only editable when in edit mode */}
                   <TableCell>
                     {editingId === reconciliation.id ? (
                       <Input
@@ -345,8 +422,8 @@ export const BankReconciliation = () => {
                       reconciliation.comments || ''
                     )}
                   </TableCell>
+
                   <TableCell>
-                    {/* Update the Button onClick handler */}
                     {editingId === reconciliation.id ? (
                       <Button
                         type="button"
@@ -373,7 +450,7 @@ export const BankReconciliation = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={8} className="text-center">
                   Please select a bank account and date range, then click
                   &quot;Show&quot;
                 </TableCell>
