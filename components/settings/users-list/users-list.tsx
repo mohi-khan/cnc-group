@@ -132,9 +132,21 @@ export default function UsersList() {
   }
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchUsers()
     fetchRoles()
-  }, [fetchUsers, fetchRoles])
+  }, [fetchUsers, fetchRoles, router])
 
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE

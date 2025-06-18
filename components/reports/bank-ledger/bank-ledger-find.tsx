@@ -48,8 +48,20 @@ export default function BankLedgerFind({ onSearch }: BankLedgerFindProps) {
     }
   }, [token])
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchBankAccounts()
-  }, [fetchBankAccounts])
+  }, [fetchBankAccounts, router])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {

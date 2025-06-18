@@ -121,8 +121,8 @@ export default function DepartmentManagement() {
       setDepartments(data.data)
     }
     setIsLoading(false)
-  }, [toast,router,token])
-const fetchCompany = useCallback(async () => {
+  }, [toast, router, token])
+  const fetchCompany = useCallback(async () => {
     if (!token) return
     const response = await getAllCompanies(token)
     if (response?.error?.status === 401) {
@@ -140,22 +140,32 @@ const fetchCompany = useCallback(async () => {
       setCompany([])
     }
     console.log('this is company is fetch by department components', response)
-  }, [router,toast,token])
+  }, [router, toast, token])
   useEffect(() => {
     fetchDepartments()
     fetchCompany()
-  }, [fetchDepartments,fetchCompany])
-
-  
+  }, [fetchDepartments, fetchCompany])
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, router])
 
   React.useEffect(() => {
     if (userId !== undefined) {

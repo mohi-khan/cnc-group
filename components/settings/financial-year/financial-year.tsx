@@ -32,12 +32,14 @@ import { toast } from '@/hooks/use-toast'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { createFinancialYearSchema } from '@/utils/type'
+import { useRouter } from 'next/navigation'
 
 const FinancialYear = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
   console.log('🚀 ~ FinancialYear ~ token:', token)
 
   // State variables
@@ -65,6 +67,19 @@ const FinancialYear = () => {
   })
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     if (userId !== 0) {
       form.reset({
         ...form.getValues(),
@@ -72,7 +87,7 @@ const FinancialYear = () => {
       })
       console.log('Reset form with updated userId:', userId)
     }
-  }, [userId, form])
+  }, [userId, form, router])
 
   // Remove or comment out this useEffect
   // useEffect(() => {

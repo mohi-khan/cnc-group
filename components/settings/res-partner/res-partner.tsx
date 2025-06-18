@@ -113,13 +113,25 @@ export default function ResPartners() {
   })
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, router])
 
   const fetchResPartners = React.useCallback(async () => {
     if (!token) return
