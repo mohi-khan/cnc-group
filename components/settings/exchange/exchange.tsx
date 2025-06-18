@@ -98,7 +98,7 @@ export default function ExchangePage() {
       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
     setIsLoading(false)
-  }, [token,toast])
+  }, [token, toast])
 
   async function onSubmit(data: ExchangeType) {
     setIsLoading(true)
@@ -166,6 +166,18 @@ export default function ExchangePage() {
   }
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchExchanges()
     fetchCurrency()
   }, [fetchCurrency, fetchExchanges])

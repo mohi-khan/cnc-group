@@ -173,9 +173,22 @@ export default function LevelEntry() {
   }, [token,router])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     fetchChartOfAccounts()
     fetchLevels()
-  }, [fetchChartOfAccounts, fetchLevels])
+  }, [fetchChartOfAccounts, fetchLevels, router])
 
   const handleChartOfAccountSelect = (position: number, value: string) => {
     const accountId = parseInt(value, 10)

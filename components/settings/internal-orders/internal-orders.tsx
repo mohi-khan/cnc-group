@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { SmallButton } from '../../custom-ui/small-button'
+import { useRouter } from 'next/navigation'
 
 type InternalOrder = {
   id: string
@@ -96,6 +97,7 @@ const companies: Company[] = [
 ]
 
 export default function InternalOrders() {
+  const router = useRouter()
   const [orders, setOrders] = useState<InternalOrder[]>(dummyData)
   const [selectedOrder, setSelectedOrder] = useState<InternalOrder | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -139,6 +141,20 @@ export default function InternalOrders() {
       setIsDialogOpen(false)
     }
   }
+  useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+  }, [])
 
   return (
     <div className="container mx-auto py-10">

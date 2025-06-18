@@ -55,9 +55,21 @@ const CashPositon = () => {
   }, [fromDate, toDate, companyName, token])
   // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchGetBankBalance()
     fetchGetCashBalance()
-  }, [fetchGetBankBalance, fetchGetCashBalance])
+  }, [fetchGetBankBalance, fetchGetCashBalance,router])
 
   // Function to generate PDF
   const generatePdf = () => {

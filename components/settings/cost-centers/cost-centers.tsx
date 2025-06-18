@@ -124,9 +124,21 @@ export default function CostCenterManagement() {
     }, [token,toast])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchCostCenters()
     fetchCurrency()
-  }, [fetchCostCenters, fetchCurrency])
+  }, [fetchCostCenters, fetchCurrency, router])
    
 
   const handleActivateDeactivate = async (id: number, isActive: boolean) => {

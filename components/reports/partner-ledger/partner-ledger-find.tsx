@@ -100,8 +100,20 @@ export default function PartneredgerFind({
   }, [token, router, setPartners])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchgetResPartner()
-  }, [fetchgetResPartner])
+  }, [fetchgetResPartner, router])
 
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {

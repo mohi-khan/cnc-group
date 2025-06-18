@@ -55,8 +55,20 @@ export default function GeneralLedgerFind({
     }
   }, [token])
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchChartOfAccounts()
-  }, [fetchChartOfAccounts])
+  }, [fetchChartOfAccounts, router])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
