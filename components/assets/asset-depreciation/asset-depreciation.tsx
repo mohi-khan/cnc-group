@@ -79,6 +79,20 @@ export default function AssetDepreciation() {
   })
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+
+checkUserData()
+
     // Ensure we're in a browser environment
     if (typeof window !== 'undefined') {
       if (userData) {
@@ -88,7 +102,7 @@ export default function AssetDepreciation() {
         console.log('No user data found in localStorage')
       }
     }
-  }, [userData])
+  }, [userData, router])
 
   // Handle preview request
   const onPreview = async (data: FormValues) => {

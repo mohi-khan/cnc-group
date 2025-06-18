@@ -7,12 +7,14 @@ import { AssetCategoryList } from './asset-category-list'
 import { AssetCategoryPopup } from './asset-category-popup'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const AssetCategory = () => {
   //getting userData from jotai atom component
   useInitializeUser()
 
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   const [assetCategories, setAssetCategories] = useState<AssetCategoryType[]>(
     []
@@ -25,9 +27,21 @@ const AssetCategory = () => {
     setAssetCategories(categories.data ?? [])
   }, [token])
 
-  useEffect(() => {
+  useEffect(() => {const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+
+checkUserData()
     fetchAssetCategories()
-  }, [fetchAssetCategories])
+  }, [fetchAssetCategories, router])
 
   
   const handleAddCategory = () => {

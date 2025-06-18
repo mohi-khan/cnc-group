@@ -60,6 +60,18 @@ export const BankReconciliation = () => {
   })
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     const fetchBankAccounts = async () => {
       if (!token) return
       try {
@@ -82,7 +94,7 @@ export const BankReconciliation = () => {
       }
     }
     fetchBankAccounts()
-  }, [toast,router,token])
+  }, [toast, router, token])
 
   const fetchReconciliations = async (data: {
     bankAccount: string
@@ -113,7 +125,9 @@ export const BankReconciliation = () => {
           })
         } else {
           // Filter out reconciled items
-          const unReconciledItems = response.data.filter(item => !item.reconciled)
+          const unReconciledItems = response.data.filter(
+            (item) => !item.reconciled
+          )
           setReconciliations(unReconciledItems || [])
         }
       } catch (error) {
@@ -179,12 +193,7 @@ export const BankReconciliation = () => {
         r.id === id
           ? {
               ...r,
-              [field]:
-                field === 'reconciled'
-                  ? value
-                    ? true
-                    : false
-                  : value,
+              [field]: field === 'reconciled' ? (value ? true : false) : value,
             }
           : r
       )

@@ -12,12 +12,14 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const VehicleSummary = () => {
   //getting userData from jotai atom component
-    useInitializeUser()
-  
-    const [token] = useAtom(tokenAtom)
+  useInitializeUser()
+  const router = useRouter()
+
+  const [token] = useAtom(tokenAtom)
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   // const [token, setToken] = useState<string | null>(null)
   const [vehicleSummary, setVehicleSummary] = useState<VehicleSummaryType[]>([])
@@ -46,36 +48,64 @@ const VehicleSummary = () => {
     fetchVehicles()
   }, [fetchVehicles])
   // Fetch Vehicle Summary Data
-  const fetchGetVehicleSummary = useCallback(async ({
-    token,
-    startDate,
-    endDate,
-    vehicleNo,
-  }: {
-    token: string
-    startDate: Date
-    endDate: Date
-    vehicleNo: number
-  }) => {
-    const response = await getVehicleSummary({ 
-      startDate: startDate.toISOString().split('T')[0], 
-      endDate: endDate.toISOString().split('T')[0], 
+  const fetchGetVehicleSummary = useCallback(
+    async ({
+      token,
+      startDate,
+      endDate,
       vehicleNo,
-      token
-    })
-    if (!response.data) throw new Error('No data received')
+    }: {
+      token: string
+      startDate: Date
+      endDate: Date
+      vehicleNo: number
+    }) => {
+      const response = await getVehicleSummary({
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        vehicleNo,
+        token,
+      })
+      if (!response.data) throw new Error('No data received')
 
-    setVehicleSummary(response.data)
-    console.log('✅ Vehicle Summary data:', response.data)
-  }, [])
+      setVehicleSummary(response.data)
+      console.log('✅ Vehicle Summary data:', response.data)
+    },
+    []
+  )
 
   // Fetch data when token is available
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (token) {
-      fetchGetVehicleSummary({ token, startDate, endDate, vehicleNo: selectedVehicleNo })
+      fetchGetVehicleSummary({
+        token,
+        startDate,
+        endDate,
+        vehicleNo: selectedVehicleNo,
+      })
       fetchVehicles()
     }
-  }, [ token,selectedVehicleNo, startDate, endDate,fetchGetVehicleSummary,fetchVehicles])
+  }, [
+    token,
+    selectedVehicleNo,
+    startDate,
+    endDate,
+    fetchGetVehicleSummary,
+    fetchVehicles,
+    router,
+  ])
 
   // Generate PDF
   const generatePdf = () => {

@@ -11,7 +11,7 @@ export async function createBillEntry(
     method: 'POST',
     body: data,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: ` ${token}`,
       'Content-Type': 'application/json',
     },
   })
@@ -24,7 +24,7 @@ export async function getBillEntry(token: string) {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `${token}`,
     },
   })
 }

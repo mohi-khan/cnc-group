@@ -16,12 +16,14 @@ import { PaymentRequisitionPopup } from '../payment-requisition/payment-requisit
 import { getAllAdvance } from '@/api/approved-advances-api'
 import { useAtom } from 'jotai'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { useRouter } from 'next/navigation'
 
 const ApprovedAdvances = () => {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
 
   const [advances, setAdvances] = useState<ApproveAdvanceType[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -58,8 +60,20 @@ const ApprovedAdvances = () => {
   }, [token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchAdvances()
-  }, [fetchAdvances])
+  }, [fetchAdvances, router])
 
   const handleCreatePayment = (advance: ApproveAdvanceType) => {
     setSelectedAdvance(advance)

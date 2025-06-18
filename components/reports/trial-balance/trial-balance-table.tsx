@@ -66,10 +66,22 @@ export default function TrialBalanceTable({
   }, [startDate, endDate, companyId, setTrialBalanceData, token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (startDate && endDate && companyId) {
       fetchTrialBalanceTableData()
     }
-  }, [startDate, endDate, companyId, fetchTrialBalanceTableData])
+  }, [startDate, endDate, companyId, fetchTrialBalanceTableData, router])
 
   const toggleRowExpansion = (id: number) => {
     const newExpandedRows = new Set(expandedRows)

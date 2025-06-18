@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import PaymentRequisitionList from './payment-requisition-list'
 import { GetPaymentOrder } from '@/utils/type'
-import {
-  getAllPaymentRequisition,
-} from '@/api/payment-requisition-api'
+import { getAllPaymentRequisition } from '@/api/payment-requisition-api'
 import { PaymentRequisitionPopup } from './payment-requisition-popup'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -16,7 +14,7 @@ const PaymentRequisition = () => {
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
   const [userData] = useAtom(userDataAtom)
-  console.log("🚀 ~ PaymentRequisition ~ userData:", userData)
+  console.log('🚀 ~ PaymentRequisition ~ userData:', userData)
 
   const router = useRouter()
 
@@ -28,7 +26,9 @@ const PaymentRequisition = () => {
 
   const fetchRequisitions = useCallback(async () => {
     if (!token) return
-    const companyId = userData?.userCompanies?.map(company => company?.company?.companyId).join(',')
+    const companyId = userData?.userCompanies
+      ?.map((company) => company?.company?.companyId)
+      .join(',')
     if (!companyId) return
     try {
       setLoading(true)
@@ -46,9 +46,12 @@ const PaymentRequisition = () => {
         return
       } else {
         const filteredRequisitions =
-        data.data?.filter((req) => req.status !== 'Invoice Created') || []
+          data.data?.filter((req) => req.status !== 'Invoice Created') || []
         setRequisitions(filteredRequisitions)
-        console.log("🚀 ~ fetchRequisitions ~ filteredRequisitions:", filteredRequisitions)
+        console.log(
+          '🚀 ~ fetchRequisitions ~ filteredRequisitions:',
+          filteredRequisitions
+        )
         console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
       }
     } catch (err) {
@@ -56,11 +59,23 @@ const PaymentRequisition = () => {
     } finally {
       setLoading(false)
     }
-  }, [token,router,userData?.userCompanies])
+  }, [token, router, userData?.userCompanies])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchRequisitions()
-  }, [fetchRequisitions])
+  }, [fetchRequisitions, router])
 
   // const handleCreateRequisition = async (newRequisition: PurchaseEntryType) => {
   //   try {

@@ -99,7 +99,7 @@
 //   const flattenData = (data: GetCashReport[]): any[] => {
 //       return data.flatMap((report) => {
 //         const rows = [];
-  
+
 //         // Add opening balance
 //         if (report.openingBal && report.openingBal.length > 0) {
 //           rows.push({
@@ -113,7 +113,7 @@
 //             balance: report.openingBal[0].balance
 //           });
 //         }
-  
+
 //         // Add transaction data
 //         report.transactionData.forEach((transaction) => {
 //           rows.push({
@@ -126,7 +126,7 @@
 //             narration: transaction.narration
 //           });
 //         });
-  
+
 //         // Add closing balance
 //         if (report.closingBal && report.closingBal.length > 0) {
 //           rows.push({
@@ -140,7 +140,7 @@
 //             balance: report.closingBal[0].balance
 //           });
 //         }
-  
+
 //         // Add IOU balances
 //         report.IouBalance.forEach((iou) => {
 //           rows.push({
@@ -153,12 +153,10 @@
 //             narration: 'IOU Transaction'
 //           });
 //         });
-  
+
 //         return rows;
 //       });
 //     }
-  
-
 
 //   const generateExcel = () => {
 //     exportToExcel(cashReport, 'cash-report')
@@ -225,17 +223,22 @@ import CashReportList from './cash-report-list'
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import { Router } from 'next/router'
+import { useRouter } from 'next/navigation'
 
 // TODO: Replace this stub with your actual CashReportHeading implementation or import from the correct file.
 
 export default function CashReport() {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  const router = useRouter()
   const [token] = useAtom(tokenAtom)
   const [cashReport, setCashReport] = useState<GetCashReport[]>([])
   // const [fromDate, setFromDate] = useState<string>('2025-05-01')
   // const [endDate, setEndDate] = useState<string>('2025-06-30')
-  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  )
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
   const [companyId, setCompanyId] = useState<number | undefined>()
@@ -249,13 +252,26 @@ export default function CashReport() {
   }
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
       console.log('Current user from localStorage:', userData)
     }
-  }, [userData])
+  }, [userData, router])
 
   const fetchEmployees = useCallback(async () => {
     if (!token) return
@@ -279,7 +295,7 @@ export default function CashReport() {
           : []
     )
     console.log('This is cash report data: ', respons.data || [])
-  }, [token,date, companyId, location])
+  }, [token, date, companyId, location])
 
   useEffect(() => {
     fetchCashReport()
@@ -301,68 +317,66 @@ export default function CashReport() {
   }
 
   const flattenData = (data: GetCashReport[]): any[] => {
-      return data.flatMap((report) => {
-        const rows = [];
-  
-        // Add opening balance
-        if (report.openingBal && report.openingBal.length > 0) {
-          rows.push({
-            date: '',
-            voucherId: '',
-            currentAccountName: 'Opening Balance',
-            debit: '',
-            credit: '',
-            oppositeAccountName: '',
-            narration: '',
-            balance: report.openingBal[0].balance
-          });
-        }
-  
-        // Add transaction data
-        report.transactionData.forEach((transaction) => {
-          rows.push({
-            date: transaction.date,
-            voucherId: transaction.voucherId,
-            currentAccountName: transaction.currentAccountName,
-            debit: transaction.debit,
-            credit: transaction.credit,
-            oppositeAccountName: transaction.oppositeAccountName,
-            narration: transaction.narration
-          });
-        });
-  
-        // Add closing balance
-        if (report.closingBal && report.closingBal.length > 0) {
-          rows.push({
-            date: '',
-            voucherId: '',
-            currentAccountName: 'Closing Balance',
-            debit: '',
-            credit: '',
-            oppositeAccountName: '',
-            narration: '',
-            balance: report.closingBal[0].balance
-          });
-        }
-  
-        // Add IOU balances
-        report.IouBalance.forEach((iou) => {
-          rows.push({
-            date: iou.dateIssued,
-            voucherId: iou.iouId,
-            currentAccountName: 'IOU Balance',
-            debit: iou.amount,
-            credit: iou.totalAdjusted || '',
-            oppositeAccountName: `Employee ID: ${iou.employeeId}`,
-            narration: 'IOU Transaction'
-          });
-        });
-  
-        return rows;
-      });
-    }
-  
+    return data.flatMap((report) => {
+      const rows = []
 
+      // Add opening balance
+      if (report.openingBal && report.openingBal.length > 0) {
+        rows.push({
+          date: '',
+          voucherId: '',
+          currentAccountName: 'Opening Balance',
+          debit: '',
+          credit: '',
+          oppositeAccountName: '',
+          narration: '',
+          balance: report.openingBal[0].balance,
+        })
+      }
+
+      // Add transaction data
+      report.transactionData.forEach((transaction) => {
+        rows.push({
+          date: transaction.date,
+          voucherId: transaction.voucherId,
+          currentAccountName: transaction.currentAccountName,
+          debit: transaction.debit,
+          credit: transaction.credit,
+          oppositeAccountName: transaction.oppositeAccountName,
+          narration: transaction.narration,
+        })
+      })
+
+      // Add closing balance
+      if (report.closingBal && report.closingBal.length > 0) {
+        rows.push({
+          date: '',
+          voucherId: '',
+          currentAccountName: 'Closing Balance',
+          debit: '',
+          credit: '',
+          oppositeAccountName: '',
+          narration: '',
+          balance: report.closingBal[0].balance,
+        })
+      }
+
+      // Add IOU balances
+      report.IouBalance.forEach((iou) => {
+        rows.push({
+          date: iou.dateIssued,
+          voucherId: iou.iouId,
+          currentAccountName: 'IOU Balance',
+          debit: iou.amount,
+          credit: iou.totalAdjusted || '',
+          oppositeAccountName: `Employee ID: ${iou.employeeId}`,
+          narration: 'IOU Transaction',
+        })
+      })
+
+      return rows
+    })
+  }
 
   const generateExcel = () => {
     exportToExcel(cashReport, 'cash-report')
@@ -394,7 +408,7 @@ export default function CashReport() {
       <CashReportList
         targetRef={targetRef}
         cashReport={cashReport}
-       date={date}
+        date={date}
         setDate={setDate}
         companyId={companyId}
         location={location}
@@ -403,4 +417,3 @@ export default function CashReport() {
     </div>
   )
 }
-

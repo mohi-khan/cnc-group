@@ -130,6 +130,19 @@ const InvoicesList = () => {
 
   // Fetch initial data for bank voucher form
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+    
     const fetchInitialData = async () => {
       const search = ''
       if (!token) return

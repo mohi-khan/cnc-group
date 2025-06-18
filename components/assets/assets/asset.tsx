@@ -59,9 +59,23 @@ const Asset = () => {
   }, [token])
   
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+
+checkUserData()
+
     fetchAssets()
     fetchAssetCategories()
-  }, [fetchAssets, fetchAssetCategories])
+  }, [fetchAssets, fetchAssetCategories, router])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)
