@@ -94,8 +94,21 @@ const AssetReport = () => {
   }, [token,router])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+
+checkUserData()
     fetchAllCompanies()
-  }, [fetchAllCompanies])
+  }, [fetchAllCompanies, router])
 
   return (
     <div className="w-[97%] mx-auto py-6">

@@ -12,6 +12,7 @@ import {
 import { CurrencyType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 
 const CurrencyTable = () => {
@@ -19,7 +20,7 @@ const CurrencyTable = () => {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
+  const router = useRouter()
   const [getCurrency, setGetCurrency] = useState<CurrencyType[]>([])
 
   const fetchAllCurrency = useCallback(async () => {
@@ -30,8 +31,20 @@ const CurrencyTable = () => {
   }, [token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchAllCurrency()
-  }, [fetchAllCurrency])
+  }, [fetchAllCurrency, router])
 
   return (
     <div>

@@ -17,7 +17,7 @@ import {
   getAssets,
   getEmployee,
 } from '@/api/common-shared-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
@@ -27,6 +27,7 @@ const Vehicle = () => {
 
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
 
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -41,9 +42,30 @@ const Vehicle = () => {
   const handleClose = () => {
     setIsOpen(false)
   }
+  
+ // Fetch all vehicles
+  const fetchVehicles = useCallback(async () => {
+    if (!token) return
+    const vehicleData = await getAllVehicles(token)
+    console.log(vehicleData?.error?.message === 'Unauthorized access')
+    if (vehicleData?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (vehicleData.error || !vehicleData.data) {
+      console.error('Error vehicle:', vehicleData.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: vehicleData.error?.message || 'Failed to fetch Vehicles',
+      })
+    } else {
+      setVehicles(vehicleData.data)
+    }
+  }, [token, router])
 
   // Fetch all cost centers
-  const fetchgetAllCostCenters = React.useCallback(async () => {
+  const fetchgetAllCostCenters = useCallback(async () => {
     if (!token) return
     const response = await getAllCostCenters(token)
     if (!response.data) {
@@ -57,37 +79,15 @@ const Vehicle = () => {
     setCostCenters(response.data)
   }, [token])
 
-
-  // Fetch all vehicles
-  const fetchVehicles = React.useCallback(async () => {
-    if (!token) return
-    const vehicleData = await getAllVehicles(token)
-    console.log(vehicleData?.error?.message === 'Unauthorized access')
-    if (vehicleData?.error?.status === 401) {
-      router.push('/unauthorized-access')
-      console.log('Unauthorized access')
-      return
-    } else if (vehicleData.error || !vehicleData.data) {
-      console.error('Error vehicle:', vehicleData.error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          vehicleData.error?.message || 'Failed to fetch Vehicles',
-      })
-    } else {
-      setVehicles(vehicleData.data)
-    }
-  }, [token, router])
+ 
 
   // Fetch all assets
-  const fetchAssets = React.useCallback(async () => {
+  const fetchAssets = useCallback(async () => {
     if (!token) return
     const assetData = await getAssets(token)
     setAsset(assetData.data || [])
     console.log('Show The Assets All Data :', assetData.data)
   }, [token])
-
 
   const fetchEmployeeData = React.useCallback(async () => {
     if (!token) return
@@ -101,11 +101,23 @@ const Vehicle = () => {
   }, [token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchgetAllCostCenters()
     fetchVehicles()
     fetchAssets()
     fetchEmployeeData()
-  }, [fetchgetAllCostCenters, fetchVehicles, fetchAssets, fetchEmployeeData])
+  }, [fetchgetAllCostCenters, fetchVehicles, fetchAssets, fetchEmployeeData, router])
 
   return (
     <div>

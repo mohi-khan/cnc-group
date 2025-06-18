@@ -59,6 +59,19 @@ export default function BankReconciliationReport() {
   })
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     const fetchBankAccounts = async () => {
       if (!token) return
       try {
@@ -82,7 +95,7 @@ export default function BankReconciliationReport() {
       }
     }
     fetchBankAccounts()
-  }, [router,toast, token])
+  }, [router, toast, token])
 
   const fetchReconciliationsReport = async (data: {
     bankAccount: string
