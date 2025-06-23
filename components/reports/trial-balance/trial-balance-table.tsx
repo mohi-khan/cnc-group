@@ -105,7 +105,7 @@ export default function TrialBalanceTable({
           <div className="flex justify-center items-left">
             {item.children && item.children.length > 0 && (
               <span
-                className={`text-sm ${expandedRows.has(item.id) ? 'text-blue-600' : 'text-gray-600'}`}
+                className={`text-xs ${expandedRows.has(item.id) ? 'text-blue-600' : 'text-gray-600'}`}
                 tabIndex={0}
                 aria-label="Expand/Collapse"
               >
@@ -148,7 +148,7 @@ export default function TrialBalanceTable({
             {item.periodCredit.toFixed(2)}
           </div>
           <div className="col-span-1 text-center">
-            {item.periodDebit - item.periodCredit}
+            {(item.periodDebit - item.periodCredit).toFixed(2)}
           </div>
           <div className="col-span-1 text-center">
             {item.closingDebit.toFixed(2)}

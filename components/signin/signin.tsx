@@ -167,7 +167,7 @@ export default function SignIn() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Link
-            href="/forgot-password"
+            href="/contactadmin"
             className="text-sm text-center text-primary hover:underline"
           >
             Forgot your password?
