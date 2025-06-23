@@ -150,7 +150,7 @@ export default function ResPartners() {
     }
     // console.log('companies here', companies)
     // setIsLoading(false)
-  }, [token,router])
+  }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -166,7 +166,7 @@ export default function ResPartners() {
       console.log('company', data.data)
       setCompanies(data.data)
     }
-  }, [token,router])
+  }, [token, router])
 
   React.useEffect(() => {
     fetchResPartners()
@@ -694,16 +694,34 @@ export default function ResPartners() {
                   }
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, index) => (
-                <PaginationItem key={`page-${index}`}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(index + 1)}
-                    isActive={currentPage === index + 1}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {[...Array(totalPages)].map((_, index) => {
+                if (
+                  index === 0 ||
+                  index === totalPages - 1 ||
+                  (index >= currentPage - 2 && index <= currentPage + 2)
+                ) {
+                  return (
+                    <PaginationItem key={`page-${index}`}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                } else if (
+                  index === currentPage - 3 ||
+                  index === currentPage + 3
+                ) {
+                  return (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <PaginationLink>...</PaginationLink>
+                    </PaginationItem>
+                  )
+                }
+                return null
+              })}
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>
