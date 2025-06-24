@@ -118,7 +118,7 @@ export default function Dashboard() {
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
-      const data = await getFundPosition(3, '2025-02-19', '02')
+      const data = await getFundPosition(3, '2025-02-19', '02', token)
       console.log('Fetched fund position data:', data)
       setFundPositionData(data.data)
     } catch (error) {
@@ -327,7 +327,8 @@ export default function Dashboard() {
       departmentId,
       startDate,
       endDate,
-      companyId
+      companyId,
+      token
     )
     if (response.data) {
       setCostBreakdown(
@@ -344,7 +345,7 @@ export default function Dashboard() {
 
     console.log('Processing fund position data:', fundPositionData)
 
-    const dates = ['01/01/2025', '12/01/2025'] // We know there are two dates
+    const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
 
     return dates.map((date) => {
       const cashBalance = fundPositionData.cashBalance
@@ -371,7 +372,7 @@ export default function Dashboard() {
         netBalance: cashBalance + bankBalance,
       }
     })
-  }, [fundPositionData])
+  }, [])
 
   React.useEffect(() => {
     const checkUserData = () => {
@@ -401,20 +402,18 @@ export default function Dashboard() {
     fetchCostBreakdown()
     fetchAllCompany()
   }, [
-    fetchFundPosition,
-    fetchRequisitions,
-    fetchAdvances,
-    fetchExpenseData,
-    fetchExpenseDataYearly,
-    fetchIncomeData,
-    fetchIncomeDataYearly,
-    fetchGPData,
-    fetchGPDataYearly,
+    fetchCostBreakdown,
+    token,
+    fetchAllCompany,
+    fetchDepartments,
     fetchNPData,
     fetchNPDataYearly,
-    fetchDepartments,
-    fetchCostBreakdown,
-    fetchAllCompany,
+    fetchGPData,
+    fetchIncomeDataYearly,
+    fetchIncomeData,
+    fetchExpenseDataYearly,
+    fetchExpenseData,
+    ,
   ])
 
   console.log('Processed fund position data:', processedFundPositionData)
