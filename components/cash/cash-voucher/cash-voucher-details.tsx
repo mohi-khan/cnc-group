@@ -175,7 +175,7 @@ export default function CashVoucherDetails({
                       <FormItem>
                         <FormControl>
                           <CustomCombobox
-                            items={filteredChartOfAccounts.map((account) => ({
+                            items={filteredChartOfAccounts.filter((account) => account.isActive).map((account) => ({
                               id: account.accountId.toString(),
                               name: account.name || 'Unnamed Account',
                             }))}
@@ -209,7 +209,7 @@ export default function CashVoucherDetails({
                       <FormItem>
                         <FormControl>
                           <CustomCombobox
-                            items={costCenters.map((center) => ({
+                            items={costCenters.filter((center) => center.isActive).map((center) => ({
                               id: center.costCenterId.toString(),
                               name:
                                 center.costCenterName || 'Unnamed Cost Center',
@@ -244,7 +244,7 @@ export default function CashVoucherDetails({
                       <FormItem>
                         <FormControl>
                           <CustomCombobox
-                            items={departments.map((department) => ({
+                            items={departments.filter((department) => department.isActive).map((department) => ({
                               id: department.departmentID.toString(),
                               name:
                                 department.departmentName ||
@@ -280,7 +280,7 @@ export default function CashVoucherDetails({
                       <FormItem>
                         <FormControl>
                           <CustomComboboxWithApi
-                            items={partners.map((partner) => ({
+                            items={partners.filter((partner) => partner.active).map((partner) => ({
                               id: partner.id.toString(),
                               name: partner.name || 'Unnamed Partner',
                             }))}

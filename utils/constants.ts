@@ -292,10 +292,10 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Financial Settings',
         items: [
           { name: 'Cost Centers', source: '/settings/cost-centers' },
-          { name: 'Internal Orders', source: '/settings/internal-orders' },
+          // { name: 'Internal Orders', source: '/settings/internal-orders' },
           { name: 'Bank Accounts', source: '/settings/bank-accounts' },
           { name: 'Cash Accounts', source: '/settings/cash-accounts' },
-          { name: 'Level Entry', source: '/settings/level-entry' },
+          // { name: 'Level Entry', source: '/settings/level-entry' },
         ],
       },
       {

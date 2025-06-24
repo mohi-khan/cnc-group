@@ -75,7 +75,7 @@ export default function CostCenterManagement() {
   const [sortColumn, setSortColumn] =
     useState<keyof CostCenter>('costCenterName')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
+  const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -102,26 +102,26 @@ export default function CostCenterManagement() {
       setCostCenters(data.data)
     }
     setIsLoading(false)
-  }, [toast, token,router])
+  }, [toast, token, router])
 
   // get all currency api
-    const fetchCurrency = React.useCallback(async () => {
-      if (!token) return
-      const fetchedCurrency = await getAllCurrency(token)
-      console.log(
-        '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
-        fetchedCurrency
-      )
-      if (fetchedCurrency.error || !fetchedCurrency.data) {
-        console.error('Error getting currency:', fetchedCurrency.error)
-        toast({
-          title: 'Error',
-          description: fetchedCurrency.error?.message || 'Failed to get currency',
-        })
-      } else {
-        setCurrency(fetchedCurrency.data)
-      }
-    }, [token,toast])
+  const fetchCurrency = React.useCallback(async () => {
+    if (!token) return
+    const fetchedCurrency = await getAllCurrency(token)
+    console.log(
+      '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
+      fetchedCurrency
+    )
+    if (fetchedCurrency.error || !fetchedCurrency.data) {
+      console.error('Error getting currency:', fetchedCurrency.error)
+      toast({
+        title: 'Error',
+        description: fetchedCurrency.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(fetchedCurrency.data)
+    }
+  }, [token, toast])
 
   useEffect(() => {
     const checkUserData = () => {
@@ -139,7 +139,6 @@ export default function CostCenterManagement() {
     fetchCostCenters()
     fetchCurrency()
   }, [fetchCostCenters, fetchCurrency, router])
-   
 
   const handleActivateDeactivate = async (id: number, isActive: boolean) => {
     try {
@@ -207,7 +206,9 @@ export default function CostCenterManagement() {
   }, [userData])
 
   const CostCenterForm: React.FC<{ isEdit: boolean }> = ({ isEdit }) => {
-    const [currencyCode, setCurrencyCode] = useState<string>((isEdit && selectedCostCenter?.currencyCode) || 'BDT')
+    const [currencyCode, setCurrencyCode] = useState<string>(
+      (isEdit && selectedCostCenter?.currencyCode) || 'BDT'
+    )
 
     useEffect(() => {
       if (isEdit) {
@@ -227,7 +228,7 @@ export default function CostCenterManagement() {
         const newCostCenter = {
           costCenterName: formData.get('name') as string,
           costCenterDescription: formData.get('description') as string,
-          currencyCode: currencyCode ,
+          currencyCode: currencyCode,
           budget: Number(formData.get('budget')) || 0,
           isActive: formData.get('isActive') === 'on',
           isVehicle: formData.get('isVehicle') === 'on',
@@ -251,7 +252,10 @@ export default function CostCenterManagement() {
         if (isEdit && selectedCostCenter) {
           updateCostCenterData.costCenterId = selectedCostCenter.costCenterId
           const response = await updateCostCenter(
-            { ...updateCostCenterData, currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP" },
+            {
+              ...updateCostCenterData,
+              currencyCode: currencyCode as 'USD' | 'BDT' | 'EUR' | 'GBP',
+            },
             token
           )
           if (response.error || !response.data) {
@@ -266,7 +270,10 @@ export default function CostCenterManagement() {
           })
         } else {
           const response = await createCostCenter(
-            { ...newCostCenter, currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP" },
+            {
+              ...newCostCenter,
+              currencyCode: currencyCode as 'USD' | 'BDT' | 'EUR' | 'GBP',
+            },
             token
           )
           if (response.error || !response.data) {
@@ -374,19 +381,7 @@ export default function CostCenterManagement() {
             required
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="actual" className="text-right">
-            Actual
-          </Label>
-          <Input
-            id="actual"
-            name="actual"
-            type="string"
-            defaultValue={isEdit ? selectedCostCenter?.actual : 0}
-            className="col-span-3"
-            required
-          />
-        </div>
+
         <div className="grid grid-cols-4 items-center gap-4 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md p-2">
           <Label htmlFor="isActive" className="text-right">
             Active
@@ -532,12 +527,12 @@ export default function CostCenterManagement() {
                 >
                   Budget <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
+                {/* <TableHead
                   onClick={() => handleSort('actual')}
                   className="cursor-pointer"
                 >
                   Actual <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                </TableHead>
+                </TableHead> */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -552,7 +547,7 @@ export default function CostCenterManagement() {
                   <TableCell>
                     {Number(center.budget).toLocaleString()}
                   </TableCell>
-                  <TableCell>{center.actual?.toLocaleString()}</TableCell>
+                  {/* <TableCell>{center.actual?.toLocaleString()}</TableCell> */}
                   <TableCell className="text-right">
                     <Button
                       size="sm"

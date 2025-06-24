@@ -338,7 +338,7 @@ export default function DepartmentManagement() {
                   Start Date
                 </SortableTableHead>
                 <SortableTableHead column="endDate">End Date</SortableTableHead>
-                <SortableTableHead column="actual">Actual</SortableTableHead>
+                {/* <SortableTableHead column="actual">Actual</SortableTableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -365,7 +365,7 @@ export default function DepartmentManagement() {
                         ? new Date(department.endDate).toLocaleDateString()
                         : '-'}
                   </TableCell>
-                  <TableCell>{department.actual}</TableCell>
+                  {/* <TableCell>{department.actual}</TableCell> */}
                 </TableRow>
               ))}
             </TableBody>
@@ -458,6 +458,8 @@ export default function DepartmentManagement() {
                 control={form.control}
                 name="companyCode"
                 render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
                   <FormControl>
                     <CustomCombobox
                       items={company.map((company) => ({
@@ -481,7 +483,9 @@ export default function DepartmentManagement() {
                       }
                       placeholder="Select company"
                     />
-                  </FormControl>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
               <FormField
@@ -553,7 +557,7 @@ export default function DepartmentManagement() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="actual"
                 render={({ field }) => (
@@ -571,7 +575,7 @@ export default function DepartmentManagement() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <div className="flex justify-end space-x-2">
                 <Button
                   variant="outline"

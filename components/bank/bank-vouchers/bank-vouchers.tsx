@@ -400,12 +400,12 @@ export default function BankVoucher() {
             setIsDialogOpen(true)
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> ADD
         </Button>
         <Popup
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
-          title="Add New Voucher"
+          title="Bank Vouchers"
           size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
@@ -430,7 +430,12 @@ export default function BankVoucher() {
                 requisition={undefined}
                 setFormState={setFormState}
               />
-              <BankVoucherDetails form={form} formState={formState} requisition={undefined} partners={formState.partners} />
+              <BankVoucherDetails
+                form={form}
+                formState={formState}
+                requisition={undefined}
+                partners={formState.partners}
+              />
               <BankVoucherSubmit form={form} onSubmit={onSubmit} />
             </form>
           </Form>
