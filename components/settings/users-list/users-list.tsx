@@ -154,6 +154,7 @@ export default function UsersList() {
   const currentUsers = users.slice(startIndex, endIndex)
 
   const handleEditUser = (user: User) => {
+    
     setEditingUser({
       ...user,
       roleId: user.roleId ?? null,
@@ -335,7 +336,7 @@ export default function UsersList() {
                   </DialogContent>
                 </Dialog>
 
-                <Dialog>
+                <Dialog open={isEditDialogOpen}  onOpenChange={setIsEditDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"

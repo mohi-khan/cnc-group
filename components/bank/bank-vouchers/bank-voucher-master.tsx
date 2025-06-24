@@ -1,17 +1,23 @@
-"use client"
+'use client'
 
-import type React from "react"
+import type React from 'react'
 
-import { getAllCurrency, getEmployee } from "@/api/common-shared-api"
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { toast } from "@/hooks/use-toast"
-import { CustomCombobox } from "@/utils/custom-combobox"
-import type { CurrencyType, Employee, FormStateType } from "@/utils/type"
-import { tokenAtom, useInitializeUser } from "@/utils/user"
-import { useAtom } from "jotai"
-import { useCallback, useEffect, useState } from "react"
-import { HoverCard, HoverCardTrigger } from "@/components/ui/hover-card"
+import { getAllCurrency, getEmployee } from '@/api/common-shared-api'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
+import { CustomCombobox } from '@/utils/custom-combobox'
+import type { CurrencyType, Employee, FormStateType } from '@/utils/type'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { useCallback, useEffect, useState } from 'react'
+import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
 // Define the props for the BankVoucherMaster component
 interface BankVoucherMasterProps {
@@ -34,7 +40,7 @@ export default function BankVoucherMaster({
   requisition,
   disableJournalType = false,
 }: BankVoucherMasterProps) {
-  console.log("🚀 ~ requisition:", requisition)
+  console.log('🚀 ~ requisition:', requisition)
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
@@ -47,14 +53,14 @@ export default function BankVoucherMaster({
   const fetchCurrency = useCallback(async () => {
     const data = await getAllCurrency(token)
     if (data.error || !data.data) {
-      console.error("Error getting currency:", data.error)
+      console.error('Error getting currency:', data.error)
       toast({
-        title: "Error",
-        description: data.error?.message || "Failed to get currency",
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
       })
     } else {
       setCurrency(data.data)
-      console.log("🚀 ~ fetchCurrency ~ data.data:", data.data)
+      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
     }
   }, [token])
 
@@ -66,7 +72,7 @@ export default function BankVoucherMaster({
     } else {
       setEmployeeData([])
     }
-    console.log("Show The Employee Data :", employees.data)
+    console.log('Show The Employee Data :', employees.data)
   }, [token])
 
   useEffect(() => {
@@ -77,7 +83,7 @@ export default function BankVoucherMaster({
     if (disableJournalType) {
       setFormState((prev) => ({
         ...prev,
-        formType: "Debit", // This will show "Receipt"
+        formType: 'Debit', // This will show "Receipt"
       }))
     }
 
@@ -85,31 +91,43 @@ export default function BankVoucherMaster({
     if (requisition && Object.keys(requisition).length > 0) {
       // Set company
       if (requisition.companyid) {
-        form.setValue("journalEntry.companyId", requisition.companyid)
+        form.setValue('journalEntry.companyId', requisition.companyid)
       }
 
       // Set amount
       if (requisition.advanceamount) {
-        form.setValue("journalEntry.amountTotal", Number.parseFloat(requisition.advanceamount))
+        form.setValue(
+          'journalEntry.amountTotal',
+          Number.parseFloat(requisition.advanceamount)
+        )
 
         // Update the first detail row if it exists
-        const detailsArray = form.getValues("journalDetails") || []
+        const detailsArray = form.getValues('journalDetails') || []
         if (detailsArray.length > 0) {
           const updatedDetails = [...detailsArray]
           updatedDetails[0] = {
             ...updatedDetails[0],
-            [formState.formType === "Credit" ? "debit" : "credit"]: Number.parseFloat(requisition.advanceamount),
+            [formState.formType === 'Credit' ? 'debit' : 'credit']:
+              Number.parseFloat(requisition.advanceamount),
           }
-          form.setValue("journalDetails", updatedDetails)
+          form.setValue('journalDetails', updatedDetails)
         }
       }
 
       // Set currency
       if (requisition.currency) {
-        form.setValue("journalEntry.currencyId", requisition.currency)
+        form.setValue('journalEntry.currencyId', requisition.currency)
       }
     }
-  }, [requisition, fetchCurrency, form, formState.formType, fetchEmployeeData, disableJournalType, setFormState])
+  }, [
+    requisition,
+    fetchCurrency,
+    form,
+    formState.formType,
+    fetchEmployeeData,
+    disableJournalType,
+    setFormState,
+  ])
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -123,19 +141,22 @@ export default function BankVoucherMaster({
               <CustomCombobox
                 items={formState.companies.map((company) => ({
                   id: company.company.companyId.toString(),
-                  name: company.company.companyName || "Unnamed Company",
+                  name: company.company.companyName || 'Unnamed Company',
                 }))}
                 value={
                   field.value
                     ? {
                         id: field.value.toString(),
                         name:
-                          formState.companies.find((c) => c.company.companyId === field.value)?.company.companyName ||
-                          "",
+                          formState.companies.find(
+                            (c) => c.company.companyId === field.value
+                          )?.company.companyName || '',
                       }
                     : null
                 }
-                onChange={(value) => field.onChange(value ? Number.parseInt(value.id, 10) : null)}
+                onChange={(value) =>
+                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                }
                 placeholder="Select company"
               />
             </FormControl>
@@ -154,19 +175,22 @@ export default function BankVoucherMaster({
               <CustomCombobox
                 items={formState.locations.map((location) => ({
                   id: location.location.locationId.toString(),
-                  name: location.location.address || "Unnamed Location",
+                  name: location.location.address || 'Unnamed Location',
                 }))}
                 value={
                   field.value
                     ? {
                         id: field.value.toString(),
                         name:
-                          formState.locations.find((l) => l.location.locationId === field.value)?.location.address ||
-                          "",
+                          formState.locations.find(
+                            (l) => l.location.locationId === field.value
+                          )?.location.address || '',
                       }
                     : null
                 }
-                onChange={(value) => field.onChange(value ? Number.parseInt(value.id, 10) : null)}
+                onChange={(value) =>
+                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                }
                 placeholder="Select location"
               />
             </FormControl>
@@ -189,25 +213,31 @@ export default function BankVoucherMaster({
                       <CustomCombobox
                         items={currency.map((curr: CurrencyType) => ({
                           id: curr.currencyId.toString(),
-                          name: curr.currencyCode || "Unnamed Currency",
+                          name: curr.currencyCode || 'Unnamed Currency',
                         }))}
                         value={
                           field.value
                             ? {
                                 id: field.value.toString(),
                                 name:
-                                  currency.find((curr: CurrencyType) => curr.currencyId === field.value)
-                                    ?.currencyCode || "Unnamed Currency",
+                                  currency.find(
+                                    (curr: CurrencyType) =>
+                                      curr.currencyId === field.value
+                                  )?.currencyCode || 'Unnamed Currency',
                               }
                             : null
                         }
-                        onChange={(value: { id: string; name: string } | null) => {
-                          const newValue = value ? Number.parseInt(value.id, 10) : null
+                        onChange={(
+                          value: { id: string; name: string } | null
+                        ) => {
+                          const newValue = value
+                            ? Number.parseInt(value.id, 10)
+                            : null
                           field.onChange(newValue)
 
                           // Reset exchange rate when currency changes or is cleared
                           if (newValue === null || newValue === 1) {
-                            form.setValue("journalEntry.exchangeRate", 1)
+                            form.setValue('journalEntry.exchangeRate', 1)
                           }
                         }}
                         placeholder="Select currency"
@@ -225,10 +255,12 @@ export default function BankVoucherMaster({
                         <Input
                           type="number"
                           placeholder="Enter exchange rate"
-                          value={exchangeField.value ?? ""}
+                          value={exchangeField.value ?? ''}
                           onChange={(e) => {
                             const value = e.target.value
-                            exchangeField.onChange(value === "" ? null : Number(value))
+                            exchangeField.onChange(
+                              value === '' ? null : Number(value)
+                            )
                           }}
                           className="w-40 ml-5"
                         />
@@ -247,19 +279,19 @@ export default function BankVoucherMaster({
         <FormLabel>Type</FormLabel>
         <CustomCombobox
           items={[
-            { id: "Credit", name: "Payment" },
-            { id: "Debit", name: "Receipt" },
+            { id: 'Credit', name: 'Payment' },
+            { id: 'Debit', name: 'Receipt' },
           ]}
           value={{
             id: String(formState.formType),
-            name: formState.formType === "Credit" ? "Payment" : "Receipt",
+            name: formState.formType === 'Credit' ? 'Payment' : 'Receipt',
           }}
           onChange={(value) => {
             // Only allow change if not disabled
             if (!disableJournalType) {
               setFormState({
                 ...formState,
-                formType: (value?.id as "Credit" | "Debit") || "Credit",
+                formType: (value?.id as 'Credit' | 'Debit') || 'Credit',
               })
             }
           }}
@@ -271,10 +303,14 @@ export default function BankVoucherMaster({
       <FormItem>
         <FormLabel>Bank Account Details</FormLabel>
         <CustomCombobox
-          items={formState.bankAccounts.map((account) => ({
-            id: account.id.toString(),
-            name: `${account.bankName} - ${account.accountName} - ${account.accountNumber}` || "Unnamed Account",
-          }))}
+          items={formState.bankAccounts
+            .filter((account) => account.isActive)
+            .map((account) => ({
+              id: account.id.toString(),
+              name:
+                `${account.bankName} - ${account.accountName} - ${account.accountNumber}` ||
+                'Unnamed Account',
+            }))}
           value={
             formState.selectedBankAccount
               ? {
@@ -282,17 +318,23 @@ export default function BankVoucherMaster({
                   name:
                     `${
                       formState.bankAccounts.find(
-                        (a) => formState.selectedBankAccount && a.id === formState.selectedBankAccount.id,
+                        (a) =>
+                          formState.selectedBankAccount &&
+                          a.id === formState.selectedBankAccount.id
                       )?.bankName
                     } - ${
                       formState.bankAccounts.find(
-                        (a) => formState.selectedBankAccount && a.id === formState.selectedBankAccount.id,
+                        (a) =>
+                          formState.selectedBankAccount &&
+                          a.id === formState.selectedBankAccount.id
                       )?.accountName
                     } - ${
                       formState.bankAccounts.find(
-                        (a) => formState.selectedBankAccount && a.id === formState.selectedBankAccount.id,
+                        (a) =>
+                          formState.selectedBankAccount &&
+                          a.id === formState.selectedBankAccount.id
                       )?.accountNumber
-                    }` || "",
+                    }` || '',
                 }
               : null
           }
@@ -301,7 +343,9 @@ export default function BankVoucherMaster({
               setFormState({ ...formState, selectedBankAccount: null })
               return
             }
-            const selectedAccount = formState.bankAccounts.find((account) => account.id.toString() === value.id)
+            const selectedAccount = formState.bankAccounts.find(
+              (account) => account.id.toString() === value.id
+            )
             if (selectedAccount) {
               setFormState({
                 ...formState,
@@ -326,7 +370,11 @@ export default function BankVoucherMaster({
           <FormItem>
             <FormLabel>Cheque Number</FormLabel>
             <FormControl>
-              <Input placeholder="Enter cheque number" {...field} onChange={(e) => field.onChange(e.target.value)} />
+              <Input
+                placeholder="Enter cheque number"
+                {...field}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -340,7 +388,11 @@ export default function BankVoucherMaster({
           <FormItem>
             <FormLabel>Date</FormLabel>
             <FormControl>
-              <Input type="date" {...field} onChange={(e) => field.onChange(e.target.value)} />
+              <Input
+                type="date"
+                {...field}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -363,14 +415,15 @@ export default function BankVoucherMaster({
                   field.onChange(amount)
 
                   // Update only the first detail row if it exists
-                  const detailsArray = form.getValues("journalDetails") || []
+                  const detailsArray = form.getValues('journalDetails') || []
                   if (detailsArray.length > 0) {
                     const updatedDetails = [...detailsArray]
                     updatedDetails[0] = {
                       ...updatedDetails[0],
-                      [formState.formType === "Credit" ? "debit" : "credit"]: amount,
+                      [formState.formType === 'Credit' ? 'debit' : 'credit']:
+                        amount,
                     }
-                    form.setValue("journalDetails", updatedDetails)
+                    form.setValue('journalDetails', updatedDetails)
                   }
                 }}
               />
@@ -395,7 +448,7 @@ export default function BankVoucherMaster({
                     name: employee.employeeName,
                   }))}
                   value={
-                    field.value && !form.watch("journalEntry.payToText")
+                    field.value && !form.watch('journalEntry.payToText')
                       ? {
                           id: field.value,
                           name: field.value,
@@ -405,12 +458,12 @@ export default function BankVoucherMaster({
                   onChange={(value: { id: string; name: string } | null) => {
                     if (value) {
                       field.onChange(value.name)
-                      form.setValue("journalEntry.payTo", value.name)
-                      form.setValue("journalEntry.payToText", "") // clear manual input
+                      form.setValue('journalEntry.payTo', value.name)
+                      form.setValue('journalEntry.payToText', '') // clear manual input
                     }
                   }}
                   placeholder="Select a receiver name"
-                  disabled={!!form.watch("journalEntry.payToText")}
+                  disabled={!!form.watch('journalEntry.payToText')}
                 />
               </div>
 
@@ -419,11 +472,11 @@ export default function BankVoucherMaster({
                 <FormControl>
                   <Input
                     placeholder="Enter receiver name"
-                    value={form.watch("journalEntry.payToText") || ""}
+                    value={form.watch('journalEntry.payToText') || ''}
                     onChange={(e) => {
                       const value = e.target.value
-                      form.setValue("journalEntry.payToText", value)
-                      form.setValue("journalEntry.payTo", value) // <- ensures value goes to DB
+                      form.setValue('journalEntry.payToText', value)
+                      form.setValue('journalEntry.payTo', value) // <- ensures value goes to DB
                       field.onChange(value)
                     }}
                   />
@@ -437,7 +490,6 @@ export default function BankVoucherMaster({
     </div>
   )
 }
-
 
 // 'use client'
 

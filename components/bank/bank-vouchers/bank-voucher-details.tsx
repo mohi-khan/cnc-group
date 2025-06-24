@@ -103,7 +103,7 @@ export default function BankVoucherDetails({
                     <FormItem>
                       <FormControl>
                         <CustomCombobox
-                          items={formState.filteredChartOfAccounts.map(
+                          items={formState.filteredChartOfAccounts.filter((account) => account.isActive).map(
                             (account) => ({
                               id: account.accountId.toString(),
                               name: account.name || 'Unnamed Account',
@@ -140,7 +140,7 @@ export default function BankVoucherDetails({
                     <FormItem>
                       <FormControl>
                         <CustomCombobox
-                          items={formState.costCenters.map((center) => ({
+                          items={formState.costCenters.filter((center) => center.isActive).map((center) => ({
                             id: center.costCenterId.toString(),
                             name:
                               center.costCenterName || 'Unnamed Cost Center',
@@ -176,7 +176,7 @@ export default function BankVoucherDetails({
                     <FormItem>
                       <FormControl>
                         <CustomCombobox
-                          items={formState.departments.map((department) => ({
+                          items={formState.departments.filter((department) => department.isActive).map((department) => ({
                             id: department.departmentID.toString(),
                             name: department.departmentName || 'Unnamed Unit',
                           }))}
@@ -221,7 +221,7 @@ export default function BankVoucherDetails({
                         ) : (
                           // Normal bank voucher - use search combobox
                           <CustomComboboxWithApi
-                            items={partners.map((partner) => ({
+                            items={partners.filter((partner) => partner.active).map((partner) => ({
                               id: partner.id.toString(),
                               name: partner.name || 'Unnamed Partner',
                             }))}
