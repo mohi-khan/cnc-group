@@ -27,6 +27,8 @@ import {
   GetAssetData,
 } from '@/utils/type'
 import { updateVehicleEmployee } from '@/api/vehicle.api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
 
 interface VehicleListProps {
   AllVehicles: GetAllVehicleType[]
@@ -44,7 +46,7 @@ type SortColumn =
   | 'description'
   | 'purchaseDate'
   | 'assetId'
-  | 'employeeId'
+  | 'employeeid'
   | 'employeeName'
 
 export const VehicleList: React.FC<VehicleListProps> = ({
@@ -54,6 +56,9 @@ export const VehicleList: React.FC<VehicleListProps> = ({
   employeeData,
   refreshVehicles,
 }) => {
+  useInitializeUser()
+
+  const [token] = useAtom(tokenAtom)
   const [sortColumn, setSortColumn] = useState<SortColumn>('vehicleNo')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -117,7 +122,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
   function onEditEmployee(vehicleId: number): void {
     setEditingVehicle(vehicleId)
     const vehicle = AllVehicles.find((v) => v.vehicleNo === vehicleId)
-    setSelectedEmployee(vehicle?.employeeId || null)
+    setSelectedEmployee(vehicle ? vehicle.employeeid || null : null)
   }
 
   async function handleSaveEmployee(
@@ -126,7 +131,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
   ) {
     if (vehicleUser === null) return
     try {
-      await updateVehicleEmployee(vehicleId, vehicleUser)
+      await updateVehicleEmployee(vehicleId, vehicleUser, token)
       setEditingVehicle(null)
       setSelectedEmployee(null)
       refreshVehicles()
@@ -180,7 +185,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
                 {editingVehicle === vehicle.vehicleNo ? (
                   <select
                     value={selectedEmployee ?? ''}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                       setSelectedEmployee(Number(e.target.value))
                     }
                     className="border rounded p-1"
@@ -219,7 +224,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEditEmployee(vehicle.vehicleNo)}
+                    onClick={() => onEditEmployee( vehicle.vehicleNo)}
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Change User
