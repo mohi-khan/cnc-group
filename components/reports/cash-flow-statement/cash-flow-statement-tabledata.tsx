@@ -199,7 +199,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               </span>
             </TableCell>
             <TableCell className="bg-gray-100 p-2 text-right">
-              <span className="text-gray-700">0.00</span>
+              <span className="text-gray-700"> {formatAmount(cashFlowStatements[cashFlowStatements.length-1]?.credit, true)}</span>
             </TableCell>
           </TableRow>
         </TableBody>

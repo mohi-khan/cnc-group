@@ -104,6 +104,8 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     if (!token) return
     setIsSubmitting(true)
     try {
+      console.log(userId);
+      console.log(data);
       await createAssetCategory(data, token)
       onCategoryAdded()
       onOpenChange(false)
@@ -167,7 +169,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                   <FormLabel>Account Code</FormLabel>
                   <CustomCombobox
                     items={chartOfAccounts.map((account: ChartOfAccount) => ({
-                      id: account.code.toString(),
+                      id: account.accountId.toString(),
                       name: account.name || 'Unnamed Account',
                     }))}
                     value={
@@ -177,7 +179,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                             name:
                               chartOfAccounts.find(
                                 (id: ChartOfAccount) =>
-                                  Number(id.code) === field.value
+                                  Number(id.accountId) === field.value
                               )?.name || 'Select Parent Account',
                           }
                         : null
@@ -201,7 +203,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                   <FormLabel>Depreciation Account Code</FormLabel>
                   <CustomCombobox
                     items={chartOfAccounts.map((account: ChartOfAccount) => ({
-                      id: account.code.toString(),
+                      id: account.accountId.toString(),
                       name: account.name || 'Unnamed Account',
                     }))}
                     value={
@@ -211,7 +213,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
                             name:
                               chartOfAccounts.find(
                                 (id: ChartOfAccount) =>
-                                  Number(id.code) === field.value
+                                  Number(id.accountId) === field.value
                               )?.name || 'Select Parent Account',
                           }
                         : null

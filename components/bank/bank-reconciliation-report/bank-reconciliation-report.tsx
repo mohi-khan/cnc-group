@@ -260,7 +260,7 @@ export default function BankReconciliationReport() {
               </div>
               <div className="flex gap-4">
                 <div className="text-right">
-                  Balance as per Tally on Dt:{' '}
+                  Balance as per Software on Dt:{' '}
                   {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
                 </div>
                 <div className="text-right font-semibold w-32">
@@ -289,13 +289,8 @@ export default function BankReconciliationReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {report.unreconciledAmount.breakdown.onlyInBank
-                    .filter(
-                      (item) =>
-                        item.unreconciledReason === 'Only in Bank' ||
-                        item.unreconciledReason ===
-                          'Credited in Tally but not shown in B/S'
-                    )
+          
+                  {report.unreconciledAmount.breakdown.onlyInBooks
                     .map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{formatDate(item.date)}</TableCell>
@@ -307,12 +302,7 @@ export default function BankReconciliationReport() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  {report.unreconciledAmount.breakdown.onlyInBank.filter(
-                    (item) =>
-                      item.unreconciledReason === 'Only in Bank' ||
-                      item.unreconciledReason ===
-                        'Credited in Tally but not shown in B/S'
-                  ).length === 0 && (
+                  {report.unreconciledAmount.breakdown.onlyInBooks.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center">
                         No records found
@@ -326,12 +316,7 @@ export default function BankReconciliationReport() {
                     <TableCell className="text-right font-semibold">
                       {formatCurrency(
                         calculateTotal(
-                          report.unreconciledAmount.breakdown.onlyInBank.filter(
-                            (item) =>
-                              item.unreconciledReason === 'Only in Bank' ||
-                              item.unreconciledReason ===
-                                'Credited in Tally but not shown in B/S'
-                          )
+                          report.unreconciledAmount.breakdown.onlyInBooks
                         )
                       )}
                     </TableCell>
@@ -359,17 +344,8 @@ export default function BankReconciliationReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {report.unreconciledAmount.breakdown.onlyInBank.filter(
-                    (item) =>
-                      item.unreconciledReason ===
-                      'Debited in B/S but not Shown in Tally'
-                  ).length > 0 ? (
+                  {report.unreconciledAmount.breakdown.onlyInBank.length > 0 ? (
                     report.unreconciledAmount.breakdown.onlyInBank
-                      .filter(
-                        (item) =>
-                          item.unreconciledReason ===
-                          'Debited in B/S but not Shown in Tally'
-                      )
                       .map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>{formatDate(item.date)}</TableCell>
@@ -395,11 +371,7 @@ export default function BankReconciliationReport() {
                     <TableCell className="text-right font-semibold">
                       {formatCurrency(
                         calculateTotal(
-                          report.unreconciledAmount.breakdown.onlyInBank.filter(
-                            (item) =>
-                              item.unreconciledReason ===
-                              'Debited in B/S but not Shown in Tally'
-                          )
+                          report.unreconciledAmount.breakdown.onlyInBank
                         ) || 0
                       )}
                     </TableCell>
