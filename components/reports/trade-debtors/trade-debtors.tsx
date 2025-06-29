@@ -1,5 +1,5 @@
 'use client'
-import {  getAllTradeDebtors } from '@/api/trade-debtors-api'
+import { getAllTradeDebtors } from '@/api/trade-debtors-api'
 import { GetTradeDebtorsType } from '@/utils/type'
 import React, { useEffect, useCallback } from 'react'
 import {
@@ -55,9 +55,22 @@ const TradeDebtors = () => {
     setCompanies(response.data || [])
   }, [token])
   useEffect(() => {
+    
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchTradeDebtors()
     fetchCompanies()
-  }, [fetchTradeDebtors, fetchCompanies,token])
+  }, [fetchTradeDebtors, fetchCompanies, token, router])
 
   const filteredTradeDebtors = selectedCompanyName
     ? tradeDebtors.filter(

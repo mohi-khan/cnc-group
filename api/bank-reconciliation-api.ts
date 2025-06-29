@@ -42,3 +42,19 @@ export async function updateBankReconciliation(
     },
   })
 }
+
+export async function markTrueBankReconciliations(
+  ids: number[],
+  token: string
+) {
+  console.log('Updating bank reconciliation:', ids)
+  return fetchApi<BankReconciliationType>({
+    url: `api/bank-reconciliation/true-bank-reconciliations`,
+    method: 'PATCH',
+    body: { ids },
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}

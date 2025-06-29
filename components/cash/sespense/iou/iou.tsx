@@ -83,11 +83,25 @@ const Iou = () => {
   }, [token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+
+checkUserData()
+    
     fetchLoanData()
     fetchEmployeeData()
     fetchCompnay()
     fetchLocation()
-  }, [fetchLoanData, fetchEmployeeData, fetchCompnay,fetchLocation, token])
+  }, [fetchLoanData, fetchEmployeeData, fetchCompnay,fetchLocation, token, router])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)

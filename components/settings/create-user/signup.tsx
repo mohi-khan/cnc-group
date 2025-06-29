@@ -203,10 +203,22 @@ export default function SignUp() {
   }, [ token,router])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchAllCompanies()
     fetchAllLocations()
     fetchAllRoles()
-  }, [fetchAllCompanies, fetchAllLocations, fetchAllRoles])
+  }, [fetchAllCompanies, fetchAllLocations, fetchAllRoles, router])
 
   useEffect(() => {
     const fetchData = async () => {

@@ -9,21 +9,21 @@ import VehiclePerformanceReportList from './vehicle-performance-table-list'
 import { usePDF } from 'react-to-pdf'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 const VehiclePerformanceReport = () => {
-   //getting userData from jotai atom component
-      useInitializeUser()
-    
-      const [token] = useAtom(tokenAtom)
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const router = useRouter()
+  const [token] = useAtom(tokenAtom)
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-  const { toPDF, targetRef } = usePDF({ filename: 'vehicle_performance_report.pdf' })
-  
+  const { toPDF, targetRef } = usePDF({
+    filename: 'vehicle_performance_report.pdf',
+  })
 
   const generatePdf = () => {
     toPDF()
   }
-
-
 
   // Fetch all vehicles data
   const fetchVehicles = React.useCallback(async () => {
@@ -31,21 +31,30 @@ const VehiclePerformanceReport = () => {
     setVehicles(vehicleData.data || [])
     console.log('Show The Vehicle All Data :', vehicleData.data)
   }, [token])
-  
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchVehicles()
-  
-  }, [fetchVehicles])
+  }, [fetchVehicles, router])
 
   return (
     <div>
-      <VehiclePerformanceReportHeading vehicles={vehicles}
-       generatePdf={generatePdf}
+      <VehiclePerformanceReportHeading
+        vehicles={vehicles}
+        generatePdf={generatePdf}
       />
-      <VehiclePerformanceReportList 
-      targetRef={targetRef}
-      />
+      <VehiclePerformanceReportList targetRef={targetRef} />
     </div>
   )
 }

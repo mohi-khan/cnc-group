@@ -26,12 +26,14 @@ export async function createVehicle(data: CreateVehicleType, token: string) {
 
 export async function updateVehicleEmployee(
   vehicleId: number,
-  vehicleUser: number | null
+  vehicleUser: number | null,
+  token: string
 ) {
   return fetchApi({
     url: `api/vehicle/update-Vehicle/${vehicleId}/${vehicleUser}`,
     method: 'POST',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

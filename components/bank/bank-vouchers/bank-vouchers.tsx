@@ -106,6 +106,19 @@ export default function BankVoucher() {
   })
   // Retrivin user data and set companies and locations based on user Data
   React.useEffect(() => {
+  
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+      
+    }
+    
     if (userData) {
       setFormState((prevState) => ({
         ...prevState,
@@ -122,6 +135,8 @@ export default function BankVoucher() {
       console.log('No user data found in localStorage')
       // router.push('/unauthorized-access')
     }
+    checkUserData()
+   
   }, [router, userData])
   //Check If user have the previlage
   // Initialze all the Combo Box in the system
@@ -385,12 +400,12 @@ export default function BankVoucher() {
             setIsDialogOpen(true)
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add
+          <Plus className="mr-2 h-4 w-4" /> ADD
         </Button>
         <Popup
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
-          title="Add New Voucher"
+          title="Bank Vouchers"
           size="max-w-6xl"
         >
           <p className="text-sm text-muted-foreground mb-4">
@@ -415,7 +430,12 @@ export default function BankVoucher() {
                 requisition={undefined}
                 setFormState={setFormState}
               />
-              <BankVoucherDetails form={form} formState={formState} requisition={undefined} partners={formState.partners} />
+              <BankVoucherDetails
+                form={form}
+                formState={formState}
+                requisition={undefined}
+                partners={formState.partners}
+              />
               <BankVoucherSubmit form={form} onSubmit={onSubmit} />
             </form>
           </Form>

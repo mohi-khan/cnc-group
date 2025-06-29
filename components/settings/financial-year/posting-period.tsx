@@ -75,7 +75,7 @@ const PostingPeriodManager = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [token,router])
+  }, [token, router])
 
   // Effect hook to fetch posting periods when token and selectedYearId are available
   const fetchPeriods = useCallback(async () => {
@@ -108,14 +108,26 @@ const PostingPeriodManager = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [token, selectedYearId,router])
+  }, [token, selectedYearId, router])
 
   // Only fetch financial years when token changes and is available
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (token) {
       fetchFinancialYears()
     }
-  }, [token, fetchFinancialYears])
+  }, [token, fetchFinancialYears, router])
 
   // Convert period type to json format for API calling to update Period Open Data
   function transformPeriods(periods: Period[], isopen: boolean) {
@@ -135,13 +147,13 @@ const PostingPeriodManager = () => {
   // Function to handle status change of a period
   const handleStatusChange = (periodId: number, newStatus: boolean) => {
     // Check if opening a new period would exceed the limit of 2 open periods
-    // const openPeriodsCount = periods.filter((p) => p.isOpen).length
-    // const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
+    const openPeriodsCount = periods.filter((p) => p.isOpen).length
+    const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
 
-    // if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
-    //   setError('Only two periods can be open at a time.')
-    //   return
-    // }
+    if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
+      setError('Only two periods can be open at a time.')
+      return
+    }
 
     // Update the periods state with the new status
     setPeriods((prevPeriods) => {
@@ -284,8 +296,11 @@ const PostingPeriodManager = () => {
                           {/* Switch component to toggle period status */}
                           <Switch
                             checked={period.isOpen}
-                            onChange={e =>
-                              handleStatusChange(period.periodId, (e.target as HTMLInputElement).checked)
+                            onChange={(e) =>
+                              handleStatusChange(
+                                period.periodId,
+                                (e.target as HTMLInputElement).checked
+                              )
                             }
                           />
                         </TableCell>
@@ -308,8 +323,8 @@ const PostingPeriodManager = () => {
             ) : (
               <div className="text-center py-8">
                 <p>
-                  Please select a financial year and click &quot;Show Periods&quot; to
-                  view posting periods.
+                  Please select a financial year and click &quot;Show
+                  Periods&quot; to view posting periods.
                 </p>
               </div>
             )}

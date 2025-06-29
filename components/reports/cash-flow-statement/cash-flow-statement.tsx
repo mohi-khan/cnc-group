@@ -67,6 +67,19 @@ const CashFlowStatement = () => {
   }
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     if (startDate && endDate && companyId) {
       const fetchData = async () => {
         const response = await getCashFowStatement({
@@ -81,7 +94,7 @@ const CashFlowStatement = () => {
       }
       fetchData()
     }
-  }, [startDate, endDate, companyId,token])
+  }, [startDate, endDate, companyId, token, router])
 
   return (
     <div>

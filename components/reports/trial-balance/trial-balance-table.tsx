@@ -66,10 +66,22 @@ export default function TrialBalanceTable({
   }, [startDate, endDate, companyId, setTrialBalanceData, token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (startDate && endDate && companyId) {
       fetchTrialBalanceTableData()
     }
-  }, [startDate, endDate, companyId, fetchTrialBalanceTableData])
+  }, [startDate, endDate, companyId, fetchTrialBalanceTableData, router])
 
   const toggleRowExpansion = (id: number) => {
     const newExpandedRows = new Set(expandedRows)
@@ -93,7 +105,7 @@ export default function TrialBalanceTable({
           <div className="flex justify-center items-left">
             {item.children && item.children.length > 0 && (
               <span
-                className={`text-sm ${expandedRows.has(item.id) ? 'text-blue-600' : 'text-gray-600'}`}
+                className={`text-xs ${expandedRows.has(item.id) ? 'text-blue-600' : 'text-gray-600'}`}
                 tabIndex={0}
                 aria-label="Expand/Collapse"
               >
@@ -136,7 +148,7 @@ export default function TrialBalanceTable({
             {item.periodCredit.toFixed(2)}
           </div>
           <div className="col-span-1 text-center">
-            {item.periodDebit - item.periodCredit}
+            {(item.periodDebit - item.periodCredit).toFixed(2)}
           </div>
           <div className="col-span-1 text-center">
             {item.closingDebit.toFixed(2)}

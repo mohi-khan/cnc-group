@@ -40,7 +40,7 @@ const ChangePassword = () => {
       setError('User not authenticated. Please log in.')
     }
   }, [userData])
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -50,9 +50,24 @@ const ChangePassword = () => {
       setError('User not authenticated. Please log in.')
       return
     }
+    if (!oldPassword) {
+          setError('Please enter your current password')
+          toast({
+            title: 'Error',
+            description: 'Please enter your current password',
+            variant: 'destructive'
+          })
+          return
+        }
+    
 
     if (newPassword !== confirmPassword) {
       setError("New passwords don't match")
+      toast({
+        title: 'Error',
+        description: "New passwords don't match",
+        variant: 'destructive'
+      })
       return
     }
 
@@ -60,6 +75,7 @@ const ChangePassword = () => {
 
     const result = await changePassword(
       userId,
+      
       oldPassword,
       newPassword,
       confirmPassword,
@@ -76,6 +92,7 @@ const ChangePassword = () => {
       toast({
         title: 'Success',
         description: 'password changed successfully',
+        variant: 'default',
       })
     }
     // setSuccess(result.message)
@@ -105,6 +122,8 @@ const ChangePassword = () => {
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   required
+                  minLength={1}
+                  aria-invalid={error && error.includes('Current password') ? 'true' : 'false'}
                 />
                 <Button
                   type="button"
@@ -120,6 +139,9 @@ const ChangePassword = () => {
                   )}
                 </Button>
               </div>
+              {error && error.includes('Current password') && (
+                <p className="text-sm text-red-500 mt-1">Incorrect old password</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
@@ -130,6 +152,8 @@ const ChangePassword = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
+                  minLength={8}
+                  aria-invalid={error && error.includes('New password') ? 'true' : 'false'}
                 />
                 <Button
                   type="button"
@@ -155,6 +179,8 @@ const ChangePassword = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  minLength={8}
+                  aria-invalid={error && error.includes('Confirm new password') ? 'true' : 'false'}
                 />
                 <Button
                   type="button"
@@ -194,8 +220,7 @@ const ChangePassword = () => {
           </form>
         </CardContent>
       </Card>
-    </div>
-  )
+    </div>  )
 }
 
 export default ChangePassword

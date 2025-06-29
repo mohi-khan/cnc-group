@@ -83,7 +83,7 @@ export default function AutomaticReconciliation() {
     } finally {
       setLoading(false)
     }
-  }, [toast,token])
+  }, [toast, token])
 
   const fetchReconciliations = async (data: {
     bankAccount: string
@@ -159,8 +159,7 @@ export default function AutomaticReconciliation() {
             description:
               response.error?.message || 'Failed to get gl bank accounts',
           })
-        }
-        else {
+        } else {
           setTransactions(response.data || [])
         }
         console.log('Received transactions:', response.data) // Debug log
@@ -181,8 +180,20 @@ export default function AutomaticReconciliation() {
   }
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchBankAccounts()
-  }, [fetchBankAccounts])
+  }, [fetchBankAccounts, router])
 
   const updateLocalReconciliation = (
     id: number,

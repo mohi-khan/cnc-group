@@ -261,7 +261,7 @@ export function JournalVoucherDetailsSection({
                 <FormItem>
                   <CustomCombobox
                     // Convert each chart-of-accounts entry into an object with id and name.
-                    items={chartOfAccounts.map((account) => ({
+                    items={chartOfAccounts.filter((account) => account.isActive).map((account) => ({
                       id: account.accountId,
                       name: account.name,
                     }))}
@@ -294,7 +294,7 @@ export function JournalVoucherDetailsSection({
                 <FormItem>
                   <FormControl>
                     <CustomCombobox
-                      items={costCenters.map((center) => ({
+                      items={costCenters.filter((center) => center.isActive).map((center) => ({
                         id: center.costCenterId.toString(),
                         name: center.costCenterName || 'Unnamed Cost Center',
                       }))}
@@ -328,7 +328,7 @@ export function JournalVoucherDetailsSection({
                 <FormItem>
                   <FormControl>
                     <CustomCombobox
-                      items={departments.map((department) => ({
+                      items={departments.filter((department) => department.isActive).map((department) => ({
                         id: department.departmentID.toString(),
                         name: department.departmentName || 'Unnamed Unit',
                       }))}

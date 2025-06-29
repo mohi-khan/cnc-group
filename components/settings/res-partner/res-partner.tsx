@@ -113,13 +113,25 @@ export default function ResPartners() {
   })
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, router])
 
   const fetchResPartners = React.useCallback(async () => {
     if (!token) return
@@ -138,7 +150,7 @@ export default function ResPartners() {
     }
     // console.log('companies here', companies)
     // setIsLoading(false)
-  }, [token,router])
+  }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -154,7 +166,7 @@ export default function ResPartners() {
       console.log('company', data.data)
       setCompanies(data.data)
     }
-  }, [token,router])
+  }, [token, router])
 
   React.useEffect(() => {
     fetchResPartners()
@@ -682,16 +694,34 @@ export default function ResPartners() {
                   }
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, index) => (
-                <PaginationItem key={`page-${index}`}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(index + 1)}
-                    isActive={currentPage === index + 1}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {[...Array(totalPages)].map((_, index) => {
+                if (
+                  index === 0 ||
+                  index === totalPages - 1 ||
+                  (index >= currentPage - 2 && index <= currentPage + 2)
+                ) {
+                  return (
+                    <PaginationItem key={`page-${index}`}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                } else if (
+                  index === currentPage - 3 ||
+                  index === currentPage + 3
+                ) {
+                  return (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <PaginationLink>...</PaginationLink>
+                    </PaginationItem>
+                  )
+                }
+                return null
+              })}
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>

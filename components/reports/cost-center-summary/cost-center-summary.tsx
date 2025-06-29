@@ -7,10 +7,7 @@ import { CostCenter, CostCenterSummaryType } from '@/utils/type'
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import {
- 
-  getCostCenterSummary,
-} from '@/api/cost-center-summary-api'
+import { getCostCenterSummary } from '@/api/cost-center-summary-api'
 import { getAllCostCenters } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -88,7 +85,7 @@ const CostCenterSummary = () => {
     const response = await getCostCenterSummary({
       fromdate: startDate ? startDate.toISOString().split('T')[0] : '',
       enddate: endDate ? endDate.toISOString().split('T')[0] : '',
-      costCenterId: costCenterId,     
+      costCenterId: costCenterId,
       companyid: companyId,
       token: token,
     })
@@ -110,11 +107,24 @@ const CostCenterSummary = () => {
     }
   }, [token, startDate, endDate, companyId, costCenterId])
   useEffect(() => {
+    
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (startDate && endDate && companyId) {
       fetchData()
       fetchAllCostCenter()
     }
-  }, [startDate, endDate, companyId, fetchData, fetchAllCostCenter])
+  }, [startDate, endDate, companyId, fetchData, fetchAllCostCenter, router])
   return (
     <div>
       <CostCenterSummaryHeading
@@ -127,10 +137,8 @@ const CostCenterSummary = () => {
         data={costCenterSummary}
         startDate={startDate}
         endDate={endDate}
-       costCenterId={costCenterId}
+        costCenterId={costCenterId}
         companyId={companyId}
-
-      
       />
     </div>
   )

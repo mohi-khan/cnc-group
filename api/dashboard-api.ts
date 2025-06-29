@@ -12,7 +12,8 @@ import { CompanyType } from './company-api'
 export async function getFundPosition(
   companyId: number,
   date: string,
-  month: string
+  month: string,
+  token: string
 ) {
   const params = new URLSearchParams({
     companyId: companyId.toString(),
@@ -24,6 +25,10 @@ export async function getFundPosition(
   return fetchApi<FundPositionType>({
     url,
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // Using the token directly as passed
+    },
   })
 }
 
@@ -115,12 +120,14 @@ export async function getCostBreakdown(
   departmentId: number,
   fromDate: string,
   toDate: string,
-  companyId: number
+  companyId: number,
+  token: string
 ) {
   return fetchApi<GetCostBreakdownType>({
     url: `api/dashboard/getcostBreakdown?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}`,
     method: 'GET',
     headers: {
+      Authorization: `${token}`,
       'Content-Type': 'application/json',
     },
   })

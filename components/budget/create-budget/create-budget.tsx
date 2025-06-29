@@ -11,11 +11,18 @@ import CreateBudgetList from './create-budget-list'
 import { getAllMasterBudget } from '@/api/budget-api'
 import { CompanyType } from '@/api/company-api'
 import { getAllCompanies } from '@/api/common-shared-api'
+import { useInitializeUser } from '@/utils/user'
+import { useRouter } from 'next/navigation'
 
 const CreateBudget = () => {
+  
+useInitializeUser()
+
+const router = useRouter()
+
   const [showForm, setShowForm] = useState<boolean>(false)
   const [masterBudget, setMasterBudget] = useState<MasterBudgetType[]>([])
-  const [token, setToken] = useState<string >('')
+  const [token, setToken] = useState<string>('')
   const [company, setCompany] = useState<CompanyType[]>([])
 
   // Retrieve token from localStorage safely
@@ -35,7 +42,7 @@ const CreateBudget = () => {
     setShowForm(true)
   }
 
-  const  fetchGetAllCompany=useCallback(async()=> {
+  const fetchGetAllCompany = useCallback(async () => {
     try {
       const response = await getAllCompanies(token)
       if (!response.data) throw new Error('No data received')
@@ -49,9 +56,9 @@ const CreateBudget = () => {
       })
       setCompany([])
     }
-  },[token])
+  }, [token])
 
-  const fetchGetAllMasterBudget=useCallback(async(token: string)=> {
+  const fetchGetAllMasterBudget = useCallback(async (token: string) => {
     try {
       const response = await getAllMasterBudget({ token })
       if (!response.data) throw new Error('No data received')
@@ -65,14 +72,26 @@ const CreateBudget = () => {
       })
       setMasterBudget([])
     }
-  },[])
+  }, [])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (token) {
       fetchGetAllMasterBudget(token)
       fetchGetAllCompany()
     }
-  }, [token,fetchGetAllCompany,fetchGetAllMasterBudget])
+  }, [token, fetchGetAllCompany, fetchGetAllMasterBudget, router])
 
   return (
     <div className="container mx-auto p-6">

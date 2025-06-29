@@ -202,6 +202,18 @@ export default function ChartOfAccountsTable() {
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (userData) {
       setUserId(userData.userId)
       console.log(
@@ -211,7 +223,7 @@ export default function ChartOfAccountsTable() {
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, router])
   console.log('🚀 ~ ChartOfAccountsTable ~ userData:', userData)
 
   // Dynamically update defaultValues based on userId

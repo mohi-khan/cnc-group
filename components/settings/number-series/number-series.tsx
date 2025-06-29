@@ -138,7 +138,7 @@ export function NumberSeries() {
       setSeries(response.data)
     }
     setIsLoading(false)
-  }, [toast, token,router])
+  }, [toast, token, router])
 
   const fetchFinancialYears = React.useCallback(async () => {
     if (!token) return
@@ -161,7 +161,7 @@ export function NumberSeries() {
       setFynancialYear(response.data)
     }
     setIsLoading(false)
-  }, [toast, token,router])
+  }, [toast, token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -180,7 +180,7 @@ export function NumberSeries() {
     } else {
       setCompanies(data.data)
     }
-  }, [toast, token,router])
+  }, [toast, token, router])
 
   const fetchAllLocations = React.useCallback(async () => {
     if (!token) return
@@ -199,9 +199,21 @@ export function NumberSeries() {
     } else {
       setLocations(response.data)
     }
-  }, [toast, token,router])
+  }, [toast, token, router])
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     fetchNumberSeries()
     fetchCompanies()
     fetchAllLocations()
@@ -211,6 +223,7 @@ export function NumberSeries() {
     fetchCompanies,
     fetchNumberSeries,
     fetchFinancialYears,
+    router
   ])
 
   const onSubmit = async (values: NumberSeriesType) => {
@@ -433,8 +446,7 @@ export function NumberSeries() {
                       <TableCell>
                         {renderTableCell(record, 'endingNumber')}
                       </TableCell>
-                      <TableCell className="flex gap-3 justify-end">
-                      </TableCell>
+                      <TableCell className="flex gap-3 justify-end"></TableCell>
                     </TableRow>
                   ))}
                 <TableRow>

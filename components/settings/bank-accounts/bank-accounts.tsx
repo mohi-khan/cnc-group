@@ -105,13 +105,26 @@ export default function BankAccounts() {
   const itemsPerPage = 10
 
   React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
+
     if (userData) {
       setUserId(userData?.userId)
       console.log('Current userId from localStorage:', userData.userId)
     } else {
       console.log('No user data found in localStorage')
     }
-  }, [userData])
+  }, [userData, router])
 
   const form = useForm<CreateBankAccount>({
     resolver: zodResolver(createBankAccountSchema),
@@ -146,7 +159,7 @@ export default function BankAccounts() {
     } else {
       setCurrency(fetchedCurrency.data)
     }
-  }, [token,toast])
+  }, [token, toast])
 
   const fetchBankAccounts = React.useCallback(async () => {
     if (!token) return
@@ -165,7 +178,7 @@ export default function BankAccounts() {
     } else {
       setAccounts(fetchedAccounts.data)
     }
-  }, [toast,router,token])
+  }, [toast, router, token])
 
   const fetchGlAccounts = React.useCallback(async () => {
     if (!token) return
@@ -184,13 +197,13 @@ export default function BankAccounts() {
     } else {
       setGlAccounts(fetchedGlAccounts.data)
     }
-  }, [toast,router,token])
+  }, [toast, router, token])
 
   React.useEffect(() => {
     fetchGlAccounts()
     fetchBankAccounts()
     fetchCurrency()
-  }, [fetchBankAccounts, fetchGlAccounts,fetchCurrency])
+  }, [fetchBankAccounts, fetchGlAccounts, fetchCurrency])
 
   React.useEffect(() => {
     if (editingAccount) {

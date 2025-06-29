@@ -1212,7 +1212,7 @@ export interface GetAllVehicleType {
   description: string
   purchaseDate: string
   assetId: number
-  employeeId: number
+  employeeid: number
   employeeName: string
   user: number
 }

@@ -61,8 +61,9 @@ import { toast } from '@/hooks/use-toast'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CompanyType } from '@/api/company-api'
 import { getAllCompanies } from '@/api/common-shared-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { useRouter } from 'next/navigation'
 
 // Dummy data for other charts (unchanged)
 const inventoryData = [
@@ -84,8 +85,9 @@ const costBreakdownData = [
 export default function Dashboard() {
   //getting userData from jotai atom component
   useInitializeUser()
-
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+  const [userData] = useAtom(userDataAtom)
 
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
@@ -116,7 +118,7 @@ export default function Dashboard() {
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
-      const data = await getFundPosition(3, '2025-02-19', '02')
+      const data = await getFundPosition(3, '2025-02-19', '02', token)
       console.log('Fetched fund position data:', data)
       setFundPositionData(data.data)
     } catch (error) {
@@ -202,8 +204,8 @@ export default function Dashboard() {
   //  Get Expense data yearly
   const fetchExpenseDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getExpenseData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -236,8 +238,8 @@ export default function Dashboard() {
   // Get Income Data  yearly
   const fetchIncomeDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getIncomeData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -268,8 +270,8 @@ export default function Dashboard() {
   //Get getGPData yearly
   const fetchGPDataYearly = React.useCallback(async () => {
     const companyId = 3 // Example companyId
-    const startDate = '' // Example startDate
-    const endDate = '' // Example endDate
+    const startDate = '2025-02-01' // Example startDate
+    const endDate = '2025-12-31' // Example endDate
 
     const response = await getGPData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -316,16 +318,17 @@ export default function Dashboard() {
 
   //Get Cost Breakdown Data
   const fetchCostBreakdown = React.useCallback(async () => {
-    const departmentId = 16 // Default to 0 if no department is selected
+    const departmentId = 3 // Default to 0 if no department is selected
     const startDate = '2025-01-01' // Example startDate
-    const endDate = '2025-03-31' // Example endDate
+    const endDate = '2025-12-31' // Example endDate
     const companyId = 3 // Example companyId
 
     const response = await getCostBreakdown(
       departmentId,
       startDate,
       endDate,
-      companyId
+      companyId,
+      token
     )
     if (response.data) {
       setCostBreakdown(
@@ -337,43 +340,12 @@ export default function Dashboard() {
     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
   }, [])
 
-  React.useEffect(() => {
-    fetchFundPosition()
-    fetchRequisitions()
-    fetchAdvances()
-    fetchExpenseData()
-    fetchExpenseDataYearly()
-    fetchIncomeData()
-    fetchIncomeDataYearly()
-    fetchGPData()
-    fetchGPDataYearly()
-    fetchNPData()
-    fetchNPDataYearly()
-    fetchDepartments()
-    fetchCostBreakdown()
-    fetchAllCompany()
-  }, [
-    fetchFundPosition,
-    fetchRequisitions,
-    fetchAdvances,
-    fetchExpenseData,
-    fetchExpenseDataYearly,
-    fetchIncomeData,
-    fetchIncomeDataYearly,
-    fetchGPData,
-    fetchGPDataYearly,
-    fetchNPData,
-    fetchNPDataYearly,
-    fetchDepartments,
-    fetchCostBreakdown,
-    fetchAllCompany
-  ])
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []
 
     console.log('Processing fund position data:', fundPositionData)
 
-    const dates = ['03/03/2025', '02/28/2025'] // We know there are two dates
+    const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
 
     return dates.map((date) => {
       const cashBalance = fundPositionData.cashBalance
@@ -400,7 +372,49 @@ export default function Dashboard() {
         netBalance: cashBalance + bankBalance,
       }
     })
-  }, [fundPositionData])
+  }, [])
+
+  React.useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+    checkUserData()
+
+    fetchFundPosition()
+    fetchRequisitions()
+    fetchAdvances()
+    fetchExpenseData()
+    fetchExpenseDataYearly()
+    fetchIncomeData()
+    fetchIncomeDataYearly()
+    fetchGPData()
+    fetchGPDataYearly()
+    fetchNPData()
+    fetchNPDataYearly()
+    fetchDepartments()
+    fetchCostBreakdown()
+    fetchAllCompany()
+  }, [
+    fetchCostBreakdown,
+    token,
+    fetchAllCompany,
+    fetchDepartments,
+    fetchNPData,
+    fetchNPDataYearly,
+    fetchGPData,
+    fetchIncomeDataYearly,
+    fetchIncomeData,
+    fetchExpenseDataYearly,
+    fetchExpenseData,
+    ,
+  ])
 
   console.log('Processed fund position data:', processedFundPositionData)
 
@@ -576,15 +590,18 @@ export default function Dashboard() {
               placeholder="Select company"
             />
           </Select>
-
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              31/03/17
-            </Button>
+            <input
+              type="date"
+              className="px-3 py-1 border rounded-md text-sm"
+              defaultValue="2017-03-31"
+            />
             <ChevronDown className="h-4 w-4" />
-            <Button variant="outline" size="sm">
-              31/12/20
-            </Button>
+            <input
+              type="date"
+              className="px-3 py-1 border rounded-md text-sm"
+              defaultValue="2020-12-31"
+            />
           </div>
         </div>
       </div>

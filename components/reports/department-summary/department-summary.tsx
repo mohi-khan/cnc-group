@@ -113,11 +113,23 @@ const DepartmentSummary = () => {
   }, [startDate, endDate, companyId, departmentId,token])
 
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData()
     if (startDate && endDate && companyId && departmentId) {
       fetchData()
       fetchAllCostCenter()
     }
-  }, [startDate, endDate, companyId, departmentId, fetchData,fetchAllCostCenter])
+  }, [startDate, endDate, companyId, departmentId, fetchData,fetchAllCostCenter, router])
   return (
     <div>
       <DeparmentSummaryHeading

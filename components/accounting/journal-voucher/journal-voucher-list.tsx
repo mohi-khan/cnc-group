@@ -63,6 +63,7 @@ export default function VoucherTable() {
         locationId: location,
         voucherType: VoucherTypes.JournalVoucher,
       }
+      
       try {
         if(!token) return
         const response = await getAllVoucher(voucherQuery, token)
@@ -100,6 +101,18 @@ export default function VoucherTable() {
   //getting userData from jotai (atom) and setting the userId, companies and locations
   // and fetching all vouchers based on the user data
   useEffect(() => {
+    const checkUserData = () => {
+      const storedUserData = localStorage.getItem('currentUser')
+      const storedToken = localStorage.getItem('authToken')
+
+      if (!storedUserData || !storedToken) {
+        console.log('No user data or token found in localStorage')
+        router.push('/')
+        return
+      }
+    }
+
+    checkUserData() 
     if (userData) {
       setUserId(userData.userId)
       setCompanies(userData.userCompanies)

@@ -317,7 +317,7 @@ export function ContraVoucherDetailsSection({
               <FormItem className="flex flex-col">
                 <CustomCombobox
                   // Map each account to an object with id and name.
-                  items={accounts.map((account) => ({
+                  items={accounts.filter((account) => account.isActive).map((account) => ({
                     id: account.id,
                     name: `${account.bankName}-${account.accountName} - ${account.accountNumber}`,
                   }))}
@@ -369,7 +369,7 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <CustomCombobox
                   // Convert each chart-of-accounts entry into an object with id and name.
-                  items={chartOfAccounts.map((account) => ({
+                  items={chartOfAccounts.filter((account) => account.isActive).map((account) => ({
                     id: account.accountId,
                     name: account.name,
                   }))}
