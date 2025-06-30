@@ -195,6 +195,7 @@ export default function CashVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }}
+                            placeholder="Select an account"
                           />
                         </FormControl>
                       </FormItem>
@@ -230,6 +231,7 @@ export default function CashVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }
+                            placeholder="Select a cost center"
                           />
                         </FormControl>
                       </FormItem>
@@ -266,6 +268,7 @@ export default function CashVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }
+                            placeholder="Select a department"
                           />
                         </FormControl>
                       </FormItem>
@@ -299,6 +302,7 @@ export default function CashVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }
+                            placeholder="Select a partner"
                             searchFunction={searchPartners}
                           />
                         </FormControl>

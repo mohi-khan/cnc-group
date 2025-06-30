@@ -110,6 +110,7 @@ export default function CashVoucherMaster({
                 onChange={(value) =>
                   field.onChange(value ? Number.parseInt(value.id, 10) : null)
                 }
+                placeholder="Select company"
               />
             </FormControl>
             <FormMessage />
@@ -142,6 +143,7 @@ export default function CashVoucherMaster({
                 onChange={(value) =>
                   field.onChange(value ? Number.parseInt(value.id, 10) : null)
                 }
+                placeholder="Select location"
               />
             </FormControl>
             <FormMessage />

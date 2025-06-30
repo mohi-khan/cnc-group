@@ -45,6 +45,9 @@ const FinancialYear = () => {
   // State variables
   const [userId, setUserId] = useState(0)
   const [error, setError] = useState('')
+  const [startDateOpen, setStartDateOpen] = useState(false)
+  const [endDateOpen, setEndDateOpen] = useState(false)
+
   useEffect(() => {
     if (userData) {
       console.log('Current user from localStorage:', userId)
@@ -89,14 +92,6 @@ const FinancialYear = () => {
     }
   }, [userId, form, router])
 
-  // Remove or comment out this useEffect
-  // useEffect(() => {
-  //   if (userId !== 0) {
-  //     form.setValue('createdby', userId)
-  //     console.log('Updated form createdby with userId:', userId)
-  //   }
-  // }, [userId, form])
-
   async function onSubmit(values: financialYear) {
     try {
       // Ensure createdby is set to userId
@@ -138,7 +133,6 @@ const FinancialYear = () => {
     }
   }
 
-  //console.log(form.getValues())
   return (
     <Card className="w-[350px]">
       <CardHeader>
@@ -166,7 +160,7 @@ const FinancialYear = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Start Date</FormLabel>
-                  <Popover>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -189,7 +183,10 @@ const FinancialYear = () => {
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date)
+                          setStartDateOpen(false)
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -203,7 +200,7 @@ const FinancialYear = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>End Date</FormLabel>
-                  <Popover>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -226,7 +223,10 @@ const FinancialYear = () => {
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date)
+                          setEndDateOpen(false)
+                        }}
                       />
                     </PopoverContent>
                   </Popover>

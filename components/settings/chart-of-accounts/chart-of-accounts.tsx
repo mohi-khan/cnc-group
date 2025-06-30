@@ -714,10 +714,9 @@ export default function ChartOfAccountsTable() {
                     )}
                   />
 
-                  {/* <FormField
+                  <FormField
                     control={form.control}
                     name="parentAccountId"
-                    rules={{ required: "Parent Account Name is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -726,7 +725,7 @@ export default function ChartOfAccountsTable() {
                         </FormLabel>
                         <CustomCombobox
                           items={parentCodes.map((account: ChartOfAccount) => ({
-                            id: account.code?.toString(),
+                            id: account.code.toString(),
                             name: account.name || 'Unnamed Account',
                           }))}
                           value={
@@ -735,61 +734,22 @@ export default function ChartOfAccountsTable() {
                                   id: field.value.toString(),
                                   name:
                                     parentCodes.find(
-                                      (id: ChartOfAccount) =>
-                                        Number(id.code) === field.value
+                                      (acc) =>
+                                        acc.code.toString() ===
+                                        field.value.toString()
                                     )?.name || 'Select Parent Account',
                                 }
                               : null
                           }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) =>
-                            field.onChange(
-                              value ? Number.parseInt(value.id, 10) : null
-                            )
+                          onChange={(value) =>
+                            field.onChange(value ? Number(value.id) : undefined)
                           }
                           placeholder="Select Parent Account"
                         />
-                        <FormMessage className="text-red-500">
-                          {field.value ? '' : 'Parent Account Name is required'}
-                        </FormMessage>
+                        <FormMessage />
                       </FormItem>
                     )}
-                  />         */}
-                  <FormField
-  control={form.control}
-  name="parentAccountId"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>
-        Parent Account Name <span className="text-red-500">*</span>
-      </FormLabel>
-      <CustomCombobox
-        items={parentCodes.map((account: ChartOfAccount) => ({
-          id: account.code.toString(),
-          name: account.name || 'Unnamed Account',
-        }))}
-        value={
-          field.value
-            ? {
-                id: field.value.toString(),
-                name:
-                  parentCodes.find(
-                    (acc) => acc.code.toString() === field.value.toString()
-                  )?.name || 'Select Parent Account',
-              }
-            : null
-        }
-        onChange={(value) =>
-          field.onChange(value ? Number(value.id) : undefined)
-        }
-        placeholder="Select Parent Account"
-      />
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
+                  />
 
                   <FormField
                     control={form.control}
@@ -1321,7 +1281,7 @@ export default function ChartOfAccountsTable() {
             >
               <div className="spacey-2">
                 <Label htmlFor="edit-notes">Notes</Label>
-                <Input
+                {/* <Input
                   id="edit-notes"
                   value={editingAccount.notes}
                   onChange={(e) =>
@@ -1330,6 +1290,27 @@ export default function ChartOfAccountsTable() {
                       notes: e.target.value,
                     })
                   }
+                /> */}
+                <CustomCombobox
+                  items={financialTags.map((tag) => ({
+                    id: tag.toLowerCase(),
+                    name: tag,
+                  }))}
+                  value={
+                    editingAccount.notes
+                      ? {
+                          id: editingAccount.notes.toLowerCase(),
+                          name: editingAccount.notes,
+                        }
+                      : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) => {
+                    setEditingAccount({
+                      ...editingAccount,
+                      notes: value ? value.name : '',
+                    })
+                  }}
+                  placeholder="Select financial tag"
                 />
               </div>
               <div className="space-y-2">

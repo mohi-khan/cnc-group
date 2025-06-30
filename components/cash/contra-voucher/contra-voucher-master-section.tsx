@@ -164,6 +164,7 @@ export function ContraVoucherMasterSection({
                         }
                       : null
                   }
+                  placeholder="Select company"
                   onChange={(value) => field.onChange(value?.id || null)}
                 />
               </FormControl>
@@ -196,6 +197,7 @@ export function ContraVoucherMasterSection({
                         }
                       : null
                   }
+                  placeholder="Select location"
                   onChange={(value) => field.onChange(value?.id || null)}
                 />
               </FormControl>
@@ -308,7 +310,7 @@ export function ContraVoucherMasterSection({
           <FormItem>
             <FormLabel>Notes</FormLabel>
             <FormControl>
-              <Textarea {...field} rows={3} />
+              <Textarea placeholder='Write notes here' {...field} rows={3} />
             </FormControl>
             <FormMessage />
           </FormItem>
