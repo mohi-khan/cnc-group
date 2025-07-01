@@ -165,6 +165,7 @@ export function JournalVoucherMasterSection({
                       }
                     : null
                 }
+                placeholder="Select company"
                 onChange={(value) => field.onChange(value?.id || null)}
               />
               <FormMessage />
@@ -194,6 +195,7 @@ export function JournalVoucherMasterSection({
                       }
                     : null
                 }
+                placeholder="Select location"
                 onChange={(value) => field.onChange(value?.id || null)}
               />
               <FormMessage />
@@ -217,82 +219,80 @@ export function JournalVoucherMasterSection({
           )}
         />
 
-        
-          <FormField
-            control={form.control}
-            name="journalEntry.currencyId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Currency</FormLabel>
-                <FormControl>
-                  <div className="flex gap-2">
-                    <HoverCard>
-                      <HoverCardTrigger asChild>
-                        <div>
-                          <CustomCombobox
-                            items={currency.map((curr: CurrencyType) => ({
-                              id: curr.currencyId.toString(),
-                              name: curr.currencyCode || 'Unnamed Currency',
-                            }))}
+        <FormField
+          control={form.control}
+          name="journalEntry.currencyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <FormControl>
+                <div className="flex gap-2">
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        <CustomCombobox
+                          items={currency.map((curr: CurrencyType) => ({
+                            id: curr.currencyId.toString(),
+                            name: curr.currencyCode || 'Unnamed Currency',
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  id: field.value.toString(),
+                                  name:
+                                    currency.find(
+                                      (curr: CurrencyType) =>
+                                        curr.currencyId === field.value
+                                    )?.currencyCode || 'Unnamed Currency',
+                                }
+                              : null
+                          }
+                          onChange={(
+                            value: { id: string; name: string } | null
+                          ) =>
+                            field.onChange(
+                              value ? Number.parseInt(value.id, 10) : null
+                            )
+                          }
+                          placeholder="Select currency"
+                        />
+                      </div>
+                    </HoverCardTrigger>
+                  </HoverCard>
+                  {field.value && field.value !== 1 && (
+                    <FormField
+                      control={form.control}
+                      name="journalEntry.exchangeRate"
+                      render={({ field: exchangeField }) => (
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Exchange Rate"
                             value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      currency.find(
-                                        (curr: CurrencyType) =>
-                                          curr.currencyId === field.value
-                                      )?.currencyCode || 'Unnamed Currency',
-                                  }
-                                : null
+                              exchangeField.value === null
+                                ? ''
+                                : exchangeField.value
                             }
-                            onChange={(
-                              value: { id: string; name: string } | null
-                            ) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
+                            onChange={(e) => {
+                              const value = e.target.value
+                              exchangeField.onChange(
+                                value === '' ? null : Number(value)
                               )
-                            }
-                            placeholder="Select currency"
+                            }}
+                            className="w-32"
                           />
-                        </div>
-                      </HoverCardTrigger>
-                    </HoverCard>
-                    {field.value && field.value !== 1 && (
-                      <FormField
-                        control={form.control}
-                        name="journalEntry.exchangeRate"
-                        render={({ field: exchangeField }) => (
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Exchange Rate"
-                              value={
-                                exchangeField.value === null
-                                  ? ''
-                                  : exchangeField.value
-                              }
-                              onChange={(e) => {
-                                const value = e.target.value
-                                exchangeField.onChange(
-                                  value === '' ? null : Number(value)
-                                )
-                              }}
-                              className="w-32"
-                            />
-                          </FormControl>
-                        )}
-                      />
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                        </FormControl>
+                      )}
+                    />
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormMessage />
-      
+        <FormMessage />
 
         <FormField
           control={form.control}
@@ -301,7 +301,7 @@ export function JournalVoucherMasterSection({
             <FormItem>
               <FormLabel className="mb-2">Analysis tags</FormLabel>
               <FormControl>
-                <Input />
+                <Input placeholder="Enter analysis tags" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -316,7 +316,7 @@ export function JournalVoucherMasterSection({
           <FormItem>
             <FormLabel>Notes</FormLabel>
             <FormControl>
-              <Textarea {...field} rows={3} />
+              <Textarea placeholder="Write notes here" {...field} rows={3} />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -352,7 +352,9 @@ export function ContraVoucherDetailsSection({
                     if (selectedId !== null) {
                       handleBankAccountChange(index, selectedId)
                     }
+                  
                   }}
+                  placeholder='Select a Bank Account'
                   // Disable the combobox based on your external disabled state.
                   disabled={disabledStates[index]?.bank}
                 />
@@ -391,6 +393,7 @@ export function ContraVoucherDetailsSection({
                     field.onChange(Number(value))
                     handleAccountNameChange(index, Number(value))
                   }}
+                  placeholder='Select an Account'
                   // Use the same disabled condition as before.
                   disabled={disabledStates[index]?.account}
                 />
