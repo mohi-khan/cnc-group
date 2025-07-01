@@ -47,7 +47,11 @@ export default function SignIn() {
         toast({
           title: 'Error',
           description: response.error?.message || 'Failed to signin',
-        })
+      
+        }
+         
+      )
+       console.log(response.error?.details);
       } else {
         // Log the current user information
 
