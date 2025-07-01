@@ -368,10 +368,10 @@ export default function BankVoucherMaster({
         name="journalEntry.notes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Cheque Number</FormLabel>
+            <FormLabel>Notes</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter cheque number"
+                placeholder="Write your notes"
                 {...field}
                 onChange={(e) => field.onChange(e.target.value)}
               />

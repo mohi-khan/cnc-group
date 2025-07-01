@@ -131,13 +131,14 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Asset Management',
         items: [
           {
-            name: 'Create Asset',
-            source: '/assets/assets',
-          },
-          {
             name: 'Create Asset Category',
             source: '/assets/asset-category',
           },
+          {
+            name: 'Create Asset',
+            source: '/assets/assets',
+          },
+          
           { name: 'Asset Depreciation', source: '/assets/asset-depreciation' },
           { name: 'Asset Report', source: '/assets/asset-report' },
         ],
@@ -163,7 +164,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Reconciliation',
         items: [
           {
-            name: 'Bank Book Entry',
+            name: 'Unaccounted Bank Transaction',
             source: '/bank/entry-bank-transaction',
           },
           {
@@ -175,7 +176,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/bank-reconciliation-report',
           },
           {
-            name: 'Transactions Upload',
+            name: 'Excel Upload (Bank Statements',
             source: '/bank/bank-transactions',
           },
           {
