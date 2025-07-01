@@ -240,6 +240,7 @@ export default function BankVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }
+                              placeholder="Select partner"
                             searchFunction={searchPartners}
                           />
                         )}

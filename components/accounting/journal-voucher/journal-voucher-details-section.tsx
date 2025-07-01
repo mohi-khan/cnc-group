@@ -277,9 +277,11 @@ export function JournalVoucherDetailsSection({
                           }
                         : null
                     }
+
                     onChange={(selectedItem) =>
                       field.onChange(selectedItem?.id || null)
                     }
+                    placeholder="Select an account"
                   />
 
                   <FormMessage />

@@ -41,6 +41,7 @@ import { getAllCompanies, getAllLocations } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 const numberSeriesSchema = z
   .object({
@@ -456,29 +457,26 @@ export function NumberSeries() {
                       name="companyId"
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number.parseInt(value))
+                          <CustomCombobox
+                            items={companies.map((company) => ({
+                              id: company.companyId ?? '', // Ensure id is never undefined
+                              name: company.companyName,
+                              value: company.companyId,
+                              label: company.companyName,
+                              ...company,
+                            }))}
+                            value={
+                              companies
+                                .filter((company) => company.companyId === field.value)
+                                .map((company) => ({
+                                  id: company.companyId ?? '', // Ensure id is never undefined
+                                  name: company.companyName,
+                                  ...company,
+                                }))[0] ?? null
                             }
-                            value={field.value?.toString()}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Company" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {companies.map((company) => (
-                                <SelectItem
-                                  key={company.companyId}
-                                  value={company.companyId?.toString() ?? ''}
-                                >
-                                  {company.companyName}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={(item) => field.onChange(item?.companyId ?? undefined)}
+                            placeholder="Select Company"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -490,29 +488,26 @@ export function NumberSeries() {
                       name="locationId"
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number.parseInt(value))
+                          <CustomCombobox
+                            items={locations.map((location) => ({
+                              id: location.locationId ?? '',
+                              name: location.address,
+                              value: location.locationId,
+                              label: location.address,
+                              ...location,
+                            }))}
+                            value={
+                              locations
+                                .filter((location) => location.locationId === field.value)
+                                .map((location) => ({
+                                  id: location.locationId ?? '',
+                                  name: location.address,
+                                  ...location,
+                                }))[0] ?? null
                             }
-                            value={field.value?.toString()}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Location" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {locations.map((location) => (
-                                <SelectItem
-                                  key={location.locationId}
-                                  value={location.locationId?.toString()}
-                                >
-                                  {location.address}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            onChange={(item) => field.onChange(item?.locationId ?? undefined)}
+                            placeholder="Select Location"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -524,23 +519,24 @@ export function NumberSeries() {
                       name="voucherType"
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select voucher type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {voucherTypes.map((type) => (
-                                <SelectItem key={type} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={voucherTypes.map((type) => ({
+                              id: type,
+                              name: type,
+                              value: type,
+                              label: type,
+                            }))}
+                            value={
+                              voucherTypes
+                                .filter((type) => type === field.value)
+                                .map((type) => ({
+                                  id: type,
+                                  name: type,
+                                }))[0] ?? null
+                            }
+                            onChange={(item) => field.onChange(item?.id ?? undefined)}
+                            placeholder="Select voucher type"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -552,26 +548,26 @@ export function NumberSeries() {
                       name="financialYear"
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Fynancial Year" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {fynancialYear.map((year) => (
-                                <SelectItem
-                                  key={year.yearid}
-                                  value={year.yearid.toString()}
-                                >
-                                  {year.yearname}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <CustomCombobox
+                            items={fynancialYear.map((year) => ({
+                              id: year.yearid ?? '',
+                              name: year.yearname,
+                              value: year.yearid,
+                              label: year.yearname,
+                              ...year,
+                            }))}
+                            value={
+                              fynancialYear
+                                .filter((year) => year.yearid === field.value)
+                                .map((year) => ({
+                                  id: year.yearid ?? '',
+                                  name: year.yearname,
+                                  ...year,
+                                }))[0] ?? null
+                            }
+                            onChange={(item) => field.onChange(item?.yearid ?? undefined)}
+                            placeholder="Select Financial Year"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
