@@ -108,7 +108,7 @@ export default function EntryBankTransaction() {
       date: new Date().toISOString().split('T')[0],
       description: '',
       amount: '',
-      currency: '',
+      currency: 'BDT',
       status: 'Pending',
       checkNo: '',
     },
@@ -269,6 +269,8 @@ export default function EntryBankTransaction() {
     }
   }
 
+  console.log('Form values:', form.getValues())
+
   const sortedTransactions = useMemo(() => {
     const sorted = [...transactions]
     sorted.sort((a, b) => {
@@ -363,7 +365,7 @@ export default function EntryBankTransaction() {
                 </SortableTableHead>
                 <SortableTableHead column="status">Status</SortableTableHead>
                 <SortableTableHead column="checkNo">Check No</SortableTableHead>
-                <SortableTableHead column="bankId">Bank ID</SortableTableHead>
+                <SortableTableHead column="bankId">Bank Name</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -391,7 +393,7 @@ export default function EntryBankTransaction() {
                     </span>
                   </TableCell>
                   <TableCell>{transaction.checkNo || '-'}</TableCell>
-                  <TableCell>{transaction.bankId || '-'}</TableCell>
+                  <TableCell>{bankAccounts.find(bank => bank.id === transaction.bankId)?.bankName || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -437,7 +439,7 @@ export default function EntryBankTransaction() {
         </div>
       )}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[525px] h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[650px] h-[70vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Bank Transaction</DialogTitle>
           </DialogHeader>
@@ -509,7 +511,7 @@ export default function EntryBankTransaction() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="currency"
                 render={({ field }) => (
@@ -535,7 +537,7 @@ export default function EntryBankTransaction() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name="description"
@@ -549,7 +551,7 @@ export default function EntryBankTransaction() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
@@ -570,7 +572,7 @@ export default function EntryBankTransaction() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name="checkNo"

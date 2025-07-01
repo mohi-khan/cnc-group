@@ -60,10 +60,12 @@ import { useAtom } from 'jotai'
 import {
   getAllBankAccounts,
   getAllChartOfAccounts,
+  getAllCompanies,
   getAllCurrency,
 } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { CompanyData } from '@/api/create-user-api'
 
 type SortColumn =
   | 'accountName'
@@ -73,6 +75,8 @@ type SortColumn =
   | 'accountType'
   | 'openingBalance'
   | 'isActive'
+  | 'companyId'
+
 type SortDirection = 'asc' | 'desc'
 
 enum AccountType {
@@ -102,6 +106,7 @@ export default function BankAccounts() {
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = React.useState(1)
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
+  const [companies, setCompanies] = React.useState<CompanyData[]>([])
   const itemsPerPage = 10
 
   React.useEffect(() => {
@@ -199,11 +204,43 @@ export default function BankAccounts() {
     }
   }, [toast, router, token])
 
+  //fetch company name
+  const fetchAllCompanies = React.useCallback(async () => {
+    if (!token) return
+    const fetchedCompanies = await getAllCompanies(token)
+    console.log('Fetched companies:', fetchedCompanies.data)
+    if (fetchedCompanies?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (fetchedCompanies.error || !fetchedCompanies.data) {
+      console.error('Error getting company:', fetchedCompanies.error)
+      toast({
+        title: 'Error',
+        description: fetchedCompanies.error?.message || 'Failed to get company',
+      })
+    } else {
+      setCompanies(
+        (fetchedCompanies.data ?? [])
+          .filter(
+            (c: any) =>
+              typeof c.companyId === 'number' &&
+              typeof c.companyName === 'string'
+          )
+          .map((c: any) => ({
+            companyId: c.companyId ?? 0,
+            companyName: c.companyName,
+          }))
+      )
+    }
+  }, [token, router, toast])
+
   React.useEffect(() => {
     fetchGlAccounts()
     fetchBankAccounts()
     fetchCurrency()
-  }, [fetchBankAccounts, fetchGlAccounts, fetchCurrency])
+    fetchAllCompanies()
+  }, [fetchBankAccounts, fetchGlAccounts, fetchCurrency, fetchAllCompanies])
 
   React.useEffect(() => {
     if (editingAccount) {
@@ -321,9 +358,10 @@ export default function BankAccounts() {
     }
   }
   console.log('Form values:', form.getValues())
+
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-10 ">
+      <div className="flex justify-between items-center m-4 mb-6">
         <h1 className="text-2xl font-bold">Bank Accounts</h1>
         <Dialog
           open={isDialogOpen}
@@ -648,13 +686,52 @@ export default function BankAccounts() {
                                 )
                               }
                               placeholder="Select GL Account"
-                            />{' '}
+                            />
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
                   )}
+                  {!editingAccount && (
+                    <FormField
+                      control={form.control}
+                      name="companyId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company</FormLabel>
+                          <CustomCombobox
+                            items={companies?.map((company) => ({
+                              id: company.companyId.toString(),
+                              name: company.companyName,
+                            }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      companies?.find(
+                                        (company) =>
+                                          company.companyId === field.value
+                                      )?.companyName || 'Unnamed Company',
+                                  }
+                                : null
+                            }
+                            onChange={(
+                              value: { id: string; name: string } | null
+                            ) =>
+                              field.onChange(
+                                value ? Number.parseInt(value.id, 10) : null
+                              )
+                            }
+                            placeholder="Select Company"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   <FormField
                     control={form.control}
                     name="notes"
@@ -666,6 +743,7 @@ export default function BankAccounts() {
                             placeholder="Enter any additional notes"
                             className="resize-none"
                             {...field}
+                            value={field.value || ''}
                           />
                         </FormControl>
                         <FormMessage />
@@ -683,7 +761,8 @@ export default function BankAccounts() {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="flex flex-col">
+
+      <div className="flex flex-col m-4">
         <Table className="border shadow-md">
           <TableHeader className="shadow-md bg-slate-200">
             <TableRow>
@@ -741,6 +820,17 @@ export default function BankAccounts() {
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
+
+              <TableHead
+                onClick={() => handleSort('companyId')}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Company Name</span>
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </TableHead>
+
               <TableHead
                 onClick={() => handleSort('isActive')}
                 className="cursor-pointer"
@@ -759,9 +849,20 @@ export default function BankAccounts() {
                 <TableCell>{account.accountName}</TableCell>
                 <TableCell>{account.accountNumber}</TableCell>
                 <TableCell>{account.bankName}</TableCell>
-                <TableCell>{account.currencyId}</TableCell>
+                <TableCell>{currency.find(
+                  (curr) => curr.currencyId === Number(account.currencyId)
+                )?.currencyCode || 'Unknown'}</TableCell>   
+                
+
                 <TableCell>{account.accountType}</TableCell>
                 <TableCell>{account.openingBalance}</TableCell>
+                <TableCell>
+                  {
+                    companies.find(
+                      (company) => company.companyId === account.companyId
+                    )?.companyName
+                  }
+                </TableCell>
                 <TableCell>
                   {account.isActive ? 'Active' : 'Inactive'}
                 </TableCell>

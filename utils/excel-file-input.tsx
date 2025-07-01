@@ -118,13 +118,13 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 mb-8">
       {/* File Upload */}
-      <div className="flex items-center justify-center py-5 rounded-md">
+      <div className="flex items-center justify-center  rounded-md">
         <Input
           type="file"
           onChange={handleFileUpload}
-          className="w-20 mr-2 rounded-md file:mr-4 file:py-5 file:font-semibold"
+          className="w-[5px] mr-2 rounded-md file:mr-4 file:py-5 file:font-semibold file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-400 file:cursor-pointer  file:text-sm file:shadow-sm file:rounded-lg file:transition-all file:duration-300 file:ease-in-out"
         />
         <Button type="button" onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? 'Submitting...' : 'Submit Data'}
@@ -143,27 +143,29 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
       {/* Display Imported Data as Table */}
       {Array.isArray(data) && data.length > 0 && (
         <div className="mt-4 pb-10">
-          <h2 className="text-lg font-semibold mb-2">Imported Data:</h2>
-          <Table className="border shadow-md mb-20">
-            <TableHeader className="bg-slate-200 shadow-md">
-              <TableRow>
-                {getTableHeaders().map((header) => (
-                  <TableHead key={header}>{header}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
+          <h2 className="text-lg font-semibold mb-4">Imported Data:</h2>
+          <div className="overflow-x-auto">
+            <Table className="border-2 shadow-2xl mb-24 w-full rounded-xl ">
+              <TableHeader className="bg-slate-200 shadow-md rounded-xl">
+                <TableRow>
                   {getTableHeaders().map((header) => (
-                    <TableCell key={`${rowIndex}-${header}`}>
-                      {(row as Record<string, any>)[header]?.toString() || ''}
-                    </TableCell>
+                    <TableHead key={header} className="p-4">{header}</TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {getTableHeaders().map((header) => (
+                      <TableCell key={`${rowIndex}-${header}`} className="p-3">
+                        {(row as Record<string, any>)[header]?.toString() || ''}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

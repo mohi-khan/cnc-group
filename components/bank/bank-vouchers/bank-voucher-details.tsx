@@ -87,7 +87,7 @@ export default function BankVoucherDetails({
             <TableHead>Cost Center</TableHead>
             <TableHead>Unit</TableHead>
             <TableHead>Partner Name</TableHead>
-            <TableHead>Remarks</TableHead>
+            <TableHead>Cheque Number</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
@@ -196,7 +196,7 @@ export default function BankVoucherDetails({
                               value ? Number.parseInt(value.id, 10) : null
                             )
                           }
-                          placeholder="Select Unit"
+                          placeholder="Select unit"
                         />
                       </FormControl>
                     </FormItem>
@@ -256,7 +256,7 @@ export default function BankVoucherDetails({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} placeholder="Enter remarks" />
+                        <Input {...field} placeholder="Enter cheque no" />
                       </FormControl>
                     </FormItem>
                   )}

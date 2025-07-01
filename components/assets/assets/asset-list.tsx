@@ -291,7 +291,7 @@ export const AssetList: React.FC<AssetListProps> = ({
             <TableHead>Category Name</TableHead>
             <TableHead>Company Name</TableHead>
             <TableHead>Location Name</TableHead>
-            <TableHead>Depreciation Name</TableHead>
+            <TableHead>Depreciation Type</TableHead>
             <TableHead>Current Value</TableHead>
             <TableHead>Purchase Date</TableHead>
             <TableHead>Purchase Value</TableHead>

@@ -166,6 +166,7 @@ export const bankAccountSchema = z.object({
     .optional()
     .nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+   companyId: z.number().int("Company ID must be an integer").min(1, "Company ID is required"),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
 })
@@ -229,6 +230,7 @@ export const createBankAccountSchema = z.object({
     .optional()
     .nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+  companyId: z.number().int("Company ID must be an integer").min(1, "Company ID is required"),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
 })
