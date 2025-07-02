@@ -950,7 +950,7 @@ export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
 //IouAdjustmentCreateSchema
 export const IouAdjustmentCreateSchema = z.object({
   iouId: z.number().int().positive(),
-  amountAdjusted: z.number().default(0),
+  amountAdjusted: z.number().positive({ message: "amount should be greater then zero" }).default(0),
   adjustmentDate: z.coerce.date(),
   adjustmentType: z.string().max(50),
   notes: z.string().optional(),
