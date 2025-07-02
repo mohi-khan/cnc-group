@@ -91,7 +91,7 @@ export default function IouPopUp({
     defaultValues: {
       amount: 0,
       adjustedAmount: 0,
-      employeeId: 1,
+      employeeId: 0,
       companyId: getCompany.length > 0 ? getCompany[0].companyId : undefined,
       locationId:
         getLoaction.length > 0 ? getLoaction[0].locationId : undefined,

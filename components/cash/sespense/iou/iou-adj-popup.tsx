@@ -30,18 +30,11 @@ import {
   type IouRecordGetType,
 } from '@/utils/type'
 import { createAdjustment, getLoanData } from '@/api/iou-api'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
-const adjtype = ['Active', 'Inactive']
+const adjtype = ['Return', 'Adjustment']
 
 interface IouAdjPopUpProps {
   isOpen: boolean
@@ -238,8 +231,10 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                     <Input
                       {...field}
                       type="date"
-                      value={format(field.value, 'yyyy-MM-dd')}
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                      placeholder="YYYY-MM-DD"
+                      value={
+                        field.value ? format(field.value, 'yyyy-MM-dd') : ''
+                      }
                     />
                   </FormControl>
                   <FormMessage />
