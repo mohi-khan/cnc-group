@@ -4,6 +4,7 @@ import {
   ChartOfAccount,
   costCentersArraySchema,
   Department,
+  EditJournalEditNotesType,
   GetDepartment,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
@@ -31,6 +32,33 @@ export async function createJournalEntryWithDetails(
     },
   })
 }
+
+export async function editJournalDetailsNotes(
+  data: EditJournalEditNotesType,
+  token: string
+) {
+  console.log('Under APi:', data)
+  return fetchApi<EditJournalEditNotesType>({
+    url: 'api/journal/edit-notes',
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+    },
+  })
+}
+
+export async function makePostJournal(voucherid: string, createId: string, token: string) {
+  console.log('voucherid:', voucherid, 'Create ID:', createId)
+  return fetchApi({
+    url: `api/journal/postJournal/${voucherid}/${createId}`,
+    method: 'POST',
+    headers: {
+      Authorization: `${token}`,
+    },
+  })
+}
+
 // Get All Voucher Data
 export const getAllVoucher=async(data: JournalQuery, token: string)=> {
   const queryParams = new URLSearchParams({
@@ -52,7 +80,7 @@ export const getAllVoucher=async(data: JournalQuery, token: string)=> {
 export async function getAllVoucherById(voucherid: string) {
   console.log(voucherid)
   return fetchApi<VoucherById[]>({
-    url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherId
+    url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherid
     method: 'GET',
   })
 }

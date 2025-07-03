@@ -1,11 +1,10 @@
-
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Printer, RotateCcw, Check, Pencil } from 'lucide-react'
+import { Printer, RotateCcw, Check, Pencil, Loader2 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { toWords } from 'number-to-words'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,10 +34,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-
 import {
-  FormStateType,
-  JournalEntryWithDetails,
+  type FormStateType,
+  type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type VoucherById,
   VoucherTypes,
@@ -53,8 +51,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { formatCurrency } from '@/utils/format'
-import { createJournalEntryWithDetails } from '@/api/vouchers-api'
+import { createJournalEntryWithDetails, editJournalDetailsNotes } from '@/api/vouchers-api'
 import { Form } from '../ui/form'
 import BankVoucherMaster from '../bank/bank-vouchers/bank-voucher-master'
 import BankVoucherDetails from '../bank/bank-vouchers/bank-voucher-details'
@@ -82,6 +79,27 @@ const printStyles = `
   }
 `
 
+// Add this API function for updating voucher notes
+const updateVoucherNotes = async (
+  id: number,
+  notes: string,
+  token: string
+) => {
+  try {
+    const response = await editJournalDetailsNotes(
+      {
+        id,
+        notes,
+      },
+      token
+    )
+    return response
+  } catch (error) {
+    console.error('Error updating voucher notes:', error)
+    throw error
+  }
+}
+
 export default function SingleVoucherDetails() {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -98,13 +116,14 @@ export default function SingleVoucherDetails() {
   const [editingReferenceText, setEditingReferenceText] = useState('')
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
-
+  const [isSavingNotes, setIsSavingNotes] = useState(false) // Add loading state for saving notes
   const contentRef = useRef<HTMLDivElement>(null)
   const checkRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
   const printCheckFn = useReactToPrint({ contentRef: checkRef })
   const [userId, setUserId] = React.useState<number | null>(null)
   const [isBankVoucherDialogOpen, setIsBankVoucherDialogOpen] = useState(false)
+
   const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher
 
   // Add missing state for validationError and amountError
@@ -112,7 +131,6 @@ export default function SingleVoucherDetails() {
   const [amountError, setAmountError] = useState<string | null>(null)
 
   // Bank voucher form setup
-
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
@@ -209,7 +227,6 @@ export default function SingleVoucherDetails() {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
         console.log('No user data or token found in localStorage')
         router.push('/')
@@ -285,7 +302,6 @@ export default function SingleVoucherDetails() {
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-
         notes: detail.notes || '',
         createdBy: userData?.userId ?? 0,
       })),
@@ -332,7 +348,6 @@ export default function SingleVoucherDetails() {
         title: 'Success',
         description: 'Bank Voucher created successfully',
       })
-
       // Close popup and reset form
       setIsBankVoucherDialogOpen(false)
       form.reset()
@@ -348,6 +363,7 @@ export default function SingleVoucherDetails() {
   useEffect(() => {
     async function fetchVoucher() {
       if (!voucherid || !token) return
+
       try {
         const response = await getSingleVoucher(voucherid as string, token)
         if (response.error || !response.data) {
@@ -389,16 +405,51 @@ export default function SingleVoucherDetails() {
     }
   }, [userData])
 
-  const handleReferenceSave = () => {
-    if (data && editingReferenceIndex !== null) {
-      const updatedData = [...data]
-      updatedData[editingReferenceIndex] = {
-        ...updatedData[editingReferenceIndex],
-        notes: editingReferenceText,
+  // Updated handleReferenceSave function to persist changes to database
+  const handleReferenceSave = async () => {
+    if (data && editingReferenceIndex !== null && voucherid && token) {
+      setIsSavingNotes(true)
+
+      try {
+        const currentItem = data[editingReferenceIndex]
+
+        // Call API to update the notes in the database
+        await updateVoucherNotes(
+          currentItem.id,
+          editingReferenceText,
+          token
+        )
+
+        // Update local state only after successful API call
+        const updatedData = [...data]
+        updatedData[editingReferenceIndex] = {
+          ...updatedData[editingReferenceIndex],
+          notes: editingReferenceText,
+        }
+        setData(updatedData)
+        setEditingReferenceIndex(null)
+
+        toast({
+          title: 'Success',
+          description: 'Notes updated successfully',
+        })
+      } catch (error) {
+        console.error('Error updating notes:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to update notes. Please try again.',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsSavingNotes(false)
       }
-      setData(updatedData)
-      setEditingReferenceIndex(null)
     }
+  }
+
+  // Add cancel function for editing
+  const handleReferenceCancel = () => {
+    setEditingReferenceIndex(null)
+    setEditingReferenceText('')
   }
 
   const handleReverseVoucher = () => {
@@ -409,6 +460,7 @@ export default function SingleVoucherDetails() {
     setIsAlertDialogOpen(false)
     const createdId = userId ?? 0 // Replace with actual user ID
     const voucherId = data?.[0].voucherno
+
     if (!voucherId || !data) return
 
     if (!voucherId) {
@@ -474,6 +526,7 @@ export default function SingleVoucherDetails() {
           <p className="text-center mb-10 text-xl font-semibold">
             {data[0].location}{' '}
           </p>
+
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="space-y-4">
               <div className="grid grid-cols-[120px,1fr] gap-8">
@@ -504,7 +557,6 @@ export default function SingleVoucherDetails() {
                   New Bank Voucher
                 </Button>
               )}
-
               <AlertDialog
                 open={isAlertDialogOpen}
                 onOpenChange={setIsAlertDialogOpen}
@@ -546,7 +598,6 @@ export default function SingleVoucherDetails() {
                   Print Check
                 </Button>
               )}
-
               <Button
                 variant="outline"
                 size="sm"
@@ -657,13 +708,17 @@ export default function SingleVoucherDetails() {
                         <TableCell>{item.partner || 'N/A'}</TableCell>
                         <TableCell>
                           {editingReferenceIndex === index ? (
-                            <Input
-                              type="text"
-                              value={editingReferenceText}
-                              onChange={(e) =>
-                                setEditingReferenceText(e.target.value)
-                              }
-                            />
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                type="text"
+                                value={editingReferenceText}
+                                onChange={(e) =>
+                                  setEditingReferenceText(e.target.value)
+                                }
+                                className="min-w-[200px]"
+                                disabled={isSavingNotes}
+                              />
+                            </div>
                           ) : (
                             item.notes
                           )}
@@ -678,13 +733,28 @@ export default function SingleVoucherDetails() {
                         )}
                         <TableCell className="no-print">
                           {editingReferenceIndex === index ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleReferenceSave}
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleReferenceSave}
+                                disabled={isSavingNotes}
+                              >
+                                {isSavingNotes ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleReferenceCancel}
+                                disabled={isSavingNotes}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           ) : (
                             <Button
                               variant="outline"
@@ -701,10 +771,12 @@ export default function SingleVoucherDetails() {
                     ))}
                 </TableBody>
               </Table>
+
               <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Reference:</span>
                 <span>{data[data.length - 1].notes}</span>
               </div>
+
               {/* Total Debit Amount */}
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount:</span>
@@ -713,6 +785,7 @@ export default function SingleVoucherDetails() {
                   {data[data.length - 1].currency}
                 </span>
               </div>
+
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount in word:</span>
                 <span className="capitalize">
@@ -720,6 +793,7 @@ export default function SingleVoucherDetails() {
                   {data[data.length - 1].currency} only
                 </span>
               </div>
+
               <div className="flex justify-between mt-20">
                 <h1 className="border-t-2 border-black pt-2">
                   Signature of Recipient
