@@ -44,6 +44,7 @@ const MeterEntryList: React.FC<MeterEntryListProps> = ({
               <TableHead>Meter Name</TableHead>
               <TableHead>Company Name</TableHead>
               <TableHead>Meter Type</TableHead>
+              <TableHead>Utility Type</TableHead>
               <TableHead>Cost Center</TableHead>
               <TableHead>Meter Description</TableHead>
               <TableHead>Provision Account Name</TableHead>
@@ -55,7 +56,8 @@ const MeterEntryList: React.FC<MeterEntryListProps> = ({
               <TableRow key={index}>
                 <TableCell>{row.meterName}</TableCell>
                 <TableCell>{row.companyName}</TableCell>
-                <TableCell>{row.metertpe}</TableCell>
+                <TableCell>{row.metertpe === 0 ? 'Pre-paid' : 'Post-paid'}</TableCell>
+                <TableCell>{row.utilityType}</TableCell>
                 <TableCell>{row.costCenterName}</TableCell>
                 <TableCell>{row.description}</TableCell>
                 <TableCell>{row.provaccountName}</TableCell>

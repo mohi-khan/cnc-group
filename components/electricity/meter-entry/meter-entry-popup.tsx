@@ -74,9 +74,10 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   const form = useForm<CreateElectricityMeterType>({
     resolver: zodResolver(CreateElectricityMeterSchema),
     defaultValues: {
-      idelectricityMeterId: 0, // Added field
-      electricityMeterName: '',
+      meterId: 0, // Added field
+      meterName: '',
       companyId: 0,
+      utilityType: 'gas',
       meterType: 0,
       costCenterId: 0,
       meterDescription: '',
@@ -145,13 +146,12 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
             {/* New Field: Electricity Meter ID */}
             <FormField
               control={form.control}
-              name="idelectricityMeterId"
+              name="meterId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Electricity Meter ID</FormLabel>
+                  <FormLabel> Meter ID</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
                       type="number"
                       placeholder="Enter Electricity Meter ID"
                       onChange={(e) => field.onChange(Number(e.target.value))}
@@ -161,10 +161,9 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name="electricityMeterName"
+              name="meterName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Meter Name</FormLabel>
@@ -175,7 +174,6 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="companyId"
@@ -193,25 +191,22 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                             id: field.value.toString(),
                             name:
                               getCompany?.find(
-                                (company) =>
-                                  company.companyId === field.value
+                                (company) => company.companyId === field.value
                               )?.companyName || 'Unnamed Company',
                           }
                         : null
                     }
-                    onChange={(
-                      value: { id: string; name: string } | null
-                    ) =>
+                    onChange={(value: { id: string; name: string } | null) =>
                       field.onChange(
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
                     placeholder="Select company"
-                  />                  <FormMessage />
+                  />{' '}
+                  <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="meterType"
@@ -244,7 +239,48 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 </FormItem>
               )}
             />
-
+            <FormField
+              control={form.control}
+              name="utilityType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Utility Type</FormLabel>
+                  <div className="flex space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="electricity"
+                        checked={field.value === 'electricity'}
+                        onCheckedChange={(checked) =>
+                          checked ? field.onChange('electricity') : field.onChange(null)
+                        }
+                      />
+                      <label htmlFor="electricity">Electricity</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="gas"
+                        checked={field.value === 'gas'}
+                        onCheckedChange={(checked) =>
+                          checked ? field.onChange('gas') : field.onChange(null)
+                        }
+                      />
+                      <label htmlFor="gas">Gas</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="water"
+                        checked={field.value === 'water'}
+                        onCheckedChange={(checked) =>
+                          checked ? field.onChange('water') : field.onChange(null)
+                        }
+                      />
+                      <label htmlFor="water">Water</label>
+                    </div>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="costCenterId"
@@ -268,19 +304,17 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                           }
                         : null
                     }
-                    onChange={(
-                      value: { id: string; name: string } | null
-                    ) =>
+                    onChange={(value: { id: string; name: string } | null) =>
                       field.onChange(
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
                     placeholder="Select cost center"
-                  />                  <FormMessage />
+                  />
+                  <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="meterDescription"
@@ -294,7 +328,6 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="provAccountId"
@@ -312,25 +345,22 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                             id: field.value.toString(),
                             name:
                               getChartOfAccounts.find(
-                                (account) =>
-                                  account.accountId === field.value
+                                (account) => account.accountId === field.value
                               )?.name || 'Unnamed Account',
                           }
                         : null
                     }
-                    onChange={(
-                      value: { id: string; name: string } | null
-                    ) =>
+                    onChange={(value: { id: string; name: string } | null) =>
                       field.onChange(
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
                     placeholder="Select provision account"
-                  />                  <FormMessage />
+                  />{' '}
+                  <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="accountId"
@@ -338,31 +368,31 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 <FormItem>
                   <FormLabel>Expense Account Name</FormLabel>
                   <CustomCombobox
-                    items={getChartOfAccounts.map((account) => ({
-                      id: account.accountId.toString(),
-                      name: account.name || 'Unnamed Account',
-                    }))}
+                    items={getChartOfAccounts
+                      .filter((account) => account.accountType === 'expense')
+                      .map((account) => ({
+                        id: account.accountId.toString(),
+                        name: account.name || 'Unnamed Account',
+                      }))}
                     value={
                       field.value
                         ? {
                             id: field.value.toString(),
                             name:
-                              getChartOfAccounts.find(
-                                (account) =>
-                                  account.accountId === field.value
+                              getChartOfAccounts.filter((account) => account.accountType === 'expense').find(
+                                (account) => account.accountId === field.value
                               )?.name || 'Unnamed Account',
                           }
                         : null
                     }
-                    onChange={(
-                      value: { id: string; name: string } | null
-                    ) =>
+                    onChange={(value: { id: string; name: string } | null) =>
                       field.onChange(
                         value ? Number.parseInt(value.id, 10) : null
                       )
                     }
                     placeholder="Select expense account"
-                  />                  <FormMessage />
+                  />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -378,7 +408,6 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 {form.formState.isSubmitting ? 'Adding...' : 'Add Meter Entry'}
               </Button>
             </div>
-
             {/* Debug: Show validation errors if any */}
             {Object.keys(form.formState.errors).length > 0 && (
               <pre className="text-red-500">
