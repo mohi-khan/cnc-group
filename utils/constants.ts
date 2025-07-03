@@ -266,11 +266,11 @@ export const MENU_ITEMS: MenuItem[] = [
         ],
       },
       {
-        name: 'Dashboard',
+        name: 'Reports',
         items: [
-          { name: 'Electricity Summary Report ', source: '/electricity/electricity-' },
-          { name: 'Gas Summary Report', source: '/electricity/bill-entry' },
-          { name: 'Water Summary Report', source: '/electricity/meter-entry' },
+          { name: 'Dashboard', source: '/utility/dashboard' },
+          { name: 'Summary Report ', source: '/electricity/electricity-' },
+          { name: 'Details Report', source: '/electricity/bill-entry' },
         
         ],
       },
