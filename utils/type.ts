@@ -497,7 +497,15 @@ export const JournalEntryWithDetailsSchema = z.object({
 
 export type JournalEntryWithDetails = z.infer<
   typeof JournalEntryWithDetailsSchema
->
+  >
+
+  export const editJournalNotesSchema = z.object({
+    id: z.number(),
+    notes: z.string()
+  })
+  
+  export type EditJournalEditNotesType = z.infer<typeof editJournalNotesSchema>
+  
 //Voucher Type Enum
 export enum VoucherTypes {
   CashVoucher = 'Cash Voucher',

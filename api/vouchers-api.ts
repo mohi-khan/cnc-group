@@ -4,6 +4,7 @@ import {
   ChartOfAccount,
   costCentersArraySchema,
   Department,
+  EditJournalEditNotesType,
   GetDepartment,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
@@ -25,6 +26,21 @@ export async function createJournalEntryWithDetails(
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+    },
+  })
+}
+
+export async function editJournalDetailsNotes(
+  data: EditJournalEditNotesType,
+  token: string
+) {
+  console.log('Under APi:', data)
+  return fetchApi<EditJournalEditNotesType>({
+    url: 'api/journal/edit-notes',
+    method: 'PATCH',
     body: data,
     headers: {
       Authorization: `${token}`,
