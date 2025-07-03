@@ -26,16 +26,16 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Books',
         items: [{ name: 'Day Books', source: '/accounting/day-books' }],
       },
-      {
-        name: 'Vouchers',
-        items: [
-          {
-            name: 'Create Repetitive Vouchers',
-            source: '/accounting/repetitive-vouchers',
-          },
-          { name: 'Lock Vouchers', source: '/accounting/lock-vouchers' },
-        ],
-      },
+      // {
+      //   name: 'Vouchers',
+      //   items: [
+      //     {
+      //       name: 'Create Repetitive Vouchers',
+      //       source: '/accounting/repetitive-vouchers',
+      //     },
+      //     { name: 'Lock Vouchers', source: '/accounting/lock-vouchers' },
+      //   ],
+      // },
     ],
   },
   {
@@ -62,11 +62,11 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Customer Management',
         items: [
           { name: 'Invoices', source: '/customers/invoices' },
-          { name: 'Receipt', source: '/customers/receipt' },
-          {
-            name: 'Customer Statement',
-            source: '/customers/customer-statement',
-          },
+          // { name: 'Receipt', source: '/customers/receipt' },
+          // {
+          //   name: 'Customer Statement',
+          //   source: '/customers/customer-statement',
+          // },
         ],
       },
     ],
@@ -77,7 +77,7 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Vendor Management',
         items: [
-          { name: 'Invoice', source: '/vendors/invoice' },
+          // { name: 'Invoice', source: '/vendors/invoice' },
           {
             name: 'Payment Requisition',
             source: '/vendors/payment-requisition',
@@ -86,7 +86,7 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Advance Payment Requisition',
             source: '/vendors/approved-advances',
           },
-          { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
+          // { name: 'Vendor Statement', source: '/vendors/vendor-statement' },
         ],
       },
     ],
@@ -119,7 +119,7 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: 'Meter Entry', source: '/electricity/meter-entry' },
           { name: 'Bill Entry', source: '/electricity/bill-entry' },
-          { name: 'Report', source: '/electricity/report' },
+          // { name: 'Report', source: '/electricity/report' },
         ],
       },
     ],
@@ -156,8 +156,8 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/currency',
           },
           { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
-          { name: 'Check Print', source: '/bank/check-print' },
-          { name: 'Bank Balances', source: '/bank/bank-balances' },
+          // { name: 'Check Print', source: '/bank/check-print' },
+          // { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
       },
       {
@@ -194,8 +194,8 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Budget Management',
         items: [
           { name: 'Create Budget', source: '/budget/create-budget' },
-          { name: 'Budget Settings', source: '/budget/budget-settings' },
-          { name: 'View Budget', source: '/budget/view-budget' },
+          // { name: 'Budget Settings', source: '/budget/budget-settings' },
+          // { name: 'View Budget', source: '/budget/view-budget' },
         ],
       },
     ],
@@ -207,7 +207,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Financial Reports',
         items: [
           { name: 'Trial Balance', source: '/reports/trial-balance' },
-          { name: 'Balance Sheet', source: '/reports/balance-sheet' },
+          // { name: 'Balance Sheet', source: '/reports/balance-sheet' },
           { name: 'Trade Debtors', source: '/reports/trade-debtors' },
           { name: 'Cash Report', source: '/reports/cash-report' },
         ],
@@ -237,7 +237,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Ledger Reports',
         items: [
           { name: 'Bank Ledger', source: '/reports/bank-ledger' },
-          { name: 'Customer Ledger', source: '/reports/customer-ledger' },
+            // { name: 'Customer Ledger', source: '/reports/customer-ledger' },  
           { name: 'General Ledger', source: '/reports/general-ledger' },
           { name: 'Partner Ledger', source: '/reports/partner-ledger' },
         ],
@@ -250,18 +250,18 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Cash Position',
             source: '/reports/cash-position',
           },
-          {
-            name: 'Bank and Cash Reports',
-            source: '/reports/bank-cash-reports',
-          },
-          {
-            name: 'Fund Flow Statement',
-            source: '/reports/fund-flow-statement',
-          },
-          {
-            name: 'Budget Vs Actual Reports',
-            source: '/reports/budget-vs-actual',
-          },
+          // {
+          //   name: 'Bank and Cash Reports',
+          //   source: '/reports/bank-cash-reports',
+          // },
+          // {
+          //   name: 'Fund Flow Statement',
+          //   source: '/reports/fund-flow-statement',
+          // },
+          // {
+          //   name: 'Budget Vs Actual Reports',
+          //   source: '/reports/budget-vs-actual',
+          // },
         ],
       },
     ],
@@ -284,7 +284,7 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Chart of Accounts',
             source: '/settings/chart-of-accounts',
           },
-          { name: 'Currencies', source: '/settings/currencies' },
+          // { name: 'Currencies', source: '/settings/currencies' },
           { name: 'Res Partners', source: '/settings/res-partner' },
           { name: 'Department', source: '/settings/department' },
         ],
@@ -295,18 +295,18 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: 'Cost Centers', source: '/settings/cost-centers' },
           // { name: 'Internal Orders', source: '/settings/internal-orders' },
           { name: 'Bank Accounts', source: '/settings/bank-accounts' },
-          { name: 'Cash Accounts', source: '/settings/cash-accounts' },
+          // { name: 'Cash Accounts', source: '/settings/cash-accounts' },
           // { name: 'Level Entry', source: '/settings/level-entry' },
         ],
       },
       {
         name: 'Other Settings',
         items: [
-          { name: 'Locations', source: '/settings/locations' },
-          {
-            name: 'Withholding Taxes',
-            source: '/settings/withholding-taxes',
-          },
+          // { name: 'Locations', source: '/settings/locations' },
+          // {
+          //   name: 'Withholding Taxes',
+          //   source: '/settings/withholding-taxes',
+          // },
           { name: 'Financial Year', source: '/settings/financial-year' },
           { name: 'Posting Period', source: '/settings/posting-period' },
           { name: 'Number Series', source: '/settings/number-series' },
