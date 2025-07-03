@@ -25,6 +25,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { CompanyType } from '@/api/company-api'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface LoanListProps {
   onAddCategory: () => void
@@ -50,9 +51,8 @@ const IouList: React.FC<LoanListProps> = ({
     direction: 'desc',
   })
   const [currentPage, setCurrentPage] = useState(1)
-  const [popupIouId, setPopupIouId] = useState<number | null>(null) // State to track which IOU ID the popup is for
-
-  const itemsPerPage = 10
+  const [popupIouId, setPopupIouId] = useState<number | null>(null)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Find employee name by matching employeeId
   const getEmployeeName = (employeeId: number) => {
@@ -87,17 +87,17 @@ const IouList: React.FC<LoanListProps> = ({
   const paginatedLoanData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return sortedLoanData.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedLoanData, currentPage])
+  }, [sortedLoanData, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
 
   const handleButtonClick = (loan: IouRecordGetType) => {
     console.log(`Adding Adj Amount for IOU ID: ${loan.iouId}`)
-    setPopupIouId(loan.iouId) // Set the ID of the current loan
+    setPopupIouId(loan.iouId)
   }
 
   const closePopup = () => {
-    setPopupIouId(null) // Close the popup by clearing the ID
+    setPopupIouId(null)
   }
 
   const requestSort = (key: keyof IouRecordGetType) => {
@@ -115,6 +115,24 @@ const IouList: React.FC<LoanListProps> = ({
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">IOU List</h1>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value))
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select items per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 per page</SelectItem>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="20">20 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Button onClick={onAddCategory}>Add IOU</Button>
       </div>
@@ -229,9 +247,9 @@ const IouList: React.FC<LoanListProps> = ({
         {/* Render the popup only for the selected IOU */}
         {popupIouId && (
           <IouAdjPopUp
-            iouId={popupIouId} // Pass only the selected IOU ID
+            iouId={popupIouId}
             isOpen={!!popupIouId}
-            onOpenChange={closePopup} // Close handler
+            onOpenChange={closePopup}
           />
         )}
 
