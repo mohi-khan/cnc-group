@@ -42,8 +42,14 @@ export interface SubItemGroup {
 
 export interface MenuItem {
   name: string
-  subItemGroups: SubItemGroup[]
+  subItemGroups: SubItemGroup[]  
 }
+export interface SubItem {
+  name: string
+  
+  subItemGroups?: SubItem[]
+}
+
 
 export type LocationData = z.infer<typeof locationSchema>
 
@@ -166,7 +172,10 @@ export const bankAccountSchema = z.object({
     .optional()
     .nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
-   companyId: z.number().int("Company ID must be an integer").min(1, "Company ID is required"),
+  companyId: z
+    .number()
+    .int('Company ID must be an integer')
+    .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
 })
@@ -230,7 +239,10 @@ export const createBankAccountSchema = z.object({
     .optional()
     .nullable(),
   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
-  companyId: z.number().int("Company ID must be an integer").min(1, "Company ID is required"),
+  companyId: z
+    .number()
+    .int('Company ID must be an integer')
+    .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
 })
@@ -330,7 +342,6 @@ export interface ParentCode {
 // Zod schema for Chart of Accounts
 
 export const chartOfAccountSchema = z.object({
-  
   name: z.string().max(255).min(1, 'Account type is required'),
   code: z
     .string()
@@ -359,7 +370,8 @@ export const chartOfAccountSchema = z.object({
   notes: z.string().nullable(),
 })
 export const extendedChartOfAccountSchema = chartOfAccountSchema.extend({
-  accountId: z.number(), })
+  accountId: z.number(),
+})
 export type ChartOfAccount = z.infer<typeof extendedChartOfAccountSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
 export const AccountsHeadSchema = z.object({
@@ -950,7 +962,10 @@ export type IouRecordCreateType = z.infer<typeof IouRecordCreateSchema>
 //IouAdjustmentCreateSchema
 export const IouAdjustmentCreateSchema = z.object({
   iouId: z.number().int().positive(),
-  amountAdjusted: z.number().positive({ message: "amount should be greater then zero" }).default(0),
+  amountAdjusted: z
+    .number()
+    .positive({ message: 'amount should be greater then zero' })
+    .default(0),
   adjustmentDate: z.coerce.date(),
   adjustmentType: z.string().max(50),
   notes: z.string().optional(),
@@ -1337,14 +1352,24 @@ export type createBankTransactionType = z.infer<
 >
 
 export const CreateElectricityMeterSchema = z.object({
-  idelectricityMeterId: z.number().int().positive(),
-  electricityMeterName: z.string().max(45),
-  companyId: z.number().int(),
-  meterType: z.number().int().default(0),
-  costCenterId: z.number().int(),
-  meterDescription: z.string().max(80),
-  provAccountId: z.number().nonnegative(),
-  accountId: z.number().nonnegative(),
+  // idelectricityMeterId: z.number().int().positive(),
+  // electricityMeterName: z.string().max(45),
+  // companyId: z.number().int(),
+  // utilityType: z.enum(['electricity', 'gas', 'water']),
+  // meterType: z.number().int().default(0),
+  // costCenterId: z.number().int(),
+  // meterDescription: z.string().max(80),
+  // provAccountId: z.number().nonnegative(),
+  // accountId: z.number().nonnegative(),
+   meterId: z.number().int().positive(),
+    meterName: z.string().max(45),
+    utilityType: z.enum(['electricity', 'gas', 'water']),
+    companyId: z.number().int(),
+    meterType: z.number().int().default(0),
+    costCenterId: z.number().int(),
+    meterDescription: z.string().max(80),
+    provAccountId: z.number().nonnegative(),
+    accountId: z.number().nonnegative()
 })
 
 export type CreateElectricityMeterType = z.infer<
@@ -1353,18 +1378,19 @@ export type CreateElectricityMeterType = z.infer<
 
 //Get Electricity Meter
 export interface GetElectricityMeterType {
-  meterid: number
-  meterName: string
-  companyId: number
-  companyName: string
-  metertpe: number
-  description: string
-  costCenterid: number
-  costCenterName: string
-  provaccountId: number
-  provaccountName: string
-  accountid: number
-  accountHead: string
+  meterid: number;
+  meterName: string;
+  companyId: number;
+  companyName: string;
+  utilityType: string | null;
+  metertpe: number;
+  description: string;
+  costCenterid: number;
+  costCenterName: string;
+  provaccountId: number;
+  provaccountName: string;
+  accountid: number;
+  accountHead: string;
 }
 
 //Get Bills get type
@@ -1517,28 +1543,28 @@ export type SalesInvoiceType = {
 // Cash Report type
 export type GetCashReport = {
   openingBal: {
-    balance: number | null;
-  }[];
+    balance: number | null
+  }[]
   transactionData: {
-    date: string;
-    voucherId: number;
-    voucherNo: string;
-    currentAccountId: number;
-    currentAccountName: string;
-    debit: number;
-    credit: number;
-    oppositeAccountId: number;
-    oppositeAccountName: string;
-    narration: string;
-  }[];
+    date: string
+    voucherId: number
+    voucherNo: string
+    currentAccountId: number
+    currentAccountName: string
+    debit: number
+    credit: number
+    oppositeAccountId: number
+    oppositeAccountName: string
+    narration: string
+  }[]
   closingBal: {
-    balance: string;
-  }[];
+    balance: string
+  }[]
   IouBalance: {
-    iouId: number;
-    amount: number;
-    dateIssued: string;
-    employeeId: number;
-    totalAdjusted: string | null;
-  }[];
-};
+    iouId: number
+    amount: number
+    dateIssued: string
+    employeeId: number
+    totalAdjusted: string | null
+  }[]
+}

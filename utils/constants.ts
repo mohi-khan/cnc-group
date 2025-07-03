@@ -91,39 +91,7 @@ export const MENU_ITEMS: MenuItem[] = [
       },
     ],
   },
-  {
-    name: 'Vehicle',
-    subItemGroups: [
-      {
-        name: 'Vehicle Management',
-        items: [
-          { name: 'Vehicle', source: '/vehicle/vehicle' },
-          {
-            name: 'Vehicle Fuel Consumption',
-            source: '/vehicle/vehicle-fuel-consumption',
-          },
-          { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
-          {
-            name: 'Vehicle Performance Report',
-            source: '/vehicle/vehicle-performance-report',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    name: 'Electricity',
-    subItemGroups: [
-      {
-        name: 'Electricity',
-        items: [
-          { name: 'Meter Entry', source: '/electricity/meter-entry' },
-          { name: 'Bill Entry', source: '/electricity/bill-entry' },
-          // { name: 'Report', source: '/electricity/report' },
-        ],
-      },
-    ],
-  },
+
   {
     name: 'Assets',
     subItemGroups: [
@@ -138,7 +106,7 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Create Asset',
             source: '/assets/assets',
           },
-          
+
           { name: 'Asset Depreciation', source: '/assets/asset-depreciation' },
           { name: 'Asset Report', source: '/assets/asset-report' },
         ],
@@ -237,7 +205,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Ledger Reports',
         items: [
           { name: 'Bank Ledger', source: '/reports/bank-ledger' },
-            // { name: 'Customer Ledger', source: '/reports/customer-ledger' },  
+          // { name: 'Customer Ledger', source: '/reports/customer-ledger' },
           { name: 'General Ledger', source: '/reports/general-ledger' },
           { name: 'Partner Ledger', source: '/reports/partner-ledger' },
         ],
@@ -266,6 +234,49 @@ export const MENU_ITEMS: MenuItem[] = [
       },
     ],
   },
+  {
+    name: 'Vehicle',
+    subItemGroups: [
+      {
+        name: 'Vehicle Management',
+        items: [
+          { name: 'Vehicle', source: '/vehicle/vehicle' },
+          {
+            name: 'Vehicle Fuel Consumption',
+            source: '/vehicle/vehicle-fuel-consumption',
+          },
+          { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
+          {
+            name: 'Vehicle Performance Report',
+            source: '/vehicle/vehicle-performance-report',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Utility',
+    subItemGroups: [
+      {
+        name: 'Utility',
+        items: [
+          { name: 'Meter Entry', source: '/electricity/meter-entry' },
+          { name: 'Bill Entry', source: '/electricity/bill-entry' },
+        
+        ],
+      },
+      {
+        name: 'Dashboard',
+        items: [
+          { name: 'Electricity Summary Report ', source: '/electricity/electricity-' },
+          { name: 'Gas Summary Report', source: '/electricity/bill-entry' },
+          { name: 'Water Summary Report', source: '/electricity/meter-entry' },
+        
+        ],
+      },
+    ],
+  },
+
   {
     name: 'Settings',
     subItemGroups: [
