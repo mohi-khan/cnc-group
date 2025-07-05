@@ -64,6 +64,79 @@ import {
   getResPartnersBySearch,
 } from '@/api/common-shared-api'
 
+// Function to convert numbers to Indian words
+const toIndianWords = (num: number): string => {
+  if (num === 0) return 'Zero'
+
+  const units = [
+    '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+    'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen',
+    'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+  ]
+
+  const tens = [
+    '', '', 'twenty', 'thirty', 'forty', 'fifty',
+    'sixty', 'seventy', 'eighty', 'ninety'
+  ]
+
+  const numToWords = (n: number): string => {
+    if (n < 20) return units[n]
+    const ten = Math.floor(n / 10)
+    const unit = n % 10
+    return tens[ten] + (unit ? ' ' + units[unit] : '')
+  }
+
+  const threeDigitToWords = (n: number): string => {
+    const hundred = Math.floor(n / 100)
+    const rest = n % 100
+    let result = ''
+    if (hundred > 0) result += units[hundred] + ' hundred'
+    if (rest > 0) result += (result ? ' ' : '') + numToWords(rest)
+    return result
+  }
+
+  // Break into Indian number system groupings
+  const parts: string[] = []
+  const numStr = num.toString()
+
+  let n = numStr.length
+  let groupings: number[] = []
+
+  // Get last 3 digits
+  if (n > 3) {
+    groupings.unshift(parseInt(numStr.slice(n - 3)))
+    n -= 3
+  } else {
+    groupings.unshift(parseInt(numStr))
+    n = 0
+  }
+
+  // Get next 2-digit groups
+  while (n > 0) {
+    const start = Math.max(n - 2, 0)
+    groupings.unshift(parseInt(numStr.slice(start, n)))
+    n -= 2
+  }
+
+  const labels = [
+    '', 'thousand', 'lakh', 'crore', 'hundred', 'thousand', "lakh" // you can extend this
+  ]
+
+  for (let i = 0; i < groupings.length; i++) {
+    if (groupings[i]) {
+      const word =
+        i === groupings.length - 1
+          ? threeDigitToWords(groupings[i])
+          : numToWords(groupings[i])
+      parts.push(word + (labels[groupings.length - 1 - i] ? ' ' + labels[groupings.length - 1 - i] : ''))
+    }
+  }
+
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
+}
+
+
+
 // Add this after your imports
 const printStyles = `
   @media print {
@@ -781,7 +854,7 @@ export default function SingleVoucherDetails() {
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount:</span>
                 <span>
-                  {data[data.length - 1].totalamount}{' '}
+                  {data[data.length - 1].totalamount}
                   {data[data.length - 1].currency}
                 </span>
               </div>
@@ -789,8 +862,9 @@ export default function SingleVoucherDetails() {
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount in word:</span>
                 <span className="capitalize">
-                  {toWords(data[data.length - 1].totalamount)}{' '}
-                  {data[data.length - 1].currency} only
+                 {toIndianWords(data[data.length - 1].totalamount)}&nbsp;
+                   {data[data.length - 1].currency}&nbsp;&nbsp;only
+
                 </span>
               </div>
 

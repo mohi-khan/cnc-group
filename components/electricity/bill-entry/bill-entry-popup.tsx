@@ -61,7 +61,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
       meterNo: 0,
       amount: 0,
       billDate: '',
-      payment: 0,
+      payment: undefined,
     },
   })
 
@@ -141,7 +141,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     <FormLabel>Bill ID</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                       
                         type="number"
                         onChange={(e) => onChange(Number(e.target.value))}
                         placeholder="Enter bill ID"
@@ -162,7 +162,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                       <CustomCombobox
                         items={meterEntry.map((meter) => ({
                           id: meter.meterid.toString(),
-                          name: meter.meterName || 'Unnamed Meter',
+                          name: `${meter.meterName} - ${meter.utilityType}` || 'Unnamed Meter',
                         }))}
                         value={
                           field.value
@@ -171,7 +171,9 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                                 name:
                                   meterEntry.find(
                                     (meter) => meter.meterid === field.value
-                                  )?.meterName || 'Unnamed Meter',
+                                  )?.meterName + ' - ' + meterEntry.find(
+                                    (meter) => meter.meterid === field.value
+                                  )?.utilityType || 'Unnamed Meter',
                               }
                             : null
                         }
@@ -218,7 +220,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     <FormLabel>Bill Amount</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                       
                         type="number"
                         onChange={(e) => onChange(Number(e.target.value))}
                         placeholder="Enter bill amount"
@@ -236,15 +238,24 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   <FormItem>
                     <FormLabel>Payment Type</FormLabel>
                     <FormControl>
-                      <select
-                        {...field}
-                        className="w-full p-2 border rounded"
-                        onChange={(e) => onChange(Number(e.target.value))}
-                        value={field.value}
-                      >
-                        <option value={0}>Prepaid</option>
-                        <option value={1}>Postpaid</option>
-                      </select>
+                      <CustomCombobox
+                        items={[
+                          { id: "0", name: "Prepaid" },
+                          { id: "1", name: "Postpaid" }
+                        ]}
+                        value={
+                          field.value !== undefined && field.value !== null
+                            ? {
+                                id: field.value.toString(),
+                                name: field.value === 0 ? "Prepaid" : "Postpaid"
+                              }
+                            : null
+                        }
+                        onChange={(value: { id: string; name: string } | null) =>
+                          onChange(value ? Number.parseInt(value.id, 10) : null)
+                        }
+                        placeholder="Select payment type"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
