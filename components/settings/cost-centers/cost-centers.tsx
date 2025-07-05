@@ -1,40 +1,20 @@
-'use client'
-
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { PlusIcon, ArrowUpDown } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
+"use client"
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { Button } from "@/components/ui/button"
+import { PlusIcon, ArrowUpDown, Search } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Switch } from "@/components/ui/switch"
 import {
   updateCostCenter,
   createCostCenter,
   deactivateCostCenter,
   activateCostCenter,
-} from '../../../api/cost-centers-api'
-import { useToast } from '@/hooks/use-toast'
-import type { CostCenter, CurrencyType } from '@/utils/type'
+} from "../../../api/cost-centers-api"
+import { useToast } from "@/hooks/use-toast"
+import type { CostCenter, CurrencyType } from "@/utils/type"
 import {
   Pagination,
   PaginationContent,
@@ -42,40 +22,38 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination'
-import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
-import { useAtom } from 'jotai'
-import { getAllCostCenters, getAllCurrency } from '@/api/common-shared-api'
-import { useRouter } from 'next/navigation'
-import { CustomCombobox } from '@/utils/custom-combobox'
+} from "@/components/ui/pagination"
+import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
+import { useAtom } from "jotai"
+import { getAllCostCenters, getAllCurrency } from "@/api/common-shared-api"
+import { useRouter } from "next/navigation"
+import { CustomCombobox } from "@/utils/custom-combobox"
 
 export default function CostCenterManagement() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
 
   // State variables
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedCostCenter, setSelectedCostCenter] =
-    useState<CostCenter | null>(null)
+  const [selectedCostCenter, setSelectedCostCenter] = useState<CostCenter | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
+    type: "success" | "error"
     message: string
   } | null>(null)
   const [userId, setUserId] = React.useState<number>(0)
   const { toast } = useToast()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
-  const [sortColumn, setSortColumn] =
-    useState<keyof CostCenter>('costCenterName')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortColumn, setSortColumn] = useState<keyof CostCenter>("costCenterName")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -83,20 +61,20 @@ export default function CostCenterManagement() {
     if (!token) return
     setIsLoading(true)
     const data = await getAllCostCenters(token)
-    console.log('🚀 ~ fetchCostCenters ~ data:', data)
+    console.log("🚀 ~ fetchCostCenters ~ data:", data)
     if (data?.error?.status === 401) {
-      router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      router.push("/unauthorized-access")
+      console.log("Unauthorized access")
       return
     } else if (data?.error?.status === 401) {
-      router.push('/unauthorized-access')
+      router.push("/unauthorized-access")
       return
     } else if (data.error || !data.data) {
-      console.error('Error getting cost centers:', data.error)
+      console.error("Error getting cost centers:", data.error)
       toast({
-        title: 'Error',
-        description: data.error?.message || 'Failed to get cost centers',
-        variant: 'destructive',
+        title: "Error",
+        description: data.error?.message || "Failed to get cost centers",
+        variant: "destructive",
       })
     } else {
       setCostCenters(data.data)
@@ -108,15 +86,12 @@ export default function CostCenterManagement() {
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
-    console.log(
-      '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
-      fetchedCurrency
-    )
+    console.log("🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:", fetchedCurrency)
     if (fetchedCurrency.error || !fetchedCurrency.data) {
-      console.error('Error getting currency:', fetchedCurrency.error)
+      console.error("Error getting currency:", fetchedCurrency.error)
       toast({
-        title: 'Error',
-        description: fetchedCurrency.error?.message || 'Failed to get currency',
+        title: "Error",
+        description: fetchedCurrency.error?.message || "Failed to get currency",
       })
     } else {
       setCurrency(fetchedCurrency.data)
@@ -125,16 +100,14 @@ export default function CostCenterManagement() {
 
   useEffect(() => {
     const checkUserData = () => {
-      const storedUserData = localStorage.getItem('currentUser')
-      const storedToken = localStorage.getItem('authToken')
-
+      const storedUserData = localStorage.getItem("currentUser")
+      const storedToken = localStorage.getItem("authToken")
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
-        router.push('/')
+        console.log("No user data or token found in localStorage")
+        router.push("/")
         return
       }
     }
-
     checkUserData()
     fetchCostCenters()
     fetchCurrency()
@@ -150,43 +123,30 @@ export default function CostCenterManagement() {
       }
 
       if (response.error || !response.data) {
-        console.error(
-          `Error ${isActive ? 'deactivating' : 'activating'} cost center:`,
-          response.error
-        )
+        console.error(`Error ${isActive ? "deactivating" : "activating"} cost center:`, response.error)
         toast({
-          title: 'Error',
-          description:
-            response.error?.message ||
-            `Failed to ${isActive ? 'deactivate' : 'activate'} cost center`,
+          title: "Error",
+          description: response.error?.message || `Failed to ${isActive ? "deactivate" : "activate"} cost center`,
         })
       } else {
-        console.log(
-          `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`
-        )
+        console.log(`Cost center ${isActive ? "deactivated" : "activated"} successfully`)
         toast({
-          title: 'Success',
-          description: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+          title: "Success",
+          description: `Cost center ${isActive ? "deactivated" : "activated"} successfully`,
         })
-
         setCostCenters((prevCostCenters) =>
-          prevCostCenters.map((center) =>
-            center.costCenterId === id
-              ? { ...center, isActive: !isActive }
-              : center
-          )
+          prevCostCenters.map((center) => (center.costCenterId === id ? { ...center, isActive: !isActive } : center)),
         )
-
         setFeedback({
-          type: 'success',
-          message: `Cost center ${isActive ? 'deactivated' : 'activated'} successfully`,
+          type: "success",
+          message: `Cost center ${isActive ? "deactivated" : "activated"} successfully`,
         })
       }
     } catch (error) {
-      console.error('Unexpected error:', error)
+      console.error("Unexpected error:", error)
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
+        title: "Error",
+        description: "An unexpected error occurred",
       })
     }
   }
@@ -199,22 +159,20 @@ export default function CostCenterManagement() {
   React.useEffect(() => {
     if (userData) {
       setUserId(userData?.userId)
-      console.log('Current userId from localStorage:', userData.userId)
+      console.log("Current userId from localStorage:", userData.userId)
     } else {
-      console.log('No user data found in localStorage')
+      console.log("No user data found in localStorage")
     }
   }, [userData])
 
   const CostCenterForm: React.FC<{ isEdit: boolean }> = ({ isEdit }) => {
-    const [currencyCode, setCurrencyCode] = useState<string>(
-      (isEdit && selectedCostCenter?.currencyCode) || 'BDT'
-    )
+    const [currencyCode, setCurrencyCode] = useState<string>((isEdit && selectedCostCenter?.currencyCode) || "BDT")
 
     useEffect(() => {
       if (isEdit) {
-        setCurrencyCode(selectedCostCenter?.currencyCode || 'BDT')
+        setCurrencyCode(selectedCostCenter?.currencyCode || "BDT")
       } else {
-        setCurrencyCode('BDT')
+        setCurrencyCode("BDT")
       }
     }, [isEdit])
 
@@ -226,25 +184,25 @@ export default function CostCenterManagement() {
       try {
         const formData = new FormData(formRef.current!)
         const newCostCenter = {
-          costCenterName: formData.get('name') as string,
-          costCenterDescription: formData.get('description') as string,
+          costCenterName: formData.get("name") as string,
+          costCenterDescription: formData.get("description") as string,
           currencyCode: currencyCode,
-          budget: Number(formData.get('budget')) || 0,
-          isActive: formData.get('isActive') === 'on',
-          isVehicle: formData.get('isVehicle') === 'on',
-          actual: Number(formData.get('actual')) || 0,
+          budget: Number(formData.get("budget")) || 0,
+          isActive: formData.get("isActive") === "on",
+          isVehicle: formData.get("isVehicle") === "on",
+          actual: Number(formData.get("actual")) || 0,
           createdBy: userId,
         }
 
         const updateCostCenterData = {
           costCenterId: 0,
-          costCenterName: formData.get('name') as string,
-          costCenterDescription: formData.get('description') as string,
+          costCenterName: formData.get("name") as string,
+          costCenterDescription: formData.get("description") as string,
           currencyCode: currencyCode,
-          budget: formData.get('budget')?.toString() || '0',
-          isActive: formData.get('isActive') === 'on',
-          isVehicle: formData.get('isVehicle') === 'on',
-          actual: formData.get('actual')?.toString() || '0',
+          budget: formData.get("budget")?.toString() || "0",
+          isActive: formData.get("isActive") === "on",
+          isVehicle: formData.get("isVehicle") === "on",
+          actual: formData.get("actual")?.toString() || "0",
           createdBy: userId,
           updatedBy: userId,
         }
@@ -254,37 +212,31 @@ export default function CostCenterManagement() {
           const response = await updateCostCenter(
             {
               ...updateCostCenterData,
-              currencyCode: currencyCode as 'USD' | 'BDT' | 'EUR' | 'GBP',
+              currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP",
             },
-            token
+            token,
           )
           if (response.error || !response.data) {
-            throw new Error(
-              response.error?.message || 'Failed to edit cost center'
-            )
+            throw new Error(response.error?.message || "Failed to edit cost center")
           }
-
           toast({
-            title: 'Success',
-            description: 'Cost center edited successfully',
+            title: "Success",
+            description: "Cost center edited successfully",
           })
         } else {
           const response = await createCostCenter(
             {
               ...newCostCenter,
-              currencyCode: currencyCode as 'USD' | 'BDT' | 'EUR' | 'GBP',
+              currencyCode: currencyCode as "USD" | "BDT" | "EUR" | "GBP",
             },
-            token
+            token,
           )
           if (response.error || !response.data) {
-            throw new Error(
-              response.error?.message || 'Failed to create cost center'
-            )
+            throw new Error(response.error?.message || "Failed to create cost center")
           }
-
           toast({
-            title: 'Success',
-            description: 'Cost center created successfully',
+            title: "Success",
+            description: "Cost center created successfully",
           })
         }
 
@@ -295,16 +247,13 @@ export default function CostCenterManagement() {
 
         // Then update feedback state
         setFeedback({
-          type: 'success',
-          message: `Cost center ${isEdit ? 'updated' : 'created'} successfully`,
+          type: "success",
+          message: `Cost center ${isEdit ? "updated" : "created"} successfully`,
         })
       } catch (error) {
         toast({
-          title: 'Error',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'An unexpected error occurred',
+          title: "Error",
+          description: error instanceof Error ? error.message : "An unexpected error occurred",
         })
       } finally {
         setIsLoading(false)
@@ -320,7 +269,7 @@ export default function CostCenterManagement() {
           <Input
             id="cost-center-name"
             name="name"
-            defaultValue={isEdit ? selectedCostCenter?.costCenterName : ''}
+            defaultValue={isEdit ? selectedCostCenter?.costCenterName : ""}
             className="col-span-3"
             required
           />
@@ -332,9 +281,7 @@ export default function CostCenterManagement() {
           <Input
             id="cost-center-description"
             name="description"
-            defaultValue={
-              isEdit ? selectedCostCenter?.costCenterDescription : ''
-            }
+            defaultValue={isEdit ? selectedCostCenter?.costCenterDescription : ""}
             className="col-span-3"
             required
           />
@@ -346,27 +293,23 @@ export default function CostCenterManagement() {
           <CustomCombobox
             items={currency.map((curr: CurrencyType) => ({
               id: curr.currencyId.toString(),
-              name: curr.currencyCode || 'Unnamed Currency',
+              name: curr.currencyCode || "Unnamed Currency",
             }))}
             value={
               currencyCode
                 ? {
                     id: currencyCode.toString(),
                     name:
-                      currency.find(
-                        (curr: CurrencyType) =>
-                          curr.currencyCode === currencyCode
-                      )?.currencyCode || 'Unnamed Currency',
+                      currency.find((curr: CurrencyType) => curr.currencyCode === currencyCode)?.currencyCode ||
+                      "Unnamed Currency",
                   }
                 : null
             }
             onChange={(value: { id: string; name: string } | null) =>
-              setCurrencyCode(
-                value ? (value.name as 'USD' | 'BDT' | 'EUR' | 'GBP') : 'BDT'
-              )
+              setCurrencyCode(value ? (value.name as "USD" | "BDT" | "EUR" | "GBP") : "BDT")
             }
             placeholder="Select currency"
-          />{' '}
+          />{" "}
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="budget" className="text-right">
@@ -381,38 +324,24 @@ export default function CostCenterManagement() {
             required
           />
         </div>
-
         <div className="grid grid-cols-4 items-center gap-4 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md p-2">
           <Label htmlFor="isActive" className="text-right">
             Active
           </Label>
-          <Switch
-            id="isActive"
-            name="isActive"
-            defaultChecked={isEdit ? selectedCostCenter?.isActive : true}
-          />
+          <Switch id="isActive" name="isActive" defaultChecked={isEdit ? selectedCostCenter?.isActive : true} />
         </div>
         <div className="grid grid-cols-4 items-center gap-4 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md p-2">
           <Label htmlFor="isVehicle" className="text-right">
             Vehicle
           </Label>
-          <Switch
-            id="isVehicle"
-            name="isVehicle"
-            defaultChecked={isEdit ? selectedCostCenter?.isVehicle : false}
-          />
+          <Switch id="isVehicle" name="isVehicle" defaultChecked={isEdit ? selectedCostCenter?.isVehicle : false} />
         </div>
         <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              isEdit ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)
-            }
-          >
+          <Button variant="outline" onClick={() => (isEdit ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false))}>
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Add'} Cost Center
+            {isLoading ? "Saving..." : isEdit ? "Update" : "Add"} Cost Center
           </Button>
         </div>
       </form>
@@ -421,19 +350,31 @@ export default function CostCenterManagement() {
 
   const handleSort = (column: keyof CostCenter) => {
     if (column === sortColumn) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
       setSortColumn(column)
-      setSortDirection('asc')
+      setSortDirection("asc")
     }
   }
 
+  const filteredCostCenters = useMemo(() => {
+    return costCenters.filter((center) => {
+      const searchLower = searchTerm.toLowerCase()
+      return (
+        center.costCenterName?.toLowerCase().includes(searchLower) ||
+        center.costCenterDescription?.toLowerCase().includes(searchLower) ||
+        center.currencyCode?.toLowerCase().includes(searchLower) ||
+        center.budget?.toString().toLowerCase().includes(searchLower)
+      )
+    })
+  }, [costCenters, searchTerm])
+
   const sortedCostCenters = useMemo(() => {
-    return [...costCenters].sort((a, b) => {
-      const aValue = a[sortColumn] ?? ''
-      const bValue = b[sortColumn] ?? ''
-      if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-        return sortDirection === 'asc'
+    return [...filteredCostCenters].sort((a, b) => {
+      const aValue = a[sortColumn] ?? ""
+      const bValue = b[sortColumn] ?? ""
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return sortDirection === "asc"
           ? aValue === bValue
             ? 0
             : aValue
@@ -445,29 +386,22 @@ export default function CostCenterManagement() {
               ? 1
               : -1
       }
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
       return 0
     })
-  }, [costCenters, sortColumn, sortDirection])
+  }, [filteredCostCenters, sortColumn, sortDirection])
 
   const paginatedCostCenters = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return sortedCostCenters.slice(startIndex, startIndex + itemsPerPage)
   }, [sortedCostCenters, currentPage, itemsPerPage])
 
-  const totalPages = Math.ceil(costCenters.length / itemsPerPage)
-
-  // Remove this useEffect
-  // React.useEffect(() => {
-  //   if (feedback && feedback.type === 'success') {
-  //     fetchCostCenters()
-  //   }
-  // }, [feedback])
+  const totalPages = Math.ceil(sortedCostCenters.length / itemsPerPage)
 
   // Replace with this implementation
   React.useEffect(() => {
-    if (feedback?.type === 'success') {
+    if (feedback?.type === "success") {
       const timer = setTimeout(() => {
         fetchCostCenters()
       }, 0)
@@ -477,62 +411,48 @@ export default function CostCenterManagement() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mx-4">
         <h1 className="text-2xl font-bold">Cost Centers</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" /> Add Cost Center
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search cost centers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <PlusIcon className="mr-2 h-4 w-4" /> Add Cost Center
+          </Button>
+        </div>
       </div>
-
       {isLoading ? (
         <div>Loading cost centers...</div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="flex flex-col">
           <Table className="border shadow-md">
             <TableHeader className="shadow-md bg-slate-200">
               <TableRow>
-                <TableHead
-                  onClick={() => handleSort('costCenterName')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("costCenterName")} className="cursor-pointer">
                   Name <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort('costCenterDescription')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("costCenterDescription")} className="cursor-pointer">
                   Description <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort('currencyCode')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("currencyCode")} className="cursor-pointer">
                   Currency Code <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort('isActive')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("isActive")} className="cursor-pointer">
                   Active <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort('isVehicle')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("isVehicle")} className="cursor-pointer">
                   Vehicle <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                <TableHead
-                  onClick={() => handleSort('budget')}
-                  className="cursor-pointer"
-                >
+                <TableHead onClick={() => handleSort("budget")} className="cursor-pointer">
                   Budget <ArrowUpDown className="ml-2 h-4 w-4 inline" />
                 </TableHead>
-                {/* <TableHead
-                  onClick={() => handleSort('actual')}
-                  className="cursor-pointer"
-                >
-                  Actual <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                </TableHead> */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -542,32 +462,19 @@ export default function CostCenterManagement() {
                   <TableCell>{center.costCenterName}</TableCell>
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
-                  <TableCell>{center.isActive ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>{center.isVehicle ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>
-                    {Number(center.budget).toLocaleString()}
-                  </TableCell>
-                  {/* <TableCell>{center.actual?.toLocaleString()}</TableCell> */}
+                  <TableCell>{center.isActive ? "Yes" : "No"}</TableCell>
+                  <TableCell>{center.isVehicle ? "Yes" : "No"}</TableCell>
+                  <TableCell>{Number(center.budget).toLocaleString()}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(center)}
-                      className="mr-2"
-                    >
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(center)} className="mr-2">
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        handleActivateDeactivate(
-                          center.costCenterId,
-                          center.isActive
-                        )
-                      }
+                      onClick={() => handleActivateDeactivate(center.costCenterId, center.isActive)}
                     >
-                      {center.isActive ? 'Deactivate' : 'Activate'}
+                      {center.isActive ? "Deactivate" : "Activate"}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -579,34 +486,36 @@ export default function CostCenterManagement() {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className={
-                      currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={`page-${index}`}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(index + 1)}
-                      isActive={currentPage === index + 1}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {[...Array(totalPages)].map((_, index) => {
+                  if (
+                    index === 0 ||
+                    index === totalPages - 1 ||
+                    (index >= currentPage - 2 && index <= currentPage + 2)
+                  ) {
+                    return (
+                      <PaginationItem key={`page-${index}`}>
+                        <PaginationLink onClick={() => setCurrentPage(index + 1)} isActive={currentPage === index + 1}>
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  } else if (index === currentPage - 3 || index === currentPage + 3) {
+                    return (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationLink>...</PaginationLink>
+                      </PaginationItem>
+                    )
+                  }
+                  return null
+                })}
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? 'pointer-events-none opacity-50'
-                        : ''
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
               </PaginationContent>
