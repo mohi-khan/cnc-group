@@ -1,29 +1,84 @@
 "use client"
 
-import React from "react"
-import { AreaChart, Area, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import React, { useEffect, useState } from "react"
+import { AreaChart, Area, Bar, BarChart, CartesianGrid, XAxis, YAxis, LineChart, Line } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { getChartDetails } from "@/api/utility-dashboard-api"
+import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
+import { useAtom } from "jotai"
 
+export type MonthlyTotal = {
+  year: number;
+  month: "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec";
+  totalAmount: number;
+};
+  
 const UtilityDashboard = () => {
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
   const [selectedCompany, setSelectedCompany] = React.useState("acme-corp")
+  const [chartDataElec, setChartDataElec] = useState<
+    MonthlyTotal[]
+  >([])
+  const [years, setYears] = useState<number[]>([]);
+const [transformedData, setTransformedData] = useState<any[]>([]);
+const [yearWiseConfig, setYearWiseConfig] = useState<ChartConfig>({});
+// config file for years
+  const getDynamicChartConfig = (years: number[]) => {
+  const config: ChartConfig = {};
+  years.forEach((year, index) => {
+    config[year] = {
+      label: String(year),
+      color: `hsl(${(index * 70) % 360}, 100%, 50%)`, // HSL color variation
+    };
+  });
+  return config;
+};
+
+  const transformMonthlyData = (data: MonthlyTotal[]) => {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+ // const grouped: Record<string, Record<string, number>> = {};
+ const grouped: Record<
+    string,
+    { [year: number]: number }
+  > = {};
+
+  data.forEach(({ year, month, totalAmount }) => {
+    if (!grouped[month]) {
+      grouped[month] = {};
+    }
+    grouped[month][year] = totalAmount;
+  });
+
+  // Ensure months are in order
+  return months.map(month => grouped[month] || { month });
+};
+   const fetchChartDataElec= async (location?:string) => {
+    console.log('under fetch')
+      const response = await getChartDetails('Electricity',token)
+      console.log('response APi',response.data)
+      if (response.data) {
+        setChartDataElec(
+          Array.isArray(response.data) ? response.data : [response.data]
+        )
+      } else {
+        setChartDataElec([])
+      }
+    }
+useEffect(()=>{
+       
+      fetchChartDataElec()
+},[])
 
   // Sample data for the charts
-  const electricityData = [
-    { month: "Jan", usage: 1200, cost: 180 },
-    { month: "Feb", usage: 1100, cost: 165 },
-    { month: "Mar", usage: 1300, cost: 195 },
-    { month: "Apr", usage: 1250, cost: 187 },
-    { month: "May", usage: 1400, cost: 210 },
-    { month: "Jun", usage: 1600, cost: 240 },
-    { month: "Jul", usage: 1800, cost: 270 },
-    { month: "Aug", usage: 1750, cost: 262 },
-    { month: "Sep", usage: 1500, cost: 225 },
-    { month: "Oct", usage: 1350, cost: 202 },
-    { month: "Nov", usage: 1200, cost: 180 },
-    { month: "Dec", usage: 1300, cost: 195 },
-  ]
+
 
   const waterData = [
     { month: "Jan", usage: 800, cost: 120 },
@@ -77,16 +132,17 @@ const UtilityDashboard = () => {
     { value: "green-energy", label: "Green Energy Co" },
   ]
 
-  const electricityConfig: ChartConfig = {
-    usage: {
-      label: "Usage (kWh)",
-      color: "hsl(var(--chart-1))",
-    },
-    cost: {
-      label: "Cost ($)",
-      color: "hsl(var(--chart-2))",
-    },
-  }
+useEffect(() => {
+
+  const uniqueYears = Array.from(new Set(chartDataElec.map((d) => d.year))).sort();
+  const transformed = transformMonthlyData(chartDataElec);
+  const config = getDynamicChartConfig(uniqueYears);
+  console.log(chartDataElec);
+  setYears(uniqueYears);
+  setTransformedData(transformed);
+  setYearWiseConfig(config);
+}, [chartDataElec]);
+
 
   const waterConfig: ChartConfig = {
     usage: {
@@ -124,7 +180,7 @@ const UtilityDashboard = () => {
       color: "hsl(var(--chart-3))",
     },
   }
-
+  //{console.log('chartData',transformedData)}
   return (
     <div className="min-h-screen bg-background p-6">
       {/* Header */}
@@ -152,53 +208,39 @@ const UtilityDashboard = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Electricity Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Electricity Usage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                usage: {
-                  label: "Usage (kWh)",
-                  color: "hsl(252, 100%, 70%)",
-                },
-                cost: {
-                  label: "Cost ($)",
-                  color: "hsl(180, 100%, 70%)",
-                },
-              }}
-            >
-              <AreaChart
-                data={electricityData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                width={900}
-                height={300}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="usage"
-                  stackId="1"
-                  stroke="hsl(252, 100%, 70%)"
-                  fill="hsl(252, 100%, 70%)"
-                  fillOpacity={0.2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="cost"
-                  stackId="1"
-                  stroke="hsl(180, 100%, 70%)"
-                  fill="hsl(180, 100%, 70%)"
-                  fillOpacity={0.2}
-                />
-              </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+   <Card>
+  <CardHeader>
+    <CardTitle>Electricity Cost Breakdown</CardTitle>
+    <CardDescription>Monthly totalAmount by year</CardDescription>
+  </CardHeader>
+  <CardContent>
+    
+    <ChartContainer config={yearWiseConfig}>
+      <LineChart
+        data={transformedData}
+        width={900}
+        height={300}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        {Array.from(new Set(chartDataElec.map((item) => item.year))).map((year, index) => (
+          <Line
+            key={year}
+            type="monotone"
+            dataKey={String(year)}
+            stroke={`hsl(${index * 70 % 360}, 100%, 50%)`}
+            strokeWidth={2}
+            dot={{ r: 3 }}
+          />
+        ))}
+      </LineChart>
+    </ChartContainer>
+  </CardContent>
+</Card>
+
 
         {/* Water Chart */}
         <Card>
