@@ -60,6 +60,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       purchaseDate: new Date(),
       assetId: 0,
       employeeid: 0,
+      driverid: 0,
+      companyid: userData?.userCompanies?.[0]?.company.companyId || 0,
       createdBy: userData?.userId || 0,
     },
   })
@@ -252,6 +254,46 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               <p className="text-red-500 text-sm">
                 {errors.employeeid.message}
               </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Driver Name
+            </label>
+
+            <Controller
+              control={control}
+              name="driverid"
+              render={({ field }) => (
+                <CustomCombobox
+                  items={employeeData.map(
+                    (a: { id: number; employeeName: string }) => ({
+                      id: a.id.toString(),
+                      name: a.employeeName || 'Unnamed Driver',
+                    })
+                  )}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            employeeData.find(
+                              (a: { id: number; employeeName: string }) =>
+                                Number(a.id) === Number(field.value)
+                            )?.employeeName || '',
+                        }
+                      : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) =>
+                    field.onChange(value ? Number(value.id) : null)
+                  }
+                  placeholder="Select Driver"
+                />
+              )}
+            />
+
+            {errors.driverid && (
+              <p className="text-red-500 text-sm">{errors.driverid.message}</p>
             )}
           </div>
 

@@ -60,10 +60,10 @@ const [yearWiseConfig, setYearWiseConfig] = useState<ChartConfig>({});
   // Ensure months are in order
   return months.map(month => grouped[month] || { month });
 };
-   const fetchChartDataElec= async (location?:string) => {
+   const fetchChartDataElec = React.useCallback(async (location?: string) => {
     console.log('under fetch')
-      const response = await getChartDetails('Electricity',token)
-      console.log('response APi',response.data)
+      const response = await getChartDetails('Electricity', token)
+      console.log('response APi', response.data)
       if (response.data) {
         setChartDataElec(
           Array.isArray(response.data) ? response.data : [response.data]
@@ -71,11 +71,12 @@ const [yearWiseConfig, setYearWiseConfig] = useState<ChartConfig>({});
       } else {
         setChartDataElec([])
       }
-    }
-useEffect(()=>{
-       
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token])
+
+useEffect(() => {
       fetchChartDataElec()
-},[])
+}, [fetchChartDataElec])
 
   // Sample data for the charts
 
