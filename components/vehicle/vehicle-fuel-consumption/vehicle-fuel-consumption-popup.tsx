@@ -175,7 +175,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Kilometers per Liter
+              Kilometer Run
             </label>
             <Input
               type="number"

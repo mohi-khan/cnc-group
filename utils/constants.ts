@@ -269,6 +269,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Reports',
         items: [
           { name: 'Dashboard', source: '/utility/dashboard' },
+          { name: 'Vehicle Dashboard', source: '/utility/vehicle-deshboard' },
           { name: 'Summary Report ', source: '/electricity/electricity-' },
           { name: 'Details Report', source: '/electricity/bill-entry' },
         

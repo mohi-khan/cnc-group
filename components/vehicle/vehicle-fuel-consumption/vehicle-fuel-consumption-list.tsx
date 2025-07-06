@@ -129,7 +129,7 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
               Total Consumption
             </SortableTableHead>
             <SortableTableHead column="kmrsPerLitr">
-              Km per Liter
+              Kilometer Run
             </SortableTableHead>
             <SortableTableHead column="transDate">
               Transaction Date

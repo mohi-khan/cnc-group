@@ -1253,6 +1253,8 @@ export const createVehicleSchema = z.object({
   purchaseDate: z.coerce.date().nullable(),
   assetId: z.number().int().min(1, 'Asset ID is required').nullable(),
   employeeid: z.number().int(),
+  driverid:z.number().int(),
+  companyid:z.number().int(),
   createdBy: z.number().int(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
@@ -1576,3 +1578,11 @@ export type GetCashReport = {
     totalAdjusted: string | null
   }[]
 }
+
+
+export type VehicleCostByYearGetData = {
+  year: number;
+  month: number;
+  costName: string;
+  amount: string; // or number, depending on actual use
+};
