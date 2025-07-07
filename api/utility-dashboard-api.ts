@@ -9,7 +9,7 @@ export async function getChartDetails(type:string,token:string,location?:string)
   }
   return fetchApi<MonthlyTotal[]>({
     // url: `api/dashboard/getcostBreakdownDetails?departmentId=${departmentId}&fromDate=${fromDate}&toDate=${toDate}&companyId=${companyId}&financial_Tag=${financial_Tag}`,
-     url: `api/utilities/getDashboardData?${params.toString()}`,
+     url: `api/utilities/getDashboardData?utilityType=${type}&location=${location}`,
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -17,4 +17,15 @@ export async function getChartDetails(type:string,token:string,location?:string)
     },
     
   })
+}
+
+export async function getUtilityMeter(token: string) {
+  return fetchApi<any[]>({
+    url: 'api/utilities/getMeters',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token,
+    },
+  });
 }

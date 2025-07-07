@@ -29,7 +29,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { getChartDetails } from '@/api/utility-dashboard-api'
+import { getChartDetails, getUtilityMeter } from '@/api/utility-dashboard-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCompanies } from '@/api/common-shared-api'
@@ -53,6 +53,8 @@ export type MonthlyTotal = {
   totalAmount: number
 }
 
+// Mock utility meters data - replace with your actual data source
+
 const UtilityDashboard = () => {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -60,7 +62,15 @@ const UtilityDashboard = () => {
 
   // Fixed: Separate states for companies list and selected company
   const [companies, setCompanies] = useState<CompanyType[]>([])
+  const [utilityMeters, setUtilityMeters] = useState<any[]>([])
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+
+  // Replace the single selectedLocation state with three separate ones
+  const [selectedLocationElec, setSelectedLocationElec] =
+    useState<string>('All')
+  const [selectedLocationWater, setSelectedLocationWater] =
+    useState<string>('All')
+  const [selectedLocationGas, setSelectedLocationGas] = useState<string>('All')
 
   // State for all utility types
   const [chartDataElec, setChartDataElec] = useState<MonthlyTotal[]>([])
@@ -116,14 +126,12 @@ const UtilityDashboard = () => {
       'Dec',
     ]
     const grouped: Record<string, { [year: number]: number }> = {}
-
     data.forEach(({ year, month, totalAmount }) => {
       if (!grouped[month]) {
         grouped[month] = {}
       }
       grouped[month][year] = totalAmount
     })
-
     return months.map((month) => ({
       month,
       ...grouped[month],
@@ -138,12 +146,10 @@ const UtilityDashboard = () => {
           ? response.data
           : [response.data]
         setCompanies(companiesData)
-
         // Auto-select first company if none selected
         if (companiesData.length > 0 && !selectedCompanyId) {
           setSelectedCompanyId(String(companiesData[0].companyId ?? ''))
         }
-
         console.log('Company data fetched:', response.data)
       } else {
         setCompanies([])
@@ -154,12 +160,38 @@ const UtilityDashboard = () => {
     }
   }, [token, selectedCompanyId])
 
-  // Fetch functions for each utility type
+  const fetchUtilityMeter = React.useCallback(async () => {
+      try {
+        const response = await getUtilityMeter(token)
+        if (response.data) {
+          setUtilityMeters(
+            Array.isArray(response.data) ? response.data : [response.data]
+          )
+          console.log("🚀 ~ fetchUtilityMeter ~ response.data:", response.data)
+        } else {
+          setUtilityMeters([])
+        }
+      } catch (error) {
+        console.error('Error fetching gas data:', error)
+        setUtilityMeters([])
+      }
+    }, [token, selectedCompanyId, selectedLocationGas])
+  
+
+  // Helper function to get location parameter
+  const getLocationParam = (location: string) => {
+    return location === 'All' ? '' : location
+  }
+
   const fetchChartDataElec = React.useCallback(async () => {
     if (!selectedCompanyId) return
-
     try {
-      const response = await getChartDetails('Electricity', token)
+      const locationParam = getLocationParam(selectedLocationElec)
+      const response = await getChartDetails(
+        'Electricity',
+        token,
+        locationParam
+      )
       if (response.data) {
         setChartDataElec(
           Array.isArray(response.data) ? response.data : [response.data]
@@ -171,13 +203,13 @@ const UtilityDashboard = () => {
       console.error('Error fetching electricity data:', error)
       setChartDataElec([])
     }
-  }, [token, selectedCompanyId])
+  }, [token, selectedCompanyId, selectedLocationElec])
 
   const fetchChartDataWater = React.useCallback(async () => {
     if (!selectedCompanyId) return
-
     try {
-      const response = await getChartDetails('Water', token)
+      const locationParam = getLocationParam(selectedLocationWater)
+      const response = await getChartDetails('Water', token, locationParam)
       if (response.data) {
         setChartDataWater(
           Array.isArray(response.data) ? response.data : [response.data]
@@ -189,13 +221,13 @@ const UtilityDashboard = () => {
       console.error('Error fetching water data:', error)
       setChartDataWater([])
     }
-  }, [token, selectedCompanyId])
+  }, [token, selectedCompanyId, selectedLocationWater])
 
   const fetchChartDataGas = React.useCallback(async () => {
     if (!selectedCompanyId) return
-
     try {
-      const response = await getChartDetails('Gas', token)
+      const locationParam = getLocationParam(selectedLocationGas)
+      const response = await getChartDetails('Gas', token, locationParam)
       if (response.data) {
         setChartDataGas(
           Array.isArray(response.data) ? response.data : [response.data]
@@ -207,7 +239,7 @@ const UtilityDashboard = () => {
       console.error('Error fetching gas data:', error)
       setChartDataGas([])
     }
-  }, [token, selectedCompanyId])
+  }, [token, selectedCompanyId, selectedLocationGas])
 
   // Combine all utilities data
   const combineAllUtilitiesData = React.useCallback(() => {
@@ -225,7 +257,6 @@ const UtilityDashboard = () => {
       'Nov',
       'Dec',
     ]
-
     const combined = months.map((month) => {
       const result: any = { month }
       // Get all unique years from all utilities
@@ -234,7 +265,6 @@ const UtilityDashboard = () => {
         ...chartDataWater.map((d) => d.year),
         ...chartDataGas.map((d) => d.year),
       ])
-
       allYears.forEach((year) => {
         const elecData = chartDataElec.find(
           (d) => d.year === year && d.month === month
@@ -245,20 +275,16 @@ const UtilityDashboard = () => {
         const gasData = chartDataGas.find(
           (d) => d.year === year && d.month === month
         )
-
         const total =
           (elecData?.totalAmount || 0) +
           (waterData?.totalAmount || 0) +
           (gasData?.totalAmount || 0)
-
         if (total > 0) {
           result[year] = total
         }
       })
-
       return result
     })
-
     setChartDataAll(combined)
   }, [chartDataElec, chartDataWater, chartDataGas])
 
@@ -269,19 +295,24 @@ const UtilityDashboard = () => {
     }
   }, [token, fetchCompany])
 
-  // Fetch chart data when company is selected
+  // Fetch chart data when company or location is selected
   useEffect(() => {
     if (token && selectedCompanyId) {
       fetchChartDataElec()
       fetchChartDataWater()
       fetchChartDataGas()
+      fetchUtilityMeter()
     }
   }, [
     token,
     selectedCompanyId,
+    selectedLocationElec,
+    selectedLocationWater,
+    selectedLocationGas,
     fetchChartDataElec,
     fetchChartDataWater,
     fetchChartDataGas,
+    fetchUtilityMeter,
   ])
 
   // Transform electricity data
@@ -291,7 +322,6 @@ const UtilityDashboard = () => {
     ).sort()
     const transformed = transformMonthlyData(chartDataElec)
     const config = getDynamicChartConfig(uniqueYears)
-
     setYearsElec(uniqueYears)
     setTransformedDataElec(transformed)
     setYearWiseConfigElec(config)
@@ -304,7 +334,6 @@ const UtilityDashboard = () => {
     ).sort()
     const transformed = transformMonthlyData(chartDataWater)
     const config = getDynamicChartConfig(uniqueYears)
-
     setYearsWater(uniqueYears)
     setTransformedDataWater(transformed)
     setYearWiseConfigWater(config)
@@ -317,7 +346,6 @@ const UtilityDashboard = () => {
     ).sort()
     const transformed = transformMonthlyData(chartDataGas)
     const config = getDynamicChartConfig(uniqueYears)
-
     setYearsGas(uniqueYears)
     setTransformedDataGas(transformed)
     setYearWiseConfigGas(config)
@@ -337,7 +365,6 @@ const UtilityDashboard = () => {
       ])
     ).sort()
     const config = getDynamicChartConfig(uniqueYears)
-
     setYearsAll(uniqueYears)
     setTransformedDataAll(chartDataAll)
     setYearWiseConfigAll(config)
@@ -358,183 +385,242 @@ const UtilityDashboard = () => {
           </h1>
           <p className="text-muted-foreground">
             Monitor your utility consumption and costs
-            {selectedCompany && (
-              <span className="ml-2 text-primary font-medium">
-                - {selectedCompany.companyName}
-              </span>
-            )}
           </p>
-        </div>
-        <div className="w-64">
-          <Select
-            value={selectedCompanyId}
-            onValueChange={setSelectedCompanyId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select company" />
-            </SelectTrigger>
-            <SelectContent>
-              {companies.map((company) => (
-                <SelectItem
-                  key={String(company.companyId ?? '')}
-                  value={String(company.companyId ?? '')}
-                >
-                  {company.companyName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
-      {/* Show message if no company selected */}
-      {!selectedCompanyId && companies.length > 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
-            Please select a company to view utility data.
-          </p>
-        </div>
-      )}
-
-      {/* Charts Grid - Only show if company is selected */}
-      {selectedCompanyId && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Electricity Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Electricity Cost Breakdown</CardTitle>
-              <CardDescription>Monthly total amount by year</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={yearWiseConfigElec}>
-                <LineChart
-                  data={transformedDataElec}
-                  width={900}
-                  height={300}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Electricity Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Electricity Cost Breakdown</CardTitle>
+                <CardDescription>
+                  Monthly total amount by year
+                  {selectedLocationElec !== 'All' && (
+                    <span className="ml-2 text-sm font-medium">
+                      • {selectedLocationElec}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="w-48">
+                <Select
+                  value={selectedLocationElec}
+                  onValueChange={setSelectedLocationElec}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {yearsElec.map((year, index) => (
-                    <Line
-                      key={year}
-                      type="monotone"
-                      dataKey={String(year)}
-                      stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                  ))}
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Locations</SelectItem>
+                    {utilityMeters.map((meter, index) => (
+                      <SelectItem
+                        key={index}
+                        value={String(meter.location ?? '')}
+                      >
+                        {meter.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={yearWiseConfigElec}>
+              <LineChart
+                data={transformedDataElec}
+                width={900}
+                height={300}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {yearsElec.map((year, index) => (
+                  <Line
+                    key={year}
+                    type="monotone"
+                    dataKey={String(year)}
+                    stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                ))}
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-          {/* Water Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Water Cost Breakdown</CardTitle>
-              <CardDescription>Monthly total amount by year</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={yearWiseConfigWater}>
-                <LineChart
-                  data={transformedDataWater}
-                  width={900}
-                  height={300}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        {/* Water Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Water Cost Breakdown</CardTitle>
+                <CardDescription>
+                  Monthly total amount by year
+                  {selectedLocationWater !== 'All' && (
+                    <span className="ml-2 text-sm font-medium">
+                      • {selectedLocationWater}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="w-48">
+                <Select
+                  value={selectedLocationWater}
+                  onValueChange={setSelectedLocationWater}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {yearsWater.map((year, index) => (
-                    <Line
-                      key={year}
-                      type="monotone"
-                      dataKey={String(year)}
-                      stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                  ))}
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Locations</SelectItem>
+                    {utilityMeters.map((meter, index) => (
+                      <SelectItem
+                        key={index}
+                        value={String(meter.location ?? '')}
+                      >
+                        {meter.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={yearWiseConfigWater}>
+              <LineChart
+                data={transformedDataWater}
+                width={900}
+                height={300}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {yearsWater.map((year, index) => (
+                  <Line
+                    key={year}
+                    type="monotone"
+                    dataKey={String(year)}
+                    stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                ))}
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-          {/* Gas Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Gas Cost Breakdown</CardTitle>
-              <CardDescription>Monthly total amount by year</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={yearWiseConfigGas}>
-                <LineChart
-                  data={transformedDataGas}
-                  width={900}
-                  height={300}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        {/* Gas Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Gas Cost Breakdown</CardTitle>
+                <CardDescription>
+                  Monthly total amount by year
+                  {selectedLocationGas !== 'All' && (
+                    <span className="ml-2 text-sm font-medium">
+                      • {selectedLocationGas}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="w-48">
+                <Select
+                  value={selectedLocationGas}
+                  onValueChange={setSelectedLocationGas}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {yearsGas.map((year, index) => (
-                    <Line
-                      key={year}
-                      type="monotone"
-                      dataKey={String(year)}
-                      stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                  ))}
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Locations</SelectItem>
+                    {utilityMeters.map((meter, index) => (
+                      <SelectItem
+                        key={index}
+                        value={String(meter.location ?? '')}
+                      >
+                        {meter.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={yearWiseConfigGas}>
+              <LineChart
+                data={transformedDataGas}
+                width={900}
+                height={300}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {yearsGas.map((year, index) => (
+                  <Line
+                    key={year}
+                    type="monotone"
+                    dataKey={String(year)}
+                    stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                ))}
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-          {/* All Utilities Combined Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                All Utilities Combined
-              </CardTitle>
-              <CardDescription>
-                Combined monthly utility costs by year
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={yearWiseConfigAll}>
-                <BarChart
-                  data={transformedDataAll}
-                  width={900}
-                  height={300}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  {yearsAll.map((year, index) => (
-                    <Bar
-                      key={year}
-                      dataKey={String(year)}
-                      fill={`hsl(${(index * 70) % 360}, 70%, 50%)`}
-                      radius={[2, 2, 0, 0]}
-                    />
-                  ))}
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+        {/* All Utilities Combined Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              All Utilities Combined
+            </CardTitle>
+            <CardDescription>
+              Combined monthly utility costs by year
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={yearWiseConfigAll}>
+              <BarChart
+                data={transformedDataAll}
+                width={900}
+                height={300}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {yearsAll.map((year, index) => (
+                  <Bar
+                    key={year}
+                    dataKey={String(year)}
+                    fill={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                    radius={[2, 2, 0, 0]}
+                  />
+                ))}
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
