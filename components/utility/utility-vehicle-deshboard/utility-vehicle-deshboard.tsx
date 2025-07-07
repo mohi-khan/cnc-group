@@ -12,67 +12,176 @@ import {
   Bar,
   ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { getAllCompanies } from '@/api/common-shared-api'
-import { CompanyType } from '@/api/company-api'
+import type { CompanyType } from '@/api/company-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getCostByYear } from '@/api/utility-vehicle-dashboard-api'
-import { GetAllVehicleType, VehicleCostByYearGetData } from '@/utils/type'
+import { getCostByYear, getVehiclePer } from '@/api/utility-vehicle-dashboard-api'
+import type { GetAllVehicleType, VehicleCostByYearGetData, vehiclePerLitreCost } from '@/utils/type'
 import { getAllVehicles } from '@/api/vehicle.api'
 
 const data = [
-  { name: 'Jan', value1: 400, value2: 240 },
-  { name: 'Feb', value1: 300, value2: 139 },
-  { name: 'Mar', value1: 200, value2: 980 },
-  { name: 'Apr', value1: 278, value2: 390 },
-  { name: 'May', value1: 189, value2: 480 },
-  { name: 'Jun', value1: 239, value2: 380 },
-  { name: 'Jul', value1: 349, value2: 430 },
-  { name: 'Aug', value1: 289, value2: 290 },
-  { name: 'Sep', value1: 329, value2: 500 },
-  { name: 'Oct', value1: 269, value2: 420 },
-  { name: 'Nov', value1: 319, value2: 550 },
-  { name: 'Dec', value1: 239, value2: 340 },
+  { month: 'Jan', year1: 2023, amount1: 240, year2: 2024, amount2: 280 },
+  { month: 'Feb', year1: 2022, amount1: 139, year2: 2023, amount2: 159 },
+  { month: 'Mar', year1: 2024, amount1: 980, year2: 2025, amount2: 920 },
+  { month: 'Apr', year1: 2021, amount1: 390, year2: 2022, amount2: 410 },
+  { month: 'May', year1: 2023, amount1: 480, year2: 2024, amount2: 460 },
+  { month: 'Jun', year1: 2022, amount1: 380, year2: 2023, amount2: 400 },
+  { month: 'Jul', year1: 2024, amount1: 430, year2: 2025, amount2: 450 },
+  { month: 'Aug', year1: 2021, amount1: 290, year2: 2022, amount2: 310 },
+  { month: 'Sep', year1: 2023, amount1: 500, year2: 2024, amount2: 520 },
+  { month: 'Oct', year1: 2022, amount1: 420, year2: 2023, amount2: 440 },
+  { month: 'Nov', year1: 2024, amount1: 550, year2: 2025, amount2: 570 },
+  { month: 'Dec', year1: 2021, amount1: 340, year2: 2022, amount2: 360 },
 ]
+
+// Enhanced custom tooltip component
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0]?.payload
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg max-w-xs">
+        <p className="font-semibold text-gray-800">{`${label}`}</p>
+        <p className="text-lg font-bold text-green-600">{`Total: ${data?.amount?.toLocaleString()}`}</p>
+        <p className="text-sm text-blue-600">{`Year: ${data?.year }`}</p>
+        {data?.costs && data.costs.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <p className="text-xs text-gray-600 mb-1">Cost Breakdown:</p>
+            {data.costs.map((cost: any, index: number) => (
+              <p key={index} className="text-xs text-gray-700">
+                {`${cost.costName}: ${cost.amount.toLocaleString()}`}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+  return null
+}
+
+// Function to format cost data for the chart
+const formatCostDataForChart = (
+  costData: VehicleCostByYearGetData | null,
+ 
+) => {
+  if (!costData || !Array.isArray(costData)) return []
+
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+
+  // Filter data for the selected year and group by month
+  const monthlyTotals = costData
+    
+    .reduce((acc: any, item: any) => {
+      const monthIndex = item.month - 1 // Convert 1-12 to 0-11
+      if (monthIndex >= 0 && monthIndex < 12) {
+        if (!acc[monthIndex]) {
+          acc[monthIndex] = {
+            month: months[monthIndex],
+            monthNumber: item.month,
+            amount: 0,
+           
+            costs: [],
+          }
+        }
+        const amount = Number.parseFloat(item.amount) || 0
+        acc[monthIndex].amount += amount
+        acc[monthIndex].costs.push({
+          costName: item.costName,
+          amount: amount,
+        })
+      }
+      return acc
+    }, {})
+
+  // Convert to array and fill missing months with zero
+  return months.map((month, index) => {
+    return (
+      monthlyTotals[index] || {
+        month,
+        monthNumber: index + 1,
+        amount: 0,
+        costs: [],
+      }
+    )
+  })
+}
 
 const UtilityVehicleDeshboard = () => {
   useInitializeUser()
-
   const [token] = useAtom(tokenAtom)
-
   const [getCompany, setGetCompany] = useState<CompanyType[] | null>([])
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
     null
   )
   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null)
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
+    null
+  )
+  const [costData, setCostData] = useState<VehicleCostByYearGetData | null>(
+    null
+  )
+  const [vehiclePer, setVehiclePer] = useState<vehiclePerLitreCost[]>([]) // Adjust type as needed
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  )
 
-    // Fetch the vehicle data from API
-    const fetchVehicles = React.useCallback(async () => {
-      if (!token) return
-      const response = await getAllVehicles(token)
-      const data: GetAllVehicleType[] = response.data ?? []
-      setVehicles(data)
-     
-    }, [token])
+  // Fetch the vehicle data from API
+  const fetchVehicles = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllVehicles(token)
+    const data: GetAllVehicleType[] = response.data ?? []
+    setVehicles(data)
+  }, [token])
 
-  const [costData, setCostData] = useState<VehicleCostByYearGetData | null>(null)
-  
-    const fetchCostByYear = React.useCallback(async () => {
-      if (!token || !selectedCompanyId) return
+  const fetchVehiclePer = React.useCallback(async () => {
+      if (!token || !selectedVehicleId) return
       try {
-        const response = await getCostByYear(token, selectedCompanyId.toString())
-        setCostData(response.data)
-        console.log('fetchCostByYear response:', response.data)
+        const response = await getVehiclePer(
+          token,
+          selectedVehicleId.toString(),
+          
+        )
+        setVehiclePer(response.data.data  || [])
+        console.log('fetchVehiclePer response:', response.data)
       } catch (error) {
-        console.error('Error fetching cost data:', error)
-      }
-    }, [token, selectedCompanyId])
+        console.error('Error fetching vehicle data:', error)
+    }
+    
+    }, [token, selectedVehicleId])
   
-   
-  
+
+  const fetchCostByYear = React.useCallback(async () => {
+    if (!token || !selectedCompanyId) return
+    try {
+      const response = await getCostByYear(token, selectedCompanyId.toString())
+      setCostData(response.data)
+      console.log('fetchCostByYear response:', response.data)
+    } catch (error) {
+      console.error('Error fetching cost data:', error)
+    }
+  }, [token, selectedCompanyId])
 
   const fetchCompnay = React.useCallback(async () => {
     if (!token) return
@@ -86,9 +195,16 @@ const UtilityVehicleDeshboard = () => {
 
   useEffect(() => {
     fetchCompnay()
-     fetchCostByYear()
-     fetchVehicles()
-  }, [fetchCompnay, fetchCostByYear, fetchVehicles])
+    fetchVehicles()
+  }, [fetchCompnay, fetchVehicles])
+
+  useEffect(() => {
+    fetchCostByYear()
+    fetchVehiclePer()
+  }, [fetchCostByYear, fetchVehiclePer])
+
+  // Format the data for the chart
+  const chartData = formatCostDataForChart(costData)
 
   return (
     <div className="p-6 space-y-6">
@@ -98,8 +214,9 @@ const UtilityVehicleDeshboard = () => {
           Monitor your vehicle usage and costs
         </p>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="col-span-2 flex justify-end mx-8">
+        <div className="col-span-2 flex justify-end mx-8 gap-4">
           <CustomCombobox
             items={(getCompany ?? []).map((company) => ({
               id: company?.companyId?.toString() ?? '',
@@ -121,62 +238,81 @@ const UtilityVehicleDeshboard = () => {
             }
             placeholder="Select company"
           />
+          <input
+            type="number"
+            className="h-10 px-3 py-2 text-sm border rounded-md"
+            onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
+            value={selectedYear}
+            min={1900}
+            max={new Date().getFullYear()}
+          />
         </div>
-        <Card className="p-4 shadow-md border-2">
+
+        {/* Fixed Line Chart - Monthly Cost Data */}
+        <Card className="p-4 shadow-lg border-2">
+          {/* <CardHeader>
+            <CardTitle>Monthly Vehicle Costs ({selectedYear})</CardTitle>
+            <CardDescription>
+              Total costs by month for the selected year
+            </CardDescription>
+          </CardHeader> */}
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart 
-                data={Array.isArray(costData) ? costData : []}
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-              >
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-
-                <YAxis domain={[0, 5000]} ticks={[0, 1000, 2000, 3000, 4000, 5000]} />
-                <Tooltip />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => `${value.toLocaleString()}`}
+                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                {costData && Array.isArray(costData) && Array.from(new Set(costData.map((item: VehicleCostByYearGetData) => item.costName))).map((costName, index) => (
-                  <Line
-                    key={costName}
-                    type="monotone"
-                    dataKey="amount"
-                    name={costName}
-                    stroke={`hsl(${index * 70 % 360}, 100%, 50%)`}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    data={costData.filter(item => item.costName === costName)}
-                  />
-                ))}
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#82ca9d"
+                  strokeWidth={2}
+                  dot={{ fill: '#82ca9d', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#82ca9d', strokeWidth: 2 }}
+                  name={` Total Amount`}
+                  label={{
+                    position: 'top',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                  }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
         <Card className="p-4 shadow-lg border-2">
+          {/* <CardHeader>
+            <CardTitle>Comparison Chart</CardTitle>
+            <CardDescription>Monthly comparison data</CardDescription>
+          </CardHeader> */}
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={Array.isArray(costData) ? costData : []}
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-              >
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis domain={[0, 5000]} ticks={[0, 1000, 2000, 3000, 4000, 5000]} />
-                <Tooltip />
+                <YAxis tickFormatter={(value) => `${value.toLocaleString()}`} />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                {costData && Array.isArray(costData) && Array.from(new Set(costData.map((item: VehicleCostByYearGetData) => item.costName))).map((costName, index) => (
-                  <Bar
-                    key={costName}
-                    dataKey="amount"
-                    name={costName}
-                    fill={`hsl(${index * 70 % 360}, 100%, 50%)`}
-                    data={costData.filter(item => item.costName === costName)}
-                  />
-                ))}
+                <Bar
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#82ca9d"
+                  strokeWidth={2}
+                  fill="#82ca9d"
+                  name={` Total Amount`}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="col-span-2 flex justify-end mx-8">
           <CustomCombobox
@@ -203,28 +339,43 @@ const UtilityVehicleDeshboard = () => {
         </div>
 
         <Card className="p-4 shadow-lg border-2">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value2" stroke="#82ca9d" />
-            </LineChart>
-          </ResponsiveContainer>
+          {/* <CardHeader>
+            <CardTitle>Vehicle Performance</CardTitle>
+            <CardDescription>Individual vehicle metrics</CardDescription>
+          </CardHeader> */}
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={vehiclePer}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="kmrsperlitre" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
+
         <Card className="p-4 shadow-lg border-2">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value1" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+          {/* <CardHeader>
+            <CardTitle>Vehicle Costs</CardTitle>
+            <CardDescription>Cost breakdown by vehicle</CardDescription>
+          </CardHeader> */}
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={vehiclePer}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis
+                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar dataKey="month" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
       </div>
     </div>

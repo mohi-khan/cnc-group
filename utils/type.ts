@@ -1586,3 +1586,16 @@ export type VehicleCostByYearGetData = {
   costName: string;
   amount: string; // or number, depending on actual use
 };
+
+export type CostBreakdown = {
+  [key: string]: string
+}
+
+export type vehiclePerLitreCost = {
+  year: number
+  month: number
+  gasConsumption: number
+  octaneConsumption: number
+  kmrsperlitre: number
+  costBreakdown: CostBreakdown
+}

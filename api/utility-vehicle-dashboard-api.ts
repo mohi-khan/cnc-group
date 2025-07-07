@@ -11,3 +11,14 @@ export async function getCostByYear(token: string, companyId: string) {
     },
   })
 }
+
+export async function getVehiclePer(token: string, vehicleId: string) {
+  return fetchApi({
+    url: `api/vehicle/getVehiclePer/${vehicleId}`,
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
