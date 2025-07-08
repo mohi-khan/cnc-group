@@ -47,6 +47,7 @@ type SortColumn =
   | 'purchaseDate'
   | 'assetId'
   | 'employeeid'
+  | 'driverName'
   | 'employeeName'
 
 export const VehicleList: React.FC<VehicleListProps> = ({
@@ -151,90 +152,105 @@ export const VehicleList: React.FC<VehicleListProps> = ({
         <h1 className="text-2xl font-bold">Vehicle List</h1>
         <Button onClick={onAddVehicle}>ADD</Button>
       </div>
-      <Table className="border shadow-md">
-        <TableHeader className="sticky top-28 bg-slate-200">
-          <TableRow>
-            <SortableTableHead column="vehicleNo">Vehicle No</SortableTableHead>
-            <SortableTableHead column="costCenterName">
-              Cost Center
-            </SortableTableHead>
-            <SortableTableHead column="description">
-              Vehicle Description
-            </SortableTableHead>
-            <SortableTableHead column="purchaseDate">
-              Purchase Date
-            </SortableTableHead>
-            <SortableTableHead column="assetId">Asset Name</SortableTableHead>
-            <SortableTableHead column="employeeName">
-              Employee Name
-            </SortableTableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedVehicles.map((vehicle) => (
-            <TableRow key={vehicle.vehicleNo}>
-              <TableCell>{vehicle.vehicleNo}</TableCell>
-              <TableCell>{vehicle.costCenterName}</TableCell>
-              <TableCell>{vehicle.description}</TableCell>
-              <TableCell>
-                {new Date(vehicle.purchaseDate).toLocaleDateString()}
-              </TableCell>
-              <TableCell>{getAssetName(vehicle.assetId)}</TableCell>
-              <TableCell>
-                {editingVehicle === vehicle.vehicleNo ? (
-                  <select
-                    value={selectedEmployee ?? ''}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                      setSelectedEmployee(Number(e.target.value))
-                    }
-                    className="border rounded p-1"
-                  >
-                    {employeeData.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.employeeName}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  vehicle.employeeName
-                )}
-              </TableCell>
-              <TableCell>
-                {editingVehicle === vehicle.vehicleNo ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleSaveEmployee(vehicle.vehicleNo, selectedEmployee)
-                      }
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEditEmployee( vehicle.vehicleNo)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Change User
-                  </Button>
-                )}
-              </TableCell>
+      <div className="mx-4 rounded-md">
+        <Table className="border shadow-md ">
+          <TableHeader className="sticky top-28 bg-slate-200">
+            <TableRow>
+              <SortableTableHead column="vehicleNo">
+                Vehicle Name
+              </SortableTableHead>
+              <SortableTableHead column="costCenterName">
+                Cost Center
+              </SortableTableHead>
+              <SortableTableHead column="description">
+                Vehicle Description
+              </SortableTableHead>
+              <SortableTableHead column="purchaseDate">
+                Purchase Date
+              </SortableTableHead>
+              <SortableTableHead column="assetId">Asset Name</SortableTableHead>
+              <SortableTableHead column="driverName">
+                Driver Name
+              </SortableTableHead>
+              <SortableTableHead column="employeeName">
+                Employee Name
+              </SortableTableHead>
+
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedVehicles.map((vehicle) => (
+              <TableRow key={vehicle.vehicleNo}>
+                <TableCell>{vehicle.description}</TableCell>
+                <TableCell>{vehicle.costCenterName}</TableCell>
+                <TableCell>{vehicle.description}</TableCell>
+                <TableCell>
+                  {new Date(vehicle.purchaseDate).toLocaleDateString()}
+                </TableCell>
+                <TableCell>{getAssetName(vehicle.assetId)}</TableCell>
+                <TableCell>
+                {vehicle.driverName}
+                </TableCell>
+
+                <TableCell>
+                  {editingVehicle === vehicle.vehicleNo ? (
+                    <select
+                      value={selectedEmployee ?? ''}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                        setSelectedEmployee(Number(e.target.value))
+                      }
+                      className="border rounded p-1"
+                    >
+                      {employeeData.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.employeeName}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    vehicle.employeeName
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingVehicle === vehicle.vehicleNo ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleSaveEmployee(
+                            vehicle.vehicleNo,
+                            selectedEmployee
+                          )
+                        }
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditEmployee(vehicle.vehicleNo)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Change User
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       <div className="mt-4">
         <Pagination>
           <PaginationContent>

@@ -1238,6 +1238,8 @@ export interface GetAllVehicleType {
   purchaseDate: string
   assetId: number
   employeeid: number
+  driverName: string
+  companyid: number
   employeeName: string
   user: number
 }
