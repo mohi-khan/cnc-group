@@ -1,3 +1,4 @@
+import Dashboard from '@/components/dashboard/dashboard'
 import { MenuItem } from './type'
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -252,6 +253,10 @@ export const MENU_ITEMS: MenuItem[] = [
           },
         ],
       },
+      {
+        name: 'Reports',
+        items: [{ name: 'Dashboard', source: '/utility/vehicle-deshboard' }],
+      },
     ],
   },
   {
@@ -262,17 +267,14 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: 'Meter Entry', source: '/electricity/meter-entry' },
           { name: 'Bill Entry', source: '/electricity/bill-entry' },
-        
         ],
       },
       {
         name: 'Reports',
         items: [
           { name: 'Dashboard', source: '/utility/dashboard' },
-          { name: 'Vehicle Dashboard', source: '/utility/vehicle-deshboard' },
           { name: 'Summary Report ', source: '/electricity/electricity-' },
           { name: 'Details Report', source: '/electricity/bill-entry' },
-        
         ],
       },
     ],
