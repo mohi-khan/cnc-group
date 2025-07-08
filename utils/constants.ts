@@ -246,7 +246,7 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Vehicle Fuel Consumption',
             source: '/vehicle/vehicle-fuel-consumption',
           },
-          { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
+          // { name: 'Vehicle Summary', source: '/vehicle/vehicle-summary' },
           {
             name: 'Vehicle Performance Report',
             source: '/vehicle/vehicle-performance-report',
