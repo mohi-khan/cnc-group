@@ -1,5 +1,5 @@
 import { fetchApi } from "@/utils/http";
-import { VehicleCostByYearGetData } from "@/utils/type";
+import { VehicleCostByYearGetData, vehiclePerLitreCost } from "@/utils/type";
 
 export async function getCostByYear(token: string, companyId: string) {
   return fetchApi<VehicleCostByYearGetData>({
@@ -13,7 +13,7 @@ export async function getCostByYear(token: string, companyId: string) {
 }
 
 export async function getVehiclePer(token: string, vehicleId: string) {
-  return fetchApi({
+  return fetchApi<vehiclePerLitreCost>({
     url: `api/vehicle/getVehiclePer/${vehicleId}`,
     method: 'GET',
     headers: {

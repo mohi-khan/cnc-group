@@ -1,385 +1,901 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-} from 'recharts'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { getAllCompanies } from '@/api/common-shared-api'
-import type { CompanyType } from '@/api/company-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
-import { useAtom } from 'jotai'
-import { CustomCombobox } from '@/utils/custom-combobox'
-import { getCostByYear, getVehiclePer } from '@/api/utility-vehicle-dashboard-api'
-import type { GetAllVehicleType, VehicleCostByYearGetData, vehiclePerLitreCost } from '@/utils/type'
-import { getAllVehicles } from '@/api/vehicle.api'
+// "use client"
 
-const data = [
-  { month: 'Jan', year1: 2023, amount1: 240, year2: 2024, amount2: 280 },
-  { month: 'Feb', year1: 2022, amount1: 139, year2: 2023, amount2: 159 },
-  { month: 'Mar', year1: 2024, amount1: 980, year2: 2025, amount2: 920 },
-  { month: 'Apr', year1: 2021, amount1: 390, year2: 2022, amount2: 410 },
-  { month: 'May', year1: 2023, amount1: 480, year2: 2024, amount2: 460 },
-  { month: 'Jun', year1: 2022, amount1: 380, year2: 2023, amount2: 400 },
-  { month: 'Jul', year1: 2024, amount1: 430, year2: 2025, amount2: 450 },
-  { month: 'Aug', year1: 2021, amount1: 290, year2: 2022, amount2: 310 },
-  { month: 'Sep', year1: 2023, amount1: 500, year2: 2024, amount2: 520 },
-  { month: 'Oct', year1: 2022, amount1: 420, year2: 2023, amount2: 440 },
-  { month: 'Nov', year1: 2024, amount1: 550, year2: 2025, amount2: 570 },
-  { month: 'Dec', year1: 2021, amount1: 340, year2: 2022, amount2: 360 },
-]
+// import React, { useEffect, useState } from "react"
+// import { CartesianGrid, XAxis, YAxis, LineChart, Line, BarChart, Bar } from "recharts"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+// import { getAllCompanies } from "@/api/common-shared-api"
+// import type { CompanyType } from "@/api/company-api"
+// import { tokenAtom, useInitializeUser } from "@/utils/user"
+// import { useAtom } from "jotai"
+// import { getCostByYear, getVehiclePer } from "@/api/utility-vehicle-dashboard-api"
+// import type { GetAllVehicleType, VehicleCostByYearGetData, vehiclePerLitreCost } from "@/utils/type"
+// import { getAllVehicles } from "@/api/vehicle.api"
 
-// Enhanced custom tooltip component
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]?.payload
-    return (
-      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg max-w-xs">
-        <p className="font-semibold text-gray-800">{`${label}`}</p>
-        <p className="text-lg font-bold text-green-600">{`Total: ${data?.amount?.toLocaleString()}`}</p>
-        <p className="text-sm text-blue-600">{`Year: ${data?.year }`}</p>
-        {data?.costs && data.costs.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <p className="text-xs text-gray-600 mb-1">Cost Breakdown:</p>
-            {data.costs.map((cost: any, index: number) => (
-              <p key={index} className="text-xs text-gray-700">
-                {`${cost.costName}: ${cost.amount.toLocaleString()}`}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-  return null
+// // Types for transformed data
+// export type MonthlyVehicleCost = {
+//   year: number
+//   month: "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec"
+//   amount: number
+//   costs: Array<{ costName: string; amount: number }>
+// }
+
+// export type VehiclePerformanceData = {
+//   year: number
+//   month: string
+//   kmrsperlitre: number
+// }
+
+// const UtilityVehicleDashboard = () => {
+//   useInitializeUser()
+//   const [token] = useAtom(tokenAtom)
+
+//   // Company and Vehicle Selection States
+//   const [companies, setCompanies] = useState<CompanyType[]>([])
+//   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("")
+//   const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
+//   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("")
+
+//   // Data States
+//   const [costData, setCostData] = useState<VehicleCostByYearGetData | null>(null)
+//   const [vehiclePerformanceData, setVehiclePerformanceData] = useState<vehiclePerLitreCost[]>([])
+
+//   // Transformed Data States
+//   const [transformedCostData, setTransformedCostData] = useState<any[]>([])
+//   const [transformedPerformanceData, setTransformedPerformanceData] = useState<any[]>([])
+
+//   // Chart Configuration States
+//   const [costChartConfig, setCostChartConfig] = useState<ChartConfig>({})
+//   const [performanceChartConfig, setPerformanceChartConfig] = useState<ChartConfig>({})
+
+//   // Years for charts
+//   const [costYears, setCostYears] = useState<number[]>([])
+//   const [performanceYears, setPerformanceYears] = useState<number[]>([])
+
+//   // Selected year for filtering
+//   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+
+//   // Dynamic chart config generator
+//   const getDynamicChartConfig = (years: number[]) => {
+//     const config: ChartConfig = {}
+//     years.forEach((year, index) => {
+//       config[year] = {
+//         label: String(year),
+//         color: `hsl(${(index * 70) % 360}, 70%, 50%)`,
+//       }
+//     })
+//     return config
+//   }
+
+//   // Transform cost data for multi-year display
+//   const transformCostDataForChart = (costData: VehicleCostByYearGetData | null) => {
+//     if (!costData || !Array.isArray(costData)) return []
+
+//     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+//     const grouped: Record<string, { [year: number]: number }> = {}
+
+//     // Group data by month and year
+//     costData.forEach((item: any) => {
+//       const monthIndex = item.month - 1
+//       if (monthIndex >= 0 && monthIndex < 12) {
+//         const monthName = months[monthIndex]
+//         const amount = Number.parseFloat(item.amount) || 0
+//         const year = item.year || new Date().getFullYear()
+
+//         if (!grouped[monthName]) {
+//           grouped[monthName] = {}
+//         }
+
+//         if (!grouped[monthName][year]) {
+//           grouped[monthName][year] = 0
+//         }
+
+//         grouped[monthName][year] += amount
+//       }
+//     })
+
+//     // Convert to chart format
+//     return months.map((month) => ({
+//       month,
+//       ...grouped[month],
+//     }))
+//   }
+
+//   // Transform performance data for multi-year display
+//   const transformPerformanceDataForChart = (performanceData: vehiclePerLitreCost[]) => {
+//     if (!performanceData || !Array.isArray(performanceData)) return []
+
+//     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+//     const grouped: Record<string, { [year: number]: number }> = {}
+
+//     // Group data by month and year
+//     performanceData.forEach((item: any) => {
+//       const monthName = item.month
+//       const kmrsperlitre = Number.parseFloat(item.kmrsperlitre) || 0
+//       const year = item.year || new Date().getFullYear()
+
+//       if (!grouped[monthName]) {
+//         grouped[monthName] = {}
+//       }
+
+//       grouped[monthName][year] = kmrsperlitre
+//     })
+
+//     // Convert to chart format
+//     return months.map((month) => ({
+//       month,
+//       ...grouped[month],
+//     }))
+//   }
+
+//   // Fetch Functions
+//   const fetchCompanies = React.useCallback(async () => {
+//     if (!token) return
+//     try {
+//       const response = await getAllCompanies(token)
+//       if (response.data) {
+//         const companiesData = Array.isArray(response.data) ? response.data : [response.data]
+//         setCompanies(companiesData)
+
+//         // Auto-select first company if none selected
+//         if (companiesData.length > 0 && !selectedCompanyId) {
+//           setSelectedCompanyId(String(companiesData[0].companyId ?? ""))
+//         }
+//       } else {
+//         setCompanies([])
+//       }
+//     } catch (error) {
+//       console.error("Error fetching companies:", error)
+//       setCompanies([])
+//     }
+//   }, [token, selectedCompanyId])
+
+//   const fetchVehicles = React.useCallback(async () => {
+//     if (!token) return
+//     try {
+//       const response = await getAllVehicles(token)
+//       const data: GetAllVehicleType[] = response.data ?? []
+//       setVehicles(data)
+
+//       // Auto-select first vehicle if none selected
+//       if (data.length > 0 && !selectedVehicleId) {
+//         setSelectedVehicleId(String(data[0].vehicleNo ?? ""))
+//       }
+//     } catch (error) {
+//       console.error("Error fetching vehicles:", error)
+//       setVehicles([])
+//     }
+//   }, [token, selectedVehicleId])
+
+//   const fetchCostByYear = React.useCallback(async () => {
+//     if (!token || !selectedCompanyId) return
+//     try {
+//       const response = await getCostByYear(token, selectedCompanyId)
+//       setCostData(response.data)
+//     } catch (error) {
+//       console.error("Error fetching cost data:", error)
+//       setCostData(null)
+//     }
+//   }, [token, selectedCompanyId])
+
+//   const fetchVehiclePerformance = React.useCallback(async () => {
+//     if (!token || !selectedVehicleId) return
+//     try {
+//       const response = await getVehiclePer(token, selectedVehicleId)
+//       const vehicleData = { data: Array.isArray(response.data) ? response.data : [response.data] } as { data: vehiclePerLitreCost[] }
+//       setVehiclePerformanceData(vehicleData.data || [])
+//       console.log("Vehicle Performance Data:", vehicleData.data)  
+//     } catch (error) {
+//       console.error("Error fetching vehicle performance data:", error)
+//       setVehiclePerformanceData([])
+//     }
+//   }, [token, selectedVehicleId])
+
+//   // Initial data fetch
+//   useEffect(() => {
+//     if (token) {
+//       fetchCompanies()
+//       fetchVehicles()
+//     }
+//   }, [token, fetchCompanies, fetchVehicles])
+
+//   // Fetch data when selections change
+//   useEffect(() => {
+//     if (token && selectedCompanyId) {
+//       fetchCostByYear()
+//     }
+//   }, [token, selectedCompanyId, fetchCostByYear])
+
+//   useEffect(() => {
+//     if (token && selectedVehicleId) {
+//       fetchVehiclePerformance()
+//     }
+//   }, [token, selectedVehicleId, fetchVehiclePerformance])
+
+//   // Transform cost data
+//   useEffect(() => {
+//     if (costData) {
+//       const uniqueYears = Array.from(new Set(Array.isArray(costData) ? costData.map((d: VehicleCostByYearGetData) => d.year || new Date().getFullYear()) : [costData].map((d: VehicleCostByYearGetData) => d.year || new Date().getFullYear()))).sort() as number[]
+//       const transformed = transformCostDataForChart(costData)
+//       const config = getDynamicChartConfig(uniqueYears)
+
+//       setCostYears(uniqueYears)
+//       setTransformedCostData(transformed)
+//       setCostChartConfig(config)
+//     }
+//   }, [costData])
+
+//   // Transform performance data
+//   useEffect(() => {
+//     if (vehiclePerformanceData.length > 0) {
+//       const uniqueYears = Array.from(
+//         new Set(vehiclePerformanceData.map((d: any) => d.year || new Date().getFullYear())),
+//       ).sort()
+//       const transformed = transformPerformanceDataForChart(vehiclePerformanceData)
+//       const config = getDynamicChartConfig(uniqueYears)
+
+//       setPerformanceYears(uniqueYears)
+//       setTransformedPerformanceData(transformed)
+//       setPerformanceChartConfig(config)
+//     }
+//   }, [vehiclePerformanceData])
+
+//   // // Get selected company and vehicle names for display
+//   // const selectedCompany = companies.find((c) => String(c.companyId) === selectedCompanyId)
+//   // const selectedVehicle = vehicles.find((v) => String(v.vehicleNo) === selectedVehicleId)
+
+//   return (
+//     <div className="min-h-screen bg-background p-6">
+//       {/* Header */}
+//       <div className="flex items-center justify-between mb-8">
+//         <div>
+//           <h1 className="text-3xl font-bold tracking-tight">Vehicle Dashboard</h1>
+//           {/* <p className="text-muted-foreground">
+//             Monitor your vehicle usage and costs
+//             {selectedCompany && <span className="ml-2 text-primary font-medium">- {selectedCompany.companyName}</span>}
+//             {selectedVehicle && (
+//               <span className="ml-2 text-secondary-foreground font-medium">| {selectedVehicle.description}</span>
+//             )}
+//           </p> */}
+//         </div>
+
+//         {/* Controls */}
+//         <div className="flex gap-4">
+//           <div className="w-64">
+//             <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+//               <SelectTrigger>
+//                 <SelectValue placeholder="Select company" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 {companies.map((company) => (
+//                   <SelectItem key={String(company.companyId ?? "")} value={String(company.companyId ?? "")}>
+//                     {company.companyName}
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//           </div>
+
+//           <input
+//             type="number"
+//             className="h-10 px-3 py-2 text-sm border rounded-md w-32"
+//             onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
+//             value={selectedYear}
+//             min={1900}
+//             max={new Date().getFullYear()}
+//             placeholder="Year"
+//           />
+//         </div>
+//       </div>
+
+//       {/* Show message if no company selected */}
+//       {!selectedCompanyId && companies.length > 0 && (
+//         <div className="text-center py-8">
+//           <p className="text-muted-foreground">Please select a company to view vehicle cost data.</p>
+//         </div>
+//       )}
+
+//       {/* Vehicle Cost Charts - Only show if company is selected */}
+//       {selectedCompanyId && (
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+//           {/* Vehicle Cost Line Chart */}
+//           <Card>
+//             <CardHeader>
+//               <CardTitle>Vehicle Cost Breakdown</CardTitle>
+//               <CardDescription>Monthly vehicle costs by year</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <ChartContainer config={costChartConfig}>
+//                 <LineChart data={transformedCostData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis dataKey="month" />
+//                   <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+//                   <ChartTooltip content={<ChartTooltipContent />} />
+//                   {costYears.map((year, index) => (
+//                     <Line
+//                       key={year}
+//                       type="monotone"
+//                       dataKey={String(year)}
+//                       stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+//                       strokeWidth={2}
+//                       dot={{ r: 3 }}
+//                     />
+//                   ))}
+//                 </LineChart>
+//               </ChartContainer>
+//             </CardContent>
+//           </Card>
+
+//           {/* Vehicle Cost Bar Chart */}
+//           <Card>
+//             <CardHeader>
+//               <CardTitle>Vehicle Cost Overview</CardTitle>
+//               <CardDescription>Monthly vehicle costs comparison</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <ChartContainer config={costChartConfig}>
+//                 <BarChart data={transformedCostData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis dataKey="month" />
+//                   <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+//                   <ChartTooltip content={<ChartTooltipContent />} />
+//                   {costYears.map((year, index) => (
+//                     <Bar
+//                       key={year}
+//                       dataKey={String(year)}
+//                       fill={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+//                       radius={[2, 2, 0, 0]}
+//                     />
+//                   ))}
+//                 </BarChart>
+//               </ChartContainer>
+//             </CardContent>
+//           </Card>
+//         </div>
+//       )}
+
+//       {/* Vehicle Selection for Performance Charts */}
+//       <div className="flex justify-end mb-6">
+//         <div className="w-64">
+//           <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+//             <SelectTrigger>
+//               <SelectValue placeholder="Select vehicle" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               {vehicles.map((vehicle) => (
+//                 <SelectItem key={String(vehicle.vehicleNo ?? "")} value={String(vehicle.vehicleNo ?? "")}>
+//                   {vehicle.description || "Unnamed Vehicle"}
+//                 </SelectItem>
+//               ))}
+//             </SelectContent>
+//           </Select>
+//         </div>
+//       </div>
+
+//       {/* Show message if no vehicle selected */}
+//       {!selectedVehicleId && vehicles.length > 0 && (
+//         <div className="text-center py-8">
+//           <p className="text-muted-foreground">Please select a vehicle to view performance data.</p>
+//         </div>
+//       )}
+
+//       {/* Vehicle Performance Charts - Only show if vehicle is selected */}
+//       {selectedVehicleId && (
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//           {/* Vehicle Performance Line Chart */}
+//           <Card>
+//             <CardHeader>
+//               <CardTitle>Vehicle Fuel Efficiency</CardTitle>
+//               <CardDescription>Kilometers per liter by month</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <ChartContainer config={performanceChartConfig}>
+//                 <LineChart data={transformedPerformanceData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis dataKey="month" />
+//                   <YAxis tickFormatter={(value) => `${value} km/l`} />
+//                   <ChartTooltip content={<ChartTooltipContent />} />
+//                   {performanceYears.map((year, index) => (
+//                     <Line
+//                       key={year}
+//                       type="monotone"
+//                       dataKey={String(year)}
+//                       stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+//                       strokeWidth={2}
+//                       dot={{ r: 3 }}
+//                     />
+//                   ))}
+//                 </LineChart>
+//               </ChartContainer>
+//             </CardContent>
+//           </Card>
+
+//           {/* Vehicle Performance Bar Chart */}
+//           <Card>
+//             <CardHeader>
+//               <CardTitle>Fuel Efficiency Overview</CardTitle>
+//               <CardDescription>Monthly fuel efficiency comparison</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <ChartContainer config={performanceChartConfig}>
+//                 <BarChart data={transformedPerformanceData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis dataKey="month" />
+//                   <YAxis tickFormatter={(value) => `${value} km/l`} />
+//                   <ChartTooltip content={<ChartTooltipContent />} />
+//                   {performanceYears.map((year, index) => (
+//                     <Bar
+//                       key={year}
+//                       dataKey={String(year)}
+//                       fill={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+//                       radius={[2, 2, 0, 0]}
+//                     />
+//                   ))}
+//                 </BarChart>
+//               </ChartContainer>
+//             </CardContent>
+//           </Card>
+//         </div>
+//       )}
+//     </div>
+//   )
+// }
+
+// export default UtilityVehicleDashboard
+
+
+"use client"
+
+import React, { useEffect, useState } from "react"
+import { CartesianGrid, XAxis, YAxis, LineChart, Line, BarChart, Bar } from "recharts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { getAllCompanies } from "@/api/common-shared-api"
+import type { CompanyType } from "@/api/company-api"
+import { tokenAtom, useInitializeUser } from "@/utils/user"
+import { useAtom } from "jotai"
+import { getCostByYear, getVehiclePer } from "@/api/utility-vehicle-dashboard-api"
+import type { GetAllVehicleType, VehicleCostByYearGetData, vehiclePerLitreCost } from "@/utils/type"
+import { getAllVehicles } from "@/api/vehicle.api"
+
+// Types for transformed data
+export type MonthlyVehicleCost = {
+  year: number
+  month: "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec"
+  amount: number
+  costs: Array<{ costName: string; amount: number }>
 }
 
-// Function to format cost data for the chart
-const formatCostDataForChart = (
-  costData: VehicleCostByYearGetData | null,
- 
-) => {
-  if (!costData || !Array.isArray(costData)) return []
+export type VehiclePerformanceData = {
+  year: number
 
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-
-  // Filter data for the selected year and group by month
-  const monthlyTotals = costData
-    
-    .reduce((acc: any, item: any) => {
-      const monthIndex = item.month - 1 // Convert 1-12 to 0-11
-      if (monthIndex >= 0 && monthIndex < 12) {
-        if (!acc[monthIndex]) {
-          acc[monthIndex] = {
-            month: months[monthIndex],
-            monthNumber: item.month,
-            amount: 0,
-           
-            costs: [],
-          }
-        }
-        const amount = Number.parseFloat(item.amount) || 0
-        acc[monthIndex].amount += amount
-        acc[monthIndex].costs.push({
-          costName: item.costName,
-          amount: amount,
-        })
-      }
-      return acc
-    }, {})
-
-  // Convert to array and fill missing months with zero
-  return months.map((month, index) => {
-    return (
-      monthlyTotals[index] || {
-        month,
-        monthNumber: index + 1,
-        amount: 0,
-        costs: [],
-      }
-    )
-  })
+  month: "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec"
+  kmrsperlitre: number
+  costs: Array<{ costName: string; kmrsperlitre: number }>
 }
 
-const UtilityVehicleDeshboard = () => {
+const UtilityVehicleDashboard = () => {
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
-  const [getCompany, setGetCompany] = useState<CompanyType[] | null>([])
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
-    null
-  )
-  const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
-    null
-  )
-  const [costData, setCostData] = useState<VehicleCostByYearGetData | null>(
-    null
-  )
-  const [vehiclePer, setVehiclePer] = useState<vehiclePerLitreCost[]>([]) // Adjust type as needed
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  )
 
-  // Fetch the vehicle data from API
+  // Company and Vehicle Selection States
+  const [companies, setCompanies] = useState<CompanyType[]>([])
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("")
+  const [vehicles, setVehicles] = useState<GetAllVehicleType[]>([])
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("")
+
+  // Data States
+  const [costData, setCostData] = useState<VehicleCostByYearGetData | null>(null)
+  const [vehiclePerformanceData, setVehiclePerformanceData] = useState<vehiclePerLitreCost[]>([])
+
+  // Transformed Data States
+  const [transformedCostData, setTransformedCostData] = useState<any[]>([])
+  const [transformedPerformanceData, setTransformedPerformanceData] = useState<any[]>([])
+
+  // Chart Configuration States
+  const [costChartConfig, setCostChartConfig] = useState<ChartConfig>({})
+  const [performanceChartConfig, setPerformanceChartConfig] = useState<ChartConfig>({})
+
+  // Years for charts
+  const [costYears, setCostYears] = useState<number[]>([])
+  const [performanceYears, setPerformanceYears] = useState<number[]>([])
+
+  // Selected year for filtering
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+
+  // Dynamic chart config generator
+  const getDynamicChartConfig = (years: number[]) => {
+    const config: ChartConfig = {}
+    years.forEach((year, index) => {
+      config[year] = {
+        label: String(year),
+        color: `hsl(${(index * 70) % 360}, 70%, 50%)`,
+      }
+    })
+    return config
+  }
+
+  // Transform cost data for multi-year display
+  const transformCostDataForChart = (costData: VehicleCostByYearGetData | null) => {
+    if (!costData || !Array.isArray(costData)) return []
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const grouped: Record<string, { [year: number]: number }> = {}
+
+    // Group data by month and year
+    costData.forEach((item: any) => {
+      const monthIndex = item.month - 1
+      if (monthIndex >= 0 && monthIndex < 12) {
+        const monthName = months[monthIndex]
+        const amount = Number.parseFloat(item.amount) || 0
+        const year = item.year || new Date().getFullYear()
+
+        if (!grouped[monthName]) {
+          grouped[monthName] = {}
+        }
+
+        if (!grouped[monthName][year]) {
+          grouped[monthName][year] = 0
+        }
+
+        grouped[monthName][year] += amount
+      }
+    })
+
+    // Convert to chart format
+    return months.map((month) => ({
+      month,
+      ...grouped[month],
+    }))
+  }
+
+  // Transform performance data to show individual records with year, month, kmrsperlitre
+  const transformPerformanceDataForChart = (performanceData: vehiclePerLitreCost[]) => {
+    if (!performanceData || !Array.isArray(performanceData)) return []
+
+    // Return the data in the format: { year, month, kmrsperlitre }
+    return performanceData.map((item: any) => ({
+      year: item.year || new Date().getFullYear(),
+      month: item.month || "Jan",
+      kmrsperlitre: Number.parseFloat(item.kmrsperlitre) || 0,
+      // Create a combined label for better display
+      monthYear: `${item.month} ${item.year || new Date().getFullYear()}`,
+    }))
+  }
+
+  // Fetch Functions
+  const fetchCompanies = React.useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllCompanies(token)
+      if (response.data) {
+        const companiesData = Array.isArray(response.data) ? response.data : [response.data]
+        setCompanies(companiesData)
+
+        // Auto-select first company if none selected
+        if (companiesData.length > 0 && !selectedCompanyId) {
+          setSelectedCompanyId(String(companiesData[0].companyId ?? ""))
+        }
+      } else {
+        setCompanies([])
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error)
+      setCompanies([])
+    }
+  }, [token, selectedCompanyId])
+
   const fetchVehicles = React.useCallback(async () => {
     if (!token) return
-    const response = await getAllVehicles(token)
-    const data: GetAllVehicleType[] = response.data ?? []
-    setVehicles(data)
-  }, [token])
+    try {
+      const response = await getAllVehicles(token)
+      const data: GetAllVehicleType[] = response.data ?? []
+      setVehicles(data)
 
-  const fetchVehiclePer = React.useCallback(async () => {
-      if (!token || !selectedVehicleId) return
-      try {
-        const response = await getVehiclePer(
-          token,
-          selectedVehicleId.toString(),
-          
-        )
-        setVehiclePer(response.data.data  || [])
-        console.log('fetchVehiclePer response:', response.data)
-      } catch (error) {
-        console.error('Error fetching vehicle data:', error)
+      // Auto-select first vehicle if none selected
+      if (data.length > 0 && !selectedVehicleId) {
+        setSelectedVehicleId(String(data[0].vehicleNo ?? ""))
+      }
+    } catch (error) {
+      console.error("Error fetching vehicles:", error)
+      setVehicles([])
     }
-    
-    }, [token, selectedVehicleId])
-  
+  }, [token, selectedVehicleId])
 
   const fetchCostByYear = React.useCallback(async () => {
     if (!token || !selectedCompanyId) return
     try {
-      const response = await getCostByYear(token, selectedCompanyId.toString())
+      const response = await getCostByYear(token, selectedCompanyId)
       setCostData(response.data)
-      console.log('fetchCostByYear response:', response.data)
     } catch (error) {
-      console.error('Error fetching cost data:', error)
+      console.error("Error fetching cost data:", error)
+      setCostData(null)
     }
   }, [token, selectedCompanyId])
 
-  const fetchCompnay = React.useCallback(async () => {
-    if (!token) return
-    const response = await getAllCompanies(token)
-    setGetCompany(response.data)
-    console.log(
-      'fetchAssetCategories category names asset tsx file:',
-      response.data
-    )
-  }, [token])
+  const fetchVehiclePerformance = React.useCallback(async () => {
+    if (!token || !selectedVehicleId) return
+    try {
+      const response = await getVehiclePer(token, selectedVehicleId)
+     const vehicleData = { data: Array.isArray(response.data) ? response.data : [response.data] } as { data: vehiclePerLitreCost[] }
+
+      // Log the data to debug
+      console.log("Vehicle Performance Data:", vehicleData)
+
+      setVehiclePerformanceData(vehicleData.data)
+    } catch (error) {
+      console.error("Error fetching vehicle performance data:", error)
+      setVehiclePerformanceData([])
+    }
+  }, [token, selectedVehicleId])
+
+  // Initial data fetch
+  useEffect(() => {
+    if (token) {
+      fetchCompanies()
+      fetchVehicles()
+    }
+  }, [token, fetchCompanies, fetchVehicles])
+
+  // Fetch data when selections change
+  useEffect(() => {
+    if (token && selectedCompanyId) {
+      fetchCostByYear()
+    }
+  }, [token, selectedCompanyId, fetchCostByYear])
 
   useEffect(() => {
-    fetchCompnay()
-    fetchVehicles()
-  }, [fetchCompnay, fetchVehicles])
+    if (token && selectedVehicleId) {
+      fetchVehiclePerformance()
+    }
+  }, [token, selectedVehicleId, fetchVehiclePerformance])
 
+  // Transform cost data
   useEffect(() => {
-    fetchCostByYear()
-    fetchVehiclePer()
-  }, [fetchCostByYear, fetchVehiclePer])
 
-  // Format the data for the chart
-  const chartData = formatCostDataForChart(costData)
+
+    if (costData && Array.isArray(costData)) {
+      const uniqueYears = Array.from(new Set(costData.map((d) => d.year || new Date().getFullYear()))).sort() as number[]
+      const transformed = transformCostDataForChart(costData)
+      const config = getDynamicChartConfig(uniqueYears)
+
+      setCostYears(uniqueYears)
+      setTransformedCostData(transformed)
+      setCostChartConfig(config)
+    }
+  }, [costData])
+
+  // Transform performance data
+  useEffect(() => {
+    if (vehiclePerformanceData.length > 0) {
+      const transformed = transformPerformanceDataForChart(vehiclePerformanceData)
+      const uniqueYears = Array.from(
+        new Set(vehiclePerformanceData.map((d: any) => d.year || new Date().getFullYear())),
+      ).sort()
+
+      setPerformanceYears(uniqueYears)
+      setTransformedPerformanceData(transformed)
+
+      // Simple config for single data series
+      setPerformanceChartConfig({
+        kmrsperlitre: {
+          label: "Fuel Efficiency (km/l)",
+          color: "hsl(220, 70%, 50%)",
+        },
+      })
+    }
+  }, [vehiclePerformanceData])
+
+  // Get selected company and vehicle names for display
+  const selectedCompany = companies.find((c) => String(c.companyId) === selectedCompanyId)
+  const selectedVehicle = vehicles.find((v) => String(v.vehicleNo) === selectedVehicleId)
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Vehicle Dashboard</h1>
-        <p className="text-muted-foreground">
-          Monitor your vehicle usage and costs
-        </p>
-      </div>
+    <div className="min-h-screen bg-background p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Vehicle Dashboard</h1>
+          <p className="text-muted-foreground">
+            Monitor your vehicle usage and costs
+            {selectedCompany && <span className="ml-2 text-primary font-medium">- {selectedCompany.companyName}</span>}
+            {selectedVehicle && (
+              <span className="ml-2 text-secondary-foreground font-medium">| {selectedVehicle.description}</span>
+            )}
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="col-span-2 flex justify-end mx-8 gap-4">
-          <CustomCombobox
-            items={(getCompany ?? []).map((company) => ({
-              id: company?.companyId?.toString() ?? '',
-              name: company.companyName || 'Unnamed Company',
-            }))}
-            value={
-              selectedCompanyId !== null
-                ? {
-                    id: selectedCompanyId.toString(),
-                    name:
-                      getCompany?.find(
-                        (company) => company.companyId === selectedCompanyId
-                      )?.companyName || 'Unnamed Company',
-                  }
-                : null
-            }
-            onChange={(value: { id: string; name: string } | null) =>
-              setSelectedCompanyId(value ? Number.parseInt(value.id, 10) : null)
-            }
-            placeholder="Select company"
-          />
+        {/* Controls */}
+        <div className="flex gap-4">
+          <div className="w-64">
+            <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select company" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((company) => (
+                  <SelectItem key={String(company.companyId ?? "")} value={String(company.companyId ?? "")}>
+                    {company.companyName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <input
             type="number"
-            className="h-10 px-3 py-2 text-sm border rounded-md"
+            className="h-10 px-3 py-2 text-sm border rounded-md w-32"
             onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
             value={selectedYear}
             min={1900}
             max={new Date().getFullYear()}
+            placeholder="Year"
           />
         </div>
-
-        {/* Fixed Line Chart - Monthly Cost Data */}
-        <Card className="p-4 shadow-lg border-2">
-          {/* <CardHeader>
-            <CardTitle>Monthly Vehicle Costs ({selectedYear})</CardTitle>
-            <CardDescription>
-              Total costs by month for the selected year
-            </CardDescription>
-          </CardHeader> */}
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `${value.toLocaleString()}`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#82ca9d"
-                  strokeWidth={2}
-                  dot={{ fill: '#82ca9d', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#82ca9d', strokeWidth: 2 }}
-                  name={` Total Amount`}
-                  label={{
-                    position: 'top',
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="p-4 shadow-lg border-2">
-          {/* <CardHeader>
-            <CardTitle>Comparison Chart</CardTitle>
-            <CardDescription>Monthly comparison data</CardDescription>
-          </CardHeader> */}
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `${value.toLocaleString()}`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#82ca9d"
-                  strokeWidth={2}
-                  fill="#82ca9d"
-                  name={` Total Amount`}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="col-span-2 flex justify-end mx-8">
-          <CustomCombobox
-            items={(vehicles ?? []).map((vehicle) => ({
-              id: vehicle?.vehicleNo?.toString() ?? '',
-              name: vehicle.description || 'Unnamed Vehicle',
-            }))}
-            value={
-              selectedVehicleId !== null
-                ? {
-                    id: selectedVehicleId.toString(),
-                    name:
-                      vehicles?.find(
-                        (vehicle) => vehicle.vehicleNo === selectedVehicleId
-                      )?.description || 'Unnamed Vehicle',
-                  }
-                : null
-            }
-            onChange={(value: { id: string; name: string } | null) =>
-              setSelectedVehicleId(value ? Number.parseInt(value.id, 10) : null)
-            }
-            placeholder="Select vehicle"
-          />
+      {/* Show message if no company selected */}
+      {!selectedCompanyId && companies.length > 0 && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Please select a company to view vehicle cost data.</p>
         </div>
+      )}
 
-        <Card className="p-4 shadow-lg border-2">
-          {/* <CardHeader>
-            <CardTitle>Vehicle Performance</CardTitle>
-            <CardDescription>Individual vehicle metrics</CardDescription>
-          </CardHeader> */}
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={vehiclePer}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line type="monotone" dataKey="kmrsperlitre" stroke="#82ca9d" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Vehicle Cost Charts - Only show if company is selected */}
+      {selectedCompanyId && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Vehicle Cost Line Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle Cost Breakdown</CardTitle>
+              <CardDescription>Monthly vehicle costs by year</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={costChartConfig}>
+                <LineChart data={transformedCostData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  {costYears.map((year, index) => (
+                    <Line
+                      key={year}
+                      type="monotone"
+                      dataKey={String(year)}
+                      stroke={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  ))}
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-        <Card className="p-4 shadow-lg border-2">
-          {/* <CardHeader>
-            <CardTitle>Vehicle Costs</CardTitle>
-            <CardDescription>Cost breakdown by vehicle</CardDescription>
-          </CardHeader> */}
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vehiclePer}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis
-                  tickFormatter={(value) => `$${value.toLocaleString()}`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="month" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          {/* Vehicle Cost Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle Cost Overview</CardTitle>
+              <CardDescription>Monthly vehicle costs comparison</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={costChartConfig}>
+                <BarChart data={transformedCostData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  {costYears.map((year, index) => (
+                    <Bar
+                      key={year}
+                      dataKey={String(year)}
+                      fill={`hsl(${(index * 70) % 360}, 70%, 50%)`}
+                      radius={[2, 2, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Vehicle Selection for Performance Charts */}
+      <div className="flex justify-end mb-6">
+        <div className="w-64">
+          <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select vehicle" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map((vehicle) => (
+                <SelectItem key={String(vehicle.vehicleNo ?? "")} value={String(vehicle.vehicleNo ?? "")}>
+                  {vehicle.description || "Unnamed Vehicle"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {/* Show message if no vehicle selected */}
+      {!selectedVehicleId && vehicles.length > 0 && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Please select a vehicle to view performance data.</p>
+        </div>
+      )}
+
+      {/* Vehicle Performance Charts - Only show if vehicle is selected */}
+      {selectedVehicleId && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Vehicle Performance Line Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle Fuel Efficiency (Line Chart)</CardTitle>
+              <CardDescription>Kilometers per liter performance over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{ kmrsperlitre: { label: "km/l", color: "hsl(220, 70%, 50%)" } }}>
+                <LineChart data={transformedPerformanceData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monthYear" />
+                  <YAxis tickFormatter={(value) => `${value} km/l`} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name) => [`${value} km/l`, "Fuel Efficiency"]}
+                        labelFormatter={(label) => `Period: ${label}`}
+                      />
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="kmrsperlitre"
+                    stroke="hsl(220, 70%, 50%)"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Fuel Efficiency"
+                  />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Vehicle Performance Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle Fuel Efficiency (Bar Chart)</CardTitle>
+              <CardDescription>Monthly kilometers per liter comparison</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{ kmrsperlitre: { label: "km/l", color: "hsl(160, 70%, 50%)" } }}>
+                <BarChart data={transformedPerformanceData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monthYear" />
+                  <YAxis tickFormatter={(value) => `${value} km/l`} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name) => [`${value} km/l`, "Fuel Efficiency"]}
+                        labelFormatter={(label) => `Period: ${label}`}
+                      />
+                    }
+                  />
+                  <Bar dataKey="kmrsperlitre" fill="hsl(160, 70%, 50%)" radius={[2, 2, 0, 0]} name="Fuel Efficiency" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
 
-export default UtilityVehicleDeshboard
+export default UtilityVehicleDashboard
+
+
+
