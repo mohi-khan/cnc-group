@@ -22,3 +22,4 @@ export async function getVehiclePer(token: string, vehicleId: string) {
     },
   })
 }
+// url: `api/vehicle/getVehiclePer/${vehicleId}`,
