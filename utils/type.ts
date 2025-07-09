@@ -1601,3 +1601,18 @@ export type vehiclePerLitreCost = {
   kmrsperlitre: number
   costBreakdown: CostBreakdown
 }
+
+export interface UtilityBillSummary {
+  year: number
+  monthNo: number
+  month: string
+  totalAmount: number
+  paidAmount: number
+  unpaidAmount: number
+}
+
+export interface UtilityReportParams {
+  fromDate: string
+  toDate: string
+  meterNo: string
+}
