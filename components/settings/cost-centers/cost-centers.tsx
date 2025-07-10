@@ -431,7 +431,7 @@ export default function CostCenterManagement() {
       {isLoading ? (
         <div>Loading cost centers...</div>
       ) : (
-        <div className="flex flex-col">
+        <div className="flex flex-col mx-4">
           <Table className="border shadow-md">
             <TableHeader className="shadow-md bg-slate-200">
               <TableRow>

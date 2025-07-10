@@ -250,37 +250,75 @@ export default function SingleVoucherDetails() {
     status: 'Draft',
   })
 
-  const handleReceiptClick = React.useCallback(() => {
-    // Pre-populate the bank voucher form with single voucher data
-    form.reset({
-      journalEntry: {
-        date: new Date().toISOString().split('T')[0],
-        journalType: 'Bank Voucher', // Changed from 'Bank Voucher' to 'Receipt'
-        companyId: 0, // Set to 0 or replace with a valid property if available
-        locationId: 0,
-        currencyId: 1,
-        exchangeRate: 1,
-        amountTotal: 0,
-        payTo: '',
-        notes: `Receipt for Invoice ${data?.[0]}`,
+  // const handleReceiptClick = React.useCallback(() => {
+  //   // Pre-populate the bank voucher form with single voucher data
+  //   form.reset({
+  //     journalEntry: {
+  //       date: new Date().toISOString().split('T')[0],
+  //       journalType: 'Bank Voucher', // Changed from 'Bank Voucher' to 'Receipt'
+  //       companyId: 0, // Set to 0 or replace with a valid property if available
+  //       locationId: 0,
+  //       currencyId: 1,
+  //       exchangeRate: 1,
+  //       amountTotal: 0,
+  //       payTo: '',
+  //       notes: `Receipt for Invoice ${data?.[0]}`,
+  //       createdBy: userData?.userId || 0,
+  //     },
+  //     journalDetails: [
+  //       {
+  //         accountId: 0,
+  //         costCenterId: null,
+  //         departmentId: null,
+  //         debit: data?.[0]?.totalamount || 0, // Set to the invoice amount
+  //         credit: 0,
+  //         analyticTags: null,
+  //         taxId: null,
+  //         resPartnerId: data?.[0]?.partner || null,
+  //         notes: `Receipt Invoice ${data?.[0]}`,
+  //         createdBy: userData?.userId || 0,
+  //       },
+  //     ],
+  //   })
+
+  //   setIsBankVoucherDialogOpen(true)
+  // }, [form, userData, data])
+
+   const handleReceiptClick = React.useCallback(() => {
+    // Pre-populate the bank voucher form with existing voucher data
+    if (data && data.length > 0) {
+      const voucherData = data[0]
+
+      // Map existing journal details
+      const mappedJournalDetails = data.map((item) => ({
+        accountId: item.accountsname || 0,
+        costCenterId: item.costcenter || null,
+        departmentId: item.department || null,
+        debit: item.debit || 0,
+        credit: item.credit || 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: item.partner || null,
+        notes: item.notes || "",
         createdBy: userData?.userId || 0,
-      },
-      journalDetails: [
-        {
-          accountId: 0,
-          costCenterId: null,
-          departmentId: null,
-          debit: data?.[0]?.totalamount || 0, // Set to the invoice amount
-          credit: 0,
-          analyticTags: null,
-          taxId: null,
-          resPartnerId: data?.[0]?.partner || null,
-          notes: `Receipt Invoice ${data?.[0]}`,
+      }))
+
+      form.reset({
+        journalEntry: {
+          date: voucherData.date || new Date().toISOString().split("T")[0],
+          journalType: "Bank Voucher",
+          companyId: voucherData.companyname || 0,
+          locationId: voucherData.location || 0,
+          currencyId: voucherData.currency || 1,
+          exchangeRate: voucherData.rate || 1,
+          amountTotal: voucherData.totalamount || 0,
+          payTo: voucherData.payTo || "",
+          notes: voucherData.notes || "",
           createdBy: userData?.userId || 0,
         },
-      ],
-    })
-
+        journalDetails: mappedJournalDetails,
+      })
+    }
     setIsBankVoucherDialogOpen(true)
   }, [form, userData, data])
 
@@ -364,6 +402,7 @@ export default function SingleVoucherDetails() {
     const updatedValues = {
       ...values,
       journalEntry: {
+        
         ...values.journalEntry,
         companyId: data?.[0]?.voucherid || 0,
         state: status === 'Draft' ? 0 : 1,
