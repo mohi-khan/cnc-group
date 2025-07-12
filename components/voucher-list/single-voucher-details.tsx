@@ -288,12 +288,13 @@ export default function SingleVoucherDetails() {
     // Pre-populate the bank voucher form with existing voucher data
     if (data && data.length > 0) {
       const voucherData = data[0]
+      console.log('🚀 ~ handleReceiptClick ~ voucherData:', voucherData)
 
       // Map existing journal details
       const mappedJournalDetails = data.map((item) => ({
-        accountId: item.accountsname || 0,
-        costCenterId: item.costcenter || null,
-        departmentId: item.department || null,
+        // accountId: item.accountsname || 0,
+        // costCenterId: item.costcenter || null,
+        // departmentId: item.department || null,
         debit: item.debit || 0,
         credit: item.credit || 0,
         analyticTags: null,
@@ -307,10 +308,10 @@ export default function SingleVoucherDetails() {
         journalEntry: {
           date: voucherData.date || new Date().toISOString().split("T")[0],
           journalType: "Bank Voucher",
-          companyId: voucherData.companyname || 0,
-          locationId: voucherData.location || 0,
-          currencyId: voucherData.currency || 1,
-          exchangeRate: voucherData.rate || 1,
+          // companyId: voucherData.companyname || 0,
+          // locationId: voucherData.location || 0,
+          // currencyId: voucherData.currency || 1,
+          // exchangeRate: voucherData.rate || 1,
           amountTotal: voucherData.totalamount || 0,
           payTo: voucherData.payTo || "",
           notes: voucherData.notes || "",
