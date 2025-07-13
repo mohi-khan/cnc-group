@@ -1455,15 +1455,11 @@ export interface GEtExpenseDataType {
 
 //Get cost breakdown data type
 export interface GetCostBreakdownType {
-  financialTag: string
+  parentName: string
   balance: number
 }
 
-//Get cost breakdown data type
-export interface GetCostBreakdownType {
-  financialTag: string
-  balance: number
-}
+
 
 //Get cost breakdown Details data type
 export interface GetCostBreakdownDetailsType {

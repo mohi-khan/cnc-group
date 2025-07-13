@@ -37,7 +37,7 @@ export async function fetchApi<T>({
   schema,
 }: FetchOptions<T>): Promise<ApiResponse<T>> {
 
-console.log(headers.Authorization)
+
 
   const response = await fetch(
     `${API_BASE_URL}/${url}`,
@@ -50,10 +50,10 @@ console.log(headers.Authorization)
       body: body ? JSON.stringify(body) : undefined,
     }
   )
-  console.log("Response is",response)
+  ///console.log("Response is",response)
   // Handle network errors
  
- console.log(response.status)
+ //console.log(response.status)
   // Handle unauthorized access
   if (response.status === 401) {
     handleLogout()
@@ -90,7 +90,7 @@ console.log(headers.Authorization)
       },
     }
   }
-  console.log(response);
+
   // Parse JSON response
   const jsonData = await response.json().catch(() => null)
   if (!jsonData) {

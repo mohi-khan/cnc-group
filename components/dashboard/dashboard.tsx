@@ -72,12 +72,6 @@ const inventoryData = [
   { date: 'Jun 25', rawMaterials: 110, color: 45, packaging: 27 },
 ]
 
-const costBreakdownData = [
-  { financialTag: 'Raw Material Cost', balance: 8000000 },
-  { financialTag: 'Labor Cost', balance: 5000000 },
-  { financialTag: 'Packaging Cost', balance: 3000000 },
-  { financialTag: 'Other Costs', balance: 2000000 },
-]
 
 export default function Dashboard() {
   //getting userData from jotai atom component
@@ -105,18 +99,19 @@ export default function Dashboard() {
   const [npData, setNPData] = useState<GEtExpenseDataType[]>([])
   const [npDataYearly, setNPDataYearly] = useState<GEtExpenseDataType[]>([])
   const [department, setDepartments] = useState<GetDepartment[]>([])
-  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
-    null
+  const [selectedDepartment, setSelectedDepartment] = useState<number>(
+    0
   )
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
 
-  console.log('🚀 ~ AssetDepreciation ~ token:', token)
+
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
+       if (!token) return
       const data = await getFundPosition(3, '2025-02-19', '02', token)
-      console.log('Fetched fund position data:', data)
+      
       setFundPositionData(data.data)
     } catch (error) {
       console.error('Error fetching fund position data:', error)
@@ -149,7 +144,7 @@ export default function Dashboard() {
       const filteredInvoices =
         data.data?.filter((req) => req.status === 'Invoice Created') || []
       setInvoices(filteredInvoices)
-      console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+
     } catch (err) {
       setError('Failed to fetch requisitions')
     } finally {
@@ -158,13 +153,15 @@ export default function Dashboard() {
   }, [token, getCompany])
 
   const fetchAdvances = React.useCallback(async () => {
+    if (!token) return
     try {
+      if (!token) return
       setLoading(true)
       setError(null) // Reset error state
 
       const data = await getAllAdvance(token)
       setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
-      console.log('🚀 ~ fetchAdvances ~ data.data:', data.data)
+
     } catch (err) {
       console.error('Error fetching advances:', err)
       setError('Failed to fetch advance requests')
@@ -176,18 +173,29 @@ export default function Dashboard() {
 
   // Get All company function
   const fetchAllCompany = React.useCallback(async () => {
+    if (!token) return
     const response = await getAllCompanies(token)
-    console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
+   
     setGetCompany(response.data || [])
   }, [token])
 
   //  Get Expense data monthly
   const fetchExpenseData = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
-    const startDate = '2025-02-01' // Example startDate
-    const endDate = '2025-03-31' // Example endDate
+ // First day of the current month
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
+
+// Last day of the current month
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
 
     const response = await getExpenseData(companyId, startDate, endDate, token)
+
     if (response.data) {
       setExpenseData(
         Array.isArray(response.data) ? response.data : [response.data]
@@ -195,11 +203,12 @@ export default function Dashboard() {
     } else {
       setExpenseData([])
     }
-    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+   
   }, [token])
 
   //  Get Expense data yearly
   const fetchExpenseDataYearly = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -212,14 +221,22 @@ export default function Dashboard() {
     } else {
       setExpenseDataYearly([])
     }
-    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+   
   }, [token])
 
   // Get Income Data
   const fetchIncomeData = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
-    const startDate = '2025-02-01' // Example startDate
-    const endDate = '2025-03-31' // Example endDate
+    const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
+
+// Last day of the current month
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
 
     const response = await getIncomeData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -229,11 +246,12 @@ export default function Dashboard() {
     } else {
       setIncomeData([])
     }
-    console.log('🚀 ~ getIncomeData  ~ response:', response)
+  
   }, [token])
 
   // Get Income Data  yearly
   const fetchIncomeDataYearly = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -246,14 +264,22 @@ export default function Dashboard() {
     } else {
       setIncomeDataYearly([])
     }
-    console.log('🚀 ~ getIncomeData  ~ response:', response)
+  
   }, [token])
 
   //Get getGPData
   const fetchGPData = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
-    const startDate = '2025-02-01' // Example startDate
-    const endDate = '2025-03-31' // Example endDate
+   const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
+
+// Last day of the current month
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
 
     const response = await getGPData(companyId, startDate, endDate, token)
     if (response.data) {
@@ -261,11 +287,12 @@ export default function Dashboard() {
     } else {
       setGPData([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response.data)
+  
   }, [token])
 
   //Get getGPData yearly
   const fetchGPDataYearly = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
     const startDate = '2025-02-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -278,11 +305,12 @@ export default function Dashboard() {
     } else {
       setGPDataYearly([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response)
+  
   }, [token])
 
   //Get getNPData
   const fetchNPData = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
     const startDate = '2025-01-01' // Example startDate
     const endDate = '2025-12-31' // Example endDate
@@ -293,16 +321,18 @@ export default function Dashboard() {
     } else {
       setNPData([])
     }
-    console.log('🚀 ~ GetNPData   ~ response:', response)
+   
   }, [token])
 
   //Get getNPData yearly
   const fetchNPDataYearly = React.useCallback(async () => {
+    if (!token) return
     const companyId = 3 // Example companyId
     const startDate = '' // Example startDate
     const endDate = '' // Example endDate
 
     const response = await getNPData(companyId, startDate, endDate, token)
+    
     if (response.data) {
       setNPDataYearly(
         Array.isArray(response.data) ? response.data : [response.data]
@@ -310,14 +340,23 @@ export default function Dashboard() {
     } else {
       setNPDataYearly([])
     }
-    console.log('🚀 ~ GetNPData   ~ response:', response)
+    
   }, [token])
 
   //Get Cost Breakdown Data
-  const fetchCostBreakdown = React.useCallback(async () => {
-    const departmentId = 3 // Default to 0 if no department is selected
-    const startDate = '2025-01-01' // Example startDate
-    const endDate = '2025-12-31' // Example endDate
+  const fetchCostBreakdown = React.useCallback(async (departmentId:number) => {
+    console.log("under fetchCostBreakdown",token)
+     if (!token) return
+    //const departmentId = selectedDepartment // Default to 0 if no department is selected
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
+
+// Last day of the current month
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  .toISOString()
+  .split('T')[0]; // Format: 'YYYY-MM-DD'
     const companyId = 3 // Example companyId
 
     const response = await getCostBreakdown(
@@ -327,6 +366,8 @@ export default function Dashboard() {
       companyId,
       token
     )
+   
+    console.log(response.data)
     if (response.data) {
       setCostBreakdown(
         Array.isArray(response.data) ? response.data : [response.data]
@@ -396,24 +437,15 @@ export default function Dashboard() {
     fetchNPData()
     fetchNPDataYearly()
     fetchDepartments()
-    fetchCostBreakdown()
+    fetchCostBreakdown(selectedDepartment)
     fetchAllCompany()
   }, [
-    fetchCostBreakdown,
     token,
-    fetchAllCompany,
-    fetchDepartments,
-    fetchNPData,
-    fetchNPDataYearly,
-    fetchGPData,
-    fetchIncomeDataYearly,
-    fetchIncomeData,
-    fetchExpenseDataYearly,
-    fetchExpenseData,
-    ,
+    selectedDepartment,
+  
   ])
 
-  console.log('Processed fund position data:', processedFundPositionData)
+
 
   // Calculate total netexpense
   const totalExpense = expenseData?.reduce(
@@ -536,7 +568,7 @@ export default function Dashboard() {
   const npPercentageChangeYearly =
     lastMonthExpenseYearly !== 0 ? (totalNPYearly - lastMonthNPYearly) / 100 : 0
 
-  function handleDepartmentChange(departmentId: number | null): void {
+  function handleDepartmentChange(departmentId: number): void {
     setSelectedDepartment(departmentId)
     // You can add more logic here if needed, such as fetching data based on the selected department
   }
@@ -581,7 +613,7 @@ export default function Dashboard() {
               }
               onChange={(value: { id: string; name: string } | null) =>
                 handleDepartmentChange(
-                  value ? Number.parseInt(value.id, 10) : null
+                  value ? Number.parseInt(value.id, 10) : 0
                 )
               }
               placeholder="Select company"
@@ -1010,7 +1042,7 @@ export default function Dashboard() {
                 }
                 onChange={(value) =>
                   handleDepartmentChange(
-                    value ? Number.parseInt(value.id, 10) : null
+                    value ? Number.parseInt(value.id, 10) : 0
                   )
                 }
                 placeholder="Select department"
