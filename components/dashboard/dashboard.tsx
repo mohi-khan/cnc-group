@@ -62,6 +62,32 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
+const formatInternationalNumber = (num: number): string => {
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+
+  if (absNum < 1000) {
+    // Show as is
+    return `${sign}${absNum}`
+  } else if (absNum < 1_000_000) {
+    // Thousand
+    const value = absNum / 1_000
+    return `${sign}${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}K`
+  } else if (absNum < 1_000_000_000) {
+    // Million
+    const value = absNum / 1_000_000
+    return `${sign}${value % 1 === 0 ? value.toFixed(0) : value.toFixed(2)}M`
+  } else if (absNum < 1_000_000_000_000) {
+    // Billion
+    const value = absNum / 1_000_000_000
+    return `${sign}${value % 1 === 0 ? value.toFixed(0) : value.toFixed(2)}B`
+  } else {
+    // Trillion and above
+    const value = absNum / 1_000_000_000_000
+    return `${sign}${value % 1 === 0 ? value.toFixed(0) : value.toFixed(2)}T`
+  }
+}
+
 // Dummy data for other charts (unchanged)
 const inventoryData = [
   { date: 'Jan 25', rawMaterials: 120, color: 45, packaging: 30 },
@@ -660,7 +686,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalIncome?.toLocaleString()}
+                    {formatInternationalNumber(totalIncome)}
                   </div>
                   <p
                     className={`text-xs ${incomePercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -707,7 +733,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalExpense?.toLocaleString()}
+                    {formatInternationalNumber(totalExpense)}
                   </div>
                   <p
                     className={`text-xs ${expensePercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -754,7 +780,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalGP?.toLocaleString()}
+                    {formatInternationalNumber(totalGP)}
                   </div>
                   <p
                     className={`text-xs ${gpPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -801,7 +827,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalNP.toLocaleString()}
+                    {formatInternationalNumber(totalNP)}
                   </div>
                   <p
                     className={`text-xs ${npPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -846,7 +872,9 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${totalIncomeYearly}</div>
+                  <div className="text-2xl font-bold">
+                    {formatInternationalNumber(totalIncomeYearly)}
+                  </div>
                   <p
                     className={`text-xs ${npPercentageChange >= 0 ? 'text-green-500' : 'text-red-500'}`}
                   >
@@ -891,7 +919,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalExpenseYearly.toLocaleString()}
+                    {formatInternationalNumber(totalExpenseYearly)}
                   </div>
                   <p
                     className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -937,7 +965,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalGPYearly.toLocaleString()}
+                    {formatInternationalNumber(totalGPYearly)}
                   </div>
                   <p
                     className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
@@ -983,7 +1011,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${totalNPYearly.toLocaleString()}
+                    {formatInternationalNumber(totalNPYearly)}
                   </div>
                   <p
                     className={`text-xs ${expensePercentageChangeYearly >= 0 ? 'text-green-500' : 'text-red-500'}`}
