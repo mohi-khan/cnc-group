@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/chart'
 import {
   getAllDepartments,
+  getAllFinancialYears,
   getCostBreakdown,
   getExpenseData,
   getFundPosition,
@@ -105,12 +106,21 @@ export default function Dashboard() {
 
   // Dynamic form state
   const [selectedCompanyId, setSelectedCompanyId] = useState<number>(3)
+
+  const formatDateLocal = (date: Date) => date.toLocaleDateString('en-CA') // returns "YYYY-MM-DD" format in local timezone
+
   const [startDate, setStartDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    formatDateLocal(
+      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    )
   )
+
   const [endDate, setEndDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    formatDateLocal(
+      new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+    )
   )
+
   const [yearlyStartDate, setYearlyStartDate] = useState<string>('2025-01-01')
   const [yearlyEndDate, setYearlyEndDate] = useState<string>('2025-12-31')
   const [fundPositionMonth, setFundPositionMonth] = useState<string>('02')
@@ -211,6 +221,24 @@ export default function Dashboard() {
     const response = await getAllCompanies(token)
     console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
     setGetCompany(response.data || [])
+  }, [token])
+
+  const fetchAllFinancialYears = React.useCallback(async () => {
+    const response = await getAllFinancialYears(token)
+    console.log(
+      '🚀 ~ fetchAllFinancialYears ~ response from dashboard :',
+      response
+    )
+    setYearlyStartDate(
+      response.data
+        ?.find((year) => year.isactive === true)
+        ?.startdate?.toString() || ''
+    )
+    setYearlyEndDate(
+      response.data
+        ?.find((year) => year.isactive === true)
+        ?.enddate?.toString() || ''
+    )
   }, [token])
 
   //  Get Expense data monthly
@@ -471,7 +499,15 @@ export default function Dashboard() {
     fetchAdvances()
     fetchDepartments()
     fetchAllCompany()
-  }, [token, fetchAdvances, fetchDepartments, fetchAllCompany])
+    fetchRequisitions()
+    fetchAllFinancialYears()
+  }, [
+    token,
+    fetchAdvances,
+    fetchDepartments,
+    fetchAllCompany,
+    fetchAllFinancialYears,
+  ])
 
   // Trigger data fetch when dynamic values change
   React.useEffect(() => {
@@ -686,21 +722,6 @@ export default function Dashboard() {
             }
             placeholder="Select company"
           />
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              className="px-3 py-1 border rounded-md text-sm"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <ChevronDown className="h-4 w-4" />
-            <input
-              type="date"
-              className="px-3 py-1 border rounded-md text-sm"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
         </div>
       </div>
 

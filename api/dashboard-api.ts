@@ -6,6 +6,7 @@ import {
   GetCostBreakdownType,
   GetDepartment,
   GEtExpenseDataType,
+  GetFinancialYearType,
 } from '@/utils/type'
 import { CompanyType } from './company-api'
 
@@ -107,6 +108,18 @@ export async function getNPData(
 export async function getAllDepartments(token: string) {
   return fetchApi<GetDepartment[]>({
     url: 'api/department/get-all-departments',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//Get financial year Data API
+export async function getAllFinancialYears(token: string) {
+  return fetchApi<GetFinancialYearType[]>({
+    url: 'api/financial-year/getfinancialyears',
     method: 'GET',
     headers: {
       Authorization: `${token}`,
