@@ -10,6 +10,9 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react'
 import { getInvoiceData, getInvoiceById } from '@/api/invoices-api'
 import type { SalesInvoiceType } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
@@ -21,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 import { Form } from '@/components/ui/form'
@@ -46,17 +48,18 @@ import BankVoucherSubmit from '@/components/bank/bank-vouchers/bank-voucher-subm
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
 
+type SortField = keyof SalesInvoiceType
+type SortDirection = 'asc' | 'desc' | null
+
 const InvoicesList = () => {
   useInitializeUser()
   const router = useRouter()
-
   const [token] = useAtom(tokenAtom)
   const [userData] = useAtom(userDataAtom)
   const [invoices, setInvoices] = useState<SalesInvoiceType[]>([])
@@ -69,6 +72,11 @@ const InvoicesList = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage] = useState(10)
   const [originalInvoiceAmount, setOriginalInvoiceAmount] = useState<number>(0)
+
+  // Search and Sort states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   // Bank voucher form setup
   const form = useForm<JournalEntryWithDetails>({
@@ -133,7 +141,6 @@ const InvoicesList = () => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
         console.log('No user data or token found in localStorage')
         router.push('/')
@@ -142,7 +149,7 @@ const InvoicesList = () => {
     }
 
     checkUserData()
-    
+
     const fetchInitialData = async () => {
       const search = ''
       if (!token) return
@@ -192,6 +199,7 @@ const InvoicesList = () => {
 
   const fetchInvoices = React.useCallback(async () => {
     if (!token) return
+
     try {
       const response = await getInvoiceData(token)
       if (response?.error?.status === 401) {
@@ -227,7 +235,6 @@ const InvoicesList = () => {
     (invoice: SalesInvoiceType) => {
       setSelectedInvoice(invoice)
       setOriginalInvoiceAmount(invoice.invoiceAmount) // Store original amount
-
       // Pre-populate the bank voucher form with invoice data
       form.reset({
         journalEntry: {
@@ -257,7 +264,6 @@ const InvoicesList = () => {
           },
         ],
       })
-
       setIsBankVoucherDialogOpen(true)
     },
     [form, userData]
@@ -318,7 +324,6 @@ const InvoicesList = () => {
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-
         notes: detail.notes || '',
         createdBy: userData?.userId ?? 0,
       })),
@@ -365,7 +370,6 @@ const InvoicesList = () => {
         title: 'Success',
         description: 'Bank Voucher created successfully',
       })
-
       // Close popup and reset form
       setIsBankVoucherDialogOpen(false)
       form.reset()
@@ -381,6 +385,84 @@ const InvoicesList = () => {
   useEffect(() => {
     fetchInvoices()
   }, [fetchInvoices])
+
+  // Search and Sort functions
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null)
+        setSortField(null)
+      } else {
+        setSortDirection('asc')
+      }
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+    setCurrentPage(1) // Reset to first page when sorting
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="ml-2 h-4 w-4" />
+    }
+    if (sortDirection === 'desc') {
+      return <ArrowDown className="ml-2 h-4 w-4" />
+    }
+    return <ArrowUpDown className="ml-2 h-4 w-4" />
+  }
+
+  // Filter and sort invoices
+  const filteredAndSortedInvoices = React.useMemo(() => {
+    const filtered = invoices.filter((invoice) => {
+      const searchLower = searchTerm.toLowerCase()
+      return (
+        invoice.LCPINo?.toLowerCase().includes(searchLower) ||
+        invoice.shipper?.toLowerCase().includes(searchLower) ||
+        invoice.consignee?.toLowerCase().includes(searchLower) ||
+        invoice.client?.toLowerCase().includes(searchLower) ||
+        invoice.address?.toLowerCase().includes(searchLower) ||
+        invoice.consignAddress?.toLowerCase().includes(searchLower) ||
+        invoice.apporvedBy?.toLowerCase().includes(searchLower) ||
+        invoice.res_partnerName?.toLowerCase().includes(searchLower) ||
+        invoice.companyName?.toLowerCase().includes(searchLower) ||
+        invoice.currencyName?.toLowerCase().includes(searchLower)
+      )
+    })
+
+    if (sortField && sortDirection) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortField]
+        let bValue = b[sortField]
+
+        // Handle different data types
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          aValue = aValue.toLowerCase()
+          bValue = bValue.toLowerCase()
+        }
+
+        if (aValue < bValue) {
+          return sortDirection === 'asc' ? -1 : 1
+        }
+        if (aValue > bValue) {
+          return sortDirection === 'asc' ? 1 : -1
+        }
+        return 0
+      })
+    }
+
+    return filtered
+  }, [invoices, searchTerm, sortField, sortDirection])
+
+  // Reset current page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -412,39 +494,175 @@ const InvoicesList = () => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Sales Invoices</CardTitle>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between ">
+            <CardTitle>Sales Invoices</CardTitle>
+            {/* Search Bar */}
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search invoices..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="max-w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
+            <Table className="border shadow-md">
+              <TableHeader className="border bg-slate-200 shadow-md">
                 <TableRow>
-                  <TableHead>LCPI No</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Shipper</TableHead>
-                  <TableHead>Consignee</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Consign Address</TableHead>
-                  <TableHead>Approved By</TableHead>
-                  <TableHead>Approval Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Partner Name</TableHead>
-                  <TableHead>Company Name</TableHead>
-                  <TableHead>Currency</TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('LCPINo')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      LCPI No
+                      {getSortIcon('LCPINo')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('date')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Date
+                      {getSortIcon('date')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('shipper')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Shipper
+                      {getSortIcon('shipper')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('consignee')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Consignee
+                      {getSortIcon('consignee')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('client')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Client
+                      {getSortIcon('client')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('address')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Address
+                      {getSortIcon('address')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('consignAddress')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Consign Address
+                      {getSortIcon('consignAddress')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('apporvedBy')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Approved By
+                      {getSortIcon('apporvedBy')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('approvalDate')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Approval Date
+                      {getSortIcon('approvalDate')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('invoiceAmount')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Amount
+                      {getSortIcon('invoiceAmount')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('res_partnerName')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Partner Name
+                      {getSortIcon('res_partnerName')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('companyName')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Company Name
+                      {getSortIcon('companyName')}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort('currencyName')}
+                      className="h-auto p-0 font-semibold"
+                    >
+                      Currency
+                      {getSortIcon('currencyName')}
+                    </Button>
+                  </TableHead>
                   <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!Array.isArray(invoices) || invoices.length === 0 ? (
+                {!Array.isArray(filteredAndSortedInvoices) ||
+                filteredAndSortedInvoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={15} className="text-center py-8">
-                      <Loader />
+                    <TableCell colSpan={14} className="text-center py-8">
+                      {searchTerm ? (
+                        'No invoices found matching your search.'
+                      ) : (
+                        <Loader />
+                      )}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  invoices
+                  filteredAndSortedInvoices
                     .slice(
                       (currentPage - 1) * rowsPerPage,
                       currentPage * rowsPerPage
@@ -454,7 +672,7 @@ const InvoicesList = () => {
                         <TableCell className="font-medium">
                           <Badge
                             variant="outline"
-                            className="cursor-pointer hover:bg-slate-100"
+                            className="cursor-pointer hover:bg-slate-300 hover:ring-2"
                             onClick={() => handleInvoiceClick(invoice.id)}
                           >
                             {invoice.LCPINo}
@@ -504,95 +722,96 @@ const InvoicesList = () => {
               </TableBody>
             </Table>
           </div>
-          {Array.isArray(invoices) && invoices.length > 0 && (
-            <div className="flex items-center justify-between py-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * rowsPerPage + 1} to{' '}
-                {Math.min(currentPage * rowsPerPage, invoices.length)} of{' '}
-                {invoices.length} invoices
-              </div>
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }}
-                      className={
-                        currentPage === 1
-                          ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
-                      }
-                    />
-                  </PaginationItem>
-
-                  {Array.from(
-                    { length: Math.ceil(invoices.length / rowsPerPage) },
-                    (_, i) => i + 1
-                  )
-                    .filter((page) => {
-                      const totalPages = Math.ceil(
-                        invoices.length / rowsPerPage
-                      )
-                      if (totalPages <= 7) return true
-                      if (page === 1 || page === totalPages) return true
-                      if (page >= currentPage - 1 && page <= currentPage + 1)
-                        return true
-                      return false
-                    })
-                    .map((page, index, array) => {
-                      const prevPage = array[index - 1]
-                      const showEllipsis = prevPage && page - prevPage > 1
-
-                      return (
-                        <React.Fragment key={page}>
-                          {showEllipsis && (
-                            <PaginationItem>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          )}
-                          <PaginationItem>
+          {Array.isArray(filteredAndSortedInvoices) &&
+            filteredAndSortedInvoices.length > 0 && (
+              <div className="flex items-center justify-between py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to{' '}
+                  {Math.min(
+                    currentPage * rowsPerPage,
+                    filteredAndSortedInvoices.length
+                  )}{' '}
+                  of {filteredAndSortedInvoices.length} invoices
+                  {searchTerm && ` (filtered from ${invoices.length} total)`}
+                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? 'pointer-events-none opacity-50'
+                            : ''
+                        }
+                      />
+                    </PaginationItem>
+                    {[
+                      ...Array(
+                        Math.ceil(
+                          filteredAndSortedInvoices.length / rowsPerPage
+                        )
+                      ),
+                    ].map((_, index) => {
+                      if (
+                        index === 0 ||
+                        index ===
+                          Math.ceil(
+                            filteredAndSortedInvoices.length / rowsPerPage
+                          ) -
+                            1 ||
+                        (index >= currentPage - 2 && index <= currentPage + 2)
+                      ) {
+                        return (
+                          <PaginationItem key={`page-${index}`}>
                             <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setCurrentPage(page)
-                              }}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
+                              onClick={() => setCurrentPage(index + 1)}
+                              isActive={currentPage === index + 1}
                             >
-                              {page}
+                              {index + 1}
                             </PaginationLink>
                           </PaginationItem>
-                        </React.Fragment>
-                      )
-                    })}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setCurrentPage((prev) =>
-                          Math.min(
-                            prev + 1,
-                            Math.ceil(invoices.length / rowsPerPage)
-                          )
                         )
-                      }}
-                      className={
-                        currentPage === Math.ceil(invoices.length / rowsPerPage)
-                          ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
+                      } else if (
+                        index === currentPage - 3 ||
+                        index === currentPage + 3
+                      ) {
+                        return (
+                          <PaginationItem key={`ellipsis-${index}`}>
+                            <PaginationLink>...</PaginationLink>
+                          </PaginationItem>
+                        )
                       }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+                      return null
+                    })}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(
+                              prev + 1,
+                              Math.ceil(
+                                filteredAndSortedInvoices.length / rowsPerPage
+                              )
+                            )
+                          )
+                        }
+                        className={
+                          currentPage ===
+                          Math.ceil(
+                            filteredAndSortedInvoices.length / rowsPerPage
+                          )
+                            ? 'pointer-events-none opacity-50'
+                            : ''
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
         </CardContent>
       </Card>
 
@@ -826,6 +1045,19 @@ export default InvoicesList
 
 //   // Fetch initial data for bank voucher form
 //   useEffect(() => {
+//     const checkUserData = () => {
+//       const storedUserData = localStorage.getItem('currentUser')
+//       const storedToken = localStorage.getItem('authToken')
+
+//       if (!storedUserData || !storedToken) {
+//         console.log('No user data or token found in localStorage')
+//         router.push('/')
+//         return
+//       }
+//     }
+
+//     checkUserData()
+
 //     const fetchInitialData = async () => {
 //       const search = ''
 //       if (!token) return
@@ -935,7 +1167,7 @@ export default InvoicesList
 //             analyticTags: null,
 //             taxId: null,
 //             resPartnerId: invoice.res_partnerId || null,
-//             notes: `Payment for Invoice ${invoice.LCPINo}`,
+//             notes: `Receipt Invoice ${invoice.LCPINo}`,
 //             createdBy: userData?.userId || 0,
 //           },
 //         ],
@@ -1100,8 +1332,8 @@ export default InvoicesList
 //         </CardHeader>
 //         <CardContent>
 //           <div className="max-w-full overflow-x-auto">
-//             <Table>
-//               <TableHeader>
+//             <Table className="border shadow-md">
+//               <TableHeader className="border bg-slate-200 shadow-md">
 //                 <TableRow>
 //                   <TableHead>LCPI No</TableHead>
 //                   <TableHead>Date</TableHead>
@@ -1198,77 +1430,58 @@ export default InvoicesList
 //                 <PaginationContent>
 //                   <PaginationItem>
 //                     <PaginationPrevious
-//                       href="#"
-//                       onClick={(e) => {
-//                         e.preventDefault()
+//                       onClick={() =>
 //                         setCurrentPage((prev) => Math.max(prev - 1, 1))
-//                       }}
+//                       }
 //                       className={
-//                         currentPage === 1
-//                           ? 'pointer-events-none opacity-50'
-//                           : 'cursor-pointer'
+//                         currentPage === 1 ? 'pointer-events-none opacity-50' : ''
 //                       }
 //                     />
 //                   </PaginationItem>
 
-//                   {Array.from(
-//                     { length: Math.ceil(invoices.length / rowsPerPage) },
-//                     (_, i) => i + 1
-//                   )
-//                     .filter((page) => {
-//                       const totalPages = Math.ceil(
-//                         invoices.length / rowsPerPage
-//                       )
-//                       if (totalPages <= 7) return true
-//                       if (page === 1 || page === totalPages) return true
-//                       if (page >= currentPage - 1 && page <= currentPage + 1)
-//                         return true
-//                       return false
-//                     })
-//                     .map((page, index, array) => {
-//                       const prevPage = array[index - 1]
-//                       const showEllipsis = prevPage && page - prevPage > 1
-
+//                   {[...Array(Math.ceil(invoices.length / rowsPerPage))].map((_, index) => {
+//                     if (
+//                       index === 0 ||
+//                       index === Math.ceil(invoices.length / rowsPerPage) - 1 ||
+//                       (index >= currentPage - 2 && index <= currentPage + 2)
+//                     ) {
 //                       return (
-//                         <React.Fragment key={page}>
-//                           {showEllipsis && (
-//                             <PaginationItem>
-//                               <PaginationEllipsis />
-//                             </PaginationItem>
-//                           )}
-//                           <PaginationItem>
-//                             <PaginationLink
-//                               href="#"
-//                               onClick={(e) => {
-//                                 e.preventDefault()
-//                                 setCurrentPage(page)
-//                               }}
-//                               isActive={currentPage === page}
-//                               className="cursor-pointer"
-//                             >
-//                               {page}
-//                             </PaginationLink>
-//                           </PaginationItem>
-//                         </React.Fragment>
+//                         <PaginationItem key={`page-${index}`}>
+//                           <PaginationLink
+//                             onClick={() => setCurrentPage(index + 1)}
+//                             isActive={currentPage === index + 1}
+//                           >
+//                             {index + 1}
+//                           </PaginationLink>
+//                         </PaginationItem>
 //                       )
-//                     })}
+//                     } else if (
+//                       index === currentPage - 3 ||
+//                       index === currentPage + 3
+//                     ) {
+//                       return (
+//                         <PaginationItem key={`ellipsis-${index}`}>
+//                           <PaginationLink>...</PaginationLink>
+//                         </PaginationItem>
+//                       )
+//                     }
+//                     return null
+//                   })}
 
 //                   <PaginationItem>
 //                     <PaginationNext
-//                       href="#"
-//                       onClick={(e) => {
-//                         e.preventDefault()
+//                       onClick={() =>
 //                         setCurrentPage((prev) =>
 //                           Math.min(
 //                             prev + 1,
 //                             Math.ceil(invoices.length / rowsPerPage)
 //                           )
 //                         )
-//                       }}
+//                       }
 //                       className={
 //                         currentPage === Math.ceil(invoices.length / rowsPerPage)
 //                           ? 'pointer-events-none opacity-50'
-//                           : 'cursor-pointer'
+//                           : ''
 //                       }
 //                     />
 //                   </PaginationItem>
@@ -1291,10 +1504,6 @@ export default InvoicesList
 //             </DialogTitle>
 //           </DialogHeader>
 //           <div className="mt-4">
-//             {/* <p className="text-sm text-muted-foreground mb-4">
-//               Create a bank voucher for invoice payment. The form is
-//               pre-populated with invoice details.
-//             </p> */}
 //             <Form {...form}>
 //               <form
 //                 onSubmit={form.handleSubmit((values) =>
@@ -1315,7 +1524,7 @@ export default InvoicesList
 //                   formState={formState}
 //                   requisition={undefined}
 //                   setFormState={setFormState}
-//                   disableJournalType={true} // Add this prop to disable the type field
+//                   disableJournalType={true} // Disable Type field when coming from invoice
 //                 />
 //                 <BankVoucherDetails
 //                   form={form}
@@ -1323,7 +1532,7 @@ export default InvoicesList
 //                   requisition={undefined}
 //                   partners={formState.partners}
 //                   isFromInvoice={true} // Add this when coming from invoice
-//                   invoicePartnerName={selectedInvoice?.res_partnerName || ''} // Add this to show partner name
+//                   invoicePartnerName={selectedInvoice?.res_partnerName || ''} // Add partner name from invoice
 //                 />
 //                 <BankVoucherSubmit
 //                   form={form}
