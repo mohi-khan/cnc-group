@@ -892,9 +892,10 @@ export default function ChartOfAccountsTable() {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Withholding Tax</FormLabel>
+                          <FormLabel>Accounts Receivable/Payable</FormLabel>
                           <FormDescription>
-                            Check if this account is subject to withholding tax
+                            Check if this account is subject to Accounts
+                            Receivable/Payable
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -1071,7 +1072,7 @@ export default function ChartOfAccountsTable() {
             >
               All
             </Button>
-             {renderCodeGroups(groups)}
+            {renderCodeGroups(groups)}
           </div>
           <div className="ml-64 flex-1 pl-4 ">
             {showFilters && (
