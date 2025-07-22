@@ -37,7 +37,7 @@ const CashPositon = () => {
       )
     }
     setBankBalances(data)
-    console.log('Filtered Bank Balance data: ', data)
+    
   }, [fromDate, toDate, companyName, token])
 
   // Fetch cash balance data and filter by companyName if one is selected
@@ -51,7 +51,7 @@ const CashPositon = () => {
       )
     }
     setCashBalances(data)
-    console.log('Filtered Cash Balance data: ', data)
+    
   }, [fromDate, toDate, companyName, token])
   // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
@@ -60,7 +60,7 @@ const CashPositon = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

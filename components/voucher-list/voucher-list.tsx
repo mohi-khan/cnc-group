@@ -122,7 +122,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
           variant: 'destructive',
         })
       } else {
-        console.log('Journal posted successfully')
+        
         toast({
           title: 'Success',
           description: 'Journal posted successfully',

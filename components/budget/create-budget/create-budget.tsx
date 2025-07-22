@@ -30,12 +30,12 @@ const router = useRouter()
     const mainToken = localStorage.getItem('authToken')
     if (mainToken) {
       setToken(`Bearer ${mainToken}`)
-      console.log('🚀 ~ create budget token:', mainToken)
+      
     }
   }, [])
 
   const handleDraft = () => {
-    console.log('Draft saved')
+    
   }
 
   const handleNew = () => {
@@ -47,7 +47,7 @@ const router = useRouter()
       const response = await getAllCompanies(token)
       if (!response.data) throw new Error('No data received')
       setCompany(response.data)
-      console.log('In budget Company data get: ', response.data)
+      
     } catch (error) {
       console.error('Error getting company AI:', error)
       toast({
@@ -63,7 +63,7 @@ const router = useRouter()
       const response = await getAllMasterBudget({ token })
       if (!response.data) throw new Error('No data received')
       setMasterBudget(response.data)
-      console.log('Master budget data: ', response.data)
+      
     } catch (error) {
       console.error('Error getting master budget:', error)
       toast({
@@ -80,7 +80,7 @@ const router = useRouter()
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

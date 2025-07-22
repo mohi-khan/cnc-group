@@ -73,7 +73,7 @@ const DeparmentSummaryHeading = ({
       setUser(userData)
       setCompanies(userData.userCompanies)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -82,7 +82,7 @@ const DeparmentSummaryHeading = ({
     if (!token) return
     const respons = await getAllDepartments(token)
     setDepartmentSummary(respons.data || [])
-    console.log('This is all department   data: ', respons.data || [])
+    
   }, [token])
   useEffect(() => {
     fetchAllCostCenter()

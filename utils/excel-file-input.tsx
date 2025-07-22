@@ -72,7 +72,7 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
         return newRow
       })
 
-      console.log('Parsed Excel Data with Dates:', sheetData) // Debugging
+      
       setData(sheetData)
     }
 
@@ -100,7 +100,7 @@ function ExcelFileInput({ apiEndpoint }: ExcelFileInputProps) {
       const response = await createBankTransactions(data, apiEndpoint, token)
 
       setMessage('Bank transactions created successfully!')
-      console.log('API response:', response)
+      
     } catch (error) {
       setMessage(
         `Error creating bank transactions: ${error instanceof Error ? error.message : String(error)}`

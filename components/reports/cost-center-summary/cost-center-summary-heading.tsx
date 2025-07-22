@@ -72,7 +72,7 @@ const CostCenterSummaryHeading = ({
       setUser(userData)
       setCompanies(userData.userCompanies)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -81,7 +81,7 @@ const CostCenterSummaryHeading = ({
     if (!token) return
     const respons = await getAllCostCenters(token)
     setCostCenterData(respons.data || [])
-    console.log('This is all cost center data: ', respons.data || [])
+    
   }, [token])
   useEffect(() => {
     fetchAllCostCenter()

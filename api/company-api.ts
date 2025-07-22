@@ -1,5 +1,5 @@
-import { fetchApi } from '@/utils/http'
 import { z } from 'zod'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export const companySchema = z.object({
   companyId:z.number().int().optional(),
@@ -34,10 +34,10 @@ export async function createCompany(
   locations: string[],
   token: string
 ) {
-  console.log('API: Creating company with data:', companyData)
+  
 
   const response = await fetch(
-    'http://localhost:4000/api/company/create-company-location',
+    `${API_BASE_URL}/api/company/create-company-location`,
     {
       method: 'POST',
       headers: {
@@ -52,9 +52,9 @@ export async function createCompany(
     }
   )
 
-  console.log('API: Company creation response status:', response.status)
+  
   const data = await response.json()
-  console.log('API: Company creation response data:', data)
+  
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to create company')

@@ -44,14 +44,14 @@ const TradeDebtors = () => {
   const fetchTradeDebtors = useCallback(async () => {
     if (!token) return
     const response = await getAllTradeDebtors(token)
-    console.log('This is from trade debtors:', response.data)
+    
     setTradeDebtors(response.data || [])
   }, [token])
 
   const fetchCompanies = useCallback(async () => {
     if (!token) return
     const response = await getAllCompanies(token)
-    console.log('This is from companies:', response.data)
+    
     setCompanies(response.data || [])
   }, [token])
   useEffect(() => {
@@ -61,7 +61,7 @@ const TradeDebtors = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -110,7 +110,7 @@ const TradeDebtors = () => {
         <div className="w-96">
           <CustomCombobox
             items={companies.map((company) => {
-              console.log('Company structure in map:', company)
+              
               return {
                 id: company.companyId?.toString() || '',
                 name: company.companyName || 'Unnamed Company',

@@ -94,7 +94,7 @@ export default function CashVoucher() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -105,7 +105,7 @@ export default function CashVoucher() {
     setIsLoadingCompanies(true)
     setIsLoadingLocations(true)
     if (userData) {
-      console.log('🚀 ~ useEffect ~ userData:', userData)
+      
       setUser(userData)
       if (userData?.userCompanies?.length > 0) {
         setCompanies(userData.userCompanies)
@@ -150,7 +150,7 @@ export default function CashVoucher() {
           throw new Error('No data received from server')
         }
         setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-        console.log('Voucher data:', response.data)
+        
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
         setVoucherGrid([])
@@ -196,8 +196,8 @@ export default function CashVoucher() {
     })
     setFilteredChartOfAccounts(filteredCoa || [])
     setCashCoa(isCashCoa || [])
-    console.log('Filtered Chart of Accounts:', filteredCoa)
-    console.log('cash Chart of Accounts:', isCashCoa)
+    
+    
   }, [chartOfAccounts])
 
   //Function to fetch chart of accounts from the API
@@ -208,7 +208,7 @@ export default function CashVoucher() {
       const response = await getAllChartOfAccounts(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting chart of accounts:', response.error)
@@ -220,7 +220,7 @@ export default function CashVoucher() {
         setChartOfAccounts([])
         return
       } else {
-        console.log('Fetched Chart of Accounts:', response.data)
+        
         setChartOfAccounts(response.data)
       }
     } catch (error) {
@@ -243,7 +243,7 @@ export default function CashVoucher() {
       const response = await getAllDepartments(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting chart of accounts:', response.error)
@@ -277,7 +277,7 @@ export default function CashVoucher() {
       const response = await getAllCostCenters(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting cost centers:', response.error)
@@ -311,7 +311,7 @@ export default function CashVoucher() {
       const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting partners:', response.error)
@@ -322,7 +322,7 @@ export default function CashVoucher() {
         setPartners([])
         return
       } else {
-        console.log('Fetched Partners:', response.data)
+        
         setPartners(response.data)
       }
     } catch (error) {
@@ -352,7 +352,7 @@ export default function CashVoucher() {
   // Function to handle voucher type change from details component
   const handleVoucherTypeChange = (voucherType: string) => {
     setCurrentVoucherType(voucherType)
-    console.log('Voucher type changed to:', voucherType)
+    
   }
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
@@ -395,11 +395,11 @@ export default function CashVoucher() {
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit', values)
-    console.log('Current voucher type:', currentVoucherType)
+    
+    
 
     if (userData) {
-      console.log('Current userId from localStorage:', userData.userId)
+      
       setUser(userData)
     }
     // Calculate the total amount
@@ -425,7 +425,7 @@ export default function CashVoucher() {
         createdBy: user?.userId || 0,
       })),
     }
-    console.log('After Adding created by', updatedValues)
+    
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithCash = {
       ...updatedValues,
@@ -453,11 +453,6 @@ export default function CashVoucher() {
         },
       ],
     }
-
-    console.log(
-      'Submitted values:',
-      JSON.stringify(updateValueswithCash, null, 2)
-    )
     // Call the API to create the journal entry with details
     const response = await createJournalEntryWithDetails(
       updateValueswithCash,
@@ -473,7 +468,7 @@ export default function CashVoucher() {
       const mycompanies = getCompanyIds(companies)
       const mylocations = getLocationIds(locations)
       getallVoucher(mycompanies, mylocations)
-      console.log('Voucher is created successfully', response.data)
+      
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',

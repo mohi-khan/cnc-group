@@ -151,13 +151,18 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
   const totalPages = Math.ceil(masterBudget.length / itemsPerPage)
 
   // Sorting Function
-  const sortData = useCallback((data: MasterBudgetType[]) => {
-    return [...data].sort((a, b) => {
-      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
-      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [sortColumn, sortDirection])
+  const sortData = useCallback(
+    (data: MasterBudgetType[]) => {
+      return [...data].sort((a, b) => {
+        if (a[sortColumn] < b[sortColumn])
+          return sortDirection === 'asc' ? -1 : 1
+        if (a[sortColumn] > b[sortColumn])
+          return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    },
+    [sortColumn, sortDirection]
+  )
 
   // Handle Sorting
   const handleSort = (column: SortColumn) => {

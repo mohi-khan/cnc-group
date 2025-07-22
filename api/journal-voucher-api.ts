@@ -8,7 +8,7 @@ import {
 } from '@/utils/type'
 
 export async function getSingleVoucher(voucherid: number,token: string) {
-  console.log(voucherid)
+  
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
@@ -24,12 +24,6 @@ export async function reverseJournalVoucher(
   createdId: number,
   token: string
 ) {
-  console.log(
-    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
-    voucherNo,
-    createdId,
-    token
-  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
@@ -68,7 +62,7 @@ export async function getAllVoucher(data: JournalQuery, token: string) {
       {} as Record<string, string>
     )
   ).toString()
-  console.log(queryParams)
+  
   return fetchApi<JournalResult[]>({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',
@@ -82,7 +76,7 @@ export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails,
   token: string
 ) {
-  console.log('journal', data)
+  
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',

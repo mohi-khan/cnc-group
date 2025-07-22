@@ -288,7 +288,7 @@ export default function SingleVoucherDetails() {
     // Pre-populate the bank voucher form with existing voucher data
     if (data && data.length > 0) {
       const voucherData = data[0]
-      console.log('🚀 ~ handleReceiptClick ~ voucherData:', voucherData)
+      
 
       // Map existing journal details
       const mappedJournalDetails = data.map((item) => ({
@@ -340,7 +340,7 @@ export default function SingleVoucherDetails() {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -487,7 +487,7 @@ export default function SingleVoucherDetails() {
           })
         } else {
           setData(response.data)
-          console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
+          
         }
       } catch (error) {
         toast({
@@ -509,12 +509,8 @@ export default function SingleVoucherDetails() {
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log(
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 

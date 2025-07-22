@@ -18,8 +18,8 @@ export default function BankVoucherSubmit({
   onSubmit,
   disabled = false, // Default to false
 }: BankVoucherSubmitProps) {
-  console.log("Form state errors:", form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  
+  // 
   return (
     <div className="flex justify-end space-x-2">
       <Button
@@ -70,8 +70,8 @@ export default function BankVoucherSubmit({
 // }: BankVoucherSubmitProps) {
 
   
-//   console.log('Form state errors:', form.formState.errors)
-//   // console.log('Form values:', form.getValues())
+//   
+//   // 
 //   return (
 //     <div className="flex justify-end space-x-2">
 //       <Button

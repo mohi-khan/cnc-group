@@ -80,9 +80,9 @@ export default function IouPopUp({
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log('Current user from localStorage:', userData)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -143,7 +143,7 @@ export default function IouPopUp({
       setIsSubmitting(false)
     }
   }
-  console.log('Form values:', form.getValues())
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

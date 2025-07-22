@@ -51,9 +51,9 @@ const ApprovedAdvances = () => {
       setIsLoading(true)
       setError(null)
       const data = await getAllAdvance(token)
-      console.log("🚀 ~ fetchAdvances ~ data:", data)
+      
       if (data?.error?.status === 401) {
-        console.log("Unauthorized access")
+        
         return
       } else if (data.error || !data.data) {
         console.error("Error fetching approved advances:", data.error)
@@ -76,7 +76,7 @@ const ApprovedAdvances = () => {
       const storedUserData = localStorage.getItem("currentUser")
       const storedToken = localStorage.getItem("authToken")
       if (!storedUserData || !storedToken) {
-        console.log("No user data or token found in localStorage")
+        
         router.push("/")
         return
       }
@@ -445,9 +445,9 @@ export default ApprovedAdvances
 //       setIsLoading(true)
 //       setError(null)
 //       const data = await getAllAdvance(token)
-//       console.log('🚀 ~ fetchAdvances ~ data:', data)
+//       
 //       if (data?.error?.status === 401) {
-//         console.log('Unauthorized access')
+//         
 //         return
 //       } else if (data.error || !data.data) {
 //         console.error('Error fetching approved advances:', data.error)
@@ -471,7 +471,7 @@ export default ApprovedAdvances
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-//         console.log('No user data or token found in localStorage')
+//         
 //         router.push('/')
 //         return
 //       }

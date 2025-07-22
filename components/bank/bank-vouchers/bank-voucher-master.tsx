@@ -40,7 +40,7 @@ export default function BankVoucherMaster({
   requisition,
   disableJournalType = false,
 }: BankVoucherMasterProps) {
-  console.log('🚀 ~ requisition:', requisition)
+  
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
@@ -60,7 +60,7 @@ export default function BankVoucherMaster({
       })
     } else {
       setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      
     }
   }, [token])
 
@@ -72,7 +72,7 @@ export default function BankVoucherMaster({
     } else {
       setEmployeeData([])
     }
-    console.log('Show The Employee Data :', employees.data)
+    
   }, [token])
 
   useEffect(() => {
@@ -531,7 +531,7 @@ export default function BankVoucherMaster({
 //   setFormState,
 //   requisition,
 // }: BankVoucherMasterProps) {
-//   console.log('🚀 ~ requisition:', requisition)
+//   
 //   //getting userData from jotai atom component
 //   useInitializeUser()
 //   const [token] = useAtom(tokenAtom)
@@ -550,7 +550,7 @@ export default function BankVoucherMaster({
 //       })
 //     } else {
 //       setCurrency(data.data)
-//       console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+//       
 //     }
 //   },[token])
 
@@ -562,7 +562,7 @@ export default function BankVoucherMaster({
 //     } else {
 //       setEmployeeData([])
 //     }
-//     console.log('Show The Employee Data :', employees.data)
+//     
 //   }, [token])
 
 //   useEffect(() => {

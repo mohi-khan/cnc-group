@@ -34,9 +34,9 @@ const ChangePassword = () => {
   useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log('Current user from localStorage:', userData.userId)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
       setError('User not authenticated. Please log in.')
     }
   }, [userData])
@@ -88,7 +88,7 @@ const ChangePassword = () => {
         description: result.error?.message || 'Failed to change password',
       })
     } else {
-      console.log('password changed successfully')
+      
       toast({
         title: 'Success',
         description: 'password changed successfully',

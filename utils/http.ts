@@ -50,10 +50,10 @@ export async function fetchApi<T>({
       body: body ? JSON.stringify(body) : undefined,
     }
   )
-  ///console.log("Response is",response)
+  ///
   // Handle network errors
  
- //console.log(response.status)
+ //
   // Handle unauthorized access
   if (response.status === 401) {
     handleLogout()
@@ -79,7 +79,7 @@ export async function fetchApi<T>({
 }
   // Handle non-200 responses
   if (!response.ok) {
-    console.log(response);
+    
     const errorData = await response.json().catch(() => null)
     return {
       data: null,
@@ -105,7 +105,7 @@ export async function fetchApi<T>({
 
   // Validate response with schema if provided
   if (schema) {
- //   console.log(jsonData)
+ //   
     const result = schema.safeParse(jsonData)
     if (!result.success) {
       return {

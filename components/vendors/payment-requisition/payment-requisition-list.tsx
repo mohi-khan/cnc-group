@@ -87,10 +87,10 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
     if (!token) return
     try {
       const response = await getAllCurrency(token)
-      console.log('Raw API response:', response) // Log the entire response to see its structure
+      
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error fetching currency:', response.error)
@@ -101,9 +101,9 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
         })
         return
       } else if (response && response.data) {
-        console.log('currency data structure:', response.data[0]) // Log the first currency to see structure
+        
         setCurrency(response.data)
-        console.log('currency data set:', response.data)
+        
       } else {
         console.error('Invalid response format from getAllcurrency:', response)
       }
@@ -658,10 +658,10 @@ export default PaymentRequisitionList;
 //     if (!token) return
 //     try {
 //       const response = await getAllCurrency(token)
-//       console.log('Raw API response:', response) // Log the entire response to see its structure
+//       
 //       if (response?.error?.status === 401) {
 //         router.push('/unauthorized-access')
-//         console.log('Unauthorized access')
+//         
 //         return
 //       } else if (response.error || !response.data) {
 //         console.error('Error fetching currency:', response.error)
@@ -672,9 +672,9 @@ export default PaymentRequisitionList;
 //         })
 //         return
 //       } else if (response && response.data) {
-//         console.log('currency data structure:', response.data[0]) // Log the first currency to see structure
+//         
 //         setCurrency(response.data)
-//         console.log('currency data set:', response.data)
+//         
 //       } else {
 //         console.error('Invalid response format from getAllcurrency:', response)
 //       }

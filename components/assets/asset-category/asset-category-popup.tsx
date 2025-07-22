@@ -56,9 +56,9 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log('Current user from localStorage:', userData)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -83,7 +83,7 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   const fetchChartOfAccounts = useCallback(async () => {
     if (!token) return
     const response = await getAllChartOfAccounts(token)
-    console.log('Fetched chart of accounts:', response.data)
+    
 
     if (response.error || !response.data) {
       console.error('Error getting chart of accounts:', response.error)
@@ -100,12 +100,12 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
   const onSubmit: (data: CreateAssetCategoryData) => Promise<void> = async (
     data
   ) => {
-    console.log('Form submitted:', data, token)
+    
     if (!token) return
     setIsSubmitting(true)
     try {
-      console.log(userId);
-      console.log(data);
+      
+      
       await createAssetCategory(data, token)
       onCategoryAdded()
       onOpenChange(false)
@@ -121,8 +121,8 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
     fetchChartOfAccounts()
   }, [fetchChartOfAccounts])
 
-  console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  
+  // 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

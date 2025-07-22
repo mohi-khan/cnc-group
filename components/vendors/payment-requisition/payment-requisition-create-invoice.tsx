@@ -170,7 +170,7 @@ const PaymentRequisitionCreateInvoiceForm = ({
       const response = await getAllVendors(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error fetching employees:', response.error)

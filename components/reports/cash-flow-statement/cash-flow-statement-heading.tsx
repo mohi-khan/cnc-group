@@ -58,7 +58,7 @@ export default function TrialBalanceHeading({
       setUser(userData)
       setCompanies(userData.userCompanies)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 

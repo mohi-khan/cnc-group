@@ -73,7 +73,7 @@ export default function PartneredgerFind({
       const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting partners:', response.error)
@@ -84,7 +84,7 @@ export default function PartneredgerFind({
         setPartners([])
         return
       } else {
-        console.log('Fetched Partners:', response.data)
+        
         setPartners(response.data)
       }
     } catch (error) {
@@ -105,7 +105,7 @@ export default function PartneredgerFind({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

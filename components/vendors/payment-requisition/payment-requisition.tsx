@@ -14,7 +14,7 @@ const PaymentRequisition = () => {
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
   const [userData] = useAtom(userDataAtom)
-  console.log('🚀 ~ PaymentRequisition ~ userData:', userData)
+  
 
   const router = useRouter()
 
@@ -38,7 +38,7 @@ const PaymentRequisition = () => {
       })
       if (data?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (data.error || !data.data) {
         console.error('Error fetching requisitions:', data.error)
@@ -48,11 +48,7 @@ const PaymentRequisition = () => {
         const filteredRequisitions =
           data.data?.filter((req) => req.status !== 'Invoice Created') || []
         setRequisitions(filteredRequisitions)
-        console.log(
-          '🚀 ~ fetchRequisitions ~ filteredRequisitions:',
-          filteredRequisitions
-        )
-        console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+        
       }
     } catch (err) {
       setError('Failed to fetch requisitions')
@@ -67,7 +63,7 @@ const PaymentRequisition = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

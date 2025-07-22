@@ -22,7 +22,7 @@ const BillEntry = () => {
     const response = await getBillEntry(token)
 
     setBillEntry(response?.data ?? [])
-    console.log('🚀 ~get bill entry data :', response)
+    
   }, [token])
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const BillEntry = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

@@ -70,7 +70,7 @@ const DayBooks = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -78,7 +78,7 @@ const DayBooks = () => {
     checkUserData()
 
     if (userData) {
-      console.log("🚀 ~ useEffect ~ userData:", userData)
+      
       setUser(userData)
       if (userData?.userCompanies?.length > 0) {
         setCompanies(userData.userCompanies)
@@ -117,7 +117,7 @@ const DayBooks = () => {
           throw new Error('No data received from server')
         }
         setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-        console.log('Voucher data:', response.data)
+        
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
         setVoucherGrid([])
@@ -288,7 +288,7 @@ export default DayBooks
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-//         console.log('No user data or token found in localStorage')
+//         
 //         router.push('/')
 //         return
 //       }
@@ -296,7 +296,7 @@ export default DayBooks
 //     checkUserData()
 
 //     if (userData) {
-//       console.log("🚀 ~ useEffect ~ userData:", userData)
+//       
 //       setUser(userData)
 //       if (userData?.userCompanies?.length > 0) {
 //         setCompanies(userData.userCompanies)
@@ -339,7 +339,7 @@ export default DayBooks
 //         throw new Error('No data received from server')
 //       }
 //       setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-//       console.log('Voucher data:', response.data)
+//       
 //     } catch (error) {
 //       console.error('Error getting Voucher Data:', error)
 //       setVoucherGrid([])

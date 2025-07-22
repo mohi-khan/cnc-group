@@ -49,7 +49,7 @@ const AssetReport = () => {
     setLoading(true)
     try {
       const data = await getAssetReport(companyId, startDate, endDate, token)
-      console.log('🚀 ~ fetchReportData ~ data:', data.data)
+      
       setReportData(
         Array.isArray(data.data)
           ? data.data
@@ -99,7 +99,7 @@ const AssetReport = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

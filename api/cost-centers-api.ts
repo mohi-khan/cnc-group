@@ -4,7 +4,7 @@ import { CostCenter, CostCenterActivateDeactivate, CreateCostCenterType } from '
 
 
 export async function createCostCenter(data: CreateCostCenterType, token: string) {
-  console.log('Creating cost center:', data)
+  
   return fetchApi<CreateCostCenterType>({
     url: 'api/cost-centers/create-cost-centers',
     method: 'POST',
@@ -17,7 +17,7 @@ export async function createCostCenter(data: CreateCostCenterType, token: string
 }
 
 export async function updateCostCenter(data: CostCenter, token: string) {
-  console.log('Editing cost center:', data)
+  
   return fetchApi<CostCenter>({
     url: `api/cost-centers/edit-cost-center/${data.costCenterId}`,
     method: 'PATCH',
@@ -30,7 +30,7 @@ export async function updateCostCenter(data: CostCenter, token: string) {
 }
 
 export function activateCostCenter(costCenterId: number, token: string) {
-  console.log('Activating cost center:', costCenterId)
+  
   return fetchApi<CostCenterActivateDeactivate>({
     url: `api/cost-centers/activate-cost-center/${costCenterId}`,
     method: 'PATCH',
@@ -42,7 +42,7 @@ export function activateCostCenter(costCenterId: number, token: string) {
 }
 
 export function deactivateCostCenter(costCenterId: number, token: string) {
-  console.log('Deactivating cost center:', costCenterId)
+  
   return fetchApi<CostCenterActivateDeactivate>({
     url: `api/cost-centers/deactivate-cost-center/${costCenterId}`,
     method: 'PATCH',

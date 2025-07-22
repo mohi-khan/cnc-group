@@ -23,7 +23,7 @@ const AssetCategory = () => {
 
   const fetchAssetCategories = React.useCallback(async () => {
     const categories = await getAllAssetCategories(token)
-    console.log('🚀 ~ fetchAssetCategories ~ categories:', categories)
+    
     setAssetCategories(categories.data ?? [])
   }, [token])
 
@@ -32,7 +32,7 @@ const AssetCategory = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

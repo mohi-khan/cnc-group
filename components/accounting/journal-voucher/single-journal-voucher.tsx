@@ -47,10 +47,10 @@
 //   useEffect(() => {
 //     async function fetchVoucher() {
 //       if (!voucherid) return
-//       console.log('Initial fetch for voucher:', voucherid)
+//       
 //       try {
 //         const response = await getSingleVoucher(voucherid.toString())
-//         console.log('Initial fetch response:', response)
+//         
 //         if (response.error || !response.data) {
 //           toast({
 //             title: 'Error',
@@ -58,7 +58,7 @@
 //               response.error?.message || 'Failed to get Voucher Data',
 //           })
 //         } else {
-//           console.log('Setting initial data:', response.data)
+//           
 //           setData(response.data)
 //         }
 //       } catch (error) {
@@ -84,7 +84,7 @@
 //     }
 
 //     const journalDetail = data[editingReferenceIndex]
-//     console.log('Before update - Current data:', data)
+//     
 
 //     setIsUpdating(true)
 //     setError(null)
@@ -95,7 +95,7 @@
 //         notes: editingReferenceText,
 //       })
 
-//       console.log('API Response:', response)
+//       
 
 //       if (response.error) {
 //         throw new Error(response.error?.message || 'Failed to update notes')
@@ -107,16 +107,16 @@
 
 //       // Refetch the data to ensure we have the latest from the database
 //       if (voucherid) {
-//         console.log('Refetching data for voucher:', voucherid)
+//         
 //         const refreshResponse = await getSingleVoucher(voucherid.toString())
-//         console.log('Refresh response:', refreshResponse)
+//         
 
 //         if (refreshResponse.error || !refreshResponse.data) {
 //           throw new Error(
 //             refreshResponse.error?.message || 'Failed to refresh data'
 //           )
 //         }
-//         console.log('Setting new data:', refreshResponse.data)
+//         
 //         setData(refreshResponse.data)
 //       }
 
@@ -145,9 +145,9 @@
 //     if (userStr) {
 //       const userData = JSON.parse(userStr)
 //       setUserId(userData?.userId)
-//       console.log('Current userId from localStorage:', userData.userId)
+//       
 //     } else {
-//       console.log('No user data found in localStorage')
+//       
 //     }
 //   }, [])
 

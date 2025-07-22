@@ -5,7 +5,7 @@ export async function createBillEntry(
   data: CreateElectricityBillType,
   token: string
 ) {
-  console.log('Request Payload:', data) // Log the data being sent
+  
   return fetchApi<CreateElectricityBillType>({
     url: 'api/utility/createElectricityBill',
     method: 'POST',

@@ -47,7 +47,7 @@ export default function BankVoucher() {
   useInitializeUser()
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
-  console.log('🚀 ~ BankVoucher ~ userData:', userData)
+  
   const [token] = useAtom(tokenAtom)
 
   //State Variables
@@ -112,7 +112,7 @@ export default function BankVoucher() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -128,11 +128,11 @@ export default function BankVoucher() {
       // Retrivin user data and set companies and locations based on user Data
       //Check If user have the previlage
       if (!userData.voucherTypes.includes('Bank Voucher')) {
-        console.log('User does not have access to Bank Voucher')
+        
         router.push('/unauthorized-access')
       }
     } else {
-      console.log('No user data found in localStorage')
+      
       // router.push('/unauthorized-access')
     }
     checkUserData()
@@ -210,7 +210,7 @@ export default function BankVoucher() {
         throw new Error('No data received from server')
       }
       localVoucherGrid = Array.isArray(response.data) ? response.data : []
-      console.log('Voucher data:', localVoucherGrid)
+      
     } catch (error) {
       console.error('Error getting Voucher Data:', error)
       throw error
@@ -222,9 +222,9 @@ export default function BankVoucher() {
   React.useEffect(() => {
     if (userData) {
       setUser(userData)
-      console.log('Current userId from localStorage:', userData.userId)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -273,7 +273,7 @@ export default function BankVoucher() {
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit', values)
+    
 
     const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
@@ -307,7 +307,7 @@ export default function BankVoucher() {
       })),
     }
 
-    console.log('After Adding created by', updatedValues)
+    
 
     const updateValueswithBank = {
       ...updatedValues,
@@ -335,11 +335,6 @@ export default function BankVoucher() {
       ],
     }
 
-    console.log(
-      'Submitted values:',
-      JSON.stringify(updateValueswithBank, null, 2)
-    )
-
     const response = await createJournalEntryWithDetails(
       updateValueswithBank,
       token
@@ -355,7 +350,7 @@ export default function BankVoucher() {
       const mylocations = getLocationIds(formState.locations)
       getallVoucher(mycompanies, mylocations)
 
-      console.log('Voucher is created successfully', response.data)
+      
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',

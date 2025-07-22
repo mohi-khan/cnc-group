@@ -44,7 +44,7 @@ export function PaymentRequisitionPopup({
 }: PaymentRequisitionPopupProps) {
   //getting userData from jotai atom component
   useInitializeUser()
-  console.log('dataaaaa', requisition)
+  
   const [userData] = useAtom(userDataAtom)
 
   // State variables
@@ -222,7 +222,7 @@ export function PaymentRequisitionPopup({
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    console.log('Before Any edit', values)
+    
 
     const totalDetailsAmount = values.journalDetails.reduce(
       (sum, detail) => sum + (detail.debit || detail.credit || 0),
@@ -254,7 +254,7 @@ export function PaymentRequisitionPopup({
       })),
     }
 
-    console.log('After Adding created by', updatedValues)
+    
 
     const updateValueswithBank = {
       ...updatedValues,
@@ -282,11 +282,6 @@ export function PaymentRequisitionPopup({
       ],
     }
 
-    console.log(
-      'Submitted values:',
-      JSON.stringify(updateValueswithBank, null, 2)
-    )
-
     const response = await createJournalEntryWithDetails(updateValueswithBank, token)
     if (response.error || !response.data) {
       toast({
@@ -294,7 +289,7 @@ export function PaymentRequisitionPopup({
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
-      console.log('Voucher is created successfully', response.data)
+      
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',

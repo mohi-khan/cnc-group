@@ -51,12 +51,8 @@ export function ContraVoucherDetailsSection({
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log(
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -102,8 +98,8 @@ export function ContraVoucherDetailsSection({
         return account.isCash === true
       })
       setCashCoa(isCashCoa || [])
-      console.log("Filtered Chart of Accounts:", filteredCoa)
-      console.log("cash Chart of Accounts:", isCashCoa)
+      
+      
     }, [chartOfAccounts])
 
   const fetchBankAccounts = useCallback(async () => {

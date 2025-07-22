@@ -12,13 +12,6 @@ export async function getVehicleSummary({
   vehicleNo: number
   token: string
 }) {
-  console.log(
-    'Fetching budget details for ID and tokekn from budget api:',
-    vehicleNo,
-    startDate,
-    endDate,
-    token
-  )
   return fetchApi<VehicleSummaryType[]>({
     url: `api/vehicle/getVehicleSummery?vehicleNo=${vehicleNo}&startDate=${startDate}&endDate=${endDate}`,
     method: 'GET',

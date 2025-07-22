@@ -40,7 +40,7 @@ const FinancialYear = () => {
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
-  console.log('🚀 ~ FinancialYear ~ token:', token)
+  
 
   // State variables
   const [userId, setUserId] = useState(0)
@@ -50,10 +50,10 @@ const FinancialYear = () => {
 
   useEffect(() => {
     if (userData) {
-      console.log('Current user from localStorage:', userId)
+      
       setUserId(userData.userId)
     } else {
-      console.log('No user data found in localStorage')
+      
       setError('User not authenticated. Please log in.')
     }
   }, [userId, userData])
@@ -75,7 +75,7 @@ const FinancialYear = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -88,7 +88,7 @@ const FinancialYear = () => {
         ...form.getValues(),
         createdby: userId,
       })
-      console.log('Reset form with updated userId:', userId)
+      
     }
   }, [userId, form, router])
 
@@ -99,7 +99,7 @@ const FinancialYear = () => {
         ...values,
         createdby: userId,
       }
-      console.log('Form data submitted:', dataToSubmit)
+      
       const response = await createFinancialYear(dataToSubmit, token)
 
       if (response.error || !response.data) {
@@ -110,7 +110,7 @@ const FinancialYear = () => {
           variant: 'destructive',
         })
       } else {
-        console.log('Financial year created successfully')
+        
         toast({
           title: 'Success',
           description: 'Financial year created successfully',

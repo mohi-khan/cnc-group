@@ -84,7 +84,7 @@ export default function AssetDepreciation() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -97,9 +97,9 @@ checkUserData()
     if (typeof window !== 'undefined') {
       if (userData) {
         setUserId(userData?.userId)
-        console.log('Current userId from localStorage:', userData.userId)
+        
       } else {
-        console.log('No user data found in localStorage')
+        
       }
     }
   }, [userData, router])
@@ -110,7 +110,7 @@ checkUserData()
     setPreviewData(null) // Clear any existing preview data
 
     try {
-      console.log('Calling preview API with data:', data)
+      
 
       // Make sure we're calling the preview API, not the create API
       const response = await previewAssetDepreciation(
@@ -121,7 +121,7 @@ checkUserData()
         token
       )
 
-      console.log('Preview API response:', response.data)
+      
 
       if (response.error || !response.data) {
         throw new Error(
@@ -131,7 +131,7 @@ checkUserData()
 
       // The response is already an array of depreciation items
       const schedules = response.data || []
-      console.log('Setting preview data:', schedules)
+      
 
       setPreviewData(schedules)
       setFormData(data) // Store the form data for later submission
@@ -161,7 +161,7 @@ checkUserData()
       } else {
         setAsset([])
       }
-      console.log('Show The Assets All Data :', assetdata.data)
+      
     } catch (error) {
       console.error('Failed to fetch asset categories:', error)
     }
@@ -185,7 +185,7 @@ checkUserData()
         },
         token
       )
-      console.log('"Asset depreciation created successfully:", response.data)')
+      
 
       if (response.error) {
         throw new Error(
@@ -194,11 +194,11 @@ checkUserData()
       }
 
       // Step 2: Create journal voucher in the background
-      console.log('Starting journal voucher creation...')
+      
       try {
         // Get the asset data for each asset in the depreciation schedule
         if (!previewData || previewData.length === 0) {
-          console.log('No preview data available for journal entries')
+          
           return
         }
 
@@ -264,11 +264,6 @@ checkUserData()
             ],
           }
 
-          console.log(
-            `Creating journal voucher for asset ${assetData.id} (${assetData.name}):`,
-            JSON.stringify(journalVoucherData, null, 2)
-          )
-
           const journalResponse = await createJournalEntryWithDetails(
             journalVoucherData,
             token
@@ -284,10 +279,7 @@ checkUserData()
               journalResponse
             )
           } else {
-            console.log(
-              `Journal voucher created successfully for asset ${assetData.id}:`,
-              journalResponse.data
-            )
+            return
           }
         }
       } catch (journalError) {

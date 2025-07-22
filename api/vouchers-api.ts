@@ -21,8 +21,8 @@ export type CostCenter = z.infer<typeof costCentersArraySchema>
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails, token: string
 ) {
-  console.log('Under APi:')
-  console.log(data)
+  
+  
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',
@@ -37,7 +37,7 @@ export async function editJournalDetailsNotes(
   data: EditJournalEditNotesType,
   token: string
 ) {
-  console.log('Under APi:', data)
+  
   return fetchApi<EditJournalEditNotesType>({
     url: 'api/journal/edit-notes',
     method: 'PATCH',
@@ -49,7 +49,7 @@ export async function editJournalDetailsNotes(
 }
 
 export async function makePostJournal(voucherid: string, createId: string, token: string) {
-  console.log('voucherid:', voucherid, 'Create ID:', createId)
+  
   return fetchApi({
     url: `api/journal/postJournal/${voucherid}/${createId}`,
     method: 'POST',
@@ -78,7 +78,7 @@ export const getAllVoucher=async(data: JournalQuery, token: string)=> {
 }
 
 export async function getAllVoucherById(voucherid: string) {
-  console.log(voucherid)
+  
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`, // Dynamic URL with voucherid
     method: 'GET',

@@ -73,7 +73,7 @@ const VehiclePerformanceReport = () => {
     try {
       const response = await getVehiclePer(token, vehicleId)
       const vehicleData = { data: Array.isArray(response.data) ? response.data : [response.data] } as { data: vehiclePerLitreCost[] }
-      console.log("Vehicle Performance Data:", vehicleData)
+      
       
       // Filter data based on start and end dates
       const filteredData = vehicleData.data.filter(item => {
@@ -106,7 +106,7 @@ const VehiclePerformanceReport = () => {
   const fetchVehicles = React.useCallback(async () => {
     const vehicleData = await getAllVehicles(token)
     setVehicles(vehicleData.data || [])
-    console.log('Show The Vehicle All Data :', vehicleData.data)
+    
   }, [token])
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const VehiclePerformanceReport = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

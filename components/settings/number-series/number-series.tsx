@@ -123,10 +123,10 @@ export function NumberSeries() {
     setIsLoading(true)
     setIsError(false)
     const response = await getAllNumberSeries(token)
-    console.log('Fetched number series:', response.data)
+    
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (response.error || !response.data) {
       console.error('Error fetching number series:', response.error)
@@ -146,10 +146,10 @@ export function NumberSeries() {
     setIsLoading(true)
     setIsError(false)
     const response = await getFinancialYear(token)
-    console.log('Fetched fynancial year:', response.data)
+    
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (response.error || !response.data) {
       console.error('Error fetching fynancial year:', response.error)
@@ -167,10 +167,10 @@ export function NumberSeries() {
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
     const data = await getAllCompanies(token)
-    console.log('Fetched companies:', data.data)
+    
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
@@ -186,10 +186,10 @@ export function NumberSeries() {
   const fetchAllLocations = React.useCallback(async () => {
     if (!token) return
     const response = await getAllLocations(token)
-    console.log('Fetched locations:', response.data)
+    
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (response.error || !response.data) {
       console.error('Error getting locations:', response.error)
@@ -208,7 +208,7 @@ export function NumberSeries() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -228,7 +228,7 @@ export function NumberSeries() {
   ])
 
   const onSubmit = async (values: NumberSeriesType) => {
-    console.log('Form values before formatting:', values)
+    
     // Ensure all numeric fields are properly converted to numbers
     const formattedValues = {
       ...values,
@@ -240,8 +240,8 @@ export function NumberSeries() {
       createdBy: userData?.userId,
       currentNumber: Number(values.startingNumber),
     }
-    console.log('Values being sent to the backend:', formattedValues)
-    console.log('Formatted values to be submitted:', formattedValues)
+    
+    
 
     if (formattedValues.endingNumber < formattedValues.startingNumber) {
       toast({
@@ -255,7 +255,7 @@ export function NumberSeries() {
 
     try {
       const response = await createNumberSeries(formattedValues, token)
-      console.log('API response:', response)
+      
       if (response.error) {
         throw new Error(
           response.error.message || 'Failed to create number series'

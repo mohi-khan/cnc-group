@@ -2,8 +2,8 @@ import { fetchApi } from '@/utils/http'
 import { AccountsHead, LevelType } from '@/utils/type'
 
 export async function createLevel(data: LevelType[], token: string) {
-  console.log('Under APi:')
-  console.log(data)
+  
+  
   return fetchApi<LevelType[]>({
     url: 'api/coa-pl-map/create-coa-pl-map',
     method: 'POST',
@@ -27,8 +27,8 @@ export async function getAllLevel(token: string) {
 }
 
 export async function editLevel(data: LevelType[], token: string) {
-  console.log('Under APi:')
-  console.log(data)
+  
+  
   return fetchApi<LevelType[]>({
     url: 'api/coa-pl-map/edit-coa-pl-map',
     method: 'PATCH',

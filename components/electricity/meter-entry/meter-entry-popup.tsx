@@ -111,7 +111,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   }, [fetchCompany, fetchCostCenters, fetchChartOfAccounts])
 
   const onSubmit = async (data: CreateElectricityMeterType) => {
-    console.log('Form Data:', data) // Debugging data before submission
+    
 
     try {
       const response = await createMeterEntry(data, token)

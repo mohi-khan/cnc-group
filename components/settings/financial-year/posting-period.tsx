@@ -51,7 +51,7 @@ const PostingPeriodManager = () => {
       const data = await getFinancialYear(token)
       if (data?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (data.error || !data.data) {
         console.error('Error getting users:', data.error)
@@ -63,7 +63,7 @@ const PostingPeriodManager = () => {
       } else {
         setFinancialYears(data.data)
       }
-      console.log('🚀 ~ fetchFinancialYears ~ data.data:', data.data)
+      
       setError(null)
     } catch (error) {
       console.error('Error fetching financial years:', error)
@@ -81,10 +81,10 @@ const PostingPeriodManager = () => {
     setIsLoading(true)
     try {
       const data = await getPostingPeriod(token, selectedYearId)
-      console.log('🚀 ~ fetchPeriods ~ data:', data)
+      
       if (data?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (data.error || !data.data) {
         console.error('Error getting users:', data.error)
@@ -114,7 +114,7 @@ const PostingPeriodManager = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -168,7 +168,7 @@ const PostingPeriodManager = () => {
         createPeriodUpdatePayload(periodId, newStatus)
       )
 
-      console.log('Updating period:', periodData)
+      
 
       // Call the updatePostingPeriod API
       const response = await updatePostingPeriod(periodData, token)
@@ -184,7 +184,7 @@ const PostingPeriodManager = () => {
             ? { ...period, isOpen: newStatus }
             : period
         )
-        console.log('Updated periods:', updatedPeriods)
+        
         return updatedPeriods
       })
 

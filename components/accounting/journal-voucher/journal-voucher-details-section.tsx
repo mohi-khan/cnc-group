@@ -132,7 +132,7 @@ export function JournalVoucherDetailsSection({
       const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting partners:', response.error)
@@ -143,7 +143,7 @@ export function JournalVoucherDetailsSection({
         setPartners([])
         return
       } else {
-        console.log('Fetched Partners:', response.data)
+        
         setPartners(response.data)
       }
     } catch (error) {

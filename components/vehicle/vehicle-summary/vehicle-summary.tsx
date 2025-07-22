@@ -34,7 +34,7 @@ const VehicleSummary = () => {
   //   const mainToken = localStorage.getItem('authToken')
   //   if (mainToken) {
   //     setToken(`Bearer ${mainToken}`)
-  //     console.log('🚀 ~ vehicle summary token:', mainToken)
+  //     
   //   }
   // }, [])
 
@@ -42,7 +42,7 @@ const VehicleSummary = () => {
   const fetchVehicles = useCallback(async () => {
     const vehicleData = await getAllVehicles(token)
     setVehicles(vehicleData.data || [])
-    console.log('Show The Vehicle All Data:', vehicleData.data)
+    
   }, [token])
   useEffect(() => {
     fetchVehicles()
@@ -69,7 +69,7 @@ const VehicleSummary = () => {
       if (!response.data) throw new Error('No data received')
 
       setVehicleSummary(response.data)
-      console.log('✅ Vehicle Summary data:', response.data)
+      
     },
     []
   )
@@ -81,7 +81,7 @@ const VehicleSummary = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

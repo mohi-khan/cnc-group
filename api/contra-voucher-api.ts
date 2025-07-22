@@ -6,7 +6,7 @@ import {
 } from '@/utils/type'
 
 export async function getSingleVoucher(voucherid: string,token: string) {
-  console.log(voucherid)
+  
   return fetchApi<VoucherById[]>({
     url: `api/journal/getJournalDetail/${voucherid}`,
     method: 'GET',
@@ -23,12 +23,6 @@ export async function reverseJournalVoucher(
   createdId: number,
   token: string
 ) {
-  console.log(
-    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
-    voucherNo,
-    createdId,
-    token
-  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
@@ -41,7 +35,7 @@ export async function reverseJournalVoucher(
 }
 
 export async function editJournalVoucher(voucherid: number, createid: number) {
-  console.log(voucherid, createid)
+  
   return fetchApi<VoucherById[]>({
     url: `api/journal/postJournal/${voucherid}/${createid}`,
     method: 'POST',
@@ -63,7 +57,7 @@ export async function getAllVoucher(data: JournalQuery) {
       {} as Record<string, string>
     )
   ).toString()
-  console.log(queryParams)
+  
   return fetchApi({
     url: `api/journal/getJournalDetails/?${queryParams}`,
     method: 'GET',
@@ -73,8 +67,8 @@ export async function getAllVoucher(data: JournalQuery) {
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails
 ) {
-  console.log('Under APi:')
-  console.log(data)
+  
+  
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',

@@ -95,7 +95,7 @@ export default function AutomaticReconciliation() {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
-        console.log('Fetching reconciliations with:', data) // Debug log
+        
         const response = await getBankReconciliations(
           Number.parseInt(data.bankAccount),
           data.fromDate,
@@ -114,7 +114,7 @@ export default function AutomaticReconciliation() {
           })
         } else {
           setReconciliations(response.data || [])
-          console.log('Received reconciliations:', response.data) // Debug log
+          
         }
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
@@ -127,7 +127,7 @@ export default function AutomaticReconciliation() {
         setLoading(false)
       }
     } else {
-      console.log('Missing required data:', data) // Debug log
+      
       setReconciliations([])
     }
   }
@@ -142,7 +142,7 @@ export default function AutomaticReconciliation() {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
-        console.log('Fetching reconciliations with:', data) // Debug log
+        
         const response = await getBankTransactions(
           Number.parseInt(data.bankAccount),
           data.fromDate,
@@ -162,7 +162,7 @@ export default function AutomaticReconciliation() {
         } else {
           setTransactions(response.data || [])
         }
-        console.log('Received transactions:', response.data) // Debug log
+        
       } catch (error) {
         console.error('Error fetching reconciliations:', error) // Debug log
         toast({
@@ -174,7 +174,7 @@ export default function AutomaticReconciliation() {
         setLoading(false)
       }
     } else {
-      console.log('Missing required data:', data) // Debug log
+      
       setReconciliations([])
     }
   }
@@ -185,7 +185,7 @@ export default function AutomaticReconciliation() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

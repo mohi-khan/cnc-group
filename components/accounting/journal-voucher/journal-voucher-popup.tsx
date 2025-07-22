@@ -118,7 +118,7 @@ export function JournalVoucherPopup({
           ) || 0
         const amountTotal = Math.max(totalDebit, totalCredit)
         form.setValue('journalEntry.amountTotal', amountTotal)
-        console.log('amountTotal from popup:', amountTotal)
+        
       }
     })
     return () => subscription.unsubscribe()
@@ -129,8 +129,8 @@ export function JournalVoucherPopup({
     handleSubmit(data, resetForm)
   }
 
-  console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  
+  // 
 
   return (
     <>

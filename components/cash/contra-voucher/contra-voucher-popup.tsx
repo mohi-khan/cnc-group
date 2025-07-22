@@ -47,12 +47,8 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      console.log(
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 
@@ -98,7 +94,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
 
   const handleSubmit = async (data: JournalEntryWithDetails) => {
     setIsSubmitting(true)
-    console.log('Submitting voucher:', data)
+    
 
     const amountTotal = data.journalDetails.reduce(
       (sum, detail) => sum + Number(detail.debit),

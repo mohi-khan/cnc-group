@@ -146,10 +146,10 @@ export default function SignUp() {
   const fetchAllCompanies = useCallback(async () => {
     if (!token) return
     const fetchedCompanies = await getAllCompanies(token)
-    console.log('Fetched companies:', fetchedCompanies.data)
+    
     if (fetchedCompanies?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (fetchedCompanies.error || !fetchedCompanies.data) {
       console.error('Error getting company:', fetchedCompanies.error)
@@ -167,7 +167,7 @@ export default function SignUp() {
     const fetchedLocations = await getAllLocations(token)
     if( fetchedLocations?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     }
     else if (fetchedLocations.error || !fetchedLocations.data) {
@@ -178,7 +178,7 @@ export default function SignUp() {
           fetchedLocations.error?.message || 'Failed to get location',
       })
     } else {
-      console.log('Fetched locations:', fetchedLocations.data)
+      
       setLocations(fetchedLocations.data)
     }
   }, [ token,router])
@@ -188,7 +188,7 @@ export default function SignUp() {
     const fetchedRoles = await getAllRoles(token)
     if (fetchedRoles?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (fetchedRoles.error || !fetchedRoles.data) {
       console.error('Error getting roles:', fetchedRoles.error)
@@ -197,7 +197,7 @@ export default function SignUp() {
         description: fetchedRoles.error?.message || 'Failed to get roles',
       })
     } else {
-      console.log('Fetched roles:', fetchedRoles.data)
+      
       setRoles(fetchedRoles.data)
     }
   }, [ token,router])
@@ -208,7 +208,7 @@ export default function SignUp() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -251,7 +251,7 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      console.log('Submitting form data:', userFormData)
+      
 
       // Step 1: Register the user
       const signUpResult = await signUp(userFormData, token)
@@ -266,7 +266,7 @@ export default function SignUp() {
       }
 
       const newUserId = signUpResult.userId // Assuming the API returns the new user's ID
-      console.log(newUserId)
+      
 
       setFeedback({
         type: 'success',

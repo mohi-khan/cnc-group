@@ -65,7 +65,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       createdBy: userData?.userId || 0,
     },
   })
-  console.log('Created By:', userData?.userId)
+  
 
   const handleFormSubmit = async (data: CreateVehicleType) => {
     const formattedData = {
@@ -77,7 +77,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
     }
 
     try {
-      console.log('Form data:', formattedData)
+      
       await createVehicle(formattedData, token)
       reset()
       onClose()
@@ -87,13 +87,13 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       alert('Failed to create vehicle. Please try again later.')
     }
   }
-  console.log('Form state errors:', errors)
+  
   const watch = (fieldName: string) => {
     const values = control._formValues || {};
     return values[fieldName];
   };
 
-  // console.log('Form values:', form.getValues())
+  // 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTrigger asChild></DialogTrigger>
