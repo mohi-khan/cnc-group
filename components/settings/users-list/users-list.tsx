@@ -157,7 +157,7 @@ export default function UsersList() {
     
     setEditingUser({
       ...user,
-      roleId: user.roleId ?? null,
+      roleId: user.roleId ?? user.roleId,
       voucherTypes: user.voucherTypes || [],
       username: user.username || '',
     })
@@ -199,12 +199,13 @@ export default function UsersList() {
             )
           )
           setEditingUser(null)
-          setIsEditDialogOpen(false)
+         setIsEditDialogOpen(false)
           await refreshAttachment()
           toast({
             title: 'Success',
             description: 'User updated successfully',
           })
+           
         } else {
           throw new Error(result.message || 'Failed to update user')
         }
@@ -336,8 +337,8 @@ export default function UsersList() {
                   </DialogContent>
                 </Dialog>
 
-                <Dialog open={isEditDialogOpen}  onOpenChange={setIsEditDialogOpen}>
-                  <DialogTrigger asChild>
+                <Dialog  open={isEditDialogOpen}  onOpenChange={setIsEditDialogOpen}>
+                  <DialogTrigger asChild >
                     <Button
                       variant="outline"
                      
@@ -348,7 +349,7 @@ export default function UsersList() {
                       Edit
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent >
                     <DialogHeader>
                       <DialogTitle>Edit User</DialogTitle>
                     </DialogHeader>
