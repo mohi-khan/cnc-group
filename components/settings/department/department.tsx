@@ -202,7 +202,7 @@ export default function DepartmentManagement() {
       const response = await createDepartment(
         {
           departmentName: values.departmentName,
-          createdBy: userId!, // Use non-null assertion since you've already checked it exists
+          createdBy: userId!,
           budget: values.budget || 0,
           companyCode: values.companyCode,
           isActive: values.isActive,
