@@ -49,10 +49,6 @@ const PaymentRequisition = () => {
           data.data?.filter((req) => req.status !== 'Invoice Created') || []
         setRequisitions(filteredRequisitions)
         
-          '🚀 ~ fetchRequisitions ~ filteredRequisitions:',
-          filteredRequisitions
-        )
-        
       }
     } catch (err) {
       setError('Failed to fetch requisitions')

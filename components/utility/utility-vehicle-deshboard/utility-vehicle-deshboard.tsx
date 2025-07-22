@@ -295,12 +295,6 @@ const UtilityVehicleDashboard = () => {
       } as {
         data: vehiclePerLitreCost[]
       }
-      // Log the data to debug
-      
-        'Vehicle Performance Data for Vehicle ID:',
-        selectedVehicleId,
-        vehicleData
-      )
       setVehiclePerformanceData(vehicleData.data)
     } catch (error) {
       console.error('Error fetching vehicle performance data:', error)

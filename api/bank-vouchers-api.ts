@@ -3,11 +3,6 @@ import { fetchApi } from '@/utils/http'
 import { JournalEntryWithDetails, VoucherById } from '@/utils/type'
 
 export async function reverseBankVoucher(voucherNo: number, createdId: number) {
-  
-    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
-    voucherNo,
-    createdId
-  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',

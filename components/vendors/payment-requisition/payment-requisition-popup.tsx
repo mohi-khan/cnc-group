@@ -282,11 +282,6 @@ export function PaymentRequisitionPopup({
       ],
     }
 
-    
-      'Submitted values:',
-      JSON.stringify(updateValueswithBank, null, 2)
-    )
-
     const response = await createJournalEntryWithDetails(updateValueswithBank, token)
     if (response.error || !response.data) {
       toast({

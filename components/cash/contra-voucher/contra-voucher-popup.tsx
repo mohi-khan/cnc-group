@@ -47,10 +47,6 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
   useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
       
     }

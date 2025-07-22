@@ -23,12 +23,6 @@ export async function reverseJournalVoucher(
   createdId: number,
   token: string
 ) {
-  
-    '🚀 ~ reverseJournalVoucher ~ voucherNo: number, createdId: number:',
-    voucherNo,
-    createdId,
-    token
-  )
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',

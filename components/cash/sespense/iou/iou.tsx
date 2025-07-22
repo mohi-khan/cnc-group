@@ -65,10 +65,6 @@ const Iou = () => {
       if (!token) return
       const response = await getAllCompanies(token)
       setGetCompany(response.data || [])
-      
-        'fetchAssetCategories category names asset tsx file:',
-        response.data
-      )
     }, [token])  
 
     // Fetch all Location Data
@@ -76,10 +72,6 @@ const Iou = () => {
     if (!token) return
     const response = await getAllLocations(token)
     setGetLocation(response.data ?? [])
-    
-      'fetchAssetCategories category names asset tsx file:',
-      response.data
-    )
   }, [token])
 
   useEffect(() => {

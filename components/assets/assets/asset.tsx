@@ -52,10 +52,6 @@ const Asset = () => {
     const categories = await getAllAssetCategories(token)
     const categoryNames = categories.data ?? []
     setAssetCategories(categoryNames)
-    
-      'fetchAssetCategories category names asset tsx file:',
-      categoryNames
-    )
   }, [token])
   
   useEffect(() => {

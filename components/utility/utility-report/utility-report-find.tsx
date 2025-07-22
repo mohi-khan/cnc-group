@@ -66,10 +66,6 @@ export default function UtilityReportFind({
           description: 'Invalid data format received for utility bills',
         })
       }
-      
-        '🚀 ~ fetchUtilityBills ~ fetchedBills.data:',
-        fetchedBills.data
-      )
     }
   }, [token])
 

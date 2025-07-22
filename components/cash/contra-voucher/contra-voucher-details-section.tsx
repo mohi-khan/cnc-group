@@ -51,10 +51,6 @@ export function ContraVoucherDetailsSection({
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
       
     }

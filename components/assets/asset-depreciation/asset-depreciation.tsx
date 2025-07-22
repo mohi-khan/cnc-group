@@ -264,11 +264,6 @@ checkUserData()
             ],
           }
 
-          
-            `Creating journal voucher for asset ${assetData.id} (${assetData.name}):`,
-            JSON.stringify(journalVoucherData, null, 2)
-          )
-
           const journalResponse = await createJournalEntryWithDetails(
             journalVoucherData,
             token
@@ -284,10 +279,7 @@ checkUserData()
               journalResponse
             )
           } else {
-            
-              `Journal voucher created successfully for asset ${assetData.id}:`,
-              journalResponse.data
-            )
+            return
           }
         }
       } catch (journalError) {

@@ -453,11 +453,6 @@ export default function CashVoucher() {
         },
       ],
     }
-
-    
-      'Submitted values:',
-      JSON.stringify(updateValueswithCash, null, 2)
-    )
     // Call the API to create the journal entry with details
     const response = await createJournalEntryWithDetails(
       updateValueswithCash,

@@ -244,10 +244,6 @@ export default function ChartOfAccountsTable() {
     checkUserData()
     if (userData) {
       setUserId(userData.userId)
-      
-        'Current userId from localStorage in everywhere:',
-        userData.userId
-      )
     } else {
       
     }
@@ -360,10 +356,7 @@ export default function ChartOfAccountsTable() {
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
-    
-      '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
-      fetchedCurrency
-    )
+
     if (fetchedCurrency.error || !fetchedCurrency.data) {
       console.error('Error getting currency:', fetchedCurrency.error)
       toast({

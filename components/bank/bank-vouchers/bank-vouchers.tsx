@@ -335,11 +335,6 @@ export default function BankVoucher() {
       ],
     }
 
-    
-      'Submitted values:',
-      JSON.stringify(updateValueswithBank, null, 2)
-    )
-
     const response = await createJournalEntryWithDetails(
       updateValueswithBank,
       token

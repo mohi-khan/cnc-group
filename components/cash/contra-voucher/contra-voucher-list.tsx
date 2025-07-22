@@ -42,10 +42,6 @@ export default function ContraVoucherTable() {
       }
       const response = await getAllVoucher(voucherQuery, token)
       if (response.data && Array.isArray(response.data)) {
-        
-          'contra voucher data line no 57 and i am from contra voucher list:',
-          response.data
-        )
 
         setVouchers(response.data)
       } else {
