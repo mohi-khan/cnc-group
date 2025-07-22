@@ -180,7 +180,7 @@ export default function ExchangePage() {
     checkUserData()
     fetchExchanges()
     fetchCurrency()
-  }, [fetchCurrency, fetchExchanges])
+  }, [fetchCurrency, fetchExchanges,router])
 
   return (
     <div className="w-[98%] mx-auto p-4">
@@ -220,6 +220,7 @@ export default function ExchangePage() {
                     value={editRate}
                     onChange={(e) => setEditRate(e.target.value)}
                     className="w-24"
+                    min={0}
                   />
                 ) : (
                   exchange.rate
@@ -353,6 +354,7 @@ export default function ExchangePage() {
                       onChange={(e) =>
                         field.onChange(Number.parseFloat(e.target.value))
                       }
+                      min={0}
                     />
                   </FormControl>
                   <FormMessage />
