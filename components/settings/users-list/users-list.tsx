@@ -82,33 +82,32 @@ export default function UsersList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [roles, setRoles] = useState<RoleData[]>([])
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-    const fetchUsers = React.useCallback(async () => {
-      // if(!token) return
-      const data = await GetUsersByRoles(token)
-      console.log('🚀 ~ fetchUsers ~ data:', data)
-      if (data?.error?.status === 401) {
-        router.push('/unauthorized-access')
-        console.log('Unauthorized access')
-        return
-      } else if (data.error || !data.data) {
-        console.error('Error getting users:', data.error)
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: data.error?.message || 'Failed to get users',
-        })
-      } else {
-        setUsers(data.data)
-        console.log('users', data)
-      }
-    }, [token, router])
-
-
+  const fetchUsers = React.useCallback(async () => {
+    if(!token) return
+    const data = await GetUsersByRoles(token)
+    console.log('🚀 ~ fetchUsers ~ data:', data)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      console.log('Unauthorized access')
+      return
+    } else if (data.error || !data.data) {
+      console.error('Error getting users:', data.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: data.error?.message || 'Failed to get users',
+      })
+    } else {
+      setUsers(data.data)
+      console.log('users', data)
+    }
+  }, [token, router])
 
   // console.log("🚀 ~ fetchRoles ~ token:", token)
   const fetchRoles = React.useCallback(async () => {
-    if(!token) return;
+    if (!token) return
     const fetchedRoles = await getAllRoles(token)
     if (fetchedRoles.error || !fetchedRoles.data) {
       console.error('Error getting roles:', fetchedRoles.error)
@@ -154,7 +153,6 @@ export default function UsersList() {
   const currentUsers = users.slice(startIndex, endIndex)
 
   const handleEditUser = (user: User) => {
-    
     setEditingUser({
       ...user,
       roleId: user.roleId ?? user.roleId,
@@ -175,7 +173,7 @@ export default function UsersList() {
         }
 
         const response = await fetch(
-          `http://localhost:4000/api/auth/users/${editingUser.id}`,
+          `${API_BASE_URL}/api/auth/users/${editingUser.id}`,
           {
             method: 'PUT',
             headers: {
@@ -199,13 +197,12 @@ export default function UsersList() {
             )
           )
           setEditingUser(null)
-         setIsEditDialogOpen(false)
+          setIsEditDialogOpen(false)
           await refreshAttachment()
           toast({
             title: 'Success',
             description: 'User updated successfully',
           })
-           
         } else {
           throw new Error(result.message || 'Failed to update user')
         }
@@ -255,7 +252,6 @@ export default function UsersList() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `${token}`,
-          
           },
           body: JSON.stringify({ active: newActiveState }),
         }
@@ -303,7 +299,7 @@ export default function UsersList() {
               <TableCell className="font-medium">
                 {startIndex + index + 1}
               </TableCell>
-              <TableCell >{user.username}</TableCell>
+              <TableCell>{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
                 <Dialog key={`view-${user.id}`}>
@@ -337,19 +333,20 @@ export default function UsersList() {
                   </DialogContent>
                 </Dialog>
 
-                <Dialog  open={isEditDialogOpen}  onOpenChange={setIsEditDialogOpen}>
-                  <DialogTrigger asChild >
+                <Dialog
+                  open={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                >
+                  <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                     
                       size="sm"
-                     
                       onClick={() => handleEditUser(user)}
                     >
                       Edit
                     </Button>
                   </DialogTrigger>
-                  <DialogContent >
+                  <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Edit User</DialogTitle>
                     </DialogHeader>
