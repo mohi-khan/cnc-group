@@ -22,8 +22,6 @@ import { updatePostingPeriodsSchema } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
-import { AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { toast } from '@/hooks/use-toast'
 
@@ -41,9 +39,9 @@ const PostingPeriodManager = () => {
     []
   )
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null)
-  const [changedPeriods, setChangedPeriods] = useState<Set<number>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [showPeriods, setShowPeriods] = useState(false)
+  const [updatingPeriods, setUpdatingPeriods] = useState<Set<number>>(new Set())
 
   // Effect hook to fetch financial years when token is available
   const fetchFinancialYears = useCallback(async () => {
@@ -115,7 +113,6 @@ const PostingPeriodManager = () => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
         console.log('No user data or token found in localStorage')
         router.push('/')
@@ -129,79 +126,90 @@ const PostingPeriodManager = () => {
     }
   }, [token, fetchFinancialYears, router])
 
-  // Convert period type to json format for API calling to update Period Open Data
-  function transformPeriods(periods: Period[], isopen: boolean) {
-    if (!periods || periods.length === 0) {
-      throw new Error('Input array is empty or undefined')
-    }
-    const postingIds: number[] = periods
-      .map((period) => period.periodId)
-      .filter((id): id is number => typeof id === 'number' && id > 0)
+  // Function to create API payload for single period update
+  function createPeriodUpdatePayload(periodId: number, isOpen: boolean) {
     const result = {
-      postingIds: postingIds,
-      isOpen: isopen,
+      postingIds: [periodId],
+      isOpen: isOpen,
     }
     return result
   }
 
-  // Function to handle status change of a period
-  const handleStatusChange = (periodId: number, newStatus: boolean) => {
+  // Function to handle status change of a period with immediate API call
+  const handleStatusChange = async (periodId: number, newStatus: boolean) => {
+    if (!token) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Authentication token is missing. Please log in again.',
+      })
+      return
+    }
+
     // Check if opening a new period would exceed the limit of 2 open periods
     const openPeriodsCount = periods.filter((p) => p.isOpen).length
     const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
 
     if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
-      setError('Only two periods can be open at a time.')
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Only two periods can be open at a time.',
+      })
       return
     }
 
-    // Update the periods state with the new status
-    setPeriods((prevPeriods) => {
-      const updatedPeriods = prevPeriods.map((period) =>
-        period.periodId === periodId ? { ...period, isOpen: newStatus } : period
-      )
-      console.log('Updated periods:', updatedPeriods)
-      return updatedPeriods
-    })
-
-    // Add the changed period to the set of changed periods
-    setChangedPeriods((prev) => {
-      const newSet = new Set(prev)
-      newSet.add(periodId)
-      return newSet
-    })
-
-    // Clear any existing error
-    setError(null)
-  }
-
-  const onSubmit = async () => {
-    if (!token) {
-      setError('Authentication token is missing. Please log in again.')
-      return
-    }
+    // Add period to updating set to show loading state
+    setUpdatingPeriods((prev) => new Set(prev).add(periodId))
 
     try {
-      const openPeriodsCount = periods.filter((p) => p.isOpen)
-      const perioddata = updatePostingPeriodsSchema.parse(
-        transformPeriods(openPeriodsCount, true)
+      // Create the payload for the API call
+      const periodData = updatePostingPeriodsSchema.parse(
+        createPeriodUpdatePayload(periodId, newStatus)
       )
-      console.log(perioddata)
 
-      // Call the updatePostingPeriod API with the transformed data
-      const response = await updatePostingPeriod(perioddata, token)
+      console.log('Updating period:', periodData)
 
-      // Handle the successful response
-      console.log('Posting periods updated successfully:', response)
+      // Call the updatePostingPeriod API
+      const response = await updatePostingPeriod(periodData, token)
 
-      // Reset the changed periods set
-      setChangedPeriods(new Set())
+      if (response?.error) {
+        throw new Error(response.error.message || 'Failed to update period')
+      }
 
-      // Refresh the periods list
-      fetchPeriods()
+      // Update the periods state with the new status only on successful API call
+      setPeriods((prevPeriods) => {
+        const updatedPeriods = prevPeriods.map((period) =>
+          period.periodId === periodId
+            ? { ...period, isOpen: newStatus }
+            : period
+        )
+        console.log('Updated periods:', updatedPeriods)
+        return updatedPeriods
+      })
+
+      // Show success message
+      toast({
+        title: 'Success',
+        description: `Period ${newStatus ? 'opened' : 'closed'} successfully.`,
+      })
+
+      // Clear any existing error
+      setError(null)
     } catch (error) {
-      console.error('Error updating posting periods:', error)
-      setError('Failed to update posting periods.')
+      console.error('Error updating posting period:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update posting period. Please try again.',
+      })
+    } finally {
+      // Remove period from updating set
+      setUpdatingPeriods((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(periodId)
+        return newSet
+      })
     }
   }
 
@@ -220,9 +228,6 @@ const PostingPeriodManager = () => {
       <CardContent>
         {/* Financial Year Selector */}
         <div className="mb-6">
-          {/* <label className="block text-sm font-medium mb-2">
-            Select Financial Year
-          </label> */}
           <div className="flex justify-center items-center">
             <div className="max-w-md mt-2 mr-3">
               <CustomCombobox
@@ -254,14 +259,6 @@ const PostingPeriodManager = () => {
           </div>
         </div>
 
-        {/* Display error message if there's an error */}
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         {/* Loading state */}
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
@@ -271,51 +268,45 @@ const PostingPeriodManager = () => {
           <>
             {/* Table to display posting periods */}
             {showPeriods && selectedYearId && periods.length > 0 ? (
-              <>
-                <Table className="border shadow-md">
-                  <TableHeader className="bg-gray-200 shadow-md">
-                    <TableRow>
-                      <TableHead>Period Name</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>End Date</TableHead>
-                      <TableHead>Status</TableHead>
+              <Table className="border shadow-md">
+                <TableHeader className="bg-gray-200 shadow-md">
+                  <TableRow>
+                    <TableHead>Period Name</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Map through periods and render each as a table row */}
+                  {periods.map((period) => (
+                    <TableRow key={period.periodId}>
+                      <TableCell>{period.periodName}</TableCell>
+                      <TableCell>
+                        {new Date(period.startDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(period.endDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {/* Switch component to toggle period status */}
+                        <Switch
+                          checked={period.isOpen}
+                          disabled={updatingPeriods.has(period.periodId)}
+                          onChange={(event) =>
+                            handleStatusChange(period.periodId, event.target.checked)
+                          }
+                        />
+                        {updatingPeriods.has(period.periodId) && (
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            Updating...
+                          </span>
+                        )}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {/* Map through periods and render each as a table row */}
-                    {periods.map((period) => (
-                      <TableRow key={period.periodId}>
-                        <TableCell>{period.periodName}</TableCell>
-                        <TableCell>
-                          {new Date(period.startDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(period.endDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {/* Switch component to toggle period status */}
-                          <Switch
-                            checked={period.isOpen}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                period.periodId,
-                                (e.target as HTMLInputElement).checked
-                              )
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                {/* Save button */}
-                {changedPeriods.size > 0 && (
-                  <div className="mt-4 flex justify-end">
-                    <Button onClick={onSubmit}>Save Changes</Button>
-                  </div>
-                )}
-              </>
+                  ))}
+                </TableBody>
+              </Table>
             ) : showPeriods && selectedYearId ? (
               <div className="text-center py-8">
                 <p>No posting periods found for the selected financial year.</p>

@@ -42,16 +42,20 @@ export default function SignIn() {
 
     try {
       const response = await signIn({ username, password })
-      console.log("🚀 ~ handleSubmit ~ response:", response)
+      console.log('🚀 ~ handleSubmit ~ response:', response)
       if (response.error || !response.data) {
+        const msg = response.error?.message
+
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to signin',
-      
-        }
-         
-      )
-       console.log(response.error?.details);
+          description:
+            msg === 'Unauthorized access' ||
+            msg === 'HTTP error! status: 422 Validation failed'
+              ? 'Wrong username/password. Please Contact with Administrator'
+              : 'Network issue occurred. Please try again later.',
+        })
+
+        console.log(response.error?.details)
       } else {
         // Log the current user information
 
@@ -59,8 +63,14 @@ export default function SignIn() {
         localStorage.setItem('authToken', response.data.data.token)
         console.log(response.data.data.user)
         // Store user information in localStorage
-        const { userId, roleId, userCompanies, userLocations, voucherTypes, employeeId } =
-          response.data.data.user
+        const {
+          userId,
+          roleId,
+          userCompanies,
+          userLocations,
+          voucherTypes,
+          employeeId,
+        } = response.data.data.user
 
         const userInfo = {
           userId,
