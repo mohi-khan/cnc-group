@@ -47,10 +47,10 @@ const Vehicle = () => {
   const fetchVehicles = useCallback(async () => {
     if (!token) return
     const vehicleData = await getAllVehicles(token)
-    console.log(vehicleData?.error?.message === 'Unauthorized access')
+    
     if (vehicleData?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (vehicleData.error || !vehicleData.data) {
       console.error('Error vehicle:', vehicleData.error)
@@ -86,7 +86,7 @@ const Vehicle = () => {
     if (!token) return
     const assetData = await getAssets(token)
     setAsset(assetData.data || [])
-    console.log('Show The Assets All Data :', assetData.data)
+    
   }, [token])
 
   const fetchEmployeeData = React.useCallback(async () => {
@@ -97,7 +97,7 @@ const Vehicle = () => {
     } else {
       setEmployeeData([])
     }
-    console.log('Show The Employee Data :', employees.data)
+    
   }, [token])
 
   useEffect(() => {
@@ -106,7 +106,7 @@ const Vehicle = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

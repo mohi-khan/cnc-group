@@ -60,7 +60,7 @@ export default function GeneralLedgerFind({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

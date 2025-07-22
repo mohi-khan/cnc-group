@@ -19,7 +19,7 @@ export async function createFinancialYear(
   data: financialYearCreate,
   token: string
 ) {
-  console.log('create financial year: ', data)
+  
   return fetchApi<financialYear>({
     url: 'api/financial-year/entry',
     method: 'POST',

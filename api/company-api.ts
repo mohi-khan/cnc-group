@@ -34,7 +34,7 @@ export async function createCompany(
   locations: string[],
   token: string
 ) {
-  console.log('API: Creating company with data:', companyData)
+  
 
   const response = await fetch(
     `${API_BASE_URL}/api/company/create-company-location`,
@@ -52,9 +52,9 @@ export async function createCompany(
     }
   )
 
-  console.log('API: Company creation response status:', response.status)
+  
   const data = await response.json()
-  console.log('API: Company creation response data:', data)
+  
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to create company')

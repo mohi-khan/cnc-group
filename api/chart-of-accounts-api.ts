@@ -16,7 +16,7 @@ export async function createChartOfAccounts(
   data: ChartOfAccounts,
   token: string
 ) {
-  console.log('Created Chart Of Account:', data)
+  
   return fetchApi<ChartOfAccount[]>({
     url: 'api/chart-of-accounts/create-coa',
     method: 'POST',

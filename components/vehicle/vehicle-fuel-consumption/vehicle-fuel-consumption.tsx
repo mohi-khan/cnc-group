@@ -41,7 +41,7 @@ const VehicleFuelConsumption = () => {
     const vehicleData = await getAllVehicleFuelConsumpiton(token)
     if (vehicleData?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (vehicleData.error || !vehicleData.data) {
       console.error(
@@ -78,7 +78,7 @@ const VehicleFuelConsumption = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

@@ -36,7 +36,7 @@ export async function previewAssetDepreciation(
 export async function createJournalEntryWithDetails(
   data: JournalEntryWithDetails, token: string
 ) {
-  console.log('journal', data)
+  
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/entry',
     method: 'POST',

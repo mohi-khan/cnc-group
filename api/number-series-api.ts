@@ -45,7 +45,7 @@ export async function getAllNumberSeries(token: string) {
 }
 
 export async function createNumberSeries(data: Omit<NumberSeries, 'id'>, token: string) {
-  console.log('Creating number series:', data)
+  
   return fetchApi<NumberSeries>({
     url: 'api/number-series/entry',
     method: 'POST',

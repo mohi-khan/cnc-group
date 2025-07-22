@@ -43,7 +43,7 @@ const ApproveInvoice = () => {
   const token = `Bearer ${mainToken}`
 
   // const mainToken = localStorage.getItem('authToken')
-  // console.log('🚀 ~ PaymentRequisition ~ mainToken:', mainToken)
+  // 
   // const token = `Bearer ${mainToken}`
 
   const handleApproveClick = (requisition: GetPaymentOrder) => {
@@ -102,7 +102,7 @@ const ApproveInvoice = () => {
         data.data?.filter((req) => req.status === 'Invoice Created') || []
 
       setInvoices(filteredRequisitions)
-      console.log('🚀 ~ fetchRequisitions ~ data:', filteredRequisitions)
+      
     } catch (err) {
       setError('Failed to fetch requisitions')
     } finally {

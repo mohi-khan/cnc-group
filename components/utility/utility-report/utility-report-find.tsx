@@ -37,7 +37,7 @@ export default function UtilityReportFind({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -66,7 +66,7 @@ export default function UtilityReportFind({
           description: 'Invalid data format received for utility bills',
         })
       }
-      console.log(
+      
         '🚀 ~ fetchUtilityBills ~ fetchedBills.data:',
         fetchedBills.data
       )

@@ -150,7 +150,7 @@ const UtilityDashboard = () => {
         if (companiesData.length > 0 && !selectedCompanyId) {
           setSelectedCompanyId(String(companiesData[0].companyId ?? ''))
         }
-        console.log('Company data fetched:', response.data)
+        
       } else {
         setCompanies([])
       }
@@ -167,7 +167,7 @@ const UtilityDashboard = () => {
           setUtilityMeters(
             Array.isArray(response.data) ? response.data : [response.data]
           )
-          console.log("🚀 ~ fetchUtilityMeter ~ response.data:", response.data)
+          
         } else {
           setUtilityMeters([])
         }

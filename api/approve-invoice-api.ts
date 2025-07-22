@@ -5,7 +5,7 @@ export async function getAllInvoices(data: {
   token: string
   companyId: number
 }) {
-  console.log('🚀 ~ getAllPaymentRequisition ~ token', data.token)
+  
   return fetchApi<GetPaymentOrder[]>({
     url: `api/purchase/getPurchaseData?company=73,75,77`,
     method: 'GET',

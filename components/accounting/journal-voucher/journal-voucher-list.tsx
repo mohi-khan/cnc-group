@@ -69,7 +69,7 @@ export default function VoucherTable() {
         const response = await getAllVoucher(voucherQuery, token)
         if (response?.error?.status === 401) {
           router.push('/unauthorized-access')
-          console.log('Unauthorized access')
+          
           return
         } else if (response.error || !response.data) {
           console.error('Error getting Voucher Data:', response.error)
@@ -81,7 +81,7 @@ export default function VoucherTable() {
           setVouchers([])
           return
         } else {
-          console.log('API Response:', response.data)
+          
           setVouchers(Array.isArray(response.data) ? response.data : [])
         }
       } catch (error) {
@@ -106,7 +106,7 @@ export default function VoucherTable() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -117,15 +117,15 @@ export default function VoucherTable() {
       setUserId(userData.userId)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData.userId)
+      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
+      
 
       fetchAllVoucher(companyIds, locationIds, token)
     } else {
-      console.log('No user data found in localStorage')
+      
       setIsLoading(false)
     }
   }, [fetchAllVoucher, router, userData, token])
@@ -147,7 +147,7 @@ export default function VoucherTable() {
     resetForm: () => void
   ) => {
     setIsSubmitting(true)
-    console.log('Submitting voucher:', data)
+    
 
     //stringify the form data to send to the API
     const submissionData = {
@@ -165,7 +165,7 @@ export default function VoucherTable() {
       })),
     }
 
-    console.log('Submission data:', submissionData)
+    
 
     // Call the API to create the journal entry with details
     const response = await createJournalEntryWithDetails(submissionData, token)

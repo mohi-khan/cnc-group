@@ -13,7 +13,7 @@ export async function getBankReconciliationReports(
     toDate: toDate,
     token: token,
   })
-  console.log('🚀 ~ params:', params)
+  
   const url = `api/bank-reconciliation/get-bank-reconciliation-summary?${params}`
   return fetchApi<BankReconciliationReportType[]>({
     url,

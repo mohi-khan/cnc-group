@@ -67,7 +67,7 @@ export default function ExchangePage() {
     const data = await getAllExchange(token)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting exchanges:', data.error)
@@ -95,7 +95,7 @@ export default function ExchangePage() {
       })
     } else {
       setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      
     }
     setIsLoading(false)
   }, [token, toast])
@@ -171,7 +171,7 @@ export default function ExchangePage() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

@@ -119,7 +119,7 @@ export default function LevelEntry() {
   const { rows, addRow, updateRow } = useLevelRows()
 
   const handleSave = async () => {
-    console.log('Saving data:', rows)
+    
     const response = await createLevel(rows, token)
     if (response.error || !response.data) {
       console.error('Error creating level', response.error)
@@ -128,7 +128,7 @@ export default function LevelEntry() {
         description: response.error?.message || 'Error creating level',
       })
     } else {
-      console.log('level is created successfully', response.data)
+      
       toast({
         title: 'Success',
         description: 'level is created successfully',
@@ -168,7 +168,7 @@ export default function LevelEntry() {
       })
     } else {
       setLevels(fetchLevels.data)
-      console.log('🚀 ~ fetchLevels ~ fetchLevels.data:', fetchLevels.data)
+      
     }
   }, [token,router])
 
@@ -178,7 +178,7 @@ export default function LevelEntry() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -302,7 +302,7 @@ export default function LevelEntry() {
   }
 
   const handleUpdate = async () => {
-    console.log('Updating levels:', levels)
+    
     const response = await editLevel(levels, token)
     if (response.error) {
       toast({

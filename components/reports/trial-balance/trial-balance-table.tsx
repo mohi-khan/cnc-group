@@ -79,7 +79,7 @@ export default function TrialBalanceTable({
       if (response.data) {
         setTrialBalanceDataLocal(response.data)
         setTrialBalanceData(response.data)
-        console.log('trial balance data : ', response.data)
+        
       } else {
         console.error(
           'Error fetching trial balance data:',
@@ -97,7 +97,7 @@ export default function TrialBalanceTable({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -326,7 +326,7 @@ export default function TrialBalanceTable({
 //       if (response.data) {
 //         setTrialBalanceDataLocal(response.data)
 //         setTrialBalanceData(response.data)
-//         console.log("trial balance data : ", response.data)
+//         
 //       } else {
 //         console.error("Error fetching trial balance data:", response?.error || "Unknown error")
 //       }
@@ -341,7 +341,7 @@ export default function TrialBalanceTable({
 //       const storedToken = localStorage.getItem("authToken")
 
 //       if (!storedUserData || !storedToken) {
-//         console.log("No user data or token found in localStorage")
+//         
 //         router.push("/")
 //         return
 //       }

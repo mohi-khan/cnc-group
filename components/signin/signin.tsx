@@ -42,7 +42,7 @@ export default function SignIn() {
 
     try {
       const response = await signIn({ username, password })
-      console.log('🚀 ~ handleSubmit ~ response:', response)
+      
       if (response.error || !response.data) {
         const msg = response.error?.message
 
@@ -55,13 +55,13 @@ export default function SignIn() {
               : 'Network issue occurred. Please try again later.',
         })
 
-        console.log(response.error?.details)
+        
       } else {
         // Log the current user information
 
         // Store token if remember me is checked
         localStorage.setItem('authToken', response.data.data.token)
-        console.log(response.data.data.user)
+        
         // Store user information in localStorage
         const {
           userId,
@@ -81,7 +81,7 @@ export default function SignIn() {
           employeeId,
         }
         localStorage.setItem('currentUser', JSON.stringify(userInfo))
-        console.log('Current user info stored:', userInfo)
+        
 
         // Redirect to dashboard
         router.push('/dashboard')

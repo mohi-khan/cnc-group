@@ -35,7 +35,7 @@
 //         })
 //       } else {
 //         setData(response.data)
-//         console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
+//         
 //       }
 //     }
 //     fetchVoucher()
@@ -63,9 +63,9 @@
 //       if (userStr) {
 //         const userData = JSON.parse(userStr)
 //         setUserId(userData?.userId)
-//         console.log('Current userId from localStorage:', userData.userId)
+//         
 //       } else {
-//         console.log('No user data found in localStorage')
+//         
 //       }
 //     }, [])
 

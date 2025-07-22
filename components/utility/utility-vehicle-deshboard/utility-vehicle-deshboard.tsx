@@ -296,7 +296,7 @@ const UtilityVehicleDashboard = () => {
         data: vehiclePerLitreCost[]
       }
       // Log the data to debug
-      console.log(
+      
         'Vehicle Performance Data for Vehicle ID:',
         selectedVehicleId,
         vehicleData

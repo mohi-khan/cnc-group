@@ -46,7 +46,7 @@ export default function Voucher() {
     // Set the filtered data to state
     setVoucherData(filteredData)
 
-    console.log('Filtered data (without cash in hand):', filteredData)
+    
   }, [voucherid])
 
   useEffect(() => {

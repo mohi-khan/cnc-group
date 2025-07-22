@@ -92,7 +92,7 @@ const IouList: React.FC<LoanListProps> = ({
   const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
 
   const handleButtonClick = (loan: IouRecordGetType) => {
-    console.log(`Adding Adj Amount for IOU ID: ${loan.iouId}`)
+    
     setPopupIouId(loan.iouId)
   }
 

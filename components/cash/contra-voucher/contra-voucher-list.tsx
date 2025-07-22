@@ -42,14 +42,14 @@ export default function ContraVoucherTable() {
       }
       const response = await getAllVoucher(voucherQuery, token)
       if (response.data && Array.isArray(response.data)) {
-        console.log(
+        
           'contra voucher data line no 57 and i am from contra voucher list:',
           response.data
         )
 
         setVouchers(response.data)
       } else {
-        console.log('No voucher data available')
+        
         setVouchers([])
       }
       setIsLoading(false)
@@ -63,7 +63,7 @@ export default function ContraVoucherTable() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -74,14 +74,14 @@ export default function ContraVoucherTable() {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
+      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
+      
       fetchAllVoucher(companyIds, locationIds)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData, fetchAllVoucher])
 

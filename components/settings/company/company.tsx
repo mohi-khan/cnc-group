@@ -125,7 +125,7 @@ export default function CompanyForm() {
       parentCompanyId,
       locationId,
     }
-    console.log("🚀 ~ handleSave ~ companyData:", companyData)
+    
 
     const response = await createCompany(
       companyData,
@@ -133,10 +133,10 @@ export default function CompanyForm() {
       token
     )
     if(!token) return;
-    console.log("🚀 ~ handleSave ~ companyData:", response)
+    
     if(response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     }
     else if (response.error || !response.data) {
@@ -147,7 +147,7 @@ export default function CompanyForm() {
           response.error?.message || 'Error creating company or location',
       })
     } else {
-      console.log('Company and Location is created successfully')
+      
       toast({
         title: 'Success',
         description: 'Company and Location is created successfully',
@@ -179,7 +179,7 @@ export default function CompanyForm() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

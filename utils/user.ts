@@ -28,9 +28,9 @@ export const useInitializeUser = () => {
         const parsedUser = JSON.parse(userStr)
 
         setUserData(parsedUser)
-        console.log('User loaded:', parsedUser.userId)
+        
       } else {
-        console.log('No user data in localStorage')
+        
         setUserData(null)
       }
       setIsLoading(false)

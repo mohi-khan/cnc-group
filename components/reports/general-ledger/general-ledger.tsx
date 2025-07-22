@@ -69,7 +69,7 @@ export default function GeneralLedger() {
       })
 
       setTransactions(response.data || [])
-      console.log(response)
+      
     },
     [token]
   )

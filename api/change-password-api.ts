@@ -34,7 +34,7 @@ export async function changePassword(
     confirmNewPassword,
   })
 
-  console.log('Validated data:', validatedData)
+  
   return fetchApi<ChangePasswordResponse>({
     url: `api/auth/change-password/${userId}`,
     method: 'PATCH',

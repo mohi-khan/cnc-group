@@ -236,7 +236,7 @@ export default function ChartOfAccountsTable() {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -244,16 +244,16 @@ export default function ChartOfAccountsTable() {
     checkUserData()
     if (userData) {
       setUserId(userData.userId)
-      console.log(
+      
         'Current userId from localStorage in everywhere:',
         userData.userId
       )
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData, router])
 
-  console.log('🚀 ~ ChartOfAccountsTable ~ userData:', userData)
+  
 
   // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({
@@ -310,11 +310,11 @@ export default function ChartOfAccountsTable() {
       data.code = await generateAccountCode(parentAccountId)
     }
     const response = await createChartOfAccounts(data, token)
-    console.log('response', response)
+    
     if (response.error || !response.data) {
       console.error('Error creating chart of accounts:', response.error)
     } else {
-      console.log('Chart Of Account created successfully')
+      
       toast({
         title: 'Success',
         description: 'Chart Of account created successfully',
@@ -339,7 +339,7 @@ export default function ChartOfAccountsTable() {
   const fetchParentCodes = React.useCallback(async () => {
     if (!token) return
     const fetchedParentCodes = await getParentCodes(token)
-    console.log('Fetched parent codes:', fetchedParentCodes.data)
+    
     if (fetchedParentCodes.error || !fetchedParentCodes.data) {
       console.error('Error fetching parent codes:', fetchedParentCodes.error)
       toast({
@@ -351,7 +351,7 @@ export default function ChartOfAccountsTable() {
     } else {
       setParentCodes(fetchedParentCodes.data)
       if (fetchedParentCodes.data.length > 0) {
-        console.log(fetchedParentCodes.data)
+        
       }
     }
   }, [token])
@@ -360,7 +360,7 @@ export default function ChartOfAccountsTable() {
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
-    console.log(
+    
       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
       fetchedCurrency
     )
@@ -378,10 +378,10 @@ export default function ChartOfAccountsTable() {
   const fetchCoaAccounts = React.useCallback(async () => {
     if (!token) return
     const fetchedAccounts = await getAllChartOfAccounts(token)
-    console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
+    
     if (fetchedAccounts?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
@@ -536,7 +536,7 @@ export default function ChartOfAccountsTable() {
             response.error?.message || 'Failed to update chart of account',
         })
       } else {
-        console.log('Chart Of Account updated successfully')
+        
         toast({
           title: 'Success',
           description: 'Chart Of account updated successfully',
@@ -573,7 +573,7 @@ export default function ChartOfAccountsTable() {
             response.error?.message || 'Failed to update chart of account',
         })
       } else {
-        console.log('Chart Of Account updated successfully')
+        
         toast({
           title: 'Success',
           description: 'Chart Of account updated successfully',
@@ -589,8 +589,8 @@ export default function ChartOfAccountsTable() {
     }
   }
 
-  console.log('Form state errors:', form.formState.errors)
-  console.log('Dynamic Groups:', groups) // Debug log to see generated groups
+  
+  
 
   // return function for chart of accounts
   return (
@@ -1571,7 +1571,7 @@ export default function ChartOfAccountsTable() {
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-//         console.log('No user data or token found in localStorage')
+//         
 //         router.push('/')
 //         return
 //       }
@@ -1580,15 +1580,15 @@ export default function ChartOfAccountsTable() {
 //     checkUserData()
 //     if (userData) {
 //       setUserId(userData.userId)
-//       console.log(
+//       
 //         'Current userId from localStorage in everywhere:',
 //         userData.userId
 //       )
 //     } else {
-//       console.log('No user data found in localStorage')
+//       
 //     }
 //   }, [userData, router])
-//   console.log('🚀 ~ ChartOfAccountsTable ~ userData:', userData)
+//   
 
 //   // Dynamically update defaultValues based on userId
 //   const form = useForm<ChartOfAccount>({
@@ -1650,11 +1650,11 @@ export default function ChartOfAccountsTable() {
 //     }
 
 //     const response = await createChartOfAccounts(data, token)
-//     console.log('response', response)
+//     
 //     if (response.error || !response.data) {
 //       console.error('Error creating chart of accounts:', response.error)
 //     } else {
-//       console.log('Chart Of Account created successfully')
+//       
 //       toast({
 //         title: 'Success',
 //         description: 'Chart Of account created successfully',
@@ -1679,7 +1679,7 @@ export default function ChartOfAccountsTable() {
 //   const fetchParentCodes = React.useCallback(async () => {
 //     if (!token) return
 //     const fetchedParentCodes = await getParentCodes(token)
-//     console.log('Fetched parent codes:', fetchedParentCodes.data)
+//     
 
 //     if (fetchedParentCodes.error || !fetchedParentCodes.data) {
 //       console.error('Error fetching parent codes:', fetchedParentCodes.error)
@@ -1692,7 +1692,7 @@ export default function ChartOfAccountsTable() {
 //     } else {
 //       setParentCodes(fetchedParentCodes.data)
 //       if (fetchedParentCodes.data.length > 0) {
-//         console.log(fetchedParentCodes.data)
+//         
 //       }
 //     }
 //   }, [token])
@@ -1701,7 +1701,7 @@ export default function ChartOfAccountsTable() {
 //   const fetchCurrency = React.useCallback(async () => {
 //     if (!token) return
 //     const fetchedCurrency = await getAllCurrency(token)
-//     console.log(
+//     
 //       '🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:',
 //       fetchedCurrency
 //     )
@@ -1719,10 +1719,10 @@ export default function ChartOfAccountsTable() {
 //   const fetchCoaAccounts = React.useCallback(async () => {
 //     if (!token) return
 //     const fetchedAccounts = await getAllChartOfAccounts(token)
-//     console.log(fetchedAccounts?.error?.message === 'Unauthorized access')
+//     
 //     if (fetchedAccounts?.error?.status === 401) {
 //       router.push('/unauthorized-access')
-//       console.log('Unauthorized access')
+//       
 //       return
 //     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
 //       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
@@ -1864,7 +1864,7 @@ export default function ChartOfAccountsTable() {
 //             response.error?.message || 'Failed to update chart of account',
 //         })
 //       } else {
-//         console.log('Chart Of Account updated successfully')
+//         
 //         toast({
 //           title: 'Success',
 //           description: 'Chart Of account updated successfully',
@@ -1904,7 +1904,7 @@ export default function ChartOfAccountsTable() {
 //             response.error?.message || 'Failed to update chart of account',
 //         })
 //       } else {
-//         console.log('Chart Of Account updated successfully')
+//         
 //         toast({
 //           title: 'Success',
 //           description: 'Chart Of account updated successfully',
@@ -1921,8 +1921,8 @@ export default function ChartOfAccountsTable() {
 //     }
 //   }
 
-//   console.log('Form state errors:', form.formState.errors)
-//   // console.log('Form values:', form.getValues())
+//   
+//   // 
 
 //   // return function for chart of accounts
 //   return (

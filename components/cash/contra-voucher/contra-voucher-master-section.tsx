@@ -74,7 +74,7 @@ export function ContraVoucherMasterSection({
           description: response.error?.message || 'Failed to get Voucher Data',
         })
       } else {
-        console.log('voucher', response.data)
+        
       }
     },
     [token]
@@ -85,14 +85,14 @@ export function ContraVoucherMasterSection({
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
+      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
+      
       fetchAllVoucher(companyIds, locationIds)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [fetchAllVoucher, userData])
 
@@ -113,7 +113,7 @@ export function ContraVoucherMasterSection({
       })
     } else {
       setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      
     }
   }, [token])
 
@@ -127,7 +127,7 @@ export function ContraVoucherMasterSection({
       })
     } else {
       setExchanges(data.data)
-      console.log('🚀 ~ fetchExchanges ~ data.data:', data.data)
+      
     }
   }, [token])
   useEffect(() => {
@@ -135,8 +135,8 @@ export function ContraVoucherMasterSection({
     fetchExchanges()
   }, [fetchCurrency, fetchExchanges])
 
-  console.log('Form state errors:', form.formState.errors)
-  // console.log('Form values:', form.getValues())
+  
+  // 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">

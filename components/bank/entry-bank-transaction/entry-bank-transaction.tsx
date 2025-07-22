@@ -147,7 +147,7 @@ export default function EntryBankTransaction() {
     setIsLoading(true)
     try {
       const response = await getAllBankTransactions(token)
-      console.log('🚀 ~ fetchTransactions ~ response:', response)
+      
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
         return
@@ -205,7 +205,7 @@ export default function EntryBankTransaction() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -269,7 +269,7 @@ export default function EntryBankTransaction() {
     }
   }
 
-  console.log('Form values:', form.getValues())
+  
 
   const sortedTransactions = useMemo(() => {
     const sorted = [...transactions]

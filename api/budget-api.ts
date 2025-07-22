@@ -53,7 +53,7 @@ export async function getAllMasterBudget(data: { token: string }) {
 }
 
 export async function getAllBudgetDetails(id: number, token: string) {
-  console.log(
+  
     'Fetching budget details for ID and tokekn from budget api:',
     id,
     token

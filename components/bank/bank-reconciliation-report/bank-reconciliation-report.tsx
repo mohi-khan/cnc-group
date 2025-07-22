@@ -64,7 +64,7 @@ export default function BankReconciliationReport() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -79,7 +79,7 @@ export default function BankReconciliationReport() {
         const accounts = await getAllBankAccounts(token)
         if (accounts?.error?.status === 401) {
           router.push('/unauthorized-access')
-          console.log('Unauthorized access')
+          
           return
         } else if (accounts.data) {
           setBankAccounts(accounts.data)
@@ -106,14 +106,14 @@ export default function BankReconciliationReport() {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
-        console.log('Fetching reconciliations with:', data) // Debug log
+        
         const response = await getBankReconciliationReports(
           Number.parseInt(data.bankAccount),
           data.fromDate,
           data.toDate,
           data.token
         )
-        console.log('Received reconciliations:', response.data) // Debug log
+        
         setReconciliations(response.data || [])
 
         // Set the report state with the first item from the response
@@ -153,7 +153,7 @@ export default function BankReconciliationReport() {
         setLoading(false)
       }
     } else {
-      console.log('Missing required data:', data) // Debug log
+      
       setReconciliations([])
       setReport(null)
     }

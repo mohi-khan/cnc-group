@@ -27,7 +27,7 @@ const CurrencyTable = () => {
     if (!token) return
     const respons = await getAllCurrency(token)
     setGetCurrency(respons.data || [])
-    console.log('This is all department   data: ', respons.data || [])
+    
   }, [token])
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const CurrencyTable = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

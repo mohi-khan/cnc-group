@@ -77,7 +77,7 @@ const CostCenterSummary = () => {
     if (!token) return
     const respons = await getAllCostCenters(token)
     setCostCenterData(respons.data || [])
-    console.log('This is all cost center data: ', respons.data || [])
+    
   }, [token])
 
   const fetchData = useCallback(async () => {
@@ -90,7 +90,7 @@ const CostCenterSummary = () => {
       token: token,
     })
     if (response.data) {
-      console.log('this is non-filter data: ', response.data)
+      
       const formattedData = response.data.map((item) => ({
         costCenterId: item.costCenterId,
         costCenterName: item.costCenterName,
@@ -100,10 +100,10 @@ const CostCenterSummary = () => {
         totalCredit: item.totalCredit,
       }))
       setCostCenterSummary(formattedData)
-      console.log('this is from cost center summary data : ', response.data)
+      
     } else {
       setCostCenterSummary([])
-      console.log('No data received from getCostCenterSummary')
+      
     }
   }, [token, startDate, endDate, companyId, costCenterId])
   useEffect(() => {
@@ -113,7 +113,7 @@ const CostCenterSummary = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

@@ -67,7 +67,7 @@ const EditBudgetDialog: React.FC<{
       const response = await updateBudgetMaster(item.budgetId, token)
 
       if (response.data) {
-        console.log('Budget updated successfully:', {
+        
           id: item.budgetId,
           name,
           fromDate,

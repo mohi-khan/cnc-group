@@ -61,10 +61,10 @@ export default function CostCenterManagement() {
     if (!token) return
     setIsLoading(true)
     const data = await getAllCostCenters(token)
-    console.log("🚀 ~ fetchCostCenters ~ data:", data)
+    
     if (data?.error?.status === 401) {
       router.push("/unauthorized-access")
-      console.log("Unauthorized access")
+      
       return
     } else if (data?.error?.status === 401) {
       router.push("/unauthorized-access")
@@ -86,7 +86,7 @@ export default function CostCenterManagement() {
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
-    console.log("🚀 ~ fetchCurrency ~ fetchedCurrency.fetchedCurrency:", fetchedCurrency)
+    
     if (fetchedCurrency.error || !fetchedCurrency.data) {
       console.error("Error getting currency:", fetchedCurrency.error)
       toast({
@@ -103,7 +103,7 @@ export default function CostCenterManagement() {
       const storedUserData = localStorage.getItem("currentUser")
       const storedToken = localStorage.getItem("authToken")
       if (!storedUserData || !storedToken) {
-        console.log("No user data or token found in localStorage")
+        
         router.push("/")
         return
       }
@@ -129,7 +129,7 @@ export default function CostCenterManagement() {
           description: response.error?.message || `Failed to ${isActive ? "deactivate" : "activate"} cost center`,
         })
       } else {
-        console.log(`Cost center ${isActive ? "deactivated" : "activated"} successfully`)
+        
         toast({
           title: "Success",
           description: `Cost center ${isActive ? "deactivated" : "activated"} successfully`,
@@ -159,9 +159,9 @@ export default function CostCenterManagement() {
   React.useEffect(() => {
     if (userData) {
       setUserId(userData?.userId)
-      console.log("Current userId from localStorage:", userData.userId)
+      
     } else {
-      console.log("No user data found in localStorage")
+      
     }
   }, [userData])
 

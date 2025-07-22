@@ -74,7 +74,7 @@ const ProfitAndLoss = () => {
         token: token,
       })
       setProfitAndLoss(response.data || [])
-      console.log('this is from Profit and loss data : ', response.data || [])
+      
     }
   }, [startDate, endDate, companyId, token])
 
@@ -84,7 +84,7 @@ const ProfitAndLoss = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

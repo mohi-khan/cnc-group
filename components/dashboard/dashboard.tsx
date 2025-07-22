@@ -149,7 +149,7 @@ export default function Dashboard() {
   const [costBreakdown, setCostBreakdown] = useState<GetCostBreakdownType[]>([])
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
 
-  console.log('🚀 ~ AssetDepreciation ~ token:', token)
+  
 
   const fetchFundPosition = React.useCallback(async () => {
     try {
@@ -159,7 +159,7 @@ export default function Dashboard() {
         fundPositionMonth,
         token
       )
-      console.log('Fetched fund position data:', data)
+      
       setFundPositionData(data.data)
     } catch (error) {
       console.error('Error fetching fund position data:', error)
@@ -192,7 +192,7 @@ export default function Dashboard() {
       const filteredInvoices =
         data.data?.filter((req) => req.status === 'Invoice Created') || []
       setInvoices(filteredInvoices)
-      console.log('🚀 ~ fetchRequisitions ~ data:', data.data)
+      
     } catch (err) {
       setError('Failed to fetch requisitions')
     } finally {
@@ -206,7 +206,7 @@ export default function Dashboard() {
       setError(null) // Reset error state
       const data = await getAllAdvance(token)
       setAdvances(Array.isArray(data?.data) ? data.data : []) // Ensure it's always an array
-      console.log('🚀 ~ fetchAdvances ~ data.data:', data.data)
+      
     } catch (err) {
       console.error('Error fetching advances:', err)
       setError('Failed to fetch advance requests')
@@ -219,13 +219,13 @@ export default function Dashboard() {
   // Get All company function
   const fetchAllCompany = React.useCallback(async () => {
     const response = await getAllCompanies(token)
-    console.log('🚀 ~ fetchAllCompany ~ response from dashboard :', response)
+    
     setGetCompany(response.data || [])
   }, [token])
 
   const fetchAllFinancialYears = React.useCallback(async () => {
     const response = await getAllFinancialYears(token)
-    console.log(
+    
       '🚀 ~ fetchAllFinancialYears ~ response from dashboard :',
       response
     )
@@ -256,7 +256,7 @@ export default function Dashboard() {
     } else {
       setExpenseData([])
     }
-    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+    
   }, [selectedCompanyId, startDate, endDate, token])
 
   //  Get Expense data yearly
@@ -274,7 +274,7 @@ export default function Dashboard() {
     } else {
       setExpenseDataYearly([])
     }
-    console.log('🚀 ~ getExpectedRevenue ~ response:', response)
+    
   }, [selectedCompanyId, yearlyStartDate, yearlyEndDate, token])
 
   // Get Income Data
@@ -292,7 +292,7 @@ export default function Dashboard() {
     } else {
       setIncomeData([])
     }
-    console.log('🚀 ~ getIncomeData  ~ response:', response)
+    
   }, [selectedCompanyId, startDate, endDate, token])
 
   // Get Income Data yearly
@@ -310,7 +310,7 @@ export default function Dashboard() {
     } else {
       setIncomeDataYearly([])
     }
-    console.log('🚀 ~ getIncomeData  ~ response:', response)
+    
   }, [selectedCompanyId, yearlyStartDate, yearlyEndDate, token])
 
   //Get getGPData
@@ -326,7 +326,7 @@ export default function Dashboard() {
     } else {
       setGPData([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response.data)
+    
   }, [selectedCompanyId, startDate, endDate, token])
 
   //Get getGPData yearly
@@ -344,7 +344,7 @@ export default function Dashboard() {
     } else {
       setGPDataYearly([])
     }
-    console.log('🚀 ~ GetGPData   ~ response:', response)
+    
   }, [selectedCompanyId, yearlyStartDate, yearlyEndDate, token])
 
   //Get getNPData
@@ -360,7 +360,7 @@ export default function Dashboard() {
     } else {
       setNPData([])
     }
-    console.log('🚀 ~ GetNPData   ~ response:', response)
+    
   }, [selectedCompanyId, yearlyStartDate, yearlyEndDate, token])
 
   //Get getNPData yearly
@@ -378,7 +378,7 @@ export default function Dashboard() {
     } else {
       setNPDataYearly([])
     }
-    console.log('🚀 ~ GetNPData   ~ response:', response)
+    
   }, [selectedCompanyId, yearlyStartDate, yearlyEndDate, token])
 
   //Get Cost Breakdown Data
@@ -398,7 +398,7 @@ export default function Dashboard() {
     } else {
       setCostBreakdown([])
     }
-    console.log('🚀 ~ GetCostBreakdown ~ response:', response)
+    
   }, [
     selectedDepartment,
     yearlyStartDate,
@@ -409,7 +409,7 @@ export default function Dashboard() {
 
   const processedFundPositionData = React.useMemo(() => {
     if (!fundPositionData) return []
-    console.log('Processing fund position data:', fundPositionData)
+    
     const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
     return dates.map((date) => {
       const cashBalance = fundPositionData.cashBalance
@@ -424,7 +424,7 @@ export default function Dashboard() {
           (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
           0
         )
-      console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
+      
       const [month, day, year] = date.split('/')
       return {
         date: `${month}/${day}`,
@@ -490,7 +490,7 @@ export default function Dashboard() {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -534,7 +534,7 @@ export default function Dashboard() {
     }
   }, [selectedDepartment, token, fetchCostBreakdown])
 
-  console.log('Processed fund position data:', processedFundPositionData)
+  
 
   // Calculate total netexpense
   const totalExpense = expenseData?.reduce(
@@ -1697,7 +1697,7 @@ export default function Dashboard() {
 
 //   //Get Cost Breakdown Data
 //   const fetchCostBreakdown = React.useCallback(async (departmentId:number) => {
-//     console.log("under fetchCostBreakdown",token)
+//     
 //      if (!token) return
 //     //const departmentId = selectedDepartment // Default to 0 if no department is selected
 //   const now = new Date();
@@ -1719,7 +1719,7 @@ export default function Dashboard() {
 //       token
 //     )
 
-//     console.log(response.data)
+//     
 //     if (response.data) {
 //       setCostBreakdown(
 //         Array.isArray(response.data) ? response.data : [response.data]
@@ -1727,13 +1727,13 @@ export default function Dashboard() {
 //     } else {
 //       setCostBreakdown([])
 //     }
-//     console.log('🚀 ~ GetCostBreakdown ~ response:', response)
+//     
 //   }, [])
 
 //   const processedFundPositionData = React.useMemo(() => {
 //     if (!fundPositionData) return []
 
-//     console.log('Processing fund position data:', fundPositionData)
+//     
 
 //     const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
 
@@ -1752,7 +1752,7 @@ export default function Dashboard() {
 //           0
 //         )
 
-//       console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
+//       
 
 //       const [month, day, year] = date.split('/')
 //       return {
@@ -1770,7 +1770,7 @@ export default function Dashboard() {
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-//         console.log('No user data or token found in localStorage')
+//         
 //         router.push('/')
 //         return
 //       }

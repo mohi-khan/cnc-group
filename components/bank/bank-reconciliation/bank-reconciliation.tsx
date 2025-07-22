@@ -68,7 +68,7 @@ export const BankReconciliation = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -109,7 +109,7 @@ export const BankReconciliation = () => {
     if (data.bankAccount && data.fromDate && data.toDate) {
       try {
         setLoading(true)
-        console.log('Fetching reconciliations with:', data)
+        
         const response = await getBankReconciliations(
           Number.parseInt(data.bankAccount),
           data.fromDate,
@@ -147,7 +147,7 @@ export const BankReconciliation = () => {
         setLoading(false)
       }
     } else {
-      console.log('Missing required data:', data)
+      
       setReconciliations([])
       setSelectedIds([])
       setSelectAll(false)

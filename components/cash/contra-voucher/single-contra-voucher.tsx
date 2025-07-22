@@ -41,7 +41,7 @@
 //           })
 //         } else {
 //           setData(response.data)
-//           console.log('🚀 ~ fetchVoucher ~ response.data.data:', response.data)
+//           
 //         }
 //       } catch (error) {
 //         toast({
@@ -65,12 +65,12 @@
 //     if (userStr) {
 //       const userData = JSON.parse(userStr)
 //       setUserId(userData.userId)
-//       console.log(
+//       
 //         'Current userId from localStorage in everywhere:',
 //         userData.userId
 //       )
 //     } else {
-//       console.log('No user data found in localStorage')
+//       
 //     }
 //   }, [])
 

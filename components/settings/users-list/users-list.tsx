@@ -87,10 +87,10 @@ export default function UsersList() {
   const fetchUsers = React.useCallback(async () => {
     if(!token) return
     const data = await GetUsersByRoles(token)
-    console.log('🚀 ~ fetchUsers ~ data:', data)
+    
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting users:', data.error)
@@ -101,11 +101,11 @@ export default function UsersList() {
       })
     } else {
       setUsers(data.data)
-      console.log('users', data)
+      
     }
   }, [token, router])
 
-  // console.log("🚀 ~ fetchRoles ~ token:", token)
+  // 
   const fetchRoles = React.useCallback(async () => {
     if (!token) return
     const fetchedRoles = await getAllRoles(token)
@@ -117,14 +117,14 @@ export default function UsersList() {
       })
     } else {
       setRoles(fetchedRoles.data)
-      console.log('Fetched roles:', fetchedRoles.data)
+      
     }
   }, [token])
 
   const refreshAttachment = async () => {
     try {
       await fetchUsers()
-      console.log('Attachment refreshed successfully')
+      
     } catch (error) {
       console.error('Error refreshing attachment:', error)
     }
@@ -136,7 +136,7 @@ export default function UsersList() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

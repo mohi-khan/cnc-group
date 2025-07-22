@@ -142,7 +142,7 @@ const InvoicesList = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -204,7 +204,7 @@ const InvoicesList = () => {
       const response = await getInvoiceData(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (response.error || !response.data) {
         console.error('Error invoice:', response.error)
@@ -216,7 +216,7 @@ const InvoicesList = () => {
       } else {
         setInvoices(response.data)
       }
-      console.log('Invoices fetched successfully:', response.data)
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     }
@@ -1050,7 +1050,7 @@ export default InvoicesList
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-//         console.log('No user data or token found in localStorage')
+//         
 //         router.push('/')
 //         return
 //       }
@@ -1111,7 +1111,7 @@ export default InvoicesList
 //       const response = await getInvoiceData(token)
 //       if (response?.error?.status === 401) {
 //         router.push('/unauthorized-access')
-//         console.log('Unauthorized access')
+//         
 //         return
 //       } else if (response.error || !response.data) {
 //         console.error('Error invoice:', response.error)
@@ -1123,7 +1123,7 @@ export default InvoicesList
 //       } else {
 //         setInvoices(response.data)
 //       }
-//       console.log('Invoices fetched successfully:', response.data)
+//       
 //     } catch (err) {
 //       setError(err instanceof Error ? err.message : 'An error occurred')
 //     }

@@ -45,11 +45,11 @@ export default function SingleGenralLedger() {
 
   const fetchVoucher = useCallback(async () => {
     if (!voucherid) return
-    console.log('Initial fetch for voucher:', voucherid);
+    
     try {
       if (!token) return
       const response = await getSingleVoucher(voucherid, token)
-      console.log('Initial fetch response:', response);
+      
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -57,7 +57,7 @@ export default function SingleGenralLedger() {
             response.error?.message || 'Failed to get Voucher Data',
         })
       } else {
-        console.log('Setting initial data:', response.data);
+        
         setData(response.data)
       }
     } catch (error) {
@@ -83,7 +83,7 @@ export default function SingleGenralLedger() {
     }
   
     const journalDetail = data[editingReferenceIndex];
-    console.log('Before update - Current data:', data);
+    
     
     setIsUpdating(true);
     setError(null);
@@ -97,7 +97,7 @@ export default function SingleGenralLedger() {
         token
       );
   
-      console.log('API Response:', response);
+      
   
       if (response.error) {
         throw new Error(response.error?.message || 'Failed to update notes');
@@ -109,15 +109,15 @@ export default function SingleGenralLedger() {
   
       // Refetch the data to ensure we have the latest from the database
       if (voucherid) {
-        console.log('Refetching data for voucher:', voucherid);
+        
         if (!token) return
         const refreshResponse = await getSingleVoucher(voucherid, token);
-        console.log('Refresh response:', refreshResponse);
+        
         
         if (refreshResponse.error || !refreshResponse.data) {
           throw new Error(refreshResponse.error?.message || 'Failed to refresh data');
         }
-        console.log('Setting new data:', refreshResponse.data);
+        
         setData(refreshResponse.data);
       }
   
@@ -141,9 +141,9 @@ export default function SingleGenralLedger() {
   React.useEffect(() => {
     if (userData) {
       setUserId(userData?.userId)
-      console.log('Current userId from localStorage:', userData.userId)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData])
 

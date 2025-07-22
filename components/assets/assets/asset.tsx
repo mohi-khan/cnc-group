@@ -32,7 +32,7 @@ const Asset = () => {
     const assetdata = await getAssets(token)
     if (assetdata?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (assetdata.error || !assetdata.data) {
       console.error('Error fetching assets:', assetdata.error)
@@ -52,7 +52,7 @@ const Asset = () => {
     const categories = await getAllAssetCategories(token)
     const categoryNames = categories.data ?? []
     setAssetCategories(categoryNames)
-    console.log(
+    
       'fetchAssetCategories category names asset tsx file:',
       categoryNames
     )
@@ -64,7 +64,7 @@ const Asset = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

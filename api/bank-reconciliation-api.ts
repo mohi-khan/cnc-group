@@ -13,7 +13,7 @@ export async function getBankReconciliations(
     toDate: toDate,
     token: token,
   })
-  console.log('🚀 ~ params:', params)
+  
   const url = `api/bank-reconciliation/get-all-bank-reconciliations?${params}`
   return fetchApi<BankReconciliationType[]>({
     url,
@@ -31,7 +31,7 @@ export async function updateBankReconciliation(
   comments: string,
   token: string
 ) {
-  console.log('Updating bank reconciliation:', id, reconciled, comments)
+  
   return fetchApi<BankReconciliationType>({
     url: `api/bank-reconciliation/edit-bank-reconciliation/${id}`,
     method: 'PATCH',
@@ -47,7 +47,7 @@ export async function markTrueBankReconciliations(
   ids: number[],
   token: string
 ) {
-  console.log('Updating bank reconciliation:', ids)
+  
   return fetchApi<BankReconciliationType>({
     url: `api/bank-reconciliation/true-bank-reconciliations`,
     method: 'PATCH',

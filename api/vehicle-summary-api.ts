@@ -12,7 +12,7 @@ export async function getVehicleSummary({
   vehicleNo: number
   token: string
 }) {
-  console.log(
+  
     'Fetching budget details for ID and tokekn from budget api:',
     vehicleNo,
     startDate,

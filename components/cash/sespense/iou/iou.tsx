@@ -33,7 +33,7 @@ const Iou = () => {
       const loansdata = await getLoanData(token)
       if (loansdata?.error?.status === 401) {
         router.push('/unauthorized-access')
-        console.log('Unauthorized access')
+        
         return
       } else if (loansdata.error || !loansdata.data) {
         console.error('Error fetching loans:', loansdata.error)
@@ -57,7 +57,7 @@ const Iou = () => {
     } else {
       setEmployeeData([])
     }
-    console.log('Show The Employee Data :', employees.data)
+    
   }, [token])
 
   // Fetch all Company Data
@@ -65,7 +65,7 @@ const Iou = () => {
       if (!token) return
       const response = await getAllCompanies(token)
       setGetCompany(response.data || [])
-      console.log(
+      
         'fetchAssetCategories category names asset tsx file:',
         response.data
       )
@@ -76,7 +76,7 @@ const Iou = () => {
     if (!token) return
     const response = await getAllLocations(token)
     setGetLocation(response.data ?? [])
-    console.log(
+    
       'fetchAssetCategories category names asset tsx file:',
       response.data
     )
@@ -88,7 +88,7 @@ const Iou = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

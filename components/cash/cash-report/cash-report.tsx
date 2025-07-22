@@ -48,7 +48,7 @@
 //       setUser(userData)
 //       setCompanies(userData.userCompanies)
 //       setLocations(userData.userLocations)
-//       console.log('Current user from localStorage:', userData)
+//       
 //     }
 //   }, [userData])
 
@@ -74,7 +74,7 @@
 //           ? [respons.data]
 //           : []
 //     )
-//     console.log('This is cash report data: ', respons.data || [])
+//     
 //   }, [token, fromDate, endDate, companyId, location])
 
 //   useEffect(() => {
@@ -257,7 +257,7 @@ export default function CashReport() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -269,7 +269,7 @@ export default function CashReport() {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
+      
     }
   }, [userData, router])
 
@@ -294,7 +294,7 @@ export default function CashReport() {
           ? [respons.data]
           : []
     )
-    console.log('This is cash report data: ', respons.data || [])
+    
   }, [token, date, companyId, location])
 
   useEffect(() => {

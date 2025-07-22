@@ -70,7 +70,7 @@ export default function DepartmentManagement() {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-  console.log('🚀 ~ DepartmentManagement ~ token:', token)
+  
 
   const router = useRouter()
 
@@ -139,7 +139,7 @@ export default function DepartmentManagement() {
     } else {
       setCompany([])
     }
-    console.log('this is company is fetch by department components', response)
+    
   }, [router, toast, token])
   useEffect(() => {
     fetchDepartments()
@@ -152,7 +152,7 @@ export default function DepartmentManagement() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -161,9 +161,9 @@ export default function DepartmentManagement() {
     checkUserData()
     if (userData) {
       setUserId(userData?.userId)
-      console.log('Current userId from localStorage:', userData.userId)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData, router])
 
@@ -172,13 +172,13 @@ export default function DepartmentManagement() {
       form.setValue('createdBy', userId)
     }
   }, [userId, form])
-  console.log('🚀 ~ DepartmentManagement ~ userData:', userData)
+  
 
   const onSubmit = async (values: Department) => {
     if (!token) return
     setIsLoading(true)
     setFeedback(null)
-    console.log('Form values:', values)
+    
 
     const newDepartment = {
       ...values,
@@ -219,7 +219,7 @@ export default function DepartmentManagement() {
         )
       }
 
-      console.log('Department created successfully:', response.data)
+      
       toast({
         title: 'Success',
         description: 'Department created successfully',
@@ -298,7 +298,7 @@ export default function DepartmentManagement() {
     )
   }
 
-  console.log('Form values:', form.getValues())
+  
 
   return (
     <div className="w-[97%] mx-auto py-10">

@@ -72,7 +72,7 @@ const CashFlowStatement = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -90,7 +90,7 @@ const CashFlowStatement = () => {
         })
 
         setCashFlowStatements(response.data || [])
-        console.log('this is from getcash flow data : ', response.data || [])
+        
       }
       fetchData()
     }

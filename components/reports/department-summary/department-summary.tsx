@@ -83,7 +83,7 @@ const DepartmentSummary = () => {
         endDate: item.endDate || undefined,
       }))
     )
-    console.log('This is all department summary  data: ', respons.data || [])
+    
   }, [token])
   const fetchData = useCallback(async () => {
     if (!token) return
@@ -95,7 +95,7 @@ const DepartmentSummary = () => {
       token: token,
     })
     if (response.data) {
-      console.log('this is non-filter data: ', response.data)
+      
       const formattedData = response.data.map((item: any) => ({
         departmentId: item.departmentId,
         departmentName: item.departmentName,
@@ -105,10 +105,10 @@ const DepartmentSummary = () => {
         totalCredit: item.totalCredit,
       }))
       setDepartmentSummary(formattedData)
-      console.log('this is from cost center summary data : ', response.data)
+      
     } else {
       setDepartmentSummary([])
-      console.log('No data received from getCostCenterSummary')
+      
     }
   }, [startDate, endDate, companyId, departmentId,token])
 
@@ -118,7 +118,7 @@ const DepartmentSummary = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }

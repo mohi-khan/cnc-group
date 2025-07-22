@@ -97,17 +97,17 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (userData) {
       setUserId(userData.userId)
       form.setValue('created_by', userData.userId)
-      console.log(
+      
         'Current userId from localStorage in everywhere:',
         userData.userId
       )
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [form, userData])
 
   const onSubmit = async (data: CreateAssetData) => {
-    console.log('Form data before submission:', data)
+    
     setIsSubmitting(true)
     try {
       // Ensure numeric fields are properly converted
@@ -128,9 +128,9 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
         depreciation_rate: data.depreciation_rate?.toString(),
       }
 
-      console.log('Formatted data for submission:', formattedData)
+      
       await createAsset(formattedData, token)
-      console.log('Asset created successfully')
+      
       onCategoryAdded()
       onOpenChange(false)
       form.reset()
@@ -148,7 +148,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (!token) return
     const response = await getAllCompanies(token)
     setGetCompany(response.data)
-    console.log(
+    
       'fetchAssetCategories category names asset tsx file:',
       response.data
     )
@@ -161,7 +161,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (!token) return
     const response = await getAllLocations(token)
     setGetLocation(response.data ?? [])
-    console.log(
+    
       'fetchAssetCategories category names asset tsx file:',
       response.data
     )
@@ -174,7 +174,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (!token) return
     const response = await getAllDepartments(token)
     setGetDepartment(response.data ?? [])
-    console.log('dept data', response.data)
+    
   }, [token])
 
 
@@ -185,7 +185,7 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
     if (!token) return
     const response = await getAllCostCenters(token)
     setGetCostCenter(response.data ?? [])
-    console.log('cost center data', response.data)
+    
   }, [token])
   useEffect(() => {
     fetchCompnay()

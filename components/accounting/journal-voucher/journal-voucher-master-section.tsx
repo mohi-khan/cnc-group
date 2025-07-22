@@ -71,7 +71,7 @@ export function JournalVoucherMasterSection({
     const response = await getAllVoucher(voucherQuery, token)
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     }
     // Check for errors in the response. if no errors, set the voucher grid data
@@ -82,7 +82,7 @@ export function JournalVoucherMasterSection({
         description: response.error?.message || 'Failed to get Voucher Data',
       })
     } else {
-      console.log('voucher', response.data)
+      
       // setVoucherGrid(response.data)
     }
   }, [token, router])
@@ -92,14 +92,14 @@ export function JournalVoucherMasterSection({
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      console.log('Current user from localStorage:', userData)
+      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      console.log({ companyIds, locationIds })
+      
       fetchAllVoucher(companyIds, locationIds)
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData , fetchAllVoucher])
 
@@ -123,7 +123,7 @@ export function JournalVoucherMasterSection({
     const data = await getAllCurrency(token)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -133,7 +133,7 @@ export function JournalVoucherMasterSection({
       })
     } else {
       setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      
     }
   }, [token, router, setCurrency])
   useEffect(() => {

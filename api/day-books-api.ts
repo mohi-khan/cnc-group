@@ -7,7 +7,7 @@ export async function getAllVoucher(data: JournalQuery, token: string) {
     companyId: JSON.stringify(data.companyId), // Convert array to JSON string
     locationId: JSON.stringify(data.locationId), // Convert array to JSON string
   }).toString()
-  console.log(queryParams)
+  
   return fetchApi({
     url: `api/journal/getJournalLists/?${queryParams}`,
     method: 'GET',

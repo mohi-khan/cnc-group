@@ -71,7 +71,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
 
   const onSubmit = async (data: CreateElectricityBillType) => {
     // Log the form data to inspect it before submission
-    console.log('Form Data:', data)
+    
 
     // Convert fields to proper types
     const submitData = {
@@ -85,7 +85,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     try {
       const response = await createBillEntry(submitData, token)
       
-      console.log('Response:', response.data)
+      
       if (response.data) {
         toast({
           title: 'Success',
@@ -117,7 +117,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     if (!token) return
     const response = await getMeterEntry(token)
     setMeterEntry(response.data ?? [])
-    console.log('🚀 ~get meter entry data :', response)
+    
   }, [token])
 
   useEffect(() => {

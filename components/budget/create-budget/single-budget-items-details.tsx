@@ -140,11 +140,11 @@ const SingleBudgetItemsDetails = () => {
       accountId: selectedItem.accountId,
     }
 
-    console.log('Updated Budget Item:', updatedBudgetItem)
+    
 
     try {
       const response = await updateBudgetDetails(budgetId, token)
-      console.log('Update Response:', response)
+      
       if (response.data) {
         setBudgetItems((prev) =>
           prev.map((item) =>
@@ -161,7 +161,7 @@ const SingleBudgetItemsDetails = () => {
         throw new Error('Failed to update budget item')
       }
     } catch (error) {
-      console.log('Update Error:', error)
+      
       toast({
         title: 'Error',
         description: 'Failed to update budget item',

@@ -78,8 +78,8 @@ export default function SingleTrialBalance() {
   const formattedStartDate = formatDateString(startDate)
   const formattedEndDate = formatDateString(endDate)
 
-  console.log('Original dates:', { startDate, endDate })
-  console.log('Formatted dates:', { formattedStartDate, formattedEndDate })
+  
+  
 
   const flattenData = (data: GeneralLedgerType[]) => {
     return data.map((item) => ({

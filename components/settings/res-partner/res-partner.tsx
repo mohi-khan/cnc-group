@@ -102,7 +102,7 @@ export default function ResPartners() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        console.log('No user data or token found in localStorage')
+        
         router.push('/')
         return
       }
@@ -111,46 +111,46 @@ export default function ResPartners() {
     checkUserData()
     if (userData) {
       setUserId(userData?.userId)
-      console.log('Current userId from localStorage:', userData.userId)
+      
     } else {
-      console.log('No user data found in localStorage')
+      
     }
   }, [userData, router])
 
   const fetchResPartners = React.useCallback(async () => {
     if (!token) return
     const data = await getAllResPartners(token)
-    console.log('🚀 ~ fetchrespartners ~ data:', data)
+    
 
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     }
 
     if (data.error || !data.data || !data.data) {
       console.error('Error getting res partners:', data.error)
     } else {
-      console.log('partner', data)
+      
       setPartners(data.data)
     }
-    // console.log('companies here', companies)
+    // 
     // setIsLoading(false)
   }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
     const data = await getAllCompanies(token)
-    console.log('🚀 ~ fetchCompanies ~ data:', data)
+    
 
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
     } else {
-      console.log('company', data.data)
+      
       setCompanies(data.data)
     }
   }, [token, router])
@@ -161,7 +161,7 @@ export default function ResPartners() {
   }, [fetchResPartners, fetchCompanies])
 
   React.useEffect(() => {
-    console.log('Resetting form', { editingPartner })
+    
     if (editingPartner) {
       form.reset({
         ...editingPartner,
@@ -193,10 +193,10 @@ export default function ResPartners() {
   }, [editingPartner, form, userId])
 
   async function onSubmit(values: ResPartner) {
-    console.log('Form submitted:', values)
+    
 
     if (editingPartner) {
-      console.log('Editing partner:', editingPartner.id)
+      
 
       const response = await editResPartner(
         editingPartner.id!,
@@ -206,7 +206,7 @@ export default function ResPartners() {
         },
         token
       )
-      console.log('🚀 ~ onSubmit ~ response:', response)
+      
 
       if (response.error || !response.data) {
         console.error('Error editing res partner:', response.error)
@@ -215,14 +215,14 @@ export default function ResPartners() {
           description: response.error?.message || 'Failed to edit res partner',
         })
       } else {
-        console.log('Account edited successfully')
+        
         toast({
           title: 'Success',
           description: 'res partner updated successfully',
         })
       }
     } else {
-      console.log('Creating new partner')
+      
       const response = await createResPartner(
         {
           ...values,
@@ -239,7 +239,7 @@ export default function ResPartners() {
             response.error?.message || 'Failed to create res partner',
         })
       } else {
-        console.log('Res partner created successfully')
+        
         toast({
           title: 'Success',
           description: 'Res partner created successfully',
@@ -256,7 +256,7 @@ export default function ResPartners() {
   function handleEdit(partner: ResPartner) {
     setEditingPartner(partner)
     setIsDialogOpen(true)
-    console.log(partner, 'partner')
+    
   }
 
   const handleSort = (column: keyof ResPartner | 'company') => {

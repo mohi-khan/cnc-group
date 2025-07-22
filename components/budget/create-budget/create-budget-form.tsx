@@ -150,7 +150,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
       const masterData = masterResponse.data || masterResponse
       // Try both keys: "id" or "budgetId"
       const budgetId = masterData.id
-      console.log('Master budget response:', masterData)
+      
 
       if (!budgetId) {
         throw new Error('Budget ID is undefined in the master response')
@@ -165,7 +165,7 @@ const CreateBudgetForm: React.FC<CreateBudgetFormProps> = ({
         createdBy: 1,
       }))
 
-      console.log('Budget Details Payload:', detailsPayload)
+      
 
       // 3. Create budget details.
       const detailsResponse = await createBudgetDetails(

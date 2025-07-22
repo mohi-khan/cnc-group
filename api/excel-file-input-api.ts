@@ -6,8 +6,8 @@ export interface BankTransactionData {
 }
 
 export async function createBankTransactions(data: BankTransactionData[] | any[], apiEndpoint: string, token: string) {
-  console.log("Creating bank transactions:", data)
-  console.log("Using API endpoint:", apiEndpoint)
+  
+  
 
   return fetchApi<BankTransactionData[]>({
     url: apiEndpoint,

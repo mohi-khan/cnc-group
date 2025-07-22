@@ -52,7 +52,7 @@ export default function CashVoucherMaster({
     const data = await getAllCurrency(token)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      console.log('Unauthorized access')
+      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -62,7 +62,7 @@ export default function CashVoucherMaster({
       })
     } else {
       setCurrency(data.data)
-      console.log('🚀 ~ fetchCurrency ~ data.data:', data.data)
+      
     }
   }, [token, router])
 
@@ -74,7 +74,7 @@ export default function CashVoucherMaster({
     } else {
       setEmployeeData([])
     }
-    console.log('Show The Employee Data :', employees.data)
+    
   }, [token])
 
   useEffect(() => {
