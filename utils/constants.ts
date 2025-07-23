@@ -63,7 +63,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Customer Management',
         items: [
           { name: 'Invoices', source: '/customers/invoices' },
-          // { name: 'Receipt', source: '/customers/receipt' },
+          { name: 'Delivery Challan', source: '/customers/delivery-challan' },
           // {
           //   name: 'Customer Statement',
           //   source: '/customers/customer-statement',
