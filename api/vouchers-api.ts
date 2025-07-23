@@ -48,7 +48,7 @@ export async function editJournalDetailsNotes(
   })
 }
 
-export async function makePostJournal(voucherid: string, createId: string, token: string) {
+export async function makePostJournal(voucherid: number, createId: number, token: string) {
   
   return fetchApi({
     url: `api/journal/postJournal/${voucherid}/${createId}`,

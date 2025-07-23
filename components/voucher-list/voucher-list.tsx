@@ -1,7 +1,6 @@
 'use client'
-
 import type React from 'react'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   Table,
   TableBody,
@@ -68,27 +67,37 @@ const VoucherList: React.FC<VoucherListProps> = ({
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+
   const [currentPage, setCurrentPage] = useState(1)
   const [sortField, setSortField] = useState<keyof Voucher>('voucherno')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [isPosting, setIsPosting] = useState<Record<number, boolean>>({})
 
-  // Local state to manage vouchers and allow updates
+  // Use ref to track if vouchers have actually changed
+  const vouchersRef = useRef<Voucher[]>(vouchers)
   const [localVouchers, setLocalVouchers] = useState<Voucher[]>(vouchers)
 
-  // Update local vouchers when props change
+  // Only update local vouchers if the actual data has changed
   useEffect(() => {
-    setLocalVouchers(vouchers)
+    // Deep comparison or use a more sophisticated comparison
+    const hasChanged =
+      JSON.stringify(vouchersRef.current) !== JSON.stringify(vouchers)
+    if (hasChanged) {
+      vouchersRef.current = vouchers
+      setLocalVouchers(vouchers)
+    }
   }, [vouchers])
 
-  const handleSort = (field: keyof Voucher) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortField(field)
-      setSortDirection('asc')
-    }
-  }
+  const handleSort = useCallback((field: keyof Voucher) => {
+    setSortField((prevField) => {
+      if (field === prevField) {
+        setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+      } else {
+        setSortDirection('asc')
+      }
+      return field
+    })
+  }, [])
 
   const sortedVouchers = useMemo(() => {
     return [...localVouchers].sort((a, b) => {
@@ -104,53 +113,81 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const endIndex = startIndex + itemsPerPage
   const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
 
-  const handlePostJournal = async (voucherId: number, createId: string) => {
-    try {
-      setIsPosting((prev) => ({ ...prev, [voucherId]: true }))
+  // Memoize the handlePostJournal function with stable dependencies
+  const handlePostJournal = useCallback(
+    async (voucherId: number) => {
+      if (!userData?.userId || !token) {
+        console.warn('Missing user data or token')
+        return
+      }
 
-      const response = await makePostJournal(
-        voucherId.toString(),
-        userData?.userId?.toString() ?? '',
-        token
-      )
+      try {
+        setIsPosting((prev) => ({ ...prev, [voucherId]: true }))
 
-      if (response.error || !response.data) {
-        console.error('Error posting journal:', response.error)
-        toast({
-          title: 'Error',
-          description: response.error?.message || 'Failed to post journal',
-          variant: 'destructive',
-        })
-      } else {
-        
-        toast({
-          title: 'Success',
-          description: 'Journal posted successfully',
-        })
-
-        // Update the local voucher state to reflect the change
-        setLocalVouchers((prevVouchers) =>
-          prevVouchers.map((voucher) =>
-            voucher.voucherid === voucherId
-              ? { ...voucher, state: 1 } // Change state from 0 (Draft) to 1 (Post)
-              : voucher
-          )
+        console.log(
+          'Posting journal for voucherId:',
+          voucherId,
+          'createdId:',
+          userData.userId
         )
 
-        // Call the callback if provided
-        onJournalPosted?.(voucherId)
+        const response = await makePostJournal(
+          voucherId,
+          userData.userId,
+          token
+        )
+
+        if (response.error || !response.data) {
+          console.error('Error posting journal:', response.error)
+          toast({
+            title: 'Error',
+            description: response.error?.message || 'Failed to post journal',
+            variant: 'destructive',
+          })
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Journal posted successfully',
+          })
+
+          // Update the local voucher state optimistically
+          setLocalVouchers((prevVouchers) =>
+            prevVouchers.map((voucher) =>
+              voucher.voucherid === voucherId
+                ? { ...voucher, state: 1 }
+                : voucher
+            )
+          )
+
+          // Call the callback if provided
+          onJournalPosted?.(voucherId)
+        }
+      } catch (error) {
+        console.error('Error posting journal:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to post journal',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsPosting((prev) => ({ ...prev, [voucherId]: false }))
       }
-    } catch (error) {
-      console.error('Error posting journal:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to post journal',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsPosting((prev) => ({ ...prev, [voucherId]: false }))
-    }
-  }
+    },
+    [userData?.userId, token, onJournalPosted] // More stable dependencies
+  )
+
+  // Memoize pagination handlers
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1))
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  }, [totalPages])
+
+  const handlePageClick = useCallback((page: number) => {
+    setCurrentPage(page)
+  }, [])
 
   return (
     <>
@@ -204,69 +241,69 @@ const VoucherList: React.FC<VoucherListProps> = ({
               </TableCell>
             </TableRow>
           ) : (
-            currentVouchers.map((voucher) => (
-              <TableRow key={voucher.voucherid}>
-                {columns.map(({ key }) => (
-                  <TableCell key={key}>
-                    {key === 'voucherno' ? (
-                      <Link
-                        href={linkGenerator(voucher.voucherid)}
-                        className="text-blue-600 hover:underline"
+            currentVouchers.map((voucher) => {
+              const isCurrentlyPosting = isPosting[voucher.voucherid]
+              const isButtonDisabled = voucher.state !== 0 || isCurrentlyPosting
+
+              return (
+                <TableRow key={voucher.voucherid}>
+                  {columns.map(({ key }) => (
+                    <TableCell key={key}>
+                      {key === 'voucherno' ? (
+                        <Link
+                          href={linkGenerator(voucher.voucherid)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {voucher[key]}
+                        </Link>
+                      ) : key === 'state' ? (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            voucher[key] === 0
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {voucher[key] === 0 ? 'Draft' : 'Posted'}
+                        </span>
+                      ) : key === 'totalamount' ? (
+                        <span className="font-mono">
+                          {voucher.currency && `${voucher.currency} `}
+                          {voucher[key].toFixed(2)}
+                        </span>
+                      ) : (
+                        voucher[key]
+                      )}
+                    </TableCell>
+                  ))}
+                  {pathname.includes('accounting/day-books') && (
+                    <TableCell className="text-right">
+                      <Button
+                        disabled={isButtonDisabled}
+                        variant="outline"
+                        onClick={() => handlePostJournal(voucher.voucherid)}
+                        className="min-w-[80px]"
                       >
-                        {voucher[key]}
-                      </Link>
-                    ) : key === 'state' ? (
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          voucher[key] === 0
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {voucher[key] === 0 ? 'Draft' : 'Posted'}
-                      </span>
-                    ) : key === 'totalamount' ? (
-                      <span className="font-mono">
-                        {voucher.currency && `${voucher.currency} `}
-                        {voucher[key].toFixed(2)}
-                      </span>
-                    ) : (
-                      voucher[key]
-                    )}
-                  </TableCell>
-                ))}
-                {pathname.includes('accounting/day-books') && (
-                  <TableCell className="text-right">
-                    <Button
-                      disabled={
-                        voucher.state !== 0 || isPosting[voucher.voucherid]
-                      }
-                      variant={voucher.state === 0 ? 'outline' : 'outline'}
-                      onClick={() =>
-                        handlePostJournal(voucher.voucherid, voucher.voucherno)
-                      }
-                      className="min-w-[80px]"
-                    >
-                      {isPosting[voucher.voucherid]
-                        ? 'Posting...'
-                        : voucher.state === 0
-                          ? 'Make Post'
-                          : 'Make Post'}
-                    </Button>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))
+                        {isCurrentlyPosting
+                          ? 'Posting...'
+                          : voucher.state !== 0
+                            ? 'Make Post'
+                            : 'Make Post'}
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              )
+            })
           )}
         </TableBody>
       </Table>
-
       {totalPages > 1 && (
         <Pagination className="mt-4">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onClick={handlePreviousPage}
                 className={
                   currentPage === 1
                     ? 'pointer-events-none opacity-50'
@@ -277,7 +314,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
             {[...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
                 <PaginationLink
-                  onClick={() => setCurrentPage(i + 1)}
+                  onClick={() => handlePageClick(i + 1)}
                   isActive={currentPage === i + 1}
                   className="cursor-pointer"
                 >
@@ -287,9 +324,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
             ))}
             <PaginationItem>
               <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
+                onClick={handleNextPage}
                 className={
                   currentPage === totalPages
                     ? 'pointer-events-none opacity-50'
