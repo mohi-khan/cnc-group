@@ -1,5 +1,5 @@
 import { fetchApi } from "@/utils/http";
-import { CurrencyType, GetDeliveryChallan } from "@/utils/type";
+import { GetDeliveryChallan } from "@/utils/type";
 
 export async function getDeliveryChallan(token:string) {
   return fetchApi<GetDeliveryChallan[]>({
@@ -10,4 +10,15 @@ export async function getDeliveryChallan(token:string) {
       'Content-Type': 'application/json',
     },
   })
+}
+
+export async function updateDeliveryChallan(token: string, id: number, exchangeRate: number) {
+  return fetchApi({
+    url: `api/delivery/update/${id}?exchangeRate=${exchangeRate}`,
+    method: 'PATCH',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
 }
