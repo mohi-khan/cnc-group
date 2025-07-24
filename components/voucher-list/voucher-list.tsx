@@ -277,7 +277,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
                     </TableCell>
                   ))}
                   {pathname.includes('accounting/day-books') && (
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex gap-2">
                       <Button
                         disabled={isButtonDisabled}
                         variant="outline"
@@ -289,6 +289,17 @@ const VoucherList: React.FC<VoucherListProps> = ({
                           : voucher.state !== 0
                             ? 'Make Post'
                             : 'Make Post'}
+                      </Button>
+                      <Button
+                        disabled={isButtonDisabled}
+                        variant="outline"
+                        className="min-w-[80px]"
+                      >
+                        {isCurrentlyPosting
+                          ? 'Posting...'
+                          : voucher.state !== 0
+                            ? 'Edit'
+                            : 'Edit'}
                       </Button>
                     </TableCell>
                   )}

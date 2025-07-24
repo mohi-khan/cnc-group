@@ -54,6 +54,7 @@ const signUpSchema = z
   })
 
 const locationSchema = z.object({
+  companyId: z.number(),
   locationId: z.number(),
   address: z.string().min(1, 'Location address is required'),
 })
