@@ -52,20 +52,12 @@ export default function SignUp() {
     companyid: [],
     locationid: [],
   })
-  // const [userCompaniesFormData, setUserCompaniesFormData] = useState<UserCompanyData>({
-  //     userId: 1,
-  //     companyId: [],
-  // })
-  // const [userLocationsFormData, setUserLocationsFormData] = useState<UserLocationData>({
-  //     userId: 1,
-  //     locationId: [],
-  // })
 
   //token from atom
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
 
-  //sate variables
+  //state variables
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -78,6 +70,7 @@ export default function SignUp() {
     message: string
   } | null>(null)
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+
   const router = useRouter()
 
   const handleChange = (
@@ -89,7 +82,8 @@ export default function SignUp() {
       [name]: name === 'roleId' ? Number.parseInt(value, 10) : value,
     }))
   }
-  ///For Validating Pasword on Inline //////
+
+  ///For Validating Password on Inline //////
   const validatePassword = (password: string) => {
     const errors: string[] = []
     if (!/[A-Z]/.test(password))
@@ -108,25 +102,49 @@ export default function SignUp() {
   ) => {
     const { name, value } = e.target
     setUserFormData((prev) => ({ ...prev, [name]: value }))
-
     if (name === 'password') {
       const errors = validatePassword(value)
       setPasswordErrors(errors)
     }
   }
-  ///For Validating Pasword on Inline //////
+
   const handleCheckboxChange = (
     type: 'companies' | 'locations' | 'voucherTypes',
     item: number | VoucherTypes
   ) => {
     if (type === 'companies') {
-      setUserFormData((prev) => ({
-        ...prev,
-        companyid: prev.companyid.includes(item as number)
-          ? prev.companyid.filter((i) => i !== item)
-          : [...prev.companyid, item as number],
-      }))
+      const companyId = item as number
+      const isCurrentlySelected = userFormData.companyid.includes(companyId)
+
+      // Get all locations under this company
+      const companyLocations = locations.filter(
+        (loc) => loc.companyId === companyId
+      )
+      const companyLocationIds = companyLocations.map((loc) => loc.locationId)
+
+      setUserFormData((prev) => {
+        if (isCurrentlySelected) {
+          // Unselecting company - remove company and all its locations
+          return {
+            ...prev,
+            companyid: prev.companyid.filter((id) => id !== companyId),
+            locationid: prev.locationid.filter(
+              (id) => !companyLocationIds.includes(id)
+            ),
+          }
+        } else {
+          // Selecting company - add company and all its locations
+          return {
+            ...prev,
+            companyid: [...prev.companyid, companyId],
+            locationid: [
+              ...new Set([...prev.locationid, ...companyLocationIds]),
+            ],
+          }
+        }
+      })
     } else if (type === 'locations') {
+      // For locations, just toggle the location without affecting company selection
       setUserFormData((prev) => ({
         ...prev,
         locationid: prev.locationid.includes(item as number)
@@ -146,10 +164,8 @@ export default function SignUp() {
   const fetchAllCompanies = useCallback(async () => {
     if (!token) return
     const fetchedCompanies = await getAllCompanies(token)
-    
     if (fetchedCompanies?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
       return
     } else if (fetchedCompanies.error || !fetchedCompanies.data) {
       console.error('Error getting company:', fetchedCompanies.error)
@@ -160,17 +176,15 @@ export default function SignUp() {
     } else {
       setCompanies(fetchedCompanies.data)
     }
-  }, [ token,router])
+  }, [token, router])
 
   const fetchAllLocations = useCallback(async () => {
     if (!token) return
     const fetchedLocations = await getAllLocations(token)
-    if( fetchedLocations?.error?.status === 401) {
+    if (fetchedLocations?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
       return
-    }
-    else if (fetchedLocations.error || !fetchedLocations.data) {
+    } else if (fetchedLocations.error || !fetchedLocations.data) {
       console.error('Error getting location:', fetchedLocations.error)
       toast({
         title: 'Error',
@@ -178,17 +192,15 @@ export default function SignUp() {
           fetchedLocations.error?.message || 'Failed to get location',
       })
     } else {
-      
       setLocations(fetchedLocations.data)
     }
-  }, [ token,router])
+  }, [token, router])
 
   const fetchAllRoles = useCallback(async () => {
     if (!token) return
     const fetchedRoles = await getAllRoles(token)
     if (fetchedRoles?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
       return
     } else if (fetchedRoles.error || !fetchedRoles.data) {
       console.error('Error getting roles:', fetchedRoles.error)
@@ -197,23 +209,19 @@ export default function SignUp() {
         description: fetchedRoles.error?.message || 'Failed to get roles',
       })
     } else {
-      
       setRoles(fetchedRoles.data)
     }
-  }, [ token,router])
+  }, [token, router])
 
   useEffect(() => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
     }
-
     checkUserData()
     fetchAllCompanies()
     fetchAllLocations()
@@ -240,9 +248,8 @@ export default function SignUp() {
         setIsLoading(false)
       }
     }
-
     fetchData()
-  }, [fetchAllCompanies,fetchAllLocations,fetchAllRoles])
+  }, [fetchAllCompanies, fetchAllLocations, fetchAllRoles])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -251,8 +258,6 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      
-
       // Step 1: Register the user
       const signUpResult = await signUp(userFormData, token)
       if (!signUpResult.success) {
@@ -266,7 +271,6 @@ export default function SignUp() {
       }
 
       const newUserId = signUpResult.userId // Assuming the API returns the new user's ID
-      
 
       setFeedback({
         type: 'success',
@@ -424,49 +428,64 @@ export default function SignUp() {
               </select>
             </div>
             <div className="space-y-2">
-              <div className="flex gap-3 items-center justify-between">
-                <Label>Company</Label>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {companies.map((company) => (
-                  <div
-                    key={company.companyId}
-                    className="flex items-center gap-2"
-                  >
-                    <Checkbox
-                      checked={userFormData.companyid.includes(
-                        company.companyId
-                      )}
-                      onCheckedChange={() =>
-                        handleCheckboxChange('companies', company.companyId)
-                      }
-                    />
-                    <Label>{company.companyName}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2 py-3">
-              <div className="flex gap-3 items-center justify-between">
-                <Label>Location</Label>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {locations.map((location) => (
-                  <div
-                    key={location.locationId}
-                    className="flex items-center gap-2"
-                  >
-                    <Checkbox
-                      checked={userFormData.locationid.includes(
-                        location.locationId
-                      )}
-                      onCheckedChange={() =>
-                        handleCheckboxChange('locations', location.locationId)
-                      }
-                    />
-                    <Label>{location.address}</Label>
-                  </div>
-                ))}
+              <Label className="pt-5">Company and Location</Label>
+              <div className="space-y-4">
+                {companies.map((company) => {
+                  const isCompanySelected = userFormData.companyid.includes(
+                    company.companyId
+                  )
+                  const companyLocations = locations.filter(
+                    (loc) => loc.companyId === company.companyId
+                  )
+                  return (
+                    <div
+                      key={company.companyId}
+                      className="border p-4 rounded-md space-y-2"
+                    >
+                      {/* Company */}
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={isCompanySelected}
+                          onCheckedChange={() =>
+                            handleCheckboxChange('companies', company.companyId)
+                          }
+                        />
+                        <Label className="font-semibold">
+                          {company.companyName}
+                        </Label>
+                      </div>
+                      {/* Locations under this company */}
+                      <div className="grid grid-cols-2 gap-2 pl-6 pt-2">
+                        {companyLocations.map((location) => (
+                          <div
+                            key={location.locationId}
+                            className="flex items-center gap-2 opacity-100"
+                          >
+                            <Checkbox
+                              checked={userFormData.locationid.includes(
+                                location.locationId
+                              )}
+                              onCheckedChange={() =>
+                                handleCheckboxChange(
+                                  'locations',
+                                  location.locationId
+                                )
+                              }
+                              disabled={!isCompanySelected} // restore disabled state
+                            />
+                            <Label
+                              className={
+                                isCompanySelected ? '' : 'text-gray-400'
+                              }
+                            >
+                              {location.address}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
             <div className="space-y-2">
