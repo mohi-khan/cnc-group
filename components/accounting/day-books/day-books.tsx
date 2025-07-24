@@ -164,7 +164,6 @@ const DayBooks = () => {
     { key: 'companyname', label: 'Company Name' },
     { key: 'currency', label: 'Currency' },
     { key: 'location', label: 'Location' },
-    { key: 'date', label: 'Date' },
     { key: 'notes', label: 'Remarks' },
     { key: 'totalamount', label: 'Total Amount' },
     { key: 'state', label: 'Status' },
