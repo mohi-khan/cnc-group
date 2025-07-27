@@ -1627,3 +1627,54 @@ export type GetDeliveryChallan = {
   currencyName: string;
   currencyId: number;
 };
+
+
+//journal edit type
+// Type for a single journal detail entry
+export interface JournalDetail {
+  id: number;
+  voucherId: number;
+  accountId: number;
+  costCenterId: number | null;
+  departmentId: number | null;
+  debit: number;
+  credit: number;
+  balance: number;
+  taxDebit: number;
+  taxCredit: number;
+  fcDebit: number;
+  fcCredit: number;
+  analyticTags: string | null;
+  taxId: number | null;
+  resPartnerId: number | null;
+  bankaccountid: number | null;
+  notes: string;
+  createdBy: number;
+  updatedBy: number;
+}
+
+// Type for the main journal entry
+export interface JournalEntry {
+  id: number;
+  voucherNo: string;
+  date: string; // ISO date string
+  journalType: string;
+  state: number;
+  companyId: number;
+  locationId: number;
+  currencyId: number;
+  exchangeRate: number;
+  amountTotal: number;
+  taxTotal: number;
+  notes: string;
+  payTo: string | null;
+  periodid: number | null;
+  createdBy: number;
+  updatedBy: number;
+}
+
+// Full combined type
+export interface JournalPayload {
+  journalEntry: JournalEntry;
+  journalDetails: JournalDetail[];
+}
