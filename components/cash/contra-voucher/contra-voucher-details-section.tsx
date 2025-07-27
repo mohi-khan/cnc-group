@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo, Fragment, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,15 +48,53 @@ export function ContraVoucherDetailsSection({
   >({})
   const [userId, setUserId] = useState<number>()
 
+  // Watch the selected company ID from master section
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+
+  // Filter bank accounts based on selected company
+  const filteredBankAccounts = useMemo(() => {
+    if (!selectedCompanyId) {
+      return [] // Return empty array if no company is selected
+    }
+
+    return accounts.filter(
+      (account) => account.isActive && account.companyId === selectedCompanyId
+    )
+  }, [accounts, selectedCompanyId])
+
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
     } else {
-      
     }
   }, [userData])
 
   const entries = form.watch('journalDetails')
+
+  // Clear bank account selections when company changes
+  useEffect(() => {
+    if (selectedCompanyId) {
+      // Clear all bank account selections in details when company changes
+      const currentEntries = form.getValues('journalDetails')
+      const updatedEntries = currentEntries.map((entry) => ({
+        ...entry,
+        bankaccountid: 0, // Clear bank account selection
+      }))
+      form.setValue('journalDetails', updatedEntries)
+
+      // Reset disabled states for bank accounts
+      setDisabledStates((prev) => {
+        const newStates = { ...prev }
+        Object.keys(newStates).forEach((key) => {
+          newStates[Number(key)] = {
+            ...newStates[Number(key)],
+            bank: false, // Re-enable bank account selection
+          }
+        })
+        return newStates
+      })
+    }
+  }, [selectedCompanyId, form])
 
   // Initialize with one entry if empty
   useEffect(() => {
@@ -71,7 +109,6 @@ export function ContraVoucherDetailsSection({
         analyticTags: null,
         taxId: null,
       }
-
       form.setValue('journalDetails', [defaultEntry])
     }
   }, [entries.length, form])
@@ -87,32 +124,30 @@ export function ContraVoucherDetailsSection({
     } else {
       setChartOfAccounts(response.data)
     }
-  },[token])
+  }, [token])
 
-    React.useEffect(() => {
-      const filteredCoa = chartOfAccounts?.filter((account) => {
-        return account.isGroup === false
-      })
-  
-      const isCashCoa = chartOfAccounts?.filter((account) => {
-        return account.isCash === true
-      })
-      setCashCoa(isCashCoa || [])
-      
-      
-    }, [chartOfAccounts])
+  React.useEffect(() => {
+    const filteredCoa = chartOfAccounts?.filter((account) => {
+      return account.isGroup === false
+    })
+
+    const isCashCoa = chartOfAccounts?.filter((account) => {
+      return account.isCash === true
+    })
+    setCashCoa(isCashCoa || [])
+  }, [chartOfAccounts])
 
   const fetchBankAccounts = useCallback(async () => {
-  const response = await getAllBankAccounts(token);
-  if (response.error || !response.data) {
-    toast({
-      title: 'Error',
-      description: response.error?.message || 'Failed to fetch Bank Accounts',
-    });
-  } else {
-    setAccounts(response.data);
-  }
-}, [token]);
+    const response = await getAllBankAccounts(token)
+    if (response.error || !response.data) {
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to fetch Bank Accounts',
+      })
+    } else {
+      setAccounts(response.data)
+    }
+  }, [token])
 
   const glAccountIdToChartName = useMemo(() => {
     const map: Record<number, { name: string; id: number }> = {}
@@ -125,7 +160,7 @@ export function ContraVoucherDetailsSection({
   useEffect(() => {
     fetchChartOfAccounts()
     fetchBankAccounts()
-  }, [fetchBankAccounts,fetchChartOfAccounts]) // Added fetchBankAccounts to dependencies
+  }, [fetchBankAccounts, fetchChartOfAccounts]) // Added fetchBankAccounts to dependencies
 
   const updateDisabledStates = (
     index: number,
@@ -142,7 +177,7 @@ export function ContraVoucherDetailsSection({
   }
 
   const handleBankAccountChange = (index: number, bankAccountId: number) => {
-    const selectedBank = accounts.find(
+    const selectedBank = filteredBankAccounts.find(
       (account) => account.id === bankAccountId
     )
     const glAccountId = selectedBank?.glAccountId
@@ -161,7 +196,6 @@ export function ContraVoucherDetailsSection({
       (account) => account.accountId === accountId
     )?.name
     form.setValue(`journalDetails.${index}.accountId`, accountId)
-
     if (accountName?.toLowerCase() === 'cash in hand') {
       updateDisabledStates(index, 'bank', true)
     } else {
@@ -172,13 +206,11 @@ export function ContraVoucherDetailsSection({
   const handleNumberInput = (value: string) => {
     // Remove any non-numeric characters except decimal point
     const sanitizedValue = value.replace(/[^\d.]/g, '')
-
     // Ensure only one decimal point
     const parts = sanitizedValue.split('.')
     if (parts.length > 2) {
       return parts[0] + '.' + parts.slice(1).join('')
     }
-
     return sanitizedValue
   }
 
@@ -199,7 +231,8 @@ export function ContraVoucherDetailsSection({
         } else {
           // Use existing credit value if available, otherwise use remaining credit
           const existingCredit = updatedEntries[i].credit || 0
-          updatedEntries[i].credit = existingCredit || Number(remainingCredit.toFixed(2))
+          updatedEntries[i].credit =
+            existingCredit || Number(remainingCredit.toFixed(2))
         }
         updatedEntries[i].debit = 0
         remainingCredit -= updatedEntries[i].credit
@@ -245,8 +278,7 @@ export function ContraVoucherDetailsSection({
   const addEntry = () => {
     const currentEntries = [...entries]
     const firstEntry = currentEntries[0]
-
-    let newEntry = {
+    const newEntry = {
       bankaccountid: 0,
       accountId: cashCoa[0]?.accountId,
       debit: 0,
@@ -258,13 +290,16 @@ export function ContraVoucherDetailsSection({
     }
 
     if (firstEntry && firstEntry.debit > 0) {
-      let totalUsedCredit = currentEntries.reduce((sum, entry, index) => {
+      const totalUsedCredit = currentEntries.reduce((sum, entry, index) => {
         return index === 0 ? sum : sum + entry.credit
       }, 0)
       newEntry.credit = firstEntry.debit - totalUsedCredit
     }
 
-    form.setValue('journalDetails', [...entries, {...newEntry, createdBy: userData?.userId || 0}])
+    form.setValue('journalDetails', [
+      ...entries,
+      { ...newEntry, createdBy: userData?.userId || 0 },
+    ])
     setDisabledStates((prev) => ({
       ...prev,
       [entries.length]: { bank: false, account: false },
@@ -290,6 +325,7 @@ export function ContraVoucherDetailsSection({
       onRemoveEntry(index)
     }
   }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium">
@@ -300,7 +336,6 @@ export function ContraVoucherDetailsSection({
         <div>Notes</div>
         <div>Action</div>
       </div>
-
       {entries.map((entry, index) => (
         <div
           key={index}
@@ -312,28 +347,28 @@ export function ContraVoucherDetailsSection({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <CustomCombobox
-                  // Map each account to an object with id and name.
-                  items={accounts.filter((account) => account.isActive).map((account) => ({
+                  // Use filtered bank accounts instead of all accounts
+                  items={filteredBankAccounts.map((account) => ({
                     id: account.id,
                     name: `${account.bankName}-${account.accountName} - ${account.accountNumber}`,
                   }))}
-                  // When a value is selected, find the corresponding account and set the field’s value.
+                  // When a value is selected, find the corresponding account and set the field's value.
                   value={
-                    field.value
+                    field.value && selectedCompanyId
                       ? {
                           id: field.value,
                           name:
-                            accounts.find(
+                            filteredBankAccounts.find(
                               (account) =>
                                 Number(account.id) === Number(field.value)
                             )?.bankName +
                               '-' +
-                              accounts.find(
+                              filteredBankAccounts.find(
                                 (account) =>
                                   Number(account.id) === Number(field.value)
                               )?.accountName +
                               ' - ' +
-                              accounts.find(
+                              filteredBankAccounts.find(
                                 (account) =>
                                   Number(account.id) === Number(field.value)
                               )?.accountNumber || '',
@@ -348,18 +383,23 @@ export function ContraVoucherDetailsSection({
                     if (selectedId !== null) {
                       handleBankAccountChange(index, selectedId)
                     }
-                  
                   }}
-                  placeholder='Select a Bank Account'
-                  // Disable the combobox based on your external disabled state.
-                  disabled={disabledStates[index]?.bank}
+                  placeholder={
+                    selectedCompanyId
+                      ? 'Select a Bank Account'
+                      : 'Select company first'
+                  }
+                  // Disable the combobox if no company is selected or based on your external disabled state.
+                  disabled={
+                    !selectedCompanyId ||
+                    filteredBankAccounts.length === 0 ||
+                    disabledStates[index]?.bank
+                  }
                 />
-
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name={`journalDetails.${index}.accountId`}
@@ -367,10 +407,12 @@ export function ContraVoucherDetailsSection({
               <FormItem>
                 <CustomCombobox
                   // Convert each chart-of-accounts entry into an object with id and name.
-                  items={chartOfAccounts.filter((account) => account.isActive).map((account) => ({
-                    id: account.accountId,
-                    name: account.name,
-                  }))}
+                  items={chartOfAccounts
+                    .filter((account) => account.isActive)
+                    .map((account) => ({
+                      id: account.accountId,
+                      name: account.name,
+                    }))}
                   // Set the current value by finding the matching account.
                   value={
                     field.value
@@ -389,16 +431,14 @@ export function ContraVoucherDetailsSection({
                     field.onChange(Number(value))
                     handleAccountNameChange(index, Number(value))
                   }}
-                  placeholder='Select an Account'
+                  placeholder="Select an Account"
                   // Use the same disabled condition as before.
                   disabled={disabledStates[index]?.account}
                 />
-
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name={`journalDetails.${index}.debit`}
@@ -416,7 +456,6 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name={`journalDetails.${index}.credit`}
@@ -434,7 +473,6 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name={`journalDetails.${index}.notes`}
@@ -447,7 +485,6 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
-
           <Button
             type="button"
             variant="ghost"
@@ -459,11 +496,9 @@ export function ContraVoucherDetailsSection({
           </Button>
         </div>
       ))}
-
       <Button type="button" variant="outline" onClick={addEntry}>
         Add Another Entry
       </Button>
-
       <div className="mt-4 flex justify-between">
         <div>
           <p>Total Debit: {totals.debit.toFixed(2)}</p>
