@@ -327,8 +327,8 @@ export function ContraVoucherDetailsSection({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium">
+    <div  className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">
+      <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
         <div>Bank Account</div>
         <div>Account Name</div>
         <div>Debit</div>
@@ -339,7 +339,7 @@ export function ContraVoucherDetailsSection({
       {entries.map((entry, index) => (
         <div
           key={index}
-          className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium"
+          className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center px-4"
         >
           <FormField
             control={form.control}
@@ -487,19 +487,19 @@ export function ContraVoucherDetailsSection({
           />
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => handleRemoveEntry(index)}
             disabled={entries.length <= 2}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="w-10 h-10" />
           </Button>
         </div>
       ))}
-      <Button type="button" variant="outline" onClick={addEntry}>
+      <Button type="button" className='mx-4' variant="outline" onClick={addEntry}>
         Add Another Entry
       </Button>
-      <div className="mt-4 flex justify-between">
+      <div className="mt-4 flex justify-between gap-2 items-center px-4">
         <div>
           <p>Total Debit: {totals.debit.toFixed(2)}</p>
           <p>Total Credit: {totals.credit.toFixed(2)}</p>
