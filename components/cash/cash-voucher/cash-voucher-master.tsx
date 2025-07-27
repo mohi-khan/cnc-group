@@ -22,7 +22,7 @@ import type {
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 
 // Defines the props for the CashVoucherMaster component
 interface CashVoucherMasterProps {
@@ -39,12 +39,25 @@ export default function CashVoucherMaster({
   //getting userData from jotai atom component
   useInitializeUser()
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
 
   // State to hold the currency data
   const [currency, setCurrency] = useState<CurrencyType[]>([])
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
+
+  // Watch the selected company ID
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+
+  // Filter locations based on selected company
+  const filteredLocations = useMemo(() => {
+    if (!selectedCompanyId) {
+      return [] // Return empty array if no company is selected
+    }
+
+    return locations.filter(
+      (location) => location.location.companyId === selectedCompanyId
+    )
+  }, [locations, selectedCompanyId])
 
   // Function to fetch currency data
   const fetchCurrency = useCallback(async () => {
@@ -52,7 +65,6 @@ export default function CashVoucherMaster({
     const data = await getAllCurrency(token)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -62,7 +74,6 @@ export default function CashVoucherMaster({
       })
     } else {
       setCurrency(data.data)
-      
     }
   }, [token, router])
 
@@ -74,7 +85,6 @@ export default function CashVoucherMaster({
     } else {
       setEmployeeData([])
     }
-    
   }, [token])
 
   useEffect(() => {
@@ -107,9 +117,15 @@ export default function CashVoucherMaster({
                       }
                     : null
                 }
-                onChange={(value) =>
-                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
-                }
+                onChange={(value) => {
+                  const newCompanyId = value
+                    ? Number.parseInt(value.id, 10)
+                    : null
+                  field.onChange(newCompanyId)
+
+                  // Clear location when company changes
+                  form.setValue('journalEntry.locationId', null)
+                }}
                 placeholder="Select company"
               />
             </FormControl>
@@ -117,6 +133,7 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="journalEntry.locationId"
@@ -125,16 +142,16 @@ export default function CashVoucherMaster({
             <FormLabel>Location</FormLabel>
             <FormControl>
               <CustomCombobox
-                items={locations.map((location) => ({
+                items={filteredLocations.map((location) => ({
                   id: location.location.locationId.toString(),
                   name: location.location.address || 'Unnamed Location',
                 }))}
                 value={
-                  field.value
+                  field.value && selectedCompanyId
                     ? {
                         id: field.value.toString(),
                         name:
-                          locations.find(
+                          filteredLocations.find(
                             (l) => l.location.locationId === field.value
                           )?.location.address || '',
                       }
@@ -143,13 +160,17 @@ export default function CashVoucherMaster({
                 onChange={(value) =>
                   field.onChange(value ? Number.parseInt(value.id, 10) : null)
                 }
-                placeholder="Select location"
+                placeholder={
+                  selectedCompanyId ? 'Select location' : 'Select company first'
+                }
+                disabled={!selectedCompanyId || filteredLocations.length === 0}
               />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="journalEntry.currencyId"
@@ -185,7 +206,6 @@ export default function CashVoucherMaster({
                             ? Number.parseInt(value.id, 10)
                             : null
                           field.onChange(newValue)
-
                           // Reset exchange rate when currency changes or is cleared
                           if (newValue === null || newValue === 1) {
                             form.setValue('journalEntry.exchangeRate', 0)
@@ -225,7 +245,9 @@ export default function CashVoucherMaster({
           </FormItem>
         )}
       />
+
       <FormMessage />
+
       <FormField
         control={form.control}
         name="journalEntry.date"
@@ -277,7 +299,6 @@ export default function CashVoucherMaster({
                   disabled={!!form.watch('journalEntry.payToText')}
                 />
               </div>
-
               {/* Manual Text Input Section */}
               <div className="flex-1">
                 <FormControl>

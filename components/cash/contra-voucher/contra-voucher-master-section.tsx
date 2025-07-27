@@ -1,7 +1,7 @@
 'use client'
-import { Fragment, useState, useEffect, useCallback } from 'react'
 
-import { UseFormReturn } from 'react-hook-form'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import type { UseFormReturn } from 'react-hook-form'
 import {
   FormControl,
   FormField,
@@ -12,13 +12,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  CompanyFromLocalstorage,
-  CurrencyType,
-  ExchangeType,
-  JournalEntryWithDetails,
-  JournalQuery,
-  LocationFromLocalstorage,
-  User,
+  type CompanyFromLocalstorage,
+  type CurrencyType,
+  type ExchangeType,
+  type JournalEntryWithDetails,
+  type JournalQuery,
+  type LocationFromLocalstorage,
+  type User,
   VoucherTypes,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
@@ -28,10 +28,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency, getAllExchange } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
-import {
-  HoverCard,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card'
+import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -58,6 +55,20 @@ export function ContraVoucherMasterSection({
   // const [isLoading, setIsLoading] = useState(false)
   const [exchanges, setExchanges] = useState<ExchangeType[]>([])
 
+  // Watch the selected company ID
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+
+  // Filter locations based on selected company
+  const filteredLocations = useMemo(() => {
+    if (!selectedCompanyId) {
+      return [] // Return empty array if no company is selected
+    }
+
+    return locations.filter(
+      (location) => location.location.companyId === selectedCompanyId
+    )
+  }, [locations, selectedCompanyId])
+
   const fetchAllVoucher = useCallback(
     async (company: number[], location: number[]) => {
       const voucherQuery: JournalQuery = {
@@ -74,7 +85,6 @@ export function ContraVoucherMasterSection({
           description: response.error?.message || 'Failed to get Voucher Data',
         })
       } else {
-        
       }
     },
     [token]
@@ -85,20 +95,19 @@ export function ContraVoucherMasterSection({
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      
+
       fetchAllVoucher(companyIds, locationIds)
     } else {
-      
     }
   }, [fetchAllVoucher, userData])
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
   }
@@ -113,7 +122,6 @@ export function ContraVoucherMasterSection({
       })
     } else {
       setCurrency(data.data)
-      
     }
   }, [token])
 
@@ -127,16 +135,15 @@ export function ContraVoucherMasterSection({
       })
     } else {
       setExchanges(data.data)
-      
     }
   }, [token])
+
   useEffect(() => {
     fetchCurrency()
     fetchExchanges()
   }, [fetchCurrency, fetchExchanges])
 
-  
-  // 
+  //
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -165,7 +172,13 @@ export function ContraVoucherMasterSection({
                       : null
                   }
                   placeholder="Select company"
-                  onChange={(value) => field.onChange(value?.id || null)}
+                  onChange={(value) => {
+                    const newCompanyId = value?.id || null
+                    field.onChange(newCompanyId)
+
+                    // Clear location when company changes
+                    form.setValue('journalEntry.locationId', 0)
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -182,23 +195,30 @@ export function ContraVoucherMasterSection({
               <FormLabel>Location</FormLabel>
               <FormControl>
                 <CustomCombobox
-                  items={locations.map((c) => ({
+                  items={filteredLocations.map((c) => ({
                     id: c.location.locationId,
                     name: c.location.address,
                   }))}
                   value={
-                    field.value
+                    field.value && selectedCompanyId
                       ? {
                           id: field.value,
                           name:
-                            locations.find(
+                            filteredLocations.find(
                               (c) => c.location.locationId === field.value
                             )?.location.address || '',
                         }
                       : null
                   }
-                  placeholder="Select location"
+                  placeholder={
+                    selectedCompanyId
+                      ? 'Select location'
+                      : 'Select company first'
+                  }
                   onChange={(value) => field.onChange(value?.id || null)}
+                  disabled={
+                    !selectedCompanyId || filteredLocations.length === 0
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -224,7 +244,6 @@ export function ContraVoucherMasterSection({
         />
 
         {/* Currency Combobox */}
-
         <FormField
           control={form.control}
           name="journalEntry.currencyId"
@@ -260,7 +279,6 @@ export function ContraVoucherMasterSection({
                               ? Number.parseInt(value.id, 10)
                               : null
                             field.onChange(newValue)
-
                             // Reset exchange rate when currency changes or is cleared
                             if (newValue === null || newValue === 1) {
                               form.setValue('journalEntry.exchangeRate', 1)
@@ -310,7 +328,7 @@ export function ContraVoucherMasterSection({
           <FormItem>
             <FormLabel>Notes</FormLabel>
             <FormControl>
-              <Textarea placeholder='Write notes here' {...field} rows={3} />
+              <Textarea placeholder="Write notes here" {...field} rows={3} />
             </FormControl>
             <FormMessage />
           </FormItem>
