@@ -103,6 +103,10 @@ export default function Dashboard() {
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
+  console.log(
+    '🚀 ~ Dashboard ~ userData:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    userData
+  )
 
   // Dynamic form state
   const [selectedCompanyId, setSelectedCompanyId] = useState<number>(3)
@@ -507,6 +511,8 @@ export default function Dashboard() {
     fetchDepartments,
     fetchAllCompany,
     fetchAllFinancialYears,
+    fetchRequisitions,
+    router,
   ])
 
   // Trigger data fetch when dynamic values change
@@ -694,7 +700,7 @@ export default function Dashboard() {
     }
   }
 
-  return (
+  return userData && (userData.roleId === 1 || userData.roleId === 2) ? (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -1323,6 +1329,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  ) : (
+    <div className="flex items-center justify-center h-screen">
+      <p className="text-2xl font-semibold text-gray-500">
+        Access Denied. You do not have permission to view this page.
+      </p>
     </div>
   )
 }

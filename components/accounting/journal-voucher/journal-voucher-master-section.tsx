@@ -1,4 +1,6 @@
-import { UseFormReturn } from 'react-hook-form'
+'use client'
+
+import type { UseFormReturn } from 'react-hook-form'
 import {
   FormControl,
   FormField,
@@ -9,23 +11,15 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  CompanyFromLocalstorage,
-  CurrencyType,
-  JournalEntryWithDetails,
-  JournalQuery,
-  JournalResult,
-  LocationFromLocalstorage,
-  User,
+  type CompanyFromLocalstorage,
+  type CurrencyType,
+  type JournalEntryWithDetails,
+  type JournalQuery,
+  type LocationFromLocalstorage,
+  type User,
   VoucherTypes,
 } from '@/utils/type'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getAllVoucher } from '@/api/journal-voucher-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -46,7 +40,6 @@ export function JournalVoucherMasterSection({
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
 
   // State variables
@@ -59,59 +52,73 @@ export function JournalVoucherMasterSection({
   const [user, setUser] = React.useState<User | null>(null)
   const [currency, setCurrency] = useState<CurrencyType[]>([])
 
+  // Watch the selected company ID
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+
+  // Filter locations based on selected company
+  const filteredLocations = useMemo(() => {
+    if (!selectedCompanyId) {
+      return [] // Return empty array if no company is selected
+    }
+
+    return locations.filter(
+      (location) => location.location.companyId === selectedCompanyId
+    )
+  }, [locations, selectedCompanyId])
+
   // Fetching all vouchers based on company and location IDs
-  const fetchAllVoucher = React.useCallback(async (company: number[], location: number[]) => {
-    const voucherQuery: JournalQuery = {
-      date: new Date().toISOString().split('T')[0],
-      companyId: company,
-      locationId: location,
-      voucherType: VoucherTypes.JournalVoucher,
-    }
-    if (!token) return
-    const response = await getAllVoucher(voucherQuery, token)
-    if (response?.error?.status === 401) {
-      router.push('/unauthorized-access')
-      
-      return
-    }
-    // Check for errors in the response. if no errors, set the voucher grid data
-    else if (response.error || !response.data) {
-      console.error('Error getting Voucher Data:', response.error)
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Failed to get Voucher Data',
-      })
-    } else {
-      
-      // setVoucherGrid(response.data)
-    }
-  }, [token, router])
+  const fetchAllVoucher = React.useCallback(
+    async (company: number[], location: number[]) => {
+      const voucherQuery: JournalQuery = {
+        date: new Date().toISOString().split('T')[0],
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.JournalVoucher,
+      }
+      if (!token) return
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      }
+      // Check for errors in the response. if no errors, set the voucher grid data
+      else if (response.error || !response.data) {
+        console.error('Error getting Voucher Data:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to get Voucher Data',
+        })
+      } else {
+        // setVoucherGrid(response.data)
+      }
+    },
+    [token, router]
+  )
+
   // Fetching user data from localStorage and setting it to state
   const fetchUserData = React.useCallback(() => {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
       setLocations(userData.userLocations)
-      
 
       const companyIds = getCompanyIds(userData.userCompanies)
       const locationIds = getLocationIds(userData.userLocations)
-      
+
       fetchAllVoucher(companyIds, locationIds)
     } else {
-      
     }
-  }, [userData , fetchAllVoucher])
+  }, [userData, fetchAllVoucher])
 
   React.useEffect(() => {
     fetchUserData()
   }, [fetchUserData])
-  
 
   // Function to extract company IDs from localStorage data
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+
   // Function to extract location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
@@ -123,7 +130,6 @@ export function JournalVoucherMasterSection({
     const data = await getAllCurrency(token)
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
       return
     } else if (data.error || !data.data) {
       console.error('Error getting currency:', data.error)
@@ -133,9 +139,9 @@ export function JournalVoucherMasterSection({
       })
     } else {
       setCurrency(data.data)
-      
     }
   }, [token, router, setCurrency])
+
   useEffect(() => {
     fetchCurrency()
   }, [fetchCurrency])
@@ -166,7 +172,13 @@ export function JournalVoucherMasterSection({
                     : null
                 }
                 placeholder="Select company"
-                onChange={(value) => field.onChange(value?.id || null)}
+                onChange={(value) => {
+                  const newCompanyId = value?.id || null
+                  field.onChange(newCompanyId)
+
+                  // Clear location when company changes
+                  form.setValue('journalEntry.locationId', 0)
+                }}
               />
               <FormMessage />
             </FormItem>
@@ -180,23 +192,26 @@ export function JournalVoucherMasterSection({
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
               <CustomCombobox
-                items={locations.map((c) => ({
+                items={filteredLocations.map((c) => ({
                   id: c.location.locationId,
                   name: c.location.address,
                 }))}
                 value={
-                  field.value
+                  field.value && selectedCompanyId
                     ? {
                         id: field.value,
                         name:
-                          locations.find(
+                          filteredLocations.find(
                             (c) => c.location.locationId === field.value
                           )?.location.address || '',
                       }
                     : null
                 }
-                placeholder="Select location"
+                placeholder={
+                  selectedCompanyId ? 'Select location' : 'Select company first'
+                }
                 onChange={(value) => field.onChange(value?.id || null)}
+                disabled={!selectedCompanyId || filteredLocations.length === 0}
               />
               <FormMessage />
             </FormItem>
