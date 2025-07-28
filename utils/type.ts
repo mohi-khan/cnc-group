@@ -1640,12 +1640,6 @@ export interface JournalDetail {
   debit: number;
   credit: number;
   balance: number;
-  taxDebit: number;
-  taxCredit: number;
-  fcDebit: number;
-  fcCredit: number;
-  analyticTags: string | null;
-  taxId: number | null;
   resPartnerId: number | null;
   bankaccountid: number | null;
   notes: string;
@@ -1655,22 +1649,20 @@ export interface JournalDetail {
 
 // Type for the main journal entry
 export interface JournalEntry {
-  id: number;
-  voucherNo: string;
-  date: string; // ISO date string
-  journalType: string;
-  state: number;
-  companyId: number;
-  locationId: number;
-  currencyId: number;
-  exchangeRate: number;
-  amountTotal: number;
-  taxTotal: number;
-  notes: string;
-  payTo: string | null;
-  periodid: number | null;
-  createdBy: number;
-  updatedBy: number;
+  id: number
+  voucherNo: string
+  date: string // ISO date string
+  journalType: string
+  state: number
+  companyId: number
+  locationId: number
+  currencyId: number
+  exchangeRate: number
+  amountTotal: number
+  taxTotal: number
+  notes: string | null
+  payTo: string | null
+  createdBy: number
 }
 
 // Full combined type

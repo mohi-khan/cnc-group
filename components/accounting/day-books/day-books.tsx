@@ -117,6 +117,7 @@ const DayBooks = () => {
           throw new Error('No data received from server')
         }
         setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+        console.log( 'Voucher Data:', response.data)
         
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
