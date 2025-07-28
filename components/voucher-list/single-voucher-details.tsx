@@ -962,31 +962,18 @@
 //   )
 // }
 
-'use client'
-
-import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Printer, RotateCcw, Check, Pencil, Loader2 } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
-import { toWords } from 'number-to-words'
-import { Card, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+"use client"
+import React, { useState, useEffect, useRef } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Printer, RotateCcw, Check, Pencil, Loader2 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { toWords } from "number-to-words"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -997,145 +984,117 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from "@/components/ui/alert-dialog"
 import {
   type FormStateType,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type VoucherById,
   VoucherTypes,
-} from '@/utils/type'
-import { useReactToPrint } from 'react-to-print'
-import {
-  getSingleVoucher,
-  reverseJournalVoucher,
-} from '@/api/contra-voucher-api'
-import Loader from '@/utils/loader'
-import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
-import { useAtom } from 'jotai'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  createJournalEntryWithDetails,
-  editJournalDetailsNotes,
-} from '@/api/vouchers-api'
-import { Form } from '../ui/form'
-import BankVoucherMaster from '../bank/bank-vouchers/bank-voucher-master'
-import BankVoucherDetails from '../bank/bank-vouchers/bank-voucher-details'
-import BankVoucherSubmit from '../bank/bank-vouchers/bank-voucher-submit'
+} from "@/utils/type"
+import { useReactToPrint } from "react-to-print"
+import { getSingleVoucher, reverseJournalVoucher } from "@/api/contra-voucher-api"
+import Loader from "@/utils/loader"
+import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
+import { useAtom } from "jotai"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { createJournalEntryWithDetails, editJournalDetailsNotes } from "@/api/vouchers-api"
+import { Form } from "../ui/form"
+import BankVoucherMaster from "../bank/bank-vouchers/bank-voucher-master"
+import BankVoucherDetails from "../bank/bank-vouchers/bank-voucher-details"
+import BankVoucherSubmit from "../bank/bank-vouchers/bank-voucher-submit"
 import {
   getAllBankAccounts,
   getAllChartOfAccounts,
   getAllCostCenters,
   getAllDepartments,
   getResPartnersBySearch,
-} from '@/api/common-shared-api'
+} from "@/api/common-shared-api"
 
 // Function to convert numbers to Indian words
 const toIndianWords = (num: number): string => {
-  if (num === 0) return 'Zero'
-
+  if (num === 0) return "Zero"
   const units = [
-    '',
-    'one',
-    'two',
-    'three',
-    'four',
-    'five',
-    'six',
-    'seven',
-    'eight',
-    'nine',
-    'ten',
-    'eleven',
-    'twelve',
-    'thirteen',
-    'fourteen',
-    'fifteen',
-    'sixteen',
-    'seventeen',
-    'eighteen',
-    'nineteen',
+    "",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
   ]
-
-  const tens = [
-    '',
-    '',
-    'twenty',
-    'thirty',
-    'forty',
-    'fifty',
-    'sixty',
-    'seventy',
-    'eighty',
-    'ninety',
-  ]
+  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
 
   const numToWords = (n: number): string => {
     if (n < 20) return units[n]
     const ten = Math.floor(n / 10)
     const unit = n % 10
-    return tens[ten] + (unit ? ' ' + units[unit] : '')
+    return tens[ten] + (unit ? " " + units[unit] : "")
   }
 
   const threeDigitToWords = (n: number): string => {
     const hundred = Math.floor(n / 100)
     const rest = n % 100
-    let result = ''
-    if (hundred > 0) result += units[hundred] + ' hundred'
-    if (rest > 0) result += (result ? ' ' : '') + numToWords(rest)
+    let result = ""
+    if (hundred > 0) result += units[hundred] + " hundred"
+    if (rest > 0) result += (result ? " " : "") + numToWords(rest)
     return result
   }
 
   // Break into Indian number system groupings
   const parts: string[] = []
   const numStr = num.toString()
-
   let n = numStr.length
-  let groupings: number[] = []
+  const groupings: number[] = []
 
   // Get last 3 digits
   if (n > 3) {
-    groupings.unshift(parseInt(numStr.slice(n - 3)))
+    groupings.unshift(Number.parseInt(numStr.slice(n - 3)))
     n -= 3
   } else {
-    groupings.unshift(parseInt(numStr))
+    groupings.unshift(Number.parseInt(numStr))
     n = 0
   }
 
   // Get next 2-digit groups
   while (n > 0) {
     const start = Math.max(n - 2, 0)
-    groupings.unshift(parseInt(numStr.slice(start, n)))
+    groupings.unshift(Number.parseInt(numStr.slice(start, n)))
     n -= 2
   }
 
   const labels = [
-    '',
-    'thousand',
-    'lakh',
-    'crore',
-    'hundred',
-    'thousand',
-    'lakh', // you can extend this
+    "",
+    "thousand",
+    "lakh",
+    "crore",
+    "hundred",
+    "thousand",
+    "lakh", // you can extend this
   ]
 
   for (let i = 0; i < groupings.length; i++) {
     if (groupings[i]) {
-      const word =
-        i === groupings.length - 1
-          ? threeDigitToWords(groupings[i])
-          : numToWords(groupings[i])
-      parts.push(
-        word +
-          (labels[groupings.length - 1 - i]
-            ? ' ' + labels[groupings.length - 1 - i]
-            : '')
-      )
+      const word = i === groupings.length - 1 ? threeDigitToWords(groupings[i]) : numToWords(groupings[i])
+      parts.push(word + (labels[groupings.length - 1 - i] ? " " + labels[groupings.length - 1 - i] : ""))
     }
   }
 
-  return parts.join(' ').replace(/\s+/g, ' ').trim()
+  return parts.join(" ").replace(/\s+/g, " ").trim()
 }
 
 // Add this after your imports
@@ -1161,11 +1120,11 @@ const updateVoucherNotes = async (id: number, notes: string, token: string) => {
         id,
         notes,
       },
-      token
+      token,
     )
     return response
   } catch (error) {
-    console.error('Error updating voucher notes:', error)
+    console.error("Error updating voucher notes:", error)
     throw error
   }
 }
@@ -1180,17 +1139,17 @@ export default function SingleVoucherDetails() {
   const { voucherid } = useParams()
   const router = useRouter()
   const [data, setData] = useState<VoucherById[]>()
-  const [editingReferenceIndex, setEditingReferenceIndex] = useState<
-    number | null
-  >(null)
-  const [editingReferenceText, setEditingReferenceText] = useState('')
+  const [editingReferenceIndex, setEditingReferenceIndex] = useState<number | null>(null)
+  const [editingReferenceText, setEditingReferenceText] = useState("")
   const [isReversingVoucher, setIsReversingVoucher] = useState(false)
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
   const [isSavingNotes, setIsSavingNotes] = useState(false) // Add loading state for saving notes
+
   const contentRef = useRef<HTMLDivElement>(null)
   const checkRef = useRef<HTMLDivElement>(null)
   const reactToPrintFn = useReactToPrint({ contentRef })
   const printCheckFn = useReactToPrint({ contentRef: checkRef })
+
   const [userId, setUserId] = React.useState<number | null>(null)
   const [isBankVoucherDialogOpen, setIsBankVoucherDialogOpen] = useState(false)
 
@@ -1205,15 +1164,15 @@ export default function SingleVoucherDetails() {
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: {
       journalEntry: {
-        date: new Date().toISOString().split('T')[0],
-        journalType: 'Bank Voucher',
+        date: new Date().toISOString().split("T")[0],
+        journalType: "Bank Voucher",
         companyId: 0,
         locationId: 0,
         currencyId: 1,
         exchangeRate: 1,
         amountTotal: 0,
-        payTo: '',
-        notes: '',
+        payTo: "",
+        notes: "",
         createdBy: 0,
       },
       journalDetails: [
@@ -1226,7 +1185,7 @@ export default function SingleVoucherDetails() {
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
-          notes: '',
+          notes: "",
           createdBy: 0,
         },
       ],
@@ -1243,153 +1202,212 @@ export default function SingleVoucherDetails() {
     partners: [],
     departments: [],
     selectedBankAccount: null,
-    formType: 'Debit',
-    status: 'Draft',
+    formType: "Debit",
+    status: "Draft",
   })
 
-  // Add a separate effect to handle form population after formState is updated
+  // Enhanced effect to handle form population - FIXED to prevent infinite loop
   useEffect(() => {
     if (
       isBankVoucherDialogOpen &&
       data &&
-      formState.filteredChartOfAccounts.length > 0
+      formState.filteredChartOfAccounts.length > 0 &&
+      formState.costCenters.length > 0 &&
+      formState.departments.length > 0 &&
+      formState.partners.length > 0 &&
+      formState.bankAccounts.length > 0
     ) {
+      console.log("🔄 Starting form population...")
       const voucherData = data[0]
-      console.log('Populating form with voucher data:', voucherData)
+      console.log("📊 Voucher data:", voucherData)
 
-      // Helper functions to get objects by name
+      // Helper functions to get objects by name with better matching
       const getAccountByName = (accountName: string) => {
-        return formState.filteredChartOfAccounts.find(
-          (acc) => acc.name === accountName || acc.displayName === accountName
+        if (!accountName) return null
+        const cleanName = accountName.toLowerCase().trim()
+        const found = formState.filteredChartOfAccounts.find(
+          (acc) =>
+            acc.name?.toLowerCase().trim() === cleanName ||
+            acc.displayName?.toLowerCase().trim() === cleanName ||
+            acc.code?.toLowerCase().trim() === cleanName,
         )
+        console.log(`🔍 Account search for "${accountName}":`, found)
+        return found
       }
 
       const getCostCenterByName = (costCenterName: string) => {
-        return formState.costCenters.find((cc) => cc.name === costCenterName)
+        if (!costCenterName) return null
+        const cleanName = costCenterName.toLowerCase().trim()
+        const found = formState.costCenters.find((cc) => cc.costCenterName?.toLowerCase().trim() === cleanName)
+        console.log(`🔍 Cost center search for "${costCenterName}":`, found)
+        return found
       }
 
       const getDepartmentByName = (departmentName: string) => {
-        return formState.departments.find(
-          (dept) => dept.name === departmentName
-        )
+        if (!departmentName) return null
+        const cleanName = departmentName.toLowerCase().trim()
+        const found = formState.departments.find((dept) => dept.departmentName?.toLowerCase().trim() === cleanName)
+        console.log(`🔍 Department search for "${departmentName}":`, found)
+        return found
       }
 
       const getPartnerByName = (partnerName: string) => {
-        return formState.partners.find((p) => p.name === partnerName)
+        if (!partnerName) return null
+        const cleanName = partnerName.toLowerCase().trim()
+        const found = formState.partners.find((p) => p.name?.toLowerCase().trim() === cleanName)
+        console.log(`🔍 Partner search for "${partnerName}":`, found)
+        return found
+      }
+
+      const getBankAccountByName = (bankAccountName: string) => {
+        if (!bankAccountName) return null
+        const cleanName = bankAccountName.toLowerCase().trim()
+        const found = formState.bankAccounts.find(
+          (bank) =>
+            bank.accountName?.toLowerCase().trim() === cleanName ||
+            bank.bankName?.toLowerCase().trim() === cleanName ||
+            `${bank.bankName} - ${bank.accountName}`.toLowerCase().trim() === cleanName ||
+            bank.accountNumber?.toLowerCase().trim() === cleanName,
+        )
+        console.log(`🔍 Bank account search for "${bankAccountName}":`, found)
+        return found
       }
 
       // Find company and location from user data
       const selectedCompany =
-        userData?.userCompanies?.find(
-          (comp) => comp.company?.companyName === voucherData.companyname
-        ) || userData?.userCompanies?.[0]
+        userData?.userCompanies?.find((comp) => comp.company?.companyName === voucherData.companyname) ||
+        userData?.userCompanies?.[0]
 
       const selectedLocation =
-        userData?.userLocations?.find(
-          (loc) => loc.location?.address === voucherData.location
-        ) || userData?.userLocations?.[0]
+        userData?.userLocations?.find((loc) => loc.location?.address === voucherData.location) ||
+        userData?.userLocations?.[0]
 
-      // Calculate total amount
-      // const totalAmount = data.reduce((sum, item) => {
-      //   const debitAmount = parseFloat(item.debit?.toString() || '0')
-      //   const creditAmount = parseFloat(item.credit?.toString() || '0')
-      //   return sum + Math.max(debitAmount, creditAmount)
-      // }, 0)
+      console.log("🏢 Selected company:", selectedCompany)
+      console.log("📍 Selected location:", selectedLocation)
 
-      // Map existing journal details with proper IDs
-      const mappedJournalDetails = data.map((item) => {
-        const account = getAccountByName(item.accountsname || '')
-        const costCenter = getCostCenterByName(item.costcenter || '')
-        const department = getDepartmentByName(item.department || '')
-        const partner = getPartnerByName(item.partner || '')
+      // Find bank account
+      const bankAccount = getBankAccountByName(voucherData.bankaccount || "")
+      console.log("🏦 Found bank account:", bankAccount, "for name:", voucherData.bankaccount)
 
-        return {
-          accountId: account?.id || 0,
-          costCenterId: costCenter?.id || null,
-          departmentId: department?.id || null,
-          debit: parseFloat(item.debit?.toString() || '0'),
-          credit: parseFloat(item.credit?.toString() || '0'),
+      // Map existing journal details with proper IDs and better error handling
+      const mappedJournalDetails = data.map((item, index) => {
+        console.log(`📝 Processing item ${index}:`, item)
+        const account = getAccountByName(item.accountsname || "")
+        const costCenter = getCostCenterByName(item.costcenter || "")
+        const department = getDepartmentByName(item.department || "")
+        const partner = getPartnerByName(item.partner || "")
+
+        const mapped = {
+          accountId: account?.accountId || 0,
+          costCenterId: costCenter?.costCenterId || null,
+          departmentId: department?.departmentID || null,
+          debit: Number.parseFloat(item.debit?.toString() || "0"),
+          credit: Number.parseFloat(item.credit?.toString() || "0"),
           analyticTags: null,
           taxId: null,
           resPartnerId: partner?.id || null,
-          notes: item.notes || '',
+          notes: item.notes || "",
           createdBy: userData?.userId || 0,
         }
+
+        console.log(`✅ Mapped detail ${index}:`, mapped)
+        return mapped
       })
 
       // Set form values
       const formValues = {
         journalEntry: {
-          date: voucherData.date || new Date().toISOString().split('T')[0],
-          journalType: 'Bank Voucher',
+          date: voucherData.date || new Date().toISOString().split("T")[0],
+          journalType: "Bank Voucher",
           companyId: selectedCompany?.company?.companyId || 0,
           locationId: selectedLocation?.location?.locationId || 0,
-          
           currencyId: 1,
           exchangeRate: 1,
           amountTotal: voucherData.totalamount || 0,
-          payTo: voucherData.payTo || '',
+          payTo: voucherData.payTo || "",
+          payToText: "", // Clear manual input when populating from voucher
           notes: `Bank voucher for ${voucherData.journaltype} ${voucherData.voucherno}`,
           createdBy: userData?.userId || 0,
         },
         journalDetails: mappedJournalDetails,
       }
 
+      console.log("📋 Form values to be set:", formValues)
+
       // Reset form with the populated values
       form.reset(formValues)
 
-      // Force form to update by setting individual field values
-      form.setValue('journalEntry.companyId', selectedCompany?.company?.companyId || 0)
-      form.setValue('journalEntry.locationId', selectedLocation?.location?.locationId || 0)
-      form.setValue('journalEntry.amountTotal', voucherData.totalamount || 0)
-      form.setValue('journalEntry.payTo', voucherData.payTo || '')
-      form.setValue(
-        'journalEntry.notes',
-        `Bank voucher for ${voucherData.journaltype} ${voucherData.voucherno}`
-      )
-      form.setValue('journalEntry.date', voucherData.date || new Date().toISOString().split('T')[0])
-     
+      // Set individual form values
+      form.setValue("journalEntry.companyId", selectedCompany?.company?.companyId || 0)
+      form.setValue("journalEntry.locationId", selectedLocation?.location?.locationId || 0)
+      form.setValue("journalEntry.amountTotal", voucherData.totalamount || 0)
+      form.setValue("journalEntry.payTo", voucherData.payTo || "")
+      form.setValue("journalEntry.payTo", "") // Clear manual input
+      form.setValue("journalEntry.notes", `Bank voucher for ${voucherData.journaltype} ${voucherData.voucherno}`)
+      form.setValue("journalEntry.date", voucherData.date || new Date().toISOString().split("T")[0])
 
       // Set journal details
       mappedJournalDetails.forEach((detail, index) => {
+        console.log(`🔧 Setting form values for detail ${index}:`, detail)
         form.setValue(`journalDetails.${index}.accountId`, detail.accountId)
-        form.setValue(
-          `journalDetails.${index}.costCenterId`,
-          detail.costCenterId
-        )
-        form.setValue(
-          `journalDetails.${index}.departmentId`,
-          detail.departmentId
-        )
+        form.setValue(`journalDetails.${index}.costCenterId`, detail.costCenterId)
+        form.setValue(`journalDetails.${index}.departmentId`, detail.departmentId)
         form.setValue(`journalDetails.${index}.debit`, detail.debit)
         form.setValue(`journalDetails.${index}.credit`, detail.credit)
-        form.setValue(
-          `journalDetails.${index}.resPartnerId`,
-          detail.resPartnerId
-        )
+        form.setValue(`journalDetails.${index}.resPartnerId`, detail.resPartnerId)
         form.setValue(`journalDetails.${index}.notes`, detail.notes)
       })
 
-      console.log('Form populated with values:', formValues)
+      // Update formState for bank account - ONLY if it's different to prevent infinite loop
+      if (bankAccount && (!formState.selectedBankAccount || formState.selectedBankAccount.id !== bankAccount.id)) {
+        setFormState((prev) => ({
+          ...prev,
+          selectedBankAccount: {
+            id: bankAccount.id,
+            glCode: bankAccount.glAccountId || 0,
+          },
+        }))
+      }
+
+      // Trigger form validation
+      setTimeout(() => {
+        form.trigger()
+        console.log("✅ Form values after population:", form.getValues())
+      }, 100)
+
+      console.log("✅ Form population completed")
     }
-  }, [isBankVoucherDialogOpen, data, formState, userData, form])
+  }, [
+    isBankVoucherDialogOpen,
+    data,
+    formState.filteredChartOfAccounts.length,
+    formState.costCenters.length,
+    formState.departments.length,
+    formState.partners.length,
+    formState.bankAccounts.length,
+    userData,
+    form,
+  ])
 
   // Simplified handleReceiptClick function
   const handleReceiptClick = React.useCallback(() => {
     if (!data || data.length === 0) {
       toast({
-        title: 'Error',
-        description: 'No voucher data available',
-        variant: 'destructive',
+        title: "Error",
+        description: "No voucher data available",
+        variant: "destructive",
       })
       return
     }
 
+    console.log("🚀 Opening bank voucher dialog with data:", data[0])
+
     // Update form state
     setFormState((prevState) => ({
       ...prevState,
-      status: 'Draft',
-      formType: 'Debit',
+      status: "Draft",
+      formType: "Debit",
+      selectedBankAccount: null, // Reset bank account selection
     }))
 
     // Open dialog - the useEffect above will handle populating the form
@@ -1410,10 +1428,10 @@ export default function SingleVoucherDetails() {
   // Fetch initial data for bank voucher form
   useEffect(() => {
     const checkUserData = () => {
-      const storedUserData = localStorage.getItem('currentUser')
-      const storedToken = localStorage.getItem('authToken')
+      const storedUserData = localStorage.getItem("currentUser")
+      const storedToken = localStorage.getItem("authToken")
       if (!storedUserData || !storedToken) {
-        router.push('/')
+        router.push("/")
         return
       }
     }
@@ -1421,75 +1439,87 @@ export default function SingleVoucherDetails() {
     checkUserData()
 
     const fetchInitialData = async () => {
-      const search = ''
+      const search = ""
       if (!token) return
 
-      const [
-        bankAccountsResponse,
-        chartOfAccountsResponse,
-        costCentersResponse,
-        partnersResponse,
-        departmentsResponse,
-      ] = await Promise.all([
-        getAllBankAccounts(token),
-        getAllChartOfAccounts(token),
-        getAllCostCenters(token),
-        getResPartnersBySearch(search, token),
-        getAllDepartments(token),
-      ])
+      try {
+        const [
+          bankAccountsResponse,
+          chartOfAccountsResponse,
+          costCentersResponse,
+          partnersResponse,
+          departmentsResponse,
+        ] = await Promise.all([
+          getAllBankAccounts(token),
+          getAllChartOfAccounts(token),
+          getAllCostCenters(token),
+          getResPartnersBySearch(search, token),
+          getAllDepartments(token),
+        ])
 
-      if (
-        bankAccountsResponse?.error?.status === 441 ||
-        chartOfAccountsResponse?.error?.status === 441 ||
-        costCentersResponse?.error?.status === 441 ||
-        partnersResponse?.error?.status === 441 ||
-        departmentsResponse?.error?.status === 441
-      ) {
-        router.push('/unauthorized-access')
-        return
+        if (
+          bankAccountsResponse?.error?.status === 441 ||
+          chartOfAccountsResponse?.error?.status === 441 ||
+          costCentersResponse?.error?.status === 441 ||
+          partnersResponse?.error?.status === 441 ||
+          departmentsResponse?.error?.status === 441
+        ) {
+          router.push("/unauthorized-access")
+          return
+        }
+
+        const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
+          return account.isGroup === false
+        })
+
+        console.log("📊 Fetched data:", {
+          bankAccounts: bankAccountsResponse.data?.length || 0,
+          chartOfAccounts: chartOfAccountsResponse.data?.length || 0,
+          filteredCoa: filteredCoa?.length || 0,
+          costCenters: costCentersResponse.data?.length || 0,
+          partners: partnersResponse.data?.length || 0,
+          departments: departmentsResponse.data?.length || 0,
+        })
+
+        setFormState((prevState) => ({
+          ...prevState,
+          bankAccounts: bankAccountsResponse.data || [],
+          chartOfAccounts: chartOfAccountsResponse.data || [],
+          filteredChartOfAccounts: filteredCoa || [],
+          costCenters: costCentersResponse.data || [],
+          partners: partnersResponse.data || [],
+          departments: departmentsResponse.data || [],
+        }))
+      } catch (error) {
+        console.error("Error fetching initial data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch required data",
+          variant: "destructive",
+        })
       }
-
-      const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
-        return account.isGroup === false
-      })
-
-      setFormState((prevState) => ({
-        ...prevState,
-        bankAccounts: bankAccountsResponse.data || [],
-        chartOfAccounts: chartOfAccountsResponse.data || [],
-        filteredChartOfAccounts: filteredCoa || [],
-        costCenters: costCentersResponse.data || [],
-        partners: partnersResponse.data || [],
-        departments: departmentsResponse.data || [],
-      }))
     }
 
     fetchInitialData()
-  }, [token, router])
+  }, [token, router, toast])
 
   // Enhanced onSubmit function with better validation
-  const onSubmit = async (
-    values: JournalEntryWithDetails,
-    status: 'Draft' | 'Posted'
-  ) => {
+  const onSubmit = async (values: JournalEntryWithDetails, status: "Draft" | "Posted") => {
     // Validate that required fields are filled
     if (!formState.selectedBankAccount) {
       toast({
-        title: 'Error',
-        description: 'Please select a bank account',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please select a bank account",
+        variant: "destructive",
       })
       return
     }
 
-    if (
-      !values.journalEntry.amountTotal ||
-      values.journalEntry.amountTotal <= 0
-    ) {
+    if (!values.journalEntry.amountTotal || values.journalEntry.amountTotal <= 0) {
       toast({
-        title: 'Error',
-        description: 'Please enter a valid amount',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
       })
       return
     }
@@ -1498,16 +1528,16 @@ export default function SingleVoucherDetails() {
       ...values,
       journalEntry: {
         ...values.journalEntry,
-        state: status === 'Draft' ? 0 : 1,
-        notes: values.journalEntry.notes || '',
-        journalType: 'Bank Voucher',
+        state: status === "Draft" ? 0 : 1,
+        notes: values.journalEntry.notes || "",
+        journalType: "Bank Voucher",
         currencyId: values.journalEntry.currencyId || 1,
         amountTotal: values.journalEntry.amountTotal || 0,
         createdBy: userData?.userId ?? 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
-        notes: detail.notes || '',
+        notes: detail.notes || "",
         createdBy: userData?.userId ?? 0,
       })),
     }
@@ -1521,40 +1551,30 @@ export default function SingleVoucherDetails() {
           accountId: formState.selectedBankAccount?.glCode || 0,
           costCenterId: null,
           departmentId: null,
-          debit:
-            formState.formType === 'Debit'
-              ? updatedValues.journalEntry.amountTotal
-              : 0,
-          credit:
-            formState.formType === 'Credit'
-              ? updatedValues.journalEntry.amountTotal
-              : 0,
+          debit: formState.formType === "Debit" ? updatedValues.journalEntry.amountTotal : 0,
+          credit: formState.formType === "Credit" ? updatedValues.journalEntry.amountTotal : 0,
           analyticTags: null,
           taxId: null,
           resPartnerId: null,
           bankaccountid: formState.selectedBankAccount?.id,
-          notes: updatedValues.journalEntry.notes || '',
+          notes: updatedValues.journalEntry.notes || "",
           createdBy: userData?.userId ?? 0,
         },
       ],
     }
 
     try {
-      const response = await createJournalEntryWithDetails(
-        updateValueswithBank,
-        token
-      )
-
+      const response = await createJournalEntryWithDetails(updateValueswithBank, token)
       if (response.error || !response.data) {
         toast({
-          title: 'Error',
-          description: response.error?.message || 'Error creating Bank Voucher',
-          variant: 'destructive',
+          title: "Error",
+          description: response.error?.message || "Error creating Bank Voucher",
+          variant: "destructive",
         })
       } else {
         toast({
-          title: 'Success',
-          description: 'Bank Voucher created successfully',
+          title: "Success",
+          description: "Bank Voucher created successfully",
         })
         // Close popup and reset form
         setIsBankVoucherDialogOpen(false)
@@ -1562,16 +1582,16 @@ export default function SingleVoucherDetails() {
         setFormState((prevState) => ({
           ...prevState,
           selectedBankAccount: null,
-          formType: 'Debit',
-          status: 'Draft',
+          formType: "Debit",
+          status: "Draft",
         }))
       }
     } catch (error) {
-      console.error('Error creating bank voucher:', error)
+      console.error("Error creating bank voucher:", error)
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive',
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
       })
     }
   }
@@ -1579,27 +1599,24 @@ export default function SingleVoucherDetails() {
   useEffect(() => {
     async function fetchVoucher() {
       if (!voucherid || !token) return
-
       try {
         const response = await getSingleVoucher(voucherid as string, token)
         if (response.error || !response.data) {
           toast({
-            title: 'Error',
-            description:
-              response.error?.message || 'Failed to get Voucher Data',
+            title: "Error",
+            description: response.error?.message || "Failed to get Voucher Data",
           })
         } else {
+          console.log("Fetched voucher data:", response.data)
           setData(response.data)
         }
       } catch (error) {
         toast({
-          title: 'Error',
-          description:
-            'An unexpected error occurred while fetching the voucher.',
+          title: "Error",
+          description: "An unexpected error occurred while fetching the voucher.",
         })
       }
     }
-
     fetchVoucher()
   }, [voucherid, token])
 
@@ -1619,13 +1636,10 @@ export default function SingleVoucherDetails() {
   const handleReferenceSave = async () => {
     if (data && editingReferenceIndex !== null && voucherid && token) {
       setIsSavingNotes(true)
-
       try {
         const currentItem = data[editingReferenceIndex]
-
         // Call API to update the notes in the database
         await updateVoucherNotes(currentItem.id, editingReferenceText, token)
-
         // Update local state only after successful API call
         const updatedData = [...data]
         updatedData[editingReferenceIndex] = {
@@ -1634,17 +1648,16 @@ export default function SingleVoucherDetails() {
         }
         setData(updatedData)
         setEditingReferenceIndex(null)
-
         toast({
-          title: 'Success',
-          description: 'Notes updated successfully',
+          title: "Success",
+          description: "Notes updated successfully",
         })
       } catch (error) {
-        console.error('Error updating notes:', error)
+        console.error("Error updating notes:", error)
         toast({
-          title: 'Error',
-          description: 'Failed to update notes. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to update notes. Please try again.",
+          variant: "destructive",
         })
       } finally {
         setIsSavingNotes(false)
@@ -1655,7 +1668,7 @@ export default function SingleVoucherDetails() {
   // Add cancel function for editing
   const handleReferenceCancel = () => {
     setEditingReferenceIndex(null)
-    setEditingReferenceText('')
+    setEditingReferenceText("")
   }
 
   const handleReverseVoucher = () => {
@@ -1671,41 +1684,35 @@ export default function SingleVoucherDetails() {
 
     if (!voucherId) {
       toast({
-        title: 'Error',
-        description: 'Invalid voucher number',
-        variant: 'destructive',
+        title: "Error",
+        description: "Invalid voucher number",
+        variant: "destructive",
       })
       return
     }
 
     try {
       setIsReversingVoucher(true)
-      const response = await reverseJournalVoucher(
-        Number(voucherid),
-        createdId,
-        token
-      )
-
+      const response = await reverseJournalVoucher(Number(voucherid), createdId, token)
       if (!response.data || response.error) {
         toast({
-          title: 'Error',
-          description:
-            response.error?.message || 'Failed to reverse the voucher',
-          variant: 'destructive',
+          title: "Error",
+          description: response.error?.message || "Failed to reverse the voucher",
+          variant: "destructive",
         })
       } else {
         toast({
-          title: 'Success',
-          description: 'Voucher reversed successfully',
+          title: "Success",
+          description: "Voucher reversed successfully",
         })
         router.refresh()
       }
     } catch (error: any) {
-      console.error('Reverse voucher error:', error)
+      console.error("Reverse voucher error:", error)
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to reverse the voucher',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to reverse the voucher",
+        variant: "destructive",
       })
     } finally {
       setIsReversingVoucher(false)
@@ -1726,13 +1733,8 @@ export default function SingleVoucherDetails() {
       <Card ref={contentRef} className="w-full max-w-5xl mx-auto mt-24">
         <CardContent className="p-6">
           {/* Header Section */}
-          <h1 className="text-center text-3xl font-bold">
-            {data[0].companyname}
-          </h1>
-          <p className="text-center mb-10 text-xl font-semibold">
-            {data[0].location}{' '}
-          </p>
-
+          <h1 className="text-center text-3xl font-bold">{data[0].companyname}</h1>
+          <p className="text-center mb-10 text-xl font-semibold">{data[0].location} </p>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="space-y-4">
               <div className="grid grid-cols-[120px,1fr] gap-8">
@@ -1740,75 +1742,48 @@ export default function SingleVoucherDetails() {
                 <span>{data[0].voucherno}</span>
               </div>
               <div className="grid grid-cols-[120px,1fr] gap-8">
-                <span className="font-medium whitespace-nowrap">
-                  Accounting Date:
-                </span>
+                <span className="font-medium whitespace-nowrap">Accounting Date:</span>
                 <span>{data[0].date}</span>
               </div>
               <div className="grid grid-cols-[120px,1fr] gap-8">
-                <span className="font-medium whitespace-nowrap capitalize">
-                  Created By: {data[0].createdby}
-                </span>
+                <span className="font-medium whitespace-nowrap capitalize">Created By: {data[0].createdby}</span>
                 <span></span>
               </div>
             </div>
             <div className="flex justify-end gap-2 no-print">
               {data[0].journaltype === VoucherTypes.BankVoucher && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReceiptClick}
-                >
+                <Button variant="outline" size="sm" onClick={handleReceiptClick}>
                   <Pencil className="w-4 h-4 mr-2" />
                   New Bank Voucher
                 </Button>
               )}
-              <AlertDialog
-                open={isAlertDialogOpen}
-                onOpenChange={setIsAlertDialogOpen}
-              >
+              <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReverseVoucher}
-                    disabled={isReversingVoucher}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleReverseVoucher} disabled={isReversingVoucher}>
                     <RotateCcw className="w-4 h-4 mr-2" />
-                    {isReversingVoucher ? 'Reversing...' : 'Reverse'}
+                    {isReversingVoucher ? "Reversing..." : "Reverse"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-white">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action will reverse the voucher. This action cannot
-                      be undone. Are you sure?
+                      This action will reverse the voucher. This action cannot be undone. Are you sure?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>No</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmReverseVoucher}>
-                      Yes
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={confirmReverseVoucher}>Yes</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
               {data[0].journaltype === VoucherTypes.BankVoucher && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => printCheckFn()}
-                >
+                <Button variant="outline" size="sm" onClick={() => printCheckFn()}>
                   <Printer className="w-4 h-4 mr-2" />
                   Print Check
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => reactToPrintFn()}
-              >
+              <Button variant="outline" size="sm" onClick={() => reactToPrintFn()}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print Voucher
               </Button>
@@ -1816,59 +1791,24 @@ export default function SingleVoucherDetails() {
           </div>
 
           {/* Bank Voucher Dialog */}
-          <Dialog
-            open={isBankVoucherDialogOpen}
-            onOpenChange={setIsBankVoucherDialogOpen}
-          >
+          <Dialog open={isBankVoucherDialogOpen} onOpenChange={setIsBankVoucherDialogOpen}>
             <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  Create Bank Voucher from {data[0].journaltype}{' '}
-                  {data[0].voucherno}
+                  Create Bank Voucher from {data[0].journaltype} {data[0].voucherno}
                 </DialogTitle>
               </DialogHeader>
               <div className="mt-4">
-                {/* Debug information - remove in production */}
-                <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
-                  <p>
-                    <strong>Debug Info:</strong>
-                  </p>
-                  <p>
-                    Company: {data[0].companyname} (ID:{' '}
-                    {form.watch('journalEntry.companyId')})
-                  </p>
-                  <p>
-                    Location: {data[0].location} (ID:{' '}
-                    {form.watch('journalEntry.locationId')})
-                  </p>
-                  <p>Amount: {form.watch('journalEntry.amountTotal')}</p>
-                  <p>
-                    Journal Details Count:{' '}
-                    {form.watch('journalDetails')?.length || 0}
-                  </p>
-                  <p>
-                    First Account ID: {form.watch('journalDetails.0.accountId')}
-                  </p>
-                </div>
-
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit((values) => {
-                      console.log('Submitting form with values:', values)
+                      console.log("Submitting form with values:", values)
                       onSubmit(values, formState.status)
                     })}
                     className="space-y-8"
                   >
-                    {validationError && (
-                      <div className="text-red-500 text-sm mb-4">
-                        {validationError}
-                      </div>
-                    )}
-                    {amountError && (
-                      <div className="text-red-500 text-sm mb-4">
-                        {amountError}
-                      </div>
-                    )}
+                    {validationError && <div className="text-red-500 text-sm mb-4">{validationError}</div>}
+                    {amountError && <div className="text-red-500 text-sm mb-4">{amountError}</div>}
                     <BankVoucherMaster
                       form={form}
                       formState={formState}
@@ -1882,7 +1822,7 @@ export default function SingleVoucherDetails() {
                       requisition={undefined}
                       partners={formState.partners}
                       isFromInvoice={true} // Add this when coming from invoice
-                      invoicePartnerName={data?.[0]?.partner || ''} // Add partner name from voucher data
+                      invoicePartnerName={data?.[0]?.partner || ""} // Add partner name from voucher data
                     />
                     <BankVoucherSubmit
                       form={form}
@@ -1909,11 +1849,7 @@ export default function SingleVoucherDetails() {
                     <TableHead>Cost Center</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Partner</TableHead>
-                    <TableHead>
-                      {data[0].journaltype === VoucherTypes.BankVoucher
-                        ? 'Cheque No.'
-                        : 'Notes'}
-                    </TableHead>
+                    <TableHead>{data[0].journaltype === VoucherTypes.BankVoucher ? "Cheque No." : "Notes"}</TableHead>
                     {data[0].journaltype === VoucherTypes.CashVoucher ? (
                       <TableHead>Amount</TableHead>
                     ) : (
@@ -1932,20 +1868,18 @@ export default function SingleVoucherDetails() {
                   ) // All items
                     .map((item, index) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.accountsname || 'N/A'}</TableCell>
-                        <TableCell>{item.bankaccount || 'N/A'}</TableCell>
-                        <TableCell>{item.costcenter || 'N/A'}</TableCell>
-                        <TableCell>{item.department || 'N/A'}</TableCell>
-                        <TableCell>{item.partner || 'N/A'}</TableCell>
+                        <TableCell>{item.accountsname || "N/A"}</TableCell>
+                        <TableCell>{item.bankaccount || "N/A"}</TableCell>
+                        <TableCell>{item.costcenter || "N/A"}</TableCell>
+                        <TableCell>{item.department || "N/A"}</TableCell>
+                        <TableCell>{item.partner || "N/A"}</TableCell>
                         <TableCell>
                           {editingReferenceIndex === index ? (
                             <div className="flex gap-2 items-center">
                               <Input
                                 type="text"
                                 value={editingReferenceText}
-                                onChange={(e) =>
-                                  setEditingReferenceText(e.target.value)
-                                }
+                                onChange={(e) => setEditingReferenceText(e.target.value)}
                                 className="min-w-[200px]"
                                 disabled={isSavingNotes}
                               />
@@ -1987,13 +1921,7 @@ export default function SingleVoucherDetails() {
                               </Button>
                             </div>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleReferenceEdit(index, item.notes)
-                              }
-                            >
+                            <Button variant="outline" size="sm" onClick={() => handleReferenceEdit(index, item.notes)}>
                               Edit
                             </Button>
                           )}
@@ -2002,12 +1930,10 @@ export default function SingleVoucherDetails() {
                     ))}
                 </TableBody>
               </Table>
-
               <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Reference:</span>
                 <span>{data[data.length - 1].notes}</span>
               </div>
-
               {/* Total Debit Amount */}
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount:</span>
@@ -2016,7 +1942,6 @@ export default function SingleVoucherDetails() {
                   {data[data.length - 1].currency}
                 </span>
               </div>
-
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount in word:</span>
                 <span className="capitalize">
@@ -2024,16 +1949,11 @@ export default function SingleVoucherDetails() {
                   {data[data.length - 1].currency}&nbsp;&nbsp;only
                 </span>
               </div>
-
               <div className="flex justify-between mt-20">
-                <h1 className="border-t-2 border-black pt-2">
-                  Signature of Recipient
-                </h1>
+                <h1 className="border-t-2 border-black pt-2">Signature of Recipient</h1>
                 <h1 className="border-t-2 border-black pt-2">Prepared by</h1>
                 <h1 className="border-t-2 border-black pt-2">Checked by</h1>
-                <h1 className="border-t-2 border-black pt-2">
-                  Approved by CM/MD
-                </h1>
+                <h1 className="border-t-2 border-black pt-2">Approved by CM/MD</h1>
               </div>
             </CardContent>
           </Card>
@@ -2054,27 +1974,19 @@ export default function SingleVoucherDetails() {
                     </div>
                   </div>
                 </div>
-
                 {/* Payee Section */}
                 <div className="mb-6">
                   <div className="flex items-center mb-1">
                     <p className="flex-1 pb-1 pt-2 ">{data[0]?.payTo}</p>
                   </div>
                 </div>
-
                 {/* Amount Section */}
                 <div className="flex mb-6">
                   <div className="flex-1">
-                    <p className="flex-1 pb-1 pt-2 ">
-                      {item.debit === 0
-                        ? toWords(item.credit)
-                        : toWords(item.debit)}
-                    </p>
+                    <p className="flex-1 pb-1 pt-2 ">{item.debit === 0 ? toWords(item.credit) : toWords(item.debit)}</p>
                   </div>
                   <div className="px-2 py-1 flex items-center whitespace-nowrap ml-5">
-                    <span className="font-medium">
-                      {item.debit === 0 ? item.credit : item.debit}/-
-                    </span>
+                    <span className="font-medium">{item.debit === 0 ? item.credit : item.debit}/-</span>
                   </div>
                 </div>
               </div>
@@ -2591,7 +2503,7 @@ export default function SingleVoucherDetails() {
 //           createdBy: userData?.userId || 0,
 //         },
 //         journalDetails: mappedJournalDetails,
-        
+
 //       }
 
 //       console.log('dataaa', data)
@@ -2735,7 +2647,7 @@ export default function SingleVoucherDetails() {
 //         journalType: 'Bank Voucher',
 //         currencyId: values.journalEntry.currencyId || 1,
 //         amountTotal: values.journalEntry.amountTotal || 0,
-       
+
 //         createdBy: userData?.userId ?? 0,
 //       },
 //       journalDetails: values.journalDetails.map((detail) => ({
