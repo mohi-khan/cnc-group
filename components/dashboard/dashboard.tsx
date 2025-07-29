@@ -103,11 +103,7 @@ export default function Dashboard() {
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
-  console.log(
-    '🚀 ~ Dashboard ~ userData:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    userData
-  )
-
+  
   // Dynamic form state
   const [selectedCompanyId, setSelectedCompanyId] = useState<number>(3)
 
@@ -127,8 +123,8 @@ export default function Dashboard() {
 
   const [yearlyStartDate, setYearlyStartDate] = useState<string>('2025-01-01')
   const [yearlyEndDate, setYearlyEndDate] = useState<string>('2025-12-31')
-  const [fundPositionMonth, setFundPositionMonth] = useState<string>('02')
-  const [fundPositionDate, setFundPositionDate] = useState<string>('2025-02-19')
+  const [fundPositionMonth, setFundPositionMonth] = useState<string>('06')
+  const [fundPositionDate, setFundPositionDate] = useState<string>(new Date().toISOString())
 
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
@@ -412,10 +408,30 @@ export default function Dashboard() {
   ])
 
   const processedFundPositionData = React.useMemo(() => {
+    console.log('Fund Position',fundPositionData);
     if (!fundPositionData) return []
     console.log('Processing fund position data:', fundPositionData)
-    const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
-    return dates.map((date) => {
+      const cashDates = fundPositionData.cashBalance.map(entry => entry.date);
+
+  const bankDates = fundPositionData.BankBalance.flatMap(bankArray =>
+    bankArray.map(entry => entry.date)
+  );
+
+  const allDates = [...cashDates, ...bankDates];
+
+  const distinctDates = Array.from(new Set(allDates)).sort((a, b) => {
+    // Sort by latest first
+       const [aMonth, aDay, aYear] = a.split('/').map(Number);
+  const [bMonth, bDay, bYear] = b.split('/').map(Number);
+
+  const aDate = new Date(aYear, aMonth - 1, aDay);
+  const bDate = new Date(bYear, bMonth - 1, bDay);
+
+  return bDate.getTime() - aDate.getTime(); // desce
+  });
+
+    //const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
+    return distinctDates.map((date) => {
       const cashBalance = fundPositionData.cashBalance
         .filter((item) => item.date === date)
         .reduce(
