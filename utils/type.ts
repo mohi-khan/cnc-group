@@ -1670,3 +1670,30 @@ export interface JournalPayload {
   journalEntry: JournalEntry;
   journalDetails: JournalDetail[];
 }
+
+
+//billofexchange get type
+export type BoeGet = {
+  boeNo: string
+  boeDate: Date
+  lcLogNo: string
+  boeSubDate: Date
+  boeRecDate: Date
+  negotiationDate: Date
+  maturityDate: Date
+  usdAmount: number
+  bdtAmount: number
+}
+
+// create billofexchange type
+export type CreateBoe = {
+  boeNo: string
+  boeDate: Date
+  lcLogNo: string
+  boeSubDate: Date
+  boeRecDate: Date
+  negotiationDate: Date
+  maturityDate: Date
+  usdAmount: number
+  bdtAmount: number
+}

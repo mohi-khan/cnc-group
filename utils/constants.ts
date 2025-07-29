@@ -64,10 +64,10 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: 'Invoices', source: '/customers/invoices' },
           { name: 'Delivery Challan', source: '/customers/delivery-challan' },
-          // {
-          //   name: 'Customer Statement',
-          //   source: '/customers/customer-statement',
-          // },
+          {
+            name: 'Bill of Exchange',
+            source: '/customers/bill-of-exchange',
+          },
         ],
       },
     ],
