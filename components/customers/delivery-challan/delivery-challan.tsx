@@ -224,8 +224,8 @@ const DeliveryChallan = () => {
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
+              <Table className=" border shadow-md">
+                <TableHeader className=" bg-slate-200 shadow-md">
                   <TableRow>
                     <TableHead>
                       <div className="flex items-center gap-1">
