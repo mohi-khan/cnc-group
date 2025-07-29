@@ -2,6 +2,7 @@ import { fetchApi } from '@/utils/http'
 import {
   JournalEntryWithDetails,
   JournalNotes,
+  JournalPayload,
   JournalQuery,
   JournalResult,
   VoucherById,
@@ -85,5 +86,18 @@ export async function createJournalEntryWithDetails(
       'Content-Type': 'application/json',
       Authorization: `${token}`,
     },
+  })
+}
+
+//http://localhost:4000/api/journal/edit
+export async function editJournalMasterWithDetail(data: JournalPayload, token: string) {
+  return fetchApi<JournalPayload>({
+    url: `api/journal/edit`,
+    method: 'PATCH',
+    body: data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    }, 
   })
 }

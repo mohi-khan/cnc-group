@@ -61,6 +61,17 @@ export default function BankVoucherMaster({
     )
   }, [formState.locations, selectedCompanyId])
 
+  // Filter bank accounts based on selected company
+  const filteredBankAccounts = useMemo(() => {
+    if (!selectedCompanyId) {
+      return [] // Return empty array if no company is selected
+    }
+
+    return formState.bankAccounts.filter(
+      (account) => account.isActive && account.companyId === selectedCompanyId
+    )
+  }, [formState.bankAccounts, selectedCompanyId])
+
   // Function to fetch currency data
   const fetchCurrency = useCallback(async () => {
     const data = await getAllCurrency(token)
@@ -165,8 +176,9 @@ export default function BankVoucherMaster({
                     : null
                   field.onChange(newCompanyId)
 
-                  // Clear location when company changes
+                  // Clear location and bank account when company changes
                   form.setValue('journalEntry.locationId', null)
+                  setFormState({ ...formState, selectedBankAccount: null })
                 }}
                 placeholder="Select company"
               />
@@ -316,36 +328,24 @@ export default function BankVoucherMaster({
       <FormItem>
         <FormLabel>Bank Account Details</FormLabel>
         <CustomCombobox
-          items={formState.bankAccounts
-            .filter((account) => account.isActive)
-            .map((account) => ({
-              id: account.id.toString(),
-              name:
-                `${account.bankName} - ${account.accountName} - ${account.accountNumber}` ||
-                'Unnamed Account',
-            }))}
+          items={filteredBankAccounts.map((account) => ({
+            id: account.id.toString(),
+            name:
+              `${account.bankName} - ${account.accountName} - ${account.accountNumber}` ||
+              'Unnamed Account',
+          }))}
           value={
-            formState.selectedBankAccount
+            formState.selectedBankAccount && selectedCompanyId
               ? {
                   id: formState.selectedBankAccount.id.toString(),
                   name:
-                    `${
-                      formState.bankAccounts.find(
-                        (a) =>
-                          formState.selectedBankAccount &&
-                          a.id === formState.selectedBankAccount.id
-                      )?.bankName
-                    } - ${
-                      formState.bankAccounts.find(
-                        (a) =>
-                          formState.selectedBankAccount &&
-                          a.id === formState.selectedBankAccount.id
+                    `${filteredBankAccounts.find((a) => a.id === formState.selectedBankAccount?.id)?.bankName} - ${
+                      filteredBankAccounts.find(
+                        (a) => a.id === formState.selectedBankAccount?.id
                       )?.accountName
                     } - ${
-                      formState.bankAccounts.find(
-                        (a) =>
-                          formState.selectedBankAccount &&
-                          a.id === formState.selectedBankAccount.id
+                      filteredBankAccounts.find(
+                        (a) => a.id === formState.selectedBankAccount?.id
                       )?.accountNumber
                     }` || '',
                 }
@@ -356,7 +356,7 @@ export default function BankVoucherMaster({
               setFormState({ ...formState, selectedBankAccount: null })
               return
             }
-            const selectedAccount = formState.bankAccounts.find(
+            const selectedAccount = filteredBankAccounts.find(
               (account) => account.id.toString() === value.id
             )
             if (selectedAccount) {
@@ -371,7 +371,10 @@ export default function BankVoucherMaster({
               setFormState({ ...formState, selectedBankAccount: null })
             }
           }}
-          placeholder="Select bank account"
+          placeholder={
+            selectedCompanyId ? 'Select bank account' : 'Select company first'
+          }
+          disabled={!selectedCompanyId || filteredBankAccounts.length === 0}
         />
         <FormMessage />
       </FormItem>
