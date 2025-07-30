@@ -686,7 +686,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
           voucherid: data.voucherid,
           voucherno: editingVoucher?.voucherno || '',
           date: data.journalEntry.date,
-          notes: data.journalEntry.notes || null,
+          notes: data.journalEntry.notes ,
           companyname: editingVoucher?.companyname || '',
           location: editingVoucher?.location || '',
           currency: editingVoucher?.currency || '',
@@ -788,9 +788,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
       token,
       editingVoucher,
       resetForm,
-      chartOfAccounts,
-      costCenters,
-      departments,
+      
     ]
   )
 
