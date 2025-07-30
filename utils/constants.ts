@@ -125,7 +125,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: '/bank/currency',
           },
           { name: 'Bank Vouchers', source: '/bank/bank-vouchers' },
-          // { name: 'Check Print', source: '/bank/check-print' },
+          { name: 'FDR Record', source: '/bank/fdr-record' },
           // { name: 'Bank Balances', source: '/bank/bank-balances' },
         ],
       },
