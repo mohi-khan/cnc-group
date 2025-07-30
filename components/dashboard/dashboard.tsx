@@ -54,6 +54,7 @@ import { getAllCompanies } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 const formatInternationalNumber = (num: number): string => {
   const absNum = Math.abs(num)
@@ -103,7 +104,7 @@ export default function Dashboard() {
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
-  
+
   // Dynamic form state
   const [selectedCompanyId, setSelectedCompanyId] = useState<number>(3)
 
@@ -124,7 +125,9 @@ export default function Dashboard() {
   const [yearlyStartDate, setYearlyStartDate] = useState<string>('2025-01-01')
   const [yearlyEndDate, setYearlyEndDate] = useState<string>('2025-12-31')
   const [fundPositionMonth, setFundPositionMonth] = useState<string>('06')
-  const [fundPositionDate, setFundPositionDate] = useState<string>(new Date().toISOString())
+  const [fundPositionDate, setFundPositionDate] = useState<string>(
+    new Date().toISOString()
+  )
 
   const [fundPositionData, setFundPositionData] =
     React.useState<FundPositionType | null>(null)
@@ -408,27 +411,27 @@ export default function Dashboard() {
   ])
 
   const processedFundPositionData = React.useMemo(() => {
-    console.log('Fund Position',fundPositionData);
+    console.log('Fund Position', fundPositionData)
     if (!fundPositionData) return []
     console.log('Processing fund position data:', fundPositionData)
-      const cashDates = fundPositionData.cashBalance.map(entry => entry.date);
+    const cashDates = fundPositionData.cashBalance.map((entry) => entry.date)
 
-  const bankDates = fundPositionData.BankBalance.flatMap(bankArray =>
-    bankArray.map(entry => entry.date)
-  );
+    const bankDates = fundPositionData.BankBalance.flatMap((bankArray) =>
+      bankArray.map((entry) => entry.date)
+    )
 
-  const allDates = [...cashDates, ...bankDates];
+    const allDates = [...cashDates, ...bankDates]
 
-  const distinctDates = Array.from(new Set(allDates)).sort((a, b) => {
-    // Sort by latest first
-       const [aMonth, aDay, aYear] = a.split('/').map(Number);
-  const [bMonth, bDay, bYear] = b.split('/').map(Number);
+    const distinctDates = Array.from(new Set(allDates)).sort((a, b) => {
+      // Sort by latest first
+      const [aMonth, aDay, aYear] = a.split('/').map(Number)
+      const [bMonth, bDay, bYear] = b.split('/').map(Number)
 
-  const aDate = new Date(aYear, aMonth - 1, aDay);
-  const bDate = new Date(bYear, bMonth - 1, bDay);
+      const aDate = new Date(aYear, aMonth - 1, aDay)
+      const bDate = new Date(bYear, bMonth - 1, bDay)
 
-  return bDate.getTime() - aDate.getTime(); // desce
-  });
+      return bDate.getTime() - aDate.getTime() // desce
+    })
 
     //const dates = ['01/01/2025', '01/12/2025'] // We know there are two dates
     return distinctDates.map((date) => {
@@ -716,7 +719,7 @@ export default function Dashboard() {
     }
   }
 
-  return userData && (userData.roleId === 1 || userData.roleId === 2) ? (
+  return userData && (userData.roleId === 1 || userData.roleId === 4) ? (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -1348,9 +1351,13 @@ export default function Dashboard() {
     </div>
   ) : (
     <div className="flex items-center justify-center h-screen">
-      <p className="text-2xl font-semibold text-gray-500">
-        Access Denied. You do not have permission to view this page.
-      </p>
+      <Image
+        src="/logo.webp"
+        alt="Company Logo"
+        // className="object-contain"
+        width={500}
+        height={500}
+      />
     </div>
   )
 }
