@@ -1697,3 +1697,24 @@ export type CreateBoe = {
   usdAmount: number
   bdtAmount: number
 }
+
+// FdrCreateType
+export type FdrCreateType = {
+  fdrNo: string // e.g., "FDR1007"
+  fdrDate: string // e.g., "2025-07-30"
+  accountNo: string // e.g., "AC987654327"
+  bank: string // e.g., "DBBL"
+  branch: string // e.g., "GEC Branch"
+  faceValue: number // e.g., 75000000
+  interestRate: number // e.g., 7.5
+  term: number // e.g., 24 (months)
+  maturedDate: string // e.g., "2027-07-30"
+  company: string // e.g., "National Accessories Ltd"
+  createdBy: number // e.g., 1 (optional if backend handles it)
+}
+
+// FdrGetType
+export type FdrGetType = FdrCreateType & {
+  id: number // e.g., 101
+  createdAt: string // e.g., "2025-07-30T10:25:00Z"
+}
