@@ -1,69 +1,65 @@
-// 'use client'
-// import React, { useState } from 'react'
-// import FdrRecordList from './fdr-record-list'
-// import FdrRecordPopUp from './fdr-record-popup'
-// import {
-//   Card,
-//   CardDescription,
-//   CardHeader,
-//   CardTitle,
-// } from '@/components/ui/card'
-// import { CreditCard } from 'lucide-react'
 
-// const FdrRecord = () => {
-//   const [isPopupOpen, setIsPopupOpen] = useState(false)
 
-//   const handleAddCategory = () => {
-//     setIsPopupOpen(true)
-//   }
+"use client"
 
-//   const handleCategoryAdded = () => {
-//     setIsPopupOpen(false)
-//   }
-//   return (
-//     <div>
-//       <Card>
-//         <CardHeader>
-//           <CardTitle className="flex items-center gap-2">
-//             <CreditCard className="h-5 w-5" />
-//             FDR Records
-//           </CardTitle>
-//           <CardDescription>
-//             Manage and view all Fixed Deposit Receipt records
-//             {/* ({fdrdata.length}{' '} */}
-//             total records
-//           </CardDescription>
-//         </CardHeader>
-//       </Card>
-
-//       <FdrRecordList />
-//       <FdrRecordPopUp
-//         isOpen={isPopupOpen}
-//         onOpenChange={setIsPopupOpen}
-//         onCategoryAdded={handleCategoryAdded}
-//       />
-//     </div>
-//   )
-// }
-
-// export default FdrRecord
-
-'use client'
-
-import { useState } from 'react'
-import FdrRecordList from './fdr-record-list'
-import FdrRecordPopUp from './fdr-record-popup'
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { CreditCard, Plus } from 'lucide-react'
+import { useCallback, useEffect, useState } from "react"
+import FdrRecordList from "./fdr-record-list"
+import FdrRecordPopUp from "./fdr-record-popup"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { CreditCard, Plus } from "lucide-react"
+import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
+import { useAtom } from "jotai"
+import { FdrGetType } from "@/utils/type"
+import { getFdrData } from "@/api/fdr-record-api"
+import { CompanyType } from "@/api/company-api"
+import { getAllCompanies } from "@/api/common-shared-api"
 
 const FdrRecord = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+
+  // Initialize user data
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+    const [token] = useAtom(tokenAtom)
+    const [fdrdata, setFdrdata] = useState<FdrGetType[]>([])
+     const [loading, setLoading] = useState(true)
+  const [companyData, setCompanyData] = useState<CompanyType[]>([])
+
+  const fetchFdrData = useCallback(async () => {
+    if (!token) return
+
+    try {
+      setLoading(true)
+      const fdrdata = await getFdrData(token)
+      setFdrdata(fdrdata.data ? fdrdata.data : [])
+      console.log('FDR Data:', fdrdata.data)
+    } catch (error) {
+      console.error('Error fetching FDR data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
+  const fetchCompanyData = useCallback(async () => {
+    if (!token) return
+
+    try {
+      setLoading(true)
+      const companies = await getAllCompanies(token)
+      setCompanyData(companies.data ? companies.data : [])
+      console.log("Company Data:", companies)
+    } catch (error) {
+      console.error("Error fetching company data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    fetchFdrData()
+    fetchCompanyData()
+  }, [fetchFdrData, fetchCompanyData])
 
   const handleAddRecord = () => {
     setIsPopupOpen(true)
@@ -72,6 +68,7 @@ const FdrRecord = () => {
   const handleRecordAdded = () => {
     setIsPopupOpen(false)
     // You can add logic here to refresh the FDR list
+    // For example, you could call a refresh function on FdrRecordList
   }
 
   return (
@@ -84,27 +81,35 @@ const FdrRecord = () => {
                 <CreditCard className="h-5 w-5" />
                 FDR Records
               </CardTitle>
-              <CardDescription>
-                Manage and view all Fixed Deposit Receipt records
-              </CardDescription>
+              <CardDescription>Manage and view all Fixed Deposit Receipt records</CardDescription>
             </div>
             <Button
               onClick={handleAddRecord}
               className="flex items-center gap-2"
+              disabled={!userData?.userId} // Disable if user data not loaded
             >
               <Plus className="h-4 w-4" />
-              ADD 
+              ADD
             </Button>
           </div>
         </CardHeader>
       </Card>
 
-      <FdrRecordList />
+      <FdrRecordList 
+        fdrdata={fdrdata} // Pass the fetched FDR data
+        loading={loading} // Pass loading state to the list
+        companyData={companyData} // Pass the fetched company data
+        
+      />
 
       <FdrRecordPopUp
         isOpen={isPopupOpen}
         onOpenChange={setIsPopupOpen}
         onRecordAdded={handleRecordAdded}
+        refreshFdrData={fetchFdrData} // ✅ Pass fetch function here
+         companyData={companyData} // Pass the fetched company data
+       
+       
       />
     </div>
   )

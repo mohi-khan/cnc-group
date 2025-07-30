@@ -1385,6 +1385,13 @@ export default function SingleVoucherDetails() {
     formState.departments.length,
     formState.partners.length,
     formState.bankAccounts.length,
+    formState.bankAccounts,
+    formState.costCenters,
+    formState.departments,
+    formState.partners,
+    formState.filteredChartOfAccounts,
+    formState.selectedBankAccount,
+    
     userData,
     form,
   ])
@@ -1412,7 +1419,7 @@ export default function SingleVoucherDetails() {
 
     // Open dialog - the useEffect above will handle populating the form
     setIsBankVoucherDialogOpen(true)
-  }, [data, toast])
+  }, [data])
 
   // Initialize form state data
   useEffect(() => {
@@ -1501,7 +1508,7 @@ export default function SingleVoucherDetails() {
     }
 
     fetchInitialData()
-  }, [token, router, toast])
+  }, [token, router])
 
   // Enhanced onSubmit function with better validation
   const onSubmit = async (values: JournalEntryWithDetails, status: "Draft" | "Posted") => {

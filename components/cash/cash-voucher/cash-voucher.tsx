@@ -564,8 +564,9 @@ export default function CashVoucher() {
     <div className="w-full mx-auto">
       <div className="w-full mb-10 p-8">
         <h1 className="text-2xl font-bold mb-6">
-          Cash Vouchers{' '}
-          {currentVoucherType !== 'Mixed' && `(${currentVoucherType})`}
+          Cash Vouchers
+         {currentVoucherType !== 'Mixed' && currentVoucherType && `(${currentVoucherType})`}
+
         </h1>
 
         <Form {...form}>
