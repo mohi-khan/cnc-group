@@ -1524,9 +1524,9 @@ const VoucherList: React.FC<VoucherListProps> = ({
                         )
                       })}
                     </div>
-                    <Button type="button" variant="outline" onClick={addEntry}>
+                    {/* <Button type="button" variant="outline" onClick={addEntry}>
                       Add Another Line
-                    </Button>
+                    </Button> */}
                     <div className="flex justify-between items-center pt-4">
                       <div>
                         <p>Total Debit: {totals.debit}</p>
