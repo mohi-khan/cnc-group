@@ -1325,7 +1325,7 @@ export default function SingleVoucherDetails() {
           exchangeRate: 1,
           amountTotal: voucherData.totalamount || 0,
           payTo: voucherData.payTo || "",
-          payToText: "", // Clear manual input when populating from voucher
+          payToText: voucherData.payTo || "",
           notes: `Bank voucher for ${voucherData.journaltype} ${voucherData.voucherno}`,
           createdBy: userData?.userId || 0,
         },
@@ -1342,7 +1342,7 @@ export default function SingleVoucherDetails() {
       form.setValue("journalEntry.locationId", selectedLocation?.location?.locationId || 0)
       form.setValue("journalEntry.amountTotal", voucherData.totalamount || 0)
       form.setValue("journalEntry.payTo", voucherData.payTo || "")
-      form.setValue("journalEntry.payTo", "") // Clear manual input
+      form.setValue("journalEntry.payTo",voucherData.payTo || "") // Clear manual input
       form.setValue("journalEntry.notes", `Bank voucher for ${voucherData.journaltype} ${voucherData.voucherno}`)
       form.setValue("journalEntry.date", voucherData.date || new Date().toISOString().split("T")[0])
 
@@ -1540,6 +1540,8 @@ export default function SingleVoucherDetails() {
         journalType: "Bank Voucher",
         currencyId: values.journalEntry.currencyId || 1,
         amountTotal: values.journalEntry.amountTotal || 0,
+        payTo: values.journalEntry.payTo || "",
+        payToText: values.journalEntry.payTo || "",
         createdBy: userData?.userId ?? 0,
       },
       journalDetails: values.journalDetails.map((detail) => ({
