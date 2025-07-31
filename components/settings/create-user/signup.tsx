@@ -260,6 +260,7 @@ export default function SignUp() {
     try {
       // Step 1: Register the user
       const signUpResult = await signUp(userFormData, token)
+      console.log("🚀 ~ handleSubmit ~ userFormData:", userFormData)
       if (!signUpResult.success) {
         const errorMessages = signUpResult.errors
           ? signUpResult.errors
