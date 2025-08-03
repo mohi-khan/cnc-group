@@ -1718,3 +1718,10 @@ export type FdrGetType = FdrCreateType & {
   id: number // e.g., 101
   createdAt: string // e.g., "2025-07-30T10:25:00Z"
 }
+
+export interface NewFdrValueUpdate {
+  fdrNo: string;
+  newValue: number;
+  updateDate: string;  // input as string (e.g., "2025-08-03")
+  createdBy: number;
+}
