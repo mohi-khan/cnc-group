@@ -1,10 +1,9 @@
 'use client'
+import type React from 'react'
 
-import { getFdrData } from '@/api/fdr-record-api'
 import type { FdrGetType } from '@/utils/type'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
-import { useAtom } from 'jotai'
-import { useCallback, useEffect, useState } from 'react'
+import { useInitializeUser } from '@/utils/user'
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -42,7 +41,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
-import { CompanyType } from '@/api/company-api'
+import type { CompanyType } from '@/api/company-api'
 
 type SortField = keyof FdrGetType
 type SortOrder = 'asc' | 'desc'
@@ -52,30 +51,33 @@ interface FdrRecordListProps {
   fdrdata: FdrGetType[]
   loading?: boolean
   companyData: CompanyType[]
-
 }
 
-const FdrRecordList:React.FC<FdrRecordListProps> = ({
- companyData,
+const FdrRecordList: React.FC<FdrRecordListProps> = ({
+  companyData,
   fdrdata = [],
   loading = false,
 }) => {
   useInitializeUser()
-
-
-
   const [currentPage, setCurrentPage] = useState(1)
   const [sortField, setSortField] = useState<SortField>('fdrDate')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-
   const itemsPerPage = 10
   const totalPages = Math.ceil(fdrdata.length / itemsPerPage)
 
-   const getCompanyName = (companyId: number) => {
-    const company = companyData.find((comp) => comp.companyId === companyId)
-    return company ? company.companyName : 'Unknown Company'
+  // Updated function to handle both company and companyOther
+  const getCompanyName = (
+    companyId: number | null,
+    companyOther: string | null
+  ) => {
+    if (companyId) {
+      const company = companyData.find((comp) => comp.companyId === companyId)
+      return company ? company.companyName : 'Unknown Company'
+    } else if (companyOther) {
+      return companyOther
+    }
+    return 'No Company'
   }
-  
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -316,7 +318,9 @@ const FdrRecordList:React.FC<FdrRecordListProps> = ({
                           <div className="flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
                             <div>
-                              <div className="font-medium">{getCompanyName(fdr.company)}</div>
+                              <div className="font-medium">
+                                {getCompanyName(fdr.company, fdr.companyOther)}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
@@ -380,7 +384,6 @@ const FdrRecordList:React.FC<FdrRecordListProps> = ({
                 </TableBody>
               </Table>
             </div>
-
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-6">
@@ -444,7 +447,6 @@ const FdrRecordList:React.FC<FdrRecordListProps> = ({
                 </Pagination>
               </div>
             )}
-
             {/* Results info */}
             <div className="text-sm text-muted-foreground mt-4 text-center">
               Showing {startIndex + 1} to {Math.min(endIndex, fdrdata.length)}{' '}
