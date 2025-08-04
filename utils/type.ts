@@ -1677,6 +1677,7 @@ export type BoeGet = {
   boeNo: string
   boeDate: Date
   lcLogNo: string
+  comapanyId: number
   boeSubDate: Date
   boeRecDate: Date
   negotiationDate: Date
