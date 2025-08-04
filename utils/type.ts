@@ -1710,7 +1710,8 @@ export type FdrCreateType = {
   interestRate: number // e.g., 7.5
   term: number // e.g., 24 (months)
   maturedDate: string // e.g., "2027-07-30"
-  company: number // e.g., "National Accessories Ltd"
+  company: number | null  // e.g., "National Accessories Ltd"
+  companyOther: string | null
   createdBy: number // e.g., 1 (optional if backend handles it)
 }
 
