@@ -1,5 +1,4 @@
 'use client'
-
 import { useFormContext } from 'react-hook-form'
 import {
   FormControl,
@@ -10,13 +9,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type {
   JournalEntryWithDetails,
@@ -24,7 +16,12 @@ import type {
   BoeGet,
 } from '@/utils/type'
 import type React from 'react'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react' // Import useCallback
+import { useAtom } from 'jotai' // Import useAtom to get token
+import { tokenAtom } from '@/utils/user' // Import tokenAtom
+import { getResPartnersBySearch } from '@/api/common-shared-api' // Import API function
+import { CustomCombobox } from '@/utils/custom-combobox'
+import { CustomComboboxWithApi } from '@/utils/custom-combobox-with-api'
 
 interface BoeReceiptFormProps {
   selectedBoe: BoeGet | null
@@ -50,30 +47,43 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
 }) => {
   const form = useFormContext<JournalEntryWithDetails>()
   const { control, watch, setValue, getValues } = form
-
   const watchedAmount = watch('journalEntry.amountTotal')
   const originalBoeAmount = selectedBoe?.usdAmount || 0
+  const [token] = useAtom(tokenAtom) // Get token for API calls
 
-  // Update the form's amountTotal when the selectedBoe changes
+  // Define the search function for partners
+  const searchPartners = useCallback(
+    async (query: string) => {
+      if (!token) return []
+      try {
+        const response = await getResPartnersBySearch(query, token)
+        if (response.data) {
+          return response.data.map((p) => ({
+            id: p.id.toString(),
+            name: p.name || 'Unnamed Partner',
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to search partners:', error)
+      }
+      return []
+    },
+    [token]
+  )
+
+  // Update the form's amountTotal and related details when the selectedBoe changes
   useEffect(() => {
     if (selectedBoe) {
       setValue('journalEntry.amountTotal', selectedBoe.usdAmount)
-      // Also update the first journalDetail's debit/credit (for partner)
-      // and the second journalDetail's debit/credit (for bank)
       const currentDetails = getValues('journalDetails')
       if (currentDetails && currentDetails.length >= 2) {
         // Partner detail (credit for receipt)
         setValue(`journalDetails.0.debit`, 0)
         setValue(`journalDetails.0.credit`, selectedBoe.usdAmount)
-        // IMPORTANT: accountId for partner needs to be determined.
-        // For now, it's 0. You might need to map selected partner to its GL account.
-        setValue(`journalDetails.0.accountId`, 0) // This will be overwritten by user selection
-        setValue(`journalDetails.0.resPartnerId`, null) // Will be set by user selection
         setValue(
           `journalDetails.0.notes`,
           `Receipt for BOE ${selectedBoe.boeNo}`
         )
-
         // Bank detail (debit for receipt)
         setValue(`journalDetails.1.debit`, selectedBoe.usdAmount)
         setValue(`journalDetails.1.credit`, 0)
@@ -101,7 +111,6 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
       {amountError && (
         <div className="text-red-500 text-sm mb-4">{amountError}</div>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Company */}
         <FormField
@@ -110,33 +119,33 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Company</FormLabel>
-              <Select
-                onValueChange={(value) =>
-                  field.onChange(Number.parseInt(value))
-                }
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a company" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {formState.companies.map((company) => (
-                    <SelectItem
-                      key={company.companyId}
-                      value={company.companyId.toString()}
-                    >
-                      {company.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <CustomCombobox
+                  items={formState.companies.map((company) => ({
+                    id: company.companyId.toString(),
+                    name: company.companyName,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            formState.companies.find(
+                              (c) => c.companyId === field.value
+                            )?.companyName || 'Unnamed Company',
+                        }
+                      : null
+                  }
+                  onChange={(item) =>
+                    field.onChange(item ? Number.parseInt(item.id) : null)
+                  }
+                  placeholder="Select a company"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         {/* Location */}
         <FormField
           control={control}
@@ -144,33 +153,33 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <Select
-                onValueChange={(value) =>
-                  field.onChange(Number.parseInt(value))
-                }
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a location" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {formState.locations.map((location) => (
-                    <SelectItem
-                      key={location.locationId}
-                      value={location.locationId.toString()}
-                    >
-                      {location.branchName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <CustomCombobox
+                  items={formState.locations.map((location) => ({
+                    id: location.locationId.toString(),
+                    name: location.branchName,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            formState.locations.find(
+                              (l) => l.locationId === field.value
+                            )?.branchName || 'Unnamed Location',
+                        }
+                      : null
+                  }
+                  onChange={(item) =>
+                    field.onChange(item ? Number.parseInt(item.id) : null)
+                  }
+                  placeholder="Select a location"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         {/* Bank Account */}
         <FormField
           control={control}
@@ -178,41 +187,49 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bank Account</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  const selectedBank = formState.bankAccounts.find(
-                    (account) => account.id === Number.parseInt(value)
-                  )
-                  setFormState((prev) => ({
-                    ...prev,
-                    selectedBankAccount: selectedBank || null,
-                  }))
-                  setValue(
-                    'journalDetails.1.accountId',
-                    selectedBank?.glCode || 0
-                  ) // Set GL code for journal detail
-                  field.onChange(Number.parseInt(value))
-                }}
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a bank account" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {formState.bankAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id.toString()}>
-                      {account.bankName} - {account.accountNo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <CustomCombobox
+                  items={formState.bankAccounts.map((account) => ({
+                    id: account.id.toString(),
+                    name: `${account.bankName} - ${account.accountNumber}`,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            formState.bankAccounts.find(
+                              (a) => a.id === field.value
+                            )?.bankName +
+                              ' - ' +
+                              formState.bankAccounts.find(
+                                (a) => a.id === field.value
+                              )?.accountNumber || 'Unnamed Bank Account',
+                        }
+                      : null
+                  }
+                  onChange={(item) => {
+                    const selectedBank = formState.bankAccounts.find(
+                      (account) =>
+                        account.id === Number.parseInt(item?.id || '0')
+                    )
+                    setFormState((prev) => ({
+                      ...prev,
+                      selectedBankAccount: selectedBank || null,
+                    }))
+                    setValue(
+                      'journalDetails.1.accountId',
+                      selectedBank?.glCode || 0
+                    ) // Set GL code for journal detail
+                    field.onChange(item ? Number.parseInt(item.id) : null)
+                  }}
+                  placeholder="Select a bank account"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         {/* Res Partner */}
         <FormField
           control={control}
@@ -220,68 +237,73 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Res Partner</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(Number.parseInt(value))
-                  // You might need to set journalDetails.0.accountId based on the selected partner
-                  // For now, it remains 0 as there's no direct mapping in provided types.
-                }}
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a partner" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {formState.partners.map((partner) => (
-                    <SelectItem key={partner.id} value={partner.id.toString()}>
-                      {partner.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <CustomComboboxWithApi
+                  items={formState.partners.map((partner) => ({
+                    id: partner.id.toString(),
+                    name: partner.name || 'Unnamed Partner',
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            formState.partners.find((p) => p.id === field.value)
+                              ?.name || '',
+                        }
+                      : null
+                  }
+                  onChange={(item) =>
+                    field.onChange(item ? Number.parseInt(item.id) : null)
+                  }
+                  placeholder="Select partner"
+                  searchFunction={searchPartners}
+                  // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         {/* Chart of Account (for Partner's GL Account) */}
         <FormField
           control={control}
           name="journalDetails.0.accountId" // This is the accountId for the partner's detail
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Chart of Account (Partner)</FormLabel>
-              <Select
-                onValueChange={(value) =>
-                  field.onChange(Number.parseInt(value))
-                }
-                value={field.value?.toString() || ''}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a GL account" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {formState.filteredChartOfAccounts.map((account) => (
-                    <SelectItem
-                      key={account.accountId}
-                      value={account.accountId.toString()}
-                    >
-                      {/* Changed key and value to accountId */}
-                      {account.name} ({account.code}){' '}
-                      {/* Displaying code as GL code */}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
+              <FormLabel>Chart of Account</FormLabel>
+              <FormControl>
+                <CustomCombobox
+                  items={formState.filteredChartOfAccounts
+                    .filter((account) => account.isActive)
+                    .map((account) => ({
+                      id: account.accountId.toString(),
+                      name: account.name || 'Unnamed Account',
+                    }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            formState.filteredChartOfAccounts.find(
+                              (a) => a.accountId === field.value
+                            )?.name || '',
+                        }
+                      : null
+                  }
+                  onChange={(value) => {
+                    const newAccountId = value
+                      ? Number.parseInt(value.id, 10)
+                      : null
+                    field.onChange(newAccountId)
+                  }}
+                  placeholder="Select account"
+                />
+              </FormControl>
+              <FormMessage /> {/* This will display validation errors */}
             </FormItem>
           )}
         />
-
         {/* Amount */}
         <FormField
           control={control}
@@ -320,7 +342,6 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
             </FormItem>
           )}
         />
-
         {/* Date */}
         <FormField
           control={control}
@@ -340,7 +361,6 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
             </FormItem>
           )}
         />
-
         {/* Exchange Rate */}
         <FormField
           control={control}
@@ -363,7 +383,6 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
             </FormItem>
           )}
         />
-
         {/* Notes */}
         <FormField
           control={control}
@@ -383,7 +402,6 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
           )}
         />
       </div>
-
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel

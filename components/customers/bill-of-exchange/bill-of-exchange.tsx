@@ -56,6 +56,7 @@ const getBoeStatus = (boe: BoeGet): string => {
   const hasRecDate = !!boe.boeRecDate
   const hasNegotiationDate = !!boe.negotiationDate
   const hasMaturityDate = !!boe.maturityDate
+
   if (hasSubDate && hasRecDate && hasNegotiationDate && hasMaturityDate) {
     return 'Matured'
   } else if (hasSubDate && hasRecDate && hasNegotiationDate) {
@@ -121,6 +122,7 @@ const BillOfExchange = () => {
     const fetchInitialData = async () => {
       const search = ''
       if (!token) return
+
       const [
         bankAccountsResponse,
         chartOfAccountsResponse,
@@ -134,6 +136,7 @@ const BillOfExchange = () => {
         getResPartnersBySearch(search, token),
         getAllDepartments(token),
       ])
+
       if (
         bankAccountsResponse?.error?.status === 441 ||
         chartOfAccountsResponse?.error?.status === 441 ||
@@ -144,9 +147,11 @@ const BillOfExchange = () => {
         router.push('/unauthorized-access')
         return
       }
+
       const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
         return account.isGroup === false
       })
+
       setFormState((prevState) => ({
         ...prevState,
         bankAccounts: bankAccountsResponse.data || [],
@@ -157,6 +162,7 @@ const BillOfExchange = () => {
         departments: departmentsResponse.data || [],
       }))
     }
+
     fetchInitialData()
   }, [token, router])
 
@@ -234,7 +240,6 @@ const BillOfExchange = () => {
     (boe: BoeGet) => {
       setSelectedBoe(boe)
       setOriginalBoeAmount(boe.usdAmount)
-
       // Pre-populate the form with BOE data
       form.reset({
         journalEntry: {
@@ -319,6 +324,8 @@ const BillOfExchange = () => {
       return
     }
 
+    // Removed: Validation for bank account GL code as per user's request to copy accountId
+
     setValidationError(null)
 
     const finalValues = {
@@ -343,6 +350,7 @@ const BillOfExchange = () => {
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         notes: detail.notes || '',
+        accountId: detail.accountId,
         createdBy: userData?.userId ?? 0,
       })),
     }
@@ -359,13 +367,16 @@ const BillOfExchange = () => {
     if (finalValues.journalDetails[1]) {
       finalValues.journalDetails[1].debit = finalValues.journalEntry.amountTotal
       finalValues.journalDetails[1].credit = 0
+      // FIX: Set the accountId of the second journal detail to be the same as the first one
       finalValues.journalDetails[1].accountId =
-        formState.selectedBankAccount?.glCode || 0
+        finalValues.journalDetails[0].accountId
       finalValues.journalDetails[1].bankaccountid =
         formState.selectedBankAccount?.id || null
     }
 
+    console.log('Final values before API call:', finalValues) // Add this for debugging
     const response = await createJournalEntryWithDetails(finalValues, token)
+    console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
 
     if (response.error || !response.data) {
       toast({
