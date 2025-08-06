@@ -176,6 +176,10 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Financial Reports',
         items: [
+          {
+            name: 'Ledger',
+            source: '/reports/single-trial-balance',
+          },
           { name: 'Trial Balance', source: '/reports/trial-balance' },
           // { name: 'Balance Sheet', source: '/reports/balance-sheet' },
           { name: 'Trade Debtors', source: '/reports/trade-debtors' },
