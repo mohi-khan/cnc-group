@@ -1459,7 +1459,9 @@ export interface GetCostBreakdownType {
   balance: number
 }
 
-
+export interface settings{
+  value:string;
+}
 
 //Get cost breakdown Details data type
 export interface GetCostBreakdownDetailsType {
@@ -1615,10 +1617,12 @@ export interface UtilityReportParams {
 
 export type GetDeliveryChallan = {
   id: number;
+  challanId:string;
   date: string; // ISO date string, e.g., "2025-07-23T00:00:00.000Z"
   orderId: string; // Also an ISO date string in your data, though this name might suggest a number or string ID
   orderDate: string; // ISO date string
   division: string;
+  divisionId:number;
   amount: number;
   res_partnerId: number;
   res_partnerName: string;

@@ -37,6 +37,16 @@ export async function getAllCompanies(token: string) {
     },
   })
 }
+export async function getFactoryLocaiton(token: string,companyId:number) {
+  return fetchApi<number>({
+    url: `api//location/getFactoryLocaiton/${companyId}`,
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 //get all assets api from database
 export async function getAssets(token: string) {

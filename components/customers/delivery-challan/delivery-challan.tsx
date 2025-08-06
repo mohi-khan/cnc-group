@@ -5,8 +5,8 @@ import {
   updateDeliveryChallan,
 } from '@/api/delivery-challan-api'
 import { toast } from '@/hooks/use-toast'
-import type { GetDeliveryChallan } from '@/utils/type'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import type { GetDeliveryChallan, User } from '@/utils/type'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
@@ -33,6 +33,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CalendarDays } from 'lucide-react'
 import Loader from '@/utils/loader'
+import { createJournalEntryWithDetails } from '@/api/asset-depreciation-api'
+import { getSettings } from '@/api/shared-api'
+import { getFactoryLocaiton } from '@/api/common-shared-api'
 
 const DeliveryChallan = () => {
   useInitializeUser()
@@ -44,10 +47,13 @@ const DeliveryChallan = () => {
   const [selectedItem, setSelectedItem] = useState<GetDeliveryChallan | null>(
     null
   )
-  const [exchangeRate, setExchangeRate] = useState('')
-  const [isPosting, setIsPosting] = useState(false)
 
+  const [exchangeRate, setExchangeRate] = useState(0)
+  const [isPosting, setIsPosting] = useState(false)
+  useInitializeUser();
+   const [userData] = useAtom(userDataAtom);
   const fetchExchanges = useCallback(async () => {
+   
     if (!token) return
     setLoading(true)
     const data = await getDeliveryChallan(token)
@@ -73,14 +79,14 @@ const DeliveryChallan = () => {
 
   const handlePostClick = (item: GetDeliveryChallan) => {
     setSelectedItem(item)
-    setExchangeRate('')
+    setExchangeRate(0)
     setIsModalOpen(true)
   }
 
   const handleModalClose = () => {
     setIsModalOpen(false)
     setSelectedItem(null)
-    setExchangeRate('')
+    setExchangeRate(0)
     setIsPosting(false)
   }
 
@@ -94,7 +100,7 @@ const DeliveryChallan = () => {
       return
     }
 
-    const rate = Number.parseFloat(exchangeRate)
+    const rate = exchangeRate
     if (isNaN(rate) || rate <= 0) {
       toast({
         variant: 'destructive',
@@ -123,10 +129,73 @@ const DeliveryChallan = () => {
         toast({
           title: 'Success',
           description: 'Delivery challan updated successfully',
-        })
-        handleModalClose()
+        })}
+        //// Journal Adding 
+        const debitData = (await getSettings(token, 'Revenue Account'))?.data;
+        const creditData = (await getSettings(token,'Accounts Recievable'))?.data;
+        const factoryLocation=(await getFactoryLocaiton(token,selectedItem.companyId))?.data
+        if (!debitData) {
+         throw new Error('Revenue Account setting not found');}
+         if (!creditData) {
+         throw new Error('AR Account setting not found');}
+         if (!factoryLocation){
+          throw new Error('Factory Locaiton Missing')
+         }
+         const updatedValues = {
+           
+              journalEntry: {
+                date:new Date().toISOString().slice(0, 10),
+                state:  1, // 0 for Draft, 1 for Posted
+                companyId:selectedItem.companyId,
+                locationId:factoryLocation, // by default for the time being
+                currencyId:selectedItem.currencyId,
+                notes: `against ${selectedItem.challanId} and order No ${selectedItem.orderId} `, // Ensure notes is always a string
+                journalType: 'Journal Voucher', // Use the dynamic voucher type
+                amountTotal: selectedItem.amount * exchangeRate, // Set the calculated total amount
+                exchangeRate: exchangeRate,
+                createdBy: userData?.userId || 0,
+              },
+              
+            journalDetails:[{
+              accountId:parseInt(debitData),
+              departmentId:selectedItem.divisionId,
+              debit:selectedItem.amount*exchangeRate,
+              credit:0,
+              createdBy: userData?.userId || 0
+            },{
+              accountId:parseInt(creditData),
+              partnerId:selectedItem.res_partnerId,
+              debit:0,
+              credit:selectedItem.amount*exchangeRate,
+              createdBy: userData?.userId || 0,
+            }]     }
+            
+             console.log(selectedItem);
+        
+            /// To add new row for Bank Transaction on JournalDetails
+            
+            // Call the API to create the journal entry with details
+         const Journalresponse = await createJournalEntryWithDetails(
+              updatedValues,
+              token
+            )
+            // Check for errors in the response. if no error, show success message
+            if (Journalresponse.error || !Journalresponse.data) {
+              toast({
+                title: 'Error',
+                description: Journalresponse.error?.message || 'Error creating Journal',
+              })
+            } else {
+       
+              
+              toast({
+                title: 'Success',
+                description: 'Voucher is created successfully',
+              })
+         
+        handleModalClose();
         // Refresh the data
-        fetchExchanges()
+        fetchExchanges();
       }
     } catch (error) {
       console.error('Error updating delivery challan:', error)
@@ -301,7 +370,7 @@ const DeliveryChallan = () => {
                 min="0"
                 placeholder="Enter exchange rate"
                 value={exchangeRate}
-                onChange={(e) => setExchangeRate(e.target.value)}
+                onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
                 className="col-span-3"
               />
             </div>
