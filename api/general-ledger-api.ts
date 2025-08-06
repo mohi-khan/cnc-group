@@ -8,7 +8,8 @@ export async function getAllCoa() {
   })
 }
 
-export async function getGeneralLedgerByDate({
+export async function
+  getGeneralLedgerByDate({
   accountcode,
   fromdate,
   todate,
