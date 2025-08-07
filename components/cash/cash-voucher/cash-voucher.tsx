@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useCallback, useEffect, useState } from 'react'
 import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
@@ -24,9 +23,7 @@ import {
   type Voucher,
   VoucherTypes,
 } from '@/utils/type'
-
 import { useFieldArray, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import CashVoucherMaster from './cash-voucher-master'
 import CashVoucherDetails from './cash-voucher-details'
@@ -39,8 +36,15 @@ import {
   getAllDepartments,
   getResPartnersBySearch,
 } from '@/api/common-shared-api'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-export default function CashVoucher() {
+// Add props interface for duplication
+interface CashVoucherProps {
+  initialData?: JournalEntryWithDetails;
+  onClose?: () => void; // Callback to close the modal/popup
+}
+
+export default function CashVoucher({ initialData, onClose }: CashVoucherProps) {
   //getting userData from jotai atom component
   const router = useRouter()
   useInitializeUser()
@@ -66,7 +70,6 @@ export default function CashVoucher() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [currentVoucherType, setCurrentVoucherType] = useState<string>('')
-
   const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
     []
   )
@@ -92,20 +95,15 @@ export default function CashVoucher() {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
     }
-
     checkUserData()
-
     setIsLoadingCompanies(true)
     setIsLoadingLocations(true)
     if (userData) {
-      
       setUser(userData)
       if (userData?.userCompanies?.length > 0) {
         setCompanies(userData.userCompanies)
@@ -128,6 +126,7 @@ export default function CashVoucher() {
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)
   }
+
   //Function to get location IDs from localStorage data
   function getLocationIds(data: LocationFromLocalstorage[]): number[] {
     return data.map((location) => location.location.locationId)
@@ -150,7 +149,6 @@ export default function CashVoucher() {
           throw new Error('No data received from server')
         }
         setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-        
       } catch (error) {
         console.error('Error getting Voucher Data:', error)
         setVoucherGrid([])
@@ -159,6 +157,7 @@ export default function CashVoucher() {
     },
     [token, setVoucherGrid]
   )
+
   //Function to fetch all vouchers when companies and locations change
   // useEffect is used to fetch all vouchers when companies and locations change
   const fetchVoucherData = React.useCallback(async () => {
@@ -184,20 +183,18 @@ export default function CashVoucher() {
       fetchVoucherData()
     }
   }, [companies, locations, fetchVoucherData])
+
   //Function to filter chart of accounts based on isGroup and isCash properties
   //useEffect is used to filter the chart of accounts when it changes
   React.useEffect(() => {
     const filteredCoa = chartOfAccounts?.filter((account) => {
       return account.isGroup === false
     })
-
     const isCashCoa = chartOfAccounts?.filter((account) => {
       return account.isCash === true
     })
     setFilteredChartOfAccounts(filteredCoa || [])
     setCashCoa(isCashCoa || [])
-    
-    
   }, [chartOfAccounts])
 
   //Function to fetch chart of accounts from the API
@@ -208,7 +205,6 @@ export default function CashVoucher() {
       const response = await getAllChartOfAccounts(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting chart of accounts:', response.error)
@@ -220,7 +216,6 @@ export default function CashVoucher() {
         setChartOfAccounts([])
         return
       } else {
-        
         setChartOfAccounts(response.data)
       }
     } catch (error) {
@@ -243,7 +238,6 @@ export default function CashVoucher() {
       const response = await getAllDepartments(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting chart of accounts:', response.error)
@@ -277,7 +271,6 @@ export default function CashVoucher() {
       const response = await getAllCostCenters(token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting cost centers:', response.error)
@@ -311,7 +304,6 @@ export default function CashVoucher() {
       const response = await getResPartnersBySearch(search, token)
       if (response?.error?.status === 401) {
         router.push('/unauthorized-access')
-        
         return
       } else if (response.error || !response.data) {
         console.error('Error getting partners:', response.error)
@@ -322,7 +314,6 @@ export default function CashVoucher() {
         setPartners([])
         return
       } else {
-        
         setPartners(response.data)
       }
     } catch (error) {
@@ -352,17 +343,16 @@ export default function CashVoucher() {
   // Function to handle voucher type change from details component
   const handleVoucherTypeChange = (voucherType: string) => {
     setCurrentVoucherType(voucherType)
-    
   }
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const form = useForm<JournalEntryWithDetails>({
     //zodResolver is used to validate the form data against the JournalEntryWithDetailsSchema
     resolver: zodResolver(JournalEntryWithDetailsSchema),
-    defaultValues: {
+    defaultValues: initialData || { // Use initialData if provided
       journalEntry: {
         date: new Date().toISOString().split('T')[0],
-        journalType: '',
+        journalType: VoucherTypes.CashVoucher, // Ensure correct type
         companyId: 0,
         locationId: 0,
         currencyId: 0,
@@ -390,16 +380,19 @@ export default function CashVoucher() {
     },
   })
 
+  // Use useEffect to reset form if initialData changes (e.g., when duplicating a different voucher)
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
+
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const onSubmit = async (
     values: z.infer<typeof JournalEntryWithDetailsSchema>,
     status: 'Draft' | 'Posted'
   ) => {
-    
-    
-
     if (userData) {
-      
       setUser(userData)
     }
     // Calculate the total amount
@@ -414,7 +407,7 @@ export default function CashVoucher() {
         ...values.journalEntry,
         state: status === 'Draft' ? 0 : 1, // 0 for Draft, 1 for Posted
         notes: values.journalEntry.notes || '', // Ensure notes is always a string
-        journalType: 'Cash Voucher', // Use the dynamic voucher type
+        journalType: VoucherTypes.CashVoucher, // Use the dynamic voucher type
         amountTotal: totalAmount, // Set the calculated total amount
         exchangeRate: values.journalEntry.exchangeRate || 1,
         createdBy: user?.userId || 0,
@@ -425,7 +418,7 @@ export default function CashVoucher() {
         createdBy: user?.userId || 0,
       })),
     }
-    
+
     /// To add new row for Bank Transaction on JournalDetails
     const updateValueswithCash = {
       ...updatedValues,
@@ -468,11 +461,12 @@ export default function CashVoucher() {
       const mycompanies = getCompanyIds(companies)
       const mylocations = getLocationIds(locations)
       getallVoucher(mycompanies, mylocations)
-      
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
       })
+      onClose?.(); // Close the modal after successful submission
+
       // Reset the form after successful submission
       form.reset({
         journalEntry: {
@@ -529,7 +523,6 @@ export default function CashVoucher() {
     control: form.control,
     name: 'journalDetails',
   })
-
   //Function to add a new row to the journalDetails array
   //append is used to add a new entry to the journalDetails array in the form state
   const addDetailRow = () => {
@@ -547,7 +540,6 @@ export default function CashVoucher() {
       createdBy: 0,
     })
   }
-
   //columns is used to define the columns for the voucher list table
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -559,16 +551,15 @@ export default function CashVoucher() {
     { key: 'totalamount' as const, label: 'Total Amount' },
     { key: 'state' as const, label: 'Status' },
   ]
-
   return (
     <div className="w-full mx-auto">
       <div className="w-full mb-10 p-8">
         <h1 className="text-2xl font-bold mb-6">
-          Cash Vouchers
-         {currentVoucherType !== 'Mixed' && currentVoucherType && `(${currentVoucherType})`}
-
+          Cash Vouchers{' '}
+          {currentVoucherType !== 'Mixed' &&
+            currentVoucherType &&
+            `(${currentVoucherType})`}
         </h1>
-
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <CashVoucherMaster
@@ -576,7 +567,6 @@ export default function CashVoucher() {
               companies={companies}
               locations={locations}
             />
-
             <CashVoucherDetails
               form={form}
               fields={fields}
@@ -588,16 +578,17 @@ export default function CashVoucher() {
               onSubmit={onSubmit}
               onVoucherTypeChange={handleVoucherTypeChange}
             />
-
-            <div className="mb-6">
-              <VoucherList
-                vouchers={voucherGrid}
-                columns={columns}
-                isLoading={isLoading}
-                linkGenerator={linkGenerator}
-                itemsPerPage={10}
-              />
-            </div>
+            {!initialData && ( // Only show VoucherList if not in duplication mode
+              <div className="mb-6">
+                <VoucherList
+                  vouchers={voucherGrid}
+                  columns={columns}
+                  isLoading={isLoading}
+                  linkGenerator={linkGenerator}
+                  itemsPerPage={10}
+                />
+              </div>
+            )}
           </form>
         </Form>
       </div>

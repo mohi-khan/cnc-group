@@ -629,19 +629,28 @@ const VoucherSchemaById = z.object({
   journaltype: z.string(),
   state: z.number(),
   companyname: z.string(),
+  companyId: z.number(),
   location: z.string(),
+  locationId: z.number(),
   currency: z.string(),
+  currencyId: z.number(),
   totalamount: z.number(),
   notes: z.string(),
   id: z.number(),
   accountsname: z.string(),
+  accountId: z.number(),
   costcenter: z.string().nullable(),
+  costCenterId: z.number(),
   createdby: z.number(),
-  department: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  department: z.any().nullable(),
+  departmentID: z.number(),
+  // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
   partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
-  bankaccount: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  bankaccount: z.any().nullable(),
+  bankAccountId: z.number(),
+  // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
 })
