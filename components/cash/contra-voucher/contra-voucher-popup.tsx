@@ -1,13 +1,20 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import { Form } from '@/components/ui/form'
+import {
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormField,
+} from '@/components/ui/form'
 import { Plus } from 'lucide-react'
-
 import {
   exchangeSchema,
   type JournalEntryWithDetails,
@@ -24,39 +31,64 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
-//child component props interface to define the props for the ContraVoucherPopup component
-interface ChildComponentProps {
+// Updated interface to support both normal usage and duplication
+interface ContraVoucherPopupProps {
   fetchAllVoucher: (company: number[], location: number[]) => void
+  isOpen?: boolean // Optional for duplication mode
+  onOpenChange?: (open: boolean) => void // Optional for duplication mode
+  initialData?: JournalEntryWithDetails // Optional initial data for duplication
 }
 
-export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
+export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
   fetchAllVoucher,
+  isOpen: externalIsOpen,
+  onOpenChange,
+  initialData,
 }) => {
-  //getting userData from jotai atom component
+  // Initialize user data
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
 
-  //state variables
-  const [isOpen, setIsOpen] = useState(false)
+  // State variables
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
 
-  //getting user data from localStorage and setting it to state
+  // Determine if we're in duplication mode or normal mode
+  const isDuplicationMode = initialData !== undefined
+  const isOpen = isDuplicationMode ? (externalIsOpen ?? false) : internalIsOpen
+  const setIsOpen = isDuplicationMode
+    ? (open: boolean) => onOpenChange?.(open)
+    : setInternalIsOpen
+
+  // Get user data from localStorage and set it to state
   useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-    } else {
-      
     }
   }, [userData])
 
-  //defaultValues is used to set the default values for the form fields
-  const form = useForm<JournalEntryWithDetails>({
-    //zodResolver is used to validate the form data using the JournalEntryWithDetailsSchema
-    resolver: zodResolver(JournalEntryWithDetailsSchema),
-    defaultValues: {
+  // Create default values with useMemo to handle initialData
+  const defaultValues = useMemo(() => {
+    if (initialData) {
+      // Use initialData but ensure createdBy is set to current user
+      return {
+        ...initialData,
+        journalEntry: {
+          ...initialData.journalEntry,
+          createdBy: userData?.userId || 0,
+        },
+        journalDetails: initialData.journalDetails.map((detail) => ({
+          ...detail,
+          createdBy: userData?.userId || 0,
+        })),
+      }
+    }
+
+    // Default values for new voucher
+    return {
       journalEntry: {
         date: new Date().toISOString().split('T')[0],
         journalType: VoucherTypes.ContraVoucher,
@@ -66,35 +98,41 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         currencyId: 0,
         exchangeRate: 1,
         amountTotal: 0,
-        createdBy: userData?.userId,
+        createdBy: userData?.userId || 0,
       },
       journalDetails: [
         {
           accountId: 0,
           debit: 0,
           credit: 0,
-          createdBy: userData?.userId,
+          createdBy: userData?.userId || 0,
         },
       ],
-    },
+    }
+  }, [initialData, userData?.userId])
+
+  // Initialize form with default values
+  const form = useForm<JournalEntryWithDetails>({
+    resolver: zodResolver(JournalEntryWithDetailsSchema),
+    defaultValues,
   })
 
+  // Update form when userId changes or when initialData/defaultValues change
   useEffect(() => {
     if (userId !== null) {
-      form.setValue('journalEntry.createdBy', userId)
-      form.setValue(
-        'journalDetails',
-        form.getValues('journalDetails').map((detail) => ({
-          ...detail,
-          createdBy: userId,
-        }))
-      )
+      form.reset(defaultValues)
     }
-  }, [userId, form])
+  }, [userId, form, defaultValues])
+
+  // Reset form when popup opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(defaultValues)
+    }
+  }, [isOpen, defaultValues, form])
 
   const handleSubmit = async (data: JournalEntryWithDetails) => {
     setIsSubmitting(true)
-    
 
     const amountTotal = data.journalDetails.reduce(
       (sum, detail) => sum + Number(detail.debit),
@@ -106,7 +144,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
       journalEntry: {
         ...data.journalEntry,
         amountTotal,
-        exchangRate: data.journalEntry.exchangeRate || 1,
+        exchangeRate: data.journalEntry.exchangeRate || 1,
       },
     }
 
@@ -115,6 +153,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         submissionData,
         token
       )
+
       if (response.error || !response.data) {
         throw new Error(response.error?.message || 'Failed to create voucher')
       }
@@ -124,7 +163,7 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
         description: 'Voucher created successfully',
       })
 
-      form.reset()
+      form.reset(defaultValues)
     } catch (error) {
       console.error('Error creating voucher:', error)
       toast({
@@ -155,9 +194,13 @@ export const ContraVoucherPopup: React.FC<ChildComponentProps> = ({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" /> ADD
-      </Button>
+      {/* Only show ADD button in normal mode (not duplication mode) */}
+      {!isDuplicationMode && (
+        <Button onClick={() => setIsOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> ADD
+        </Button>
+      )}
+
       <Popup
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
