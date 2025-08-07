@@ -224,10 +224,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Cash Position',
             source: '/reports/cash-position',
           },
-          // {
-          //   name: 'Bank and Cash Reports',
-          //   source: '/reports/bank-cash-reports',
-          // },
+          {
+            name: 'FDR Reports',
+            source: '/reports/fdr-report',
+          },
           // {
           //   name: 'Fund Flow Statement',
           //   source: '/reports/fund-flow-statement',
