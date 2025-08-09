@@ -1,4 +1,8 @@
-import React from 'react'
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAtom } from 'jotai'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -7,391 +11,399 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useInitializeUser, tokenAtom } from '@/utils/user'
+import { getFdrReport } from '@/api/fdr-report-api'
+import { getAllCompanies } from '@/api/common-shared-api'
+import type { CompanyType } from '@/api/company-api'
+import Loader from '@/utils/loader'
 
-interface FDRRecord {
-  sl: number
-  fdrDate: string
+// ----- Types to support both snake_case and camelCase FDR payloads -----
+type Snake = {
+  fdr_no: string
+  fdr_date: string
+  account_no: string
+  bank: string
+  branch: string
+  face_value: number
+  interest_rate: number
+  term?: number // assumed to be months if present
+  matured_date: string
+  company: number | null
+  company_other: string | null
+  created_by?: number
+  created_at: string
+  updated_at?: string
+  last_updated_value?: number | null
+}
+type Camel = {
   fdrNo: string
+  fdrDate: string
   accountNo: string
-  bankBranch: string
-  actualFaceValue: number
-  presentFaceValue: number
-  periodDate: string
-  interest: string
+  bank: string
+  branch: string
+  faceValue: number
+  interestRate: number
+  term?: number // assumed to be months if present
+  maturedDate: string
+  company: number | null
+  companyOther: string | null
+  createdBy?: number
+  createdAt: string
+  updatedAt?: string
+  lastUpdatedValue?: number | null
+}
+type AnyFdr = Partial<Snake> & Partial<Camel>
+
+// ----- Helpers -----
+function toNumber(n: unknown): number {
+  if (typeof n === 'number') return Number.isFinite(n) ? n : 0
+  if (typeof n === 'string') {
+    const cleaned = n.replaceAll(',', '').trim()
+    const parsed = Number.parseFloat(cleaned)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+function formatCurrency(amount: unknown) {
+  return toNumber(amount).toLocaleString()
 }
 
-const nationalAccessoriesData: FDRRecord[] = [
-  {
-    sl: 1,
-    fdrDate: '10/Apr/11',
-    fdrNo: '711396842/11',
-    accountNo: '2450001035353',
-    bankBranch: 'SEBL, Halishahar Br.',
-    actualFaceValue: 1500000,
-    presentFaceValue: 7768103,
-    periodDate: '10/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 20,
-    fdrDate: '04/May/11',
-    fdrNo: '151104',
-    accountNo: '16.313.14020',
-    bankBranch: 'Dhaka Bank, Agrabad Br.',
-    actualFaceValue: 1000000,
-    presentFaceValue: 4241425,
-    periodDate: '5/Apr/25',
-    interest: '9.50%',
-  },
-  {
-    sl: 57,
-    fdrDate: '30/Aug/04',
-    fdrNo: '012395',
-    accountNo: '2450001532406',
-    bankBranch: 'SEBL, Jubilee Rd. Br.',
-    actualFaceValue: 128200,
-    presentFaceValue: 506533,
-    periodDate: '17/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 58,
-    fdrDate: '17/Feb/05',
-    fdrNo: '12394',
-    accountNo: '2450001531906',
-    bankBranch: 'SEBL, Jubilee Rd. Br.',
-    actualFaceValue: 100000,
-    presentFaceValue: 371709,
-    periodDate: '17/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 64,
-    fdrDate: '13/Aug/06',
-    fdrNo: '706291311/15/06',
-    accountNo: '2450031934',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 380177,
-    presentFaceValue: 1431026,
-    periodDate: '13/08/24',
-    interest: '9.50%',
-  },
-  {
-    sl: 75,
-    fdrDate: '06/Feb/10',
-    fdrNo: '716060141/6/10',
-    accountNo: '2450032118',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 165564,
-    presentFaceValue: 430384,
-    periodDate: '2/Mar/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 77,
-    fdrDate: '04/Mar/14',
-    fdrNo: '731195649/1/14',
-    accountNo: '2430033210',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 135000,
-    presentFaceValue: 236632,
-    periodDate: '3/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 80,
-    fdrDate: '18/Jan/17',
-    fdrNo: '21216',
-    accountNo: '0105.7030000831',
-    bankBranch: 'NRB Com, Agrabad Br.',
-    actualFaceValue: 541556,
-    presentFaceValue: 839988,
-    periodDate: '18/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 81,
-    fdrDate: '18/Jan/17',
-    fdrNo: '276344',
-    accountNo: '330073308',
-    bankBranch: 'MTBL, Agrabad Br.',
-    actualFaceValue: 335049,
-    presentFaceValue: 574640,
-    periodDate: '18/Jan/25',
-    interest: '6.50%',
-  },
-  {
-    sl: 83,
-    fdrDate: '21/Jan/18',
-    fdrNo: '748533/45/1/18',
-    accountNo: '2430033599',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 421754,
-    presentFaceValue: 596064,
-    periodDate: '21/Apr/25',
-    interest: '9.75%',
-  },
-]
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso as string
 
-const columbiaEnterpriseData: FDRRecord[] = [
-  {
-    sl: 7,
-    fdrDate: '19/Mar/13',
-    fdrNo: '1204158/346/13',
-    accountNo: '2450033182',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 2000000,
-    presentFaceValue: 4174767,
-    periodDate: '19/Mar/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 9,
-    fdrDate: '26/Dec/13',
-    fdrNo: '0007177',
-    accountNo: '0105.7030000663',
-    bankBranch: 'NRB Commercial Bank, Agrabad Br.',
-    actualFaceValue: 1500000,
-    presentFaceValue: 2928199,
-    periodDate: '26/Mar/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 12,
-    fdrDate: '04/Nov/19',
-    fdrNo: '342742',
-    accountNo: '033009142',
-    bankBranch: 'MTBL, Agrabad Br.',
-    actualFaceValue: 595833,
-    presentFaceValue: 1203575,
-    periodDate: '4/May/25',
-    interest: '7.00%',
-  },
-  {
-    sl: 22,
-    fdrDate: '05/Apr/22',
-    fdrNo: '761395/262/2022',
-    accountNo: '2430033742',
-    bankBranch: 'SEBL, Agrabad Br.',
-    actualFaceValue: 10000000,
-    presentFaceValue: 11868723,
-    periodDate: '5/Apr/25',
-    interest: '9.75%',
-  },
-  {
-    sl: 31,
-    fdrDate: '28/Apr/22',
-    fdrNo: '',
-    accountNo: '1306010120038',
-    bankBranch: 'MTBL, Agrabad Br.',
-    actualFaceValue: 10000000,
-    presentFaceValue: 11366553,
-    periodDate: '28/Apr/25',
-    interest: '7.50%',
-  },
-  {
-    sl: 32,
-    fdrDate: '28/Apr/22',
-    fdrNo: '',
-    accountNo: '1306010120047',
-    bankBranch: 'MTBL, Agrabad Br.',
-    actualFaceValue: 10000000,
-    presentFaceValue: 11365553,
-    periodDate: '28/Apr/25',
-    interest: '7.50%',
-  },
-]
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
 
-const FdrReport = () => {
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString()
+  return `${day}/${month}/${year}` // e.g. 09/08/2025
+}
+
+// Numeric months between dates for calculations
+function monthsBetween(fromISO?: string | null, toISO?: string | null): number {
+  if (!fromISO || !toISO) return 0
+  const start = new Date(fromISO)
+  const end = new Date(toISO)
+  const si = start.getTime()
+  const ei = end.getTime()
+  if (Number.isNaN(si) || Number.isNaN(ei)) return 0
+  let months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth())
+  if (end.getDate() < start.getDate()) months -= 1
+  return Math.max(0, months)
+}
+
+// New: period in months label between fdrDate and maturedDate
+function periodMonthsLabel(
+  fromISO?: string | null,
+  toISO?: string | null
+): string {
+  const months = monthsBetween(fromISO, toISO)
+  if (months <= 0) return ''
+  return `${months} ${months === 1 ? 'month' : 'months'}`
+}
+
+// Field getters to support both shapes
+const g = {
+  fdrNo: (r: AnyFdr) => r.fdr_no ?? r.fdrNo ?? '',
+  fdrDate: (r: AnyFdr) => r.fdr_date ?? r.fdrDate ?? '',
+  accountNo: (r: AnyFdr) => r.account_no ?? r.accountNo ?? '',
+  bank: (r: AnyFdr) => r.bank ?? '',
+  branch: (r: AnyFdr) => r.branch ?? '',
+  faceValue: (r: AnyFdr) => (r.face_value ?? r.faceValue ?? 0) as number,
+  interestRate: (r: AnyFdr) =>
+    (r.interest_rate ?? r.interestRate ?? 0) as number,
+  maturedDate: (r: AnyFdr) => r.matured_date ?? r.maturedDate ?? '',
+  createdAt: (r: AnyFdr) => r.created_at ?? r.createdAt ?? '',
+  companyId: (r: AnyFdr) => (r.company ?? null) as number | null,
+  companyOther: (r: AnyFdr) =>
+    (r.company_other ?? r.companyOther ?? null) as string | null,
+  term: (r: AnyFdr) => (r.term ?? undefined) as number | undefined,
+  // Present Face Value Amount (now computed via simple interest)
+  // FV = PV * (1 + r * t), where:
+  //   PV = face value (principal),
+  //   r = annual rate as decimal,
+  //   t = time in years (months/12 from FDR date to matured date; fallback to term months)
+  presentValue: (r: AnyFdr) => computeMaturityAmount(r),
+}
+
+function resolveCompanyName(row: CompanyType): string {
+  return row.companyName || `Company ${row.companyId}`
+}
+
+function companyLabel(r: AnyFdr, companyMap: Map<number, string>): string {
+  const other = g.companyOther(r)
+  if (other && other.trim().length > 0) return other.trim()
+  const id = g.companyId(r)
+  if (id !== null && id !== undefined) {
+    const name = companyMap.get(id)
+    if (name && name.trim().length > 0) return name
+    return `Company ${id}`
   }
+  return 'Unknown Company'
+}
 
-  const nationalTotal = nationalAccessoriesData.reduce(
-    (sum, record) => sum + record.actualFaceValue,
-    0
-  )
-  const nationalPresentTotal = nationalAccessoriesData.reduce(
-    (sum, record) => sum + record.presentFaceValue,
-    0
-  )
+type Group = {
+  name: string
+  rows: AnyFdr[]
+  totalActual: number
+  totalPresent: number
+}
 
-  const columbiaTotal = columbiaEnterpriseData.reduce(
-    (sum, record) => sum + record.actualFaceValue,
-    0
-  )
-  const columbiaPresentTotal = columbiaEnterpriseData.reduce(
-    (sum, record) => sum + record.presentFaceValue,
-    0
-  )
+function sortRows(rows: AnyFdr[]): AnyFdr[] {
+  return [...rows].sort((a, b) => {
+    const ad = new Date(g.fdrDate(a) || g.createdAt(a)).getTime()
+    const bd = new Date(g.fdrDate(b) || g.createdAt(b)).getTime()
+    if (Number.isNaN(ad) && Number.isNaN(bd)) return 0
+    if (Number.isNaN(ad)) return 1
+    if (Number.isNaN(bd)) return -1
+    return ad - bd
+  })
+}
 
-  const grandTotalActual = nationalTotal + columbiaTotal
-  const grandTotalPresent = nationalPresentTotal + columbiaPresentTotal
+function groupByCompany(
+  records: AnyFdr[],
+  companyMap: Map<number, string>
+): Group[] {
+  const map = new Map<string, AnyFdr[]>()
+  for (const r of records) {
+    const key = companyLabel(r, companyMap)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(r)
+  }
+  const groups: Group[] = []
+  for (const [name, rows] of map.entries()) {
+    const sorted = sortRows(rows)
+    const totalActual = sorted.reduce((s, r) => s + toNumber(g.faceValue(r)), 0)
+    const totalPresent = sorted.reduce(
+      (s, r) => s + toNumber(g.presentValue(r)),
+      0
+    )
+    groups.push({ name, rows: sorted, totalActual, totalPresent })
+  }
+  groups.sort((a, b) => a.name.localeCompare(b.name))
+  return groups
+}
+
+function calcGrandTotals(groups: Group[]) {
+  return groups.reduce(
+    (acc, g) => {
+      acc.actual += g.totalActual
+      acc.present += g.totalPresent
+      return acc
+    },
+    { actual: 0, present: 0 }
+  )
+}
+
+// Compute maturity amount (present face value amount column) using Simple Interest.
+// FV = PV * (1 + r * t)
+// t is computed (in years) from FDR date to matured date; if missing, falls back to term months; else 0.
+function computeMaturityAmount(row: AnyFdr): number {
+  const pv = toNumber(g.faceValue(row))
+  const r = toNumber(g.interestRate(row)) / 100
+  // Prefer date-based months; fallback to explicit term months if provided
+  let months = monthsBetween(g.fdrDate(row), g.maturedDate(row))
+  if (months <= 0 && typeof g.term(row) === 'number') {
+    months = Math.max(0, toNumber(g.term(row)))
+  }
+  const tYears = months / 12
+  if (pv <= 0 || r <= 0 || tYears <= 0) return pv
+  return pv * (1 + r * tYears)
+}
+
+// ----- Component -----
+export default function Page() {
+  // Uses hooks and interactivity; this is a Client Component
+  useInitializeUser()
+  const [token] = useAtom(tokenAtom)
+
+  // FDR
+  const [loadingFdr, setLoadingFdr] = useState(true)
+  const [records, setRecords] = useState<AnyFdr[]>([])
+
+  const fetchFdr = useCallback(async () => {
+    if (!token) return
+    try {
+      setLoadingFdr(true)
+      const resp = await getFdrReport(token)
+      const rows: AnyFdr[] = (resp?.data as AnyFdr[]) ?? []
+      setRecords(rows)
+    } catch (err) {
+      console.error('Error fetching FDR data:', err)
+      setRecords([])
+    } finally {
+      setLoadingFdr(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    fetchFdr()
+  }, [fetchFdr])
+
+  // Companies
+  const [companyLoading, setCompanyLoading] = useState(true)
+  const [companyData, setCompanyData] = useState<CompanyType[]>([])
+
+  const fetchCompanyData = useCallback(async () => {
+    if (!token) return
+    try {
+      setCompanyLoading(true)
+      const companies = await getAllCompanies(token)
+      setCompanyData(companies.data ? (companies.data as CompanyType[]) : [])
+    } catch (error) {
+      console.error('Error fetching company data:', error)
+      setCompanyData([])
+    } finally {
+      setCompanyLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    fetchCompanyData()
+  }, [fetchCompanyData])
+
+  // Build id -> name map
+  const companyMap = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const c of companyData) {
+      if (typeof c.companyId === 'number') {
+        map.set(c.companyId, resolveCompanyName(c))
+      }
+    }
+    return map
+  }, [companyData])
+
+  // Groups and totals
+  const groups = useMemo(
+    () => groupByCompany(records, companyMap),
+    [records, companyMap]
+  )
+  const grand = useMemo(() => calcGrandTotals(groups), [groups])
+  const isLoading = loadingFdr || companyLoading
 
   return (
-    <div className="w-full p-6 space-y-6">
+    <main className="w-full p-6 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            CNC GROUP - FDR Statement
+            {'CNC GROUP - FDR Statement'}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-8">
-            {/* National Accessories Ltd. Section */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 bg-gray-100 p-2 rounded">
-                National Accessories Ltd.
-              </h3>
-
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">
+              <Loader />
+            </div>
+          ) : groups.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              {'No FDR records found.'}
+            </div>
+          ) : (
+            <div className="space-y-8">
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
+                <Table className="border shadow-md">
+                  <TableHeader className="bg-slate-200 shadow-md">
                     <TableRow>
-                      <TableHead className="w-12">Sl #</TableHead>
-                      <TableHead>FDR Date</TableHead>
-                      <TableHead>FDR No.</TableHead>
-                      <TableHead>Account No.</TableHead>
-                      <TableHead>Bank & Branch</TableHead>
+                      <TableHead className="w-12">{'Sl #'}</TableHead>
+                      <TableHead>{'FDR Date'}</TableHead>
+                      <TableHead>{'FDR No.'}</TableHead>
+                      <TableHead>{'Account No.'}</TableHead>
+                      <TableHead>{'Bank & Branch'}</TableHead>
                       <TableHead className="text-right">
-                        Actual Face Value
+                        {'Actual Face Value'}
                       </TableHead>
                       <TableHead className="text-right">
-                        Present Face Value Amount
+                        {'Present Face Value Amount'}
                       </TableHead>
-                      <TableHead>Period Date</TableHead>
-                      <TableHead>Interest @</TableHead>
-                    </TableRow>
-                    <TableRow className="bg-gray-50 font-semibold">
-                      <TableCell colSpan={5} className="font-semibold">
-                        National Accessories Ltd. Total:
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(nationalTotal)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(nationalPresentTotal)}
-                      </TableCell>
-                      <TableCell colSpan={2}></TableCell>
+                      <TableHead>{'maturedDate'}</TableHead>
+                      <TableHead>{'Period Date'}</TableHead>
+                      <TableHead>{'Interest @'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {nationalAccessoriesData.map((record) => (
-                      <TableRow key={record.sl}>
-                        <TableCell className="font-medium">
-                          {record.sl}
-                        </TableCell>
-                        <TableCell>{record.fdrDate}</TableCell>
-                        <TableCell>{record.fdrNo}</TableCell>
-                        <TableCell>{record.accountNo}</TableCell>
-                        <TableCell>{record.bankBranch}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(record.actualFaceValue)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(record.presentFaceValue)}
-                        </TableCell>
-                        <TableCell>{record.periodDate}</TableCell>
-                        <TableCell>{record.interest}</TableCell>
-                      </TableRow>
+                    {groups.map((gGroup) => (
+                      <FragmentGroup key={gGroup.name} group={gGroup} />
                     ))}
                   </TableBody>
                 </Table>
               </div>
-            </div>
 
-            {/* Columbia Enterprise Ltd. Section */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 bg-gray-100 p-2 rounded">
-                Columbia Enterprise Ltd.
-              </h3>
-
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">Sl #</TableHead>
-                      <TableHead>FDR Date</TableHead>
-                      <TableHead>FDR No.</TableHead>
-                      <TableHead>Account No.</TableHead>
-                      <TableHead>Bank & Branch</TableHead>
-                      <TableHead className="text-right">
-                        Actual Face Value
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Present Face Value Amount
-                      </TableHead>
-                      <TableHead>Period Date</TableHead>
-                      <TableHead>Interest @</TableHead>
-                    </TableRow>
-                    <TableRow className="bg-gray-50 font-semibold">
-                      <TableCell colSpan={5} className="font-semibold">
-                        Columbia Enterprise Ltd. Total:
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(columbiaTotal)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(columbiaPresentTotal)}
-                      </TableCell>
-                      <TableCell colSpan={2}></TableCell>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {columbiaEnterpriseData.map((record) => (
-                      <TableRow key={record.sl}>
-                        <TableCell className="font-medium">
-                          {record.sl}
+              <div className="mt-8">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableBody>
+                      <TableRow className="bg-yellow-200 hover:bg-yellow-200 font-bold">
+                        <TableCell className="font-bold">
+                          {'Grand Total'}
                         </TableCell>
-                        <TableCell>{record.fdrDate}</TableCell>
-                        <TableCell>{record.fdrNo}</TableCell>
-                        <TableCell>{record.accountNo}</TableCell>
-                        <TableCell>{record.bankBranch}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(record.actualFaceValue)}
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
+                        <TableCell className="text-right font-bold">
+                          {formatCurrency(grand.actual)}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(record.presentFaceValue)}
+                        <TableCell className="text-right font-bold">
+                          {formatCurrency(grand.present)}
                         </TableCell>
-                        <TableCell>{record.periodDate}</TableCell>
-                        <TableCell>{record.interest}</TableCell>
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
-
-            {/* Grand Total Section */}
-            <div className="mt-8">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableBody>
-                    <TableRow className="bg-yellow-200 hover:bg-yellow-200 font-bold">
-                      <TableCell className="font-bold">Grand Total</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right font-bold">
-                        {formatCurrency(grandTotalActual)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        {formatCurrency(grandTotalPresent)}
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }
 
-export default FdrReport
+function FragmentGroup({ group }: { group: Group }) {
+  return (
+    <>
+      {/* Per-company total row (kept in TableBody) */}
+      <TableRow className=" border-2 font-bold">
+        <TableCell colSpan={5} className="font-semibold ">
+          {group.name + ' Total:'}
+        </TableCell>
+        <TableCell className="text-right font-semibold">
+          {formatCurrency(group.totalActual)}
+        </TableCell>
+        <TableCell className="text-right font-semibold">
+          {formatCurrency(group.totalPresent)}
+        </TableCell>
+        <TableCell colSpan={2}></TableCell>
+      </TableRow>
+      {/* Company rows */}
+      {group.rows.map((r, idx) => {
+        const bankBranch = [g.bank(r), g.branch(r)].filter(Boolean).join(', ')
+        return (
+          <TableRow key={`${group.name}-${g.fdrNo(r)}-${idx}`}>
+            <TableCell className="font-medium">{idx + 1}</TableCell>
+            <TableCell>{formatDate(g.fdrDate(r))}</TableCell>
+            <TableCell>{g.fdrNo(r)}</TableCell>
+            <TableCell>{g.accountNo(r)}</TableCell>
+            <TableCell>{bankBranch}</TableCell>
+            <TableCell className="text-right">
+              {formatCurrency(g.faceValue(r))}
+            </TableCell>
+            <TableCell className="text-right">
+              {formatCurrency(g.presentValue(r))}
+            </TableCell>
+            <TableCell>{formatDate(g.maturedDate(r))}</TableCell>
+            <TableCell>
+              {periodMonthsLabel(g.fdrDate(r), g.maturedDate(r))}
+            </TableCell>
+            <TableCell>{`${toNumber(g.interestRate(r)).toFixed(2)}%`}</TableCell>
+          </TableRow>
+        )
+      })}
+    </>
+  )
+}
