@@ -1740,3 +1740,24 @@ export interface NewFdrValueUpdate {
   updateDate: string;  // input as string (e.g., "2025-08-03")
   createdBy: number;
 }
+
+// get Fdr Report type
+export interface GetFdrReport {
+  fdr_no: string;
+  fdr_date: string; // ISO date format (YYYY-MM-DD)
+  account_no: string;
+  bank: string;
+  branch: string;
+  face_value: number;
+  interest_rate: number;
+  term: number;
+  matured_date: string; // ISO date format
+  company: number | null;
+  company_other: string | null;
+  created_by: number;
+  created_at: string; // DateTime string
+  updated_at: string; // DateTime string
+  last_updated_value: number | null;
+  last_update_date: string | null; // Date only
+}
+
