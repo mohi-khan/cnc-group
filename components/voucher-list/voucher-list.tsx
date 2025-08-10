@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { ArrowUpDown } from 'lucide-react'
-
 import {
   Table,
   TableBody,
@@ -30,11 +29,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-
 import Loader from '@/utils/loader'
 import { useInitializeUser, tokenAtom, userDataAtom } from '@/utils/user'
 import { toast } from '@/hooks/use-toast'
-
 import { makePostJournal } from '@/api/vouchers-api'
 import type { VoucherById } from '@/utils/type'
 import VoucherEditContent from './voucher-edit-content'
@@ -57,6 +54,7 @@ interface JournalDetail {
   bankaccountid?: number | null
   updatedBy?: number | null
 }
+
 interface Voucher {
   voucherid: number
   voucherno: string
@@ -70,10 +68,12 @@ interface Voucher {
   journaltype: string
   journalDetails?: JournalDetail[]
 }
+
 export interface Column {
   key: keyof Voucher
   label: string
 }
+
 interface VoucherListProps {
   vouchers: Voucher[]
   columns: Column[]
@@ -96,7 +96,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const [currentPage, setCurrentPage] = useState(1)
   const [sortField, setSortField] = useState<keyof Voucher>('voucherno')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -153,7 +152,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const handlePostJournal = useCallback(
     async (voucherId: number) => {
       if (!userData?.userId || !token) return
-
       try {
         setIsPosting((prev) => ({ ...prev, [voucherId]: true }))
         const response = await makePostJournal(
@@ -225,6 +223,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
           return
         }
         setEditVoucherData(response.data as VoucherById[])
+        console.log('🚀 ~ VoucherList ~ response.data:', response.data)
       } catch (error) {
         console.error('Error fetching voucher details:', error)
         toast({
@@ -253,9 +252,11 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const handlePreviousPage = useCallback(() => {
     setCurrentPage((prev) => Math.max(prev - 1, 1))
   }, [])
+
   const handleNextPage = useCallback(() => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
   }, [totalPages])
+
   const handlePageClick = useCallback((page: number) => {
     setCurrentPage(page)
   }, [])
@@ -374,7 +375,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
           )}
         </TableBody>
       </Table>
-
       {totalPages > 1 && (
         <Pagination className="mt-4">
           <PaginationContent>
@@ -413,35 +413,73 @@ const VoucherList: React.FC<VoucherListProps> = ({
         </Pagination>
       )}
 
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-7xl p-0">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle>
-              Edit Voucher {editVoucherId ? `#${editVoucherId}` : ''}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-6">
-            {isEditLoading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader />
+      {/* Conditionally render the entire popup structure based on isEditOpen */}
+      {isEditOpen && (
+        <>
+          {editVoucherData?.[0]?.journaltype !== 'Journal Voucher' &&
+          editVoucherData?.[0]?.journaltype !== 'Contra Voucher' ? (
+            // For Cash/Bank Vouchers, VoucherList provides the Dialog
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogContent className="max-w-7xl p-0">
+                <DialogHeader >
+                  <DialogTitle className="px-6 pt-6 text-2xl">
+                    {editVoucherData?.[0]?.journaltype === 'Bank Voucher' && <span>Bank Voucher</span>}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="p-6">
+                  {isEditLoading && (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader />
+                    </div>
+                  )}
+                  {!isEditLoading &&
+                    editVoucherData &&
+                    userData?.userId != null && (
+                      <VoucherEditContent
+                        voucherData={editVoucherData}
+                        userId={userData.userId}
+                        onClose={() => setIsEditOpen(false)}
+                        isOpen={isEditOpen} // Pass isOpen prop
+                      />
+                    )}
+                  {!isEditLoading && !editVoucherData && (
+                    <p className="text-sm text-muted-foreground">
+                      Unable to load voucher details.
+                    </p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            // For Journal/Contra Vouchers, VoucherEditContent renders its own Dialog.
+            // This div provides a title and loading state, and VoucherEditContent will render the actual popup.
+            <div className="max-w-7xl p-0">
+              <div className="p-6">
+                {isEditLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader />
+                  </div>
+                )}
+                {!isEditLoading &&
+                  editVoucherData &&
+                  userData?.userId != null && (
+                    <VoucherEditContent
+                      voucherData={editVoucherData}
+                      userId={userData.userId}
+                      onClose={() => setIsEditOpen(false)}
+                      isOpen={isEditOpen} // Pass isOpen prop
+                    />
+                  )}
+                {!isEditLoading && !editVoucherData && (
+                  <p className="text-sm text-muted-foreground">
+                    Unable to load voucher details.
+                  </p>
+                )}
               </div>
-            )}
-            {!isEditLoading && editVoucherData && userData?.userId != null && (
-              <VoucherEditContent
-                voucherData={editVoucherData}
-                userId={userData.userId}
-                onClose={() => setIsEditOpen(false)}
-                onEdited={handleEdited}
-              />
-            )}
-            {!isEditLoading && !editVoucherData && (
-              <p className="text-sm text-muted-foreground">
-                Unable to load voucher details.
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </>
+      )}
     </>
   )
 }

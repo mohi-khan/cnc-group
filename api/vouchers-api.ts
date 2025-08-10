@@ -36,8 +36,6 @@ export async function createJournalEntryWithDetails(
 export async function editJournalEntryWithDetails(
   data: JournalEntryWithDetails, token: string
 ) {
-  
-  
   return fetchApi<JournalEntryWithDetails>({
     url: 'api/journal/edit',
     method: 'PATCH',

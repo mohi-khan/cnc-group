@@ -101,6 +101,7 @@ const VoucherDuplicationContent: React.FC<VoucherDuplicationContentProps> = ({
     async (data: JournalEntryWithDetails, resetForm: () => void) => {
       try {
         const response = await createJournalEntryWithDetails(data, token)
+        console.log("🚀 ~ VoucherDuplicationContent ~ data:", data)
         if (response.error || !response.data) {
           throw new Error(response.error?.message || 'Failed to create voucher')
         }
@@ -133,7 +134,7 @@ const VoucherDuplicationContent: React.FC<VoucherDuplicationContentProps> = ({
 
   switch (voucherType) {
     case VoucherTypes.CashVoucher:
-      return <CashVoucher initialData={initialFormData} onClose={onClose} />
+      return <CashVoucher initialData={initialFormData} onClose={onClose} isEdit={false}/>
     case VoucherTypes.BankVoucher:
       return <BankVoucher initialData={initialFormData} onClose={onClose} />
     case VoucherTypes.JournalVoucher:
