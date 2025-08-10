@@ -33,6 +33,21 @@ export async function createJournalEntryWithDetails(
   })
 }
 
+export async function editJournalEntryWithDetails(
+  data: JournalEntryWithDetails, token: string
+) {
+  
+  
+  return fetchApi<JournalEntryWithDetails>({
+    url: 'api/journal/edit',
+    method: 'PATCH',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+    },
+  })
+}
+
 export async function editJournalDetailsNotes(
   data: EditJournalEditNotesType,
   token: string
