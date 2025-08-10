@@ -4,6 +4,7 @@ import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
 import {
   createJournalEntryWithDetails,
+  editJournalEntryWithDetails,
   getAllVoucher,
 } from '@/api/vouchers-api'
 import { toast } from '@/hooks/use-toast'
@@ -40,11 +41,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 // Add props interface for duplication
 interface CashVoucherProps {
-  initialData?: JournalEntryWithDetails;
-  onClose?: () => void; // Callback to close the modal/popup
+  initialData?: JournalEntryWithDetails
+  onClose?: () => void // Callback to close the modal/popup
+  isEdit: boolean
 }
 
-export default function CashVoucher({ initialData, onClose }: CashVoucherProps) {
+export default function CashVoucher({
+  initialData,
+  onClose,
+  isEdit,
+}: CashVoucherProps) {
   //getting userData from jotai atom component
   const router = useRouter()
   useInitializeUser()
@@ -349,7 +355,8 @@ export default function CashVoucher({ initialData, onClose }: CashVoucherProps) 
   const form = useForm<JournalEntryWithDetails>({
     //zodResolver is used to validate the form data against the JournalEntryWithDetailsSchema
     resolver: zodResolver(JournalEntryWithDetailsSchema),
-    defaultValues: initialData || { // Use initialData if provided
+    defaultValues: initialData || {
+      // Use initialData if provided
       journalEntry: {
         date: new Date().toISOString().split('T')[0],
         journalType: VoucherTypes.CashVoucher, // Ensure correct type
@@ -383,9 +390,9 @@ export default function CashVoucher({ initialData, onClose }: CashVoucherProps) 
   // Use useEffect to reset form if initialData changes (e.g., when duplicating a different voucher)
   useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      form.reset(initialData)
     }
-  }, [initialData, form]);
+  }, [initialData, form])
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const onSubmit = async (
@@ -447,11 +454,14 @@ export default function CashVoucher({ initialData, onClose }: CashVoucherProps) 
       ],
     }
     // Call the API to create the journal entry with details
-    const response = await createJournalEntryWithDetails(
-      updateValueswithCash,
-      token
-    )
-    // Check for errors in the response. if no error, show success message
+
+    if (isEdit === true) {
+      const response = await editJournalEntryWithDetails(
+        updateValueswithCash,
+        token
+      )
+      console.log("🚀 ~ onSubmit ~ updateValueswithCash:", updateValueswithCash)
+      // Check for errors in the response. if no error, show success message
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -463,9 +473,9 @@ export default function CashVoucher({ initialData, onClose }: CashVoucherProps) 
       getallVoucher(mycompanies, mylocations)
       toast({
         title: 'Success',
-        description: 'Voucher is created successfully',
+        description: 'Voucher is edited successfully',
       })
-      onClose?.(); // Close the modal after successful submission
+      onClose?.() // Close the modal after successful submission
 
       // Reset the form after successful submission
       form.reset({
@@ -514,6 +524,76 @@ export default function CashVoucher({ initialData, onClose }: CashVoucherProps) 
       // Reset voucher type to default
       setCurrentVoucherType('')
     }
+    } else {
+      const response = await createJournalEntryWithDetails(
+        updateValueswithCash,
+        token
+      )
+      // Check for errors in the response. if no error, show success message
+    if (response.error || !response.data) {
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Error creating Journal',
+      })
+    } else {
+      const mycompanies = getCompanyIds(companies)
+      const mylocations = getLocationIds(locations)
+      getallVoucher(mycompanies, mylocations)
+      toast({
+        title: 'Success',
+        description: 'Voucher is created successfully',
+      })
+      onClose?.() // Close the modal after successful submission
+
+      // Reset the form after successful submission
+      form.reset({
+        journalEntry: {
+          date: new Date().toISOString().split('T')[0],
+          journalType: '',
+          companyId: 0,
+          locationId: 0,
+          currencyId: 0,
+          amountTotal: 0,
+          notes: '',
+          createdBy: 0,
+        },
+        journalDetails: [
+          {
+            accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+            costCenterId: null,
+            departmentId: null,
+            debit: 0,
+            credit: 0,
+            analyticTags: null,
+            taxId: null,
+            resPartnerId: null,
+            notes: '',
+            type: 'Receipt', // Default type set to 'Receipt'
+            createdBy: 0,
+          },
+        ],
+      })
+      // remove all the rows from journalDetails
+      remove()
+      // set the default value for journalDetails to the first row
+      append({
+        accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+        costCenterId: null,
+        departmentId: null,
+        debit: 0,
+        credit: 0,
+        analyticTags: null,
+        taxId: null,
+        resPartnerId: null,
+        notes: '',
+        type: 'Receipt', // Default type set to 'Receipt'
+        createdBy: 0,
+      })
+      // Reset voucher type to default
+      setCurrentVoucherType('')
+    }
+    }
+    
   }
   //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
   const { fields, append, remove } = useFieldArray<
