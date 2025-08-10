@@ -1,22 +1,45 @@
 'use client'
 
 import type React from 'react'
-import { useCallback, useMemo, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { useAtom } from 'jotai'
-import { tokenAtom } from '@/utils/user'
-import { VoucherTypes } from '@/utils/type' // Import VoucherTypes
-
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
+import { JournalEntryWithDetailsSchema, VoucherTypes } from '@/utils/type'
 import { editJournalMasterWithDetail } from '@/api/journal-voucher-api'
-
-// Types
-import type { VoucherById, JournalEntryWithDetails } from '@/utils/type'
-
-// Existing UI flows
-import CashVoucher from '@/components/cash/cash-voucher/cash-voucher'
-import BankVoucher from '@/components/bank/bank-vouchers/bank-vouchers'
-import { JournalVoucherPopup } from '@/components/accounting/journal-voucher/journal-voucher-popup'
-import { ContraVoucherPopup } from '@/components/cash/contra-voucher/contra-voucher-popup'
+import type {
+  AccountsHead,
+  CompanyFromLocalstorage,
+  CostCenter,
+  CurrencyType,
+  GetDepartment,
+  JournalEntryWithDetails,
+  LocationFromLocalstorage,
+  ResPartner,
+  VoucherById,
+} from '@/utils/type'
+import CashVoucherMaster from '@/components/cash/cash-voucher/cash-voucher-master'
+import CashVoucherDetails from '@/components/cash/cash-voucher/cash-voucher-details'
+import BankVoucherMaster from '@/components/bank/bank-vouchers/bank-voucher-master'
+import BankVoucherDetails from '@/components/bank/bank-vouchers/bank-voucher-details'
+import { JournalVoucherMasterSection } from '@/components/accounting/journal-voucher/journal-voucher-master-section'
+import { JournalVoucherDetailsSection } from '@/components/accounting/journal-voucher/journal-voucher-details-section'
+import { JournalVoucherSubmit } from '@/components/accounting/journal-voucher/journal-voucher-submit'
+import { ContraVoucherMasterSection } from '@/components/cash/contra-voucher/contra-voucher-master-section'
+import { ContraVoucherDetailsSection } from '@/components/cash/contra-voucher/contra-voucher-details-section'
+import { ContraVoucherSubmit } from '@/components/cash/contra-voucher/contra-voucher-submit'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { ComboboxItem } from '@/utils/custom-combobox-with-api'
+import { useRouter } from 'next/navigation'
+import {
+  getAllChartOfAccounts,
+  getAllCostCenters,
+  getAllCurrency,
+  getAllDepartments,
+  getResPartnersBySearch,
+} from '@/api/common-shared-api'
+import { Button } from '@/components/ui/button'
 
 interface VoucherEditContentProps {
   voucherData: VoucherById[]
@@ -26,13 +49,7 @@ interface VoucherEditContentProps {
   onEdited?: (voucherId: number) => void
 }
 
-/**
- * Transform VoucherById[] (existing voucher rows) into JournalEntryWithDetails
- * suitable for the popup initialData when editing.
- * - Preserves original date, journalType, and state.
- * - Computes amountTotal from lines.
- * - Attempts to keep partner/bank/department/cost center mapping.
- */
+// This function is now a pure utility function, no hooks inside
 function transformVoucherDataForEdit(
   voucherData: VoucherById[],
   userId: number
@@ -59,11 +76,9 @@ function transformVoucherDataForEdit(
   const amountTotal = Math.max(totalDebit, totalCredit)
 
   const journalDetails = voucherData.map((detail) => ({
-    // Note: Many popups don't require the detail id in the initialData shape.
-    // We keep only what the popup needs. We'll re-inject IDs on submit.
     accountId: detail.accountId || 0,
-    costCenterId: (detail.costCenterId as number | null | undefined) ?? 0,
-    departmentId: (detail.departmentID as number | null | undefined) ?? 0,
+    costCenterId: (detail.costCenterId as number | null | undefined) ?? null,
+    departmentId: (detail.departmentID as number | null | undefined) ?? null,
     debit: detail.debit || 0,
     credit: detail.credit || 0,
     analyticTags: null,
@@ -72,8 +87,10 @@ function transformVoucherDataForEdit(
       (detail as any).resPartnerId ?? (detail as any).partner ?? null,
     notes: (detail as any).detail_notes || '',
     type: 'Receipt', // Often ignored for Journal, required for some cash flows; leave default.
-    bankAccountId: (detail as any).bankAccountId || 0,
+    bankAccountId: (detail as any).bankAccountId || null,
     createdBy: userId,
+    balance: (detail as any).balance || 0,
+    updatedBy: (detail as any).updatedBy || userId,
   }))
 
   const initial: JournalEntryWithDetails = {
@@ -106,23 +123,30 @@ function transformVoucherDataForEdit(
   }
 }
 
-/**
- * VoucherEditContent
- * - Opens the appropriate popup pre-filled with existing voucher data.
- * - On submit (Journal flow), calls editJournalMasterWithDetail with proper API payload.
- * - Cash/Bank/Contra flows are rendered with initialData and onClose.
- */
 const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
   voucherData,
   userId,
   onClose,
   onEdited,
 }) => {
-  // Hooks at top level
+  // Initialize user data and get token
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Prepare initial data and meta
+  // States for fetched data
+  const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+  const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+  const [currency, setCurrency] = useState<CurrencyType[]>([])
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
+  const [departments, setDepartments] = useState<GetDepartment[]>([])
+  const [partners, setPartners] = useState<ResPartner[]>([])
+
+  // Prepare initial data and meta using the pure transform function
   const { initial, meta } = useMemo(
     () => transformVoucherDataForEdit(voucherData, userId),
     [voucherData, userId]
@@ -131,17 +155,229 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
   const voucherType =
     (initial?.journalEntry.journalType as unknown as VoucherTypes) ?? null
 
-  // Keep a reference array for detail IDs to include in edit payload if available
-  const originalDetails = voucherData
-
-  // Dummy fetch for Contra popups (refresh hook for parent if needed)
-  const dummyFetchAllVoucher = useCallback(
-    (_company: number[], _location: number[]) => {
-      // Optionally trigger parent refresh here
-      // This is a placeholder to match ContraVoucherPopup props
+  // React Hook Form setup
+  const form = useForm<JournalEntryWithDetails>({
+    resolver: zodResolver(JournalEntryWithDetailsSchema),
+    defaultValues: initial || {
+      journalEntry: {
+        date: new Date().toISOString().split('T')[0],
+        journalType: VoucherTypes.JournalVoucher, // Default to JournalVoucher if no initial data
+        companyId: 0,
+        locationId: 0,
+        currencyId: 1,
+        amountTotal: 0,
+        exchangeRate: 1,
+        payTo: '',
+        notes: '',
+        createdBy: userId,
+        state: 0,
+      },
+      journalDetails: [
+        {
+          accountId: 0,
+          costCenterId: null,
+          departmentId: null,
+          debit: 0,
+          credit: 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: '',
+          type: 'Receipt',
+          bankaccountid: null,
+          createdBy: userId,
+          // balance: 0,
+          // updatedBy: userId,
+        },
+      ],
     },
-    []
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'journalDetails',
+  })
+
+  // Fetch user companies and locations
+  const fetchUserData = useCallback(() => {
+    if (userData) {
+      setCompanies(userData.userCompanies)
+      setLocations(userData.userLocations)
+    }
+  }, [userData])
+
+  // Function to fetch currency data
+  const fetchCurrency = useCallback(async () => {
+    if (!token) return
+    const data = await getAllCurrency(token)
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (data.error || !data.data) {
+      console.error('Error getting currency:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get currency',
+      })
+    } else {
+      setCurrency(data.data)
+    }
+  }, [token, router])
+
+  // Fetching chart of accounts data
+  const fetchChartOfAccounts = useCallback(async () => {
+    if (!token) return
+    const response = await getAllChartOfAccounts(token)
+    if (response.error || !response.data) {
+      console.error('Error getting Chart Of accounts:', response.error)
+      toast({
+        title: 'Error',
+        description:
+          response.error?.message || 'Failed to get Chart Of accounts',
+      })
+    } else {
+      const filteredCoa = response.data?.filter((account) => {
+        return account.isGroup === false
+      })
+      setChartOfAccounts(filteredCoa)
+    }
+  }, [token])
+
+  // Fetching cost centers data
+  const fetchCostCenters = useCallback(async () => {
+    if (!token) return
+    const data = await getAllCostCenters(token)
+    if (data.error || !data.data) {
+      console.error('Error getting cost centers:', data.error)
+      toast({
+        title: 'Error',
+        description: data.error?.message || 'Failed to get cost centers',
+      })
+    } else {
+      setCostCenters(data.data)
+    }
+  }, [token])
+
+  // Fetching departments data
+  const fetchDepartments = useCallback(async () => {
+    if (!token) return
+    const response = await getAllDepartments(token)
+    if (response.error || !response.data) {
+      console.error('Error getting departments:', response.error)
+      toast({
+        title: 'Error',
+        description: response.error?.message || 'Failed to get departments',
+      })
+    } else {
+      setDepartments(response.data)
+    }
+  }, [token])
+
+  const fetchgetResPartner = useCallback(async () => {
+    const search = ''
+    if (!token) return
+    try {
+      const response = await getResPartnersBySearch(search, token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting partners:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to load partners',
+        })
+        setPartners([])
+        return
+      } else {
+        setPartners(response.data)
+      }
+    } catch (error) {
+      console.error('Error getting partners:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load partners',
+      })
+      setPartners([])
+    }
+  }, [token, router])
+
+  // Effect to fetch all necessary data on component mount
+  useEffect(() => {
+    fetchUserData()
+    fetchCurrency()
+    fetchChartOfAccounts()
+    fetchCostCenters()
+    fetchDepartments()
+    fetchgetResPartner()
+  }, [
+    fetchUserData,
+    fetchCurrency,
+    fetchChartOfAccounts,
+    fetchCostCenters,
+    fetchDepartments,
+    fetchgetResPartner,
+  ])
+
+  // Function to search partners for combobox (if needed by child components)
+  const searchPartners = useCallback(
+    async (query: string): Promise<ComboboxItem[]> => {
+      try {
+        const response = await getResPartnersBySearch(query, token)
+        if (response.error || !response.data) {
+          console.error('Error fetching partners:', response.error)
+          return []
+        }
+        return response.data.map((partner) => ({
+          id: partner.id.toString(),
+          name: partner.name || 'Unnamed Partner',
+        }))
+      } catch (error) {
+        console.error('Error fetching partners:', error)
+        return []
+      }
+    },
+    [token]
   )
+
+  // State for BankVoucher (simulating external state, now using fetched partners)
+  const [bankFormState, setBankFormState] = useState({
+    partners: partners, // Use fetched partners
+    comapanies: companies,
+    locations: locations,
+  })
+
+  // Update bankFormState when partners data changes
+  useEffect(() => {
+    setBankFormState((prev) => ({ ...prev, partners: partners }))
+  }, [partners])
+
+  // Handlers for dynamic detail rows
+  const addDetailRow = useCallback(() => {
+    append({
+      accountId: 0,
+      costCenterId: null,
+      departmentId: null,
+      debit: 0,
+      credit: 0,
+      analyticTags: null,
+      taxId: null,
+      resPartnerId: null,
+      notes: '',
+      type: 'Receipt',
+      bankaccountid: null,
+      createdBy: userId,
+      // balance: 0,
+      // updatedBy: userId,
+    })
+  }, [append, userId])
+
+  const addEntry = addDetailRow // Alias for JournalVoucherDetailsSection
+  const removeEntry = useCallback((index: number) => remove(index), [remove])
+
+  const handleVoucherTypeChange = useCallback((type: string) => {
+    console.log('Voucher type changed to:', type)
+  }, [])
 
   // Submit handler specifically for JournalVoucherPopup editing
   const handleJournalEditSubmit = useCallback(
@@ -154,28 +390,13 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
         })
         return
       }
-
       const headerVoucherId =
         meta.voucherId ??
         (voucherData[0] as any)?.voucherId ??
         (voucherData[0] as any)?.voucherid
-
       try {
         setIsSubmitting(true)
-
-        // Build API payload similar to your VoucherList onSubmit
         const apiData = {
-          id: headerVoucherId,
-          voucherid: headerVoucherId,
-          voucherno: meta.voucherNo || '',
-          date: data.journalEntry.date,
-          notes: data.journalEntry.notes,
-          companyname: meta.companyname || '',
-          location: meta.location || '',
-          currency: meta.currency || '',
-          totalamount: data.journalEntry.amountTotal,
-          journaltype: data.journalEntry.journalType,
-
           journalEntry: {
             id: headerVoucherId,
             voucherNo: meta.voucherNo || '',
@@ -193,64 +414,28 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
             payTo: data.journalEntry.payTo ?? '',
             reference: meta.reference ?? '',
           },
-
           journalDetails: data.journalDetails.map((detail, idx) => {
-            // Try to preserve original detail id if present
-            const original = originalDetails[idx] as any
-            const originalDetailId =
-              original?.detailId ?? original?.id ?? undefined
-
-            // Some shapes include balance as string/number; normalize to number
-            const toNumberOrZero = (maybe: unknown) => {
-              if (typeof maybe === 'number') return maybe
-              if (maybe === undefined || maybe === null || maybe === '')
-                return 0
-              const n = Number(maybe)
-              return Number.isFinite(n) ? n : 0
-            }
-
             return {
-              id:
-                typeof originalDetailId === 'number'
-                  ? originalDetailId
-                  : idx + 1,
+              id: idx + 1,
               voucherId: headerVoucherId,
               accountId: detail.accountId,
               costCenterId:
-                (detail as any).costCenterId !== undefined
-                  ? (detail as any).costCenterId
-                  : null,
+                detail.costCenterId !== undefined ? detail.costCenterId : null,
               departmentId:
-                (detail as any).departmentId !== undefined
-                  ? (detail as any).departmentId
-                  : null,
+                detail.departmentId !== undefined ? detail.departmentId : null,
               resPartnerId:
-                (detail as any).resPartnerId !== undefined
-                  ? (detail as any).resPartnerId
-                  : null,
+                detail.resPartnerId !== undefined ? detail.resPartnerId : null,
               debit: detail.debit,
               credit: detail.credit,
-              notes: (detail as any).notes ?? '',
-              analyticTags: (detail as any).analyticTags ?? null,
-              taxId:
-                (detail as any).taxId !== undefined
-                  ? (detail as any).taxId
-                  : null,
-              createdBy: (detail as any).createdBy ?? userId,
-              balance: toNumberOrZero((detail as any).balance),
-              bankaccountid:
-                (detail as any).bankAccountId ??
-                (detail as any).bankaccountid ??
-                null,
-              updatedBy:
-                typeof (detail as any).updatedBy === 'number'
-                  ? (detail as any).updatedBy
-                  : ((detail as any).createdBy ?? userId),
+              notes: detail.notes ?? '',
+              analyticTags: detail.analyticTags ?? null,
+              taxId: detail.taxId !== undefined ? detail.taxId : null,
+              createdBy: detail.createdBy ?? userId,
             }
           }),
         }
-
         const response = await editJournalMasterWithDetail(apiData, token)
+        console.log('🚀 ~ VoucherEditContent ~ apiData:', apiData)
         if (response.error) {
           toast({
             title: 'Error',
@@ -259,12 +444,10 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
           })
           return
         }
-
         toast({
           title: 'Success',
           description: 'Voucher updated successfully',
         })
-
         resetForm()
         onEdited?.(headerVoucherId as number)
         onClose()
@@ -279,7 +462,52 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
         setIsSubmitting(false)
       }
     },
-    [meta, originalDetails, token, userId, voucherData, onClose, onEdited]
+    [meta, voucherData, token, userId, onClose, onEdited]
+  )
+
+  // Generic onSubmit handler for all voucher types
+  const onSubmit = useCallback(
+    async (data: JournalEntryWithDetails) => {
+      switch (voucherType) {
+        case VoucherTypes.JournalVoucher:
+          await handleJournalEditSubmit(data, form.reset)
+          break
+        case VoucherTypes.CashVoucher:
+          // Placeholder for Cash Voucher submission logic
+          console.log('Submitting Cash Voucher:', data)
+          toast({
+            title: 'Cash Voucher Submitted (Placeholder)',
+            description: 'This is a dummy submission.',
+          })
+          onClose()
+          break
+        case VoucherTypes.BankVoucher:
+          // Placeholder for Bank Voucher submission logic
+          console.log('Submitting Bank Voucher:', data)
+          toast({
+            title: 'Bank Voucher Submitted (Placeholder)',
+            description: 'This is a dummy submission.',
+          })
+          onClose()
+          break
+        case VoucherTypes.ContraVoucher:
+          // Placeholder for Contra Voucher submission logic
+          console.log('Submitting Contra Voucher:', data)
+          toast({
+            title: 'Contra Voucher Submitted (Placeholder)',
+            description: 'This is a dummy submission.',
+          })
+          onClose()
+          break
+        default:
+          toast({
+            title: 'Error',
+            description: 'Unknown voucher type for submission.',
+            variant: 'destructive',
+          })
+      }
+    },
+    [voucherType, handleJournalEditSubmit, form.reset, onClose]
   )
 
   if (!initial || !voucherType) {
@@ -293,35 +521,103 @@ const VoucherEditContent: React.FC<VoucherEditContentProps> = ({
   // Render the appropriate popup/component for editing
   switch (voucherType) {
     case VoucherTypes.CashVoucher:
-      // Assuming CashVoucher can handle initialData for editing.
-      return <CashVoucher initialData={initial} onClose={onClose} />
-
+      return (
+        <div>
+          <CashVoucherMaster
+            form={form}
+            companies={companies}
+            locations={locations}
+          />
+          <CashVoucherDetails
+            form={form}
+            fields={fields}
+            filteredChartOfAccounts={chartOfAccounts} // Use fetched chartOfAccounts
+            costCenters={costCenters} // Use fetched costCenters
+            departments={departments} // Use fetched departments
+            partners={partners} // Use fetched partners
+            addDetailRow={addDetailRow}
+            onSubmit={form.handleSubmit(onSubmit)} // Pass the form's handleSubmit
+            onVoucherTypeChange={handleVoucherTypeChange}
+          />
+        </div>
+      )
     case VoucherTypes.BankVoucher:
-      // Assuming BankVoucher can handle initialData for editing.
-      return <BankVoucher initialData={initial} onClose={onClose} />
-
+      return (
+        <div>
+          <BankVoucherMaster
+            form={form}
+            formState={bankFormState}
+            requisition={undefined} // Assuming requisition is not needed for edit or is handled internally
+            setFormState={setBankFormState}
+          />
+          <BankVoucherDetails
+            form={form}
+            formState={bankFormState}
+            requisition={undefined} // Assuming requisition is not needed for edit or is handled internally
+            partners={bankFormState.partners} // Use fetched partners
+          />
+          {/* Add a submit button for BankVoucher if it's not part of BankVoucherDetails */}
+          <div className="flex justify-end p-4">
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Updating...' : 'Update Bank Voucher'}
+            </Button>
+          </div>
+        </div>
+      )
     case VoucherTypes.JournalVoucher:
       return (
-        <JournalVoucherPopup
-          isOpen={true}
-          onOpenChange={onClose}
-          initialData={initial}
-          handleSubmit={handleJournalEditSubmit}
-          isSubmitting={isSubmitting}
-        />
+        <div>
+          <JournalVoucherMasterSection
+            form={form}
+            companies={companies}
+            locations={locations}
+            currency={currency}
+          />
+          <JournalVoucherDetailsSection
+            form={form}
+            onAddEntry={addEntry}
+            onRemoveEntry={removeEntry}
+            chartOfAccounts={chartOfAccounts}
+            costCenters={costCenters}
+            departments={departments}
+            partners={partners}
+            searchPartners={searchPartners}
+          />
+          <JournalVoucherSubmit
+            form={form}
+            onSubmit={form.handleSubmit(onSubmit)}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       )
-
     case VoucherTypes.ContraVoucher:
-      // Assuming ContraVoucherPopup accepts initialData and can handle edit flows internally
       return (
-        <ContraVoucherPopup
-          isOpen={true}
-          onOpenChange={onClose}
-          initialData={initial}
-          fetchAllVoucher={dummyFetchAllVoucher}
-        />
+        <div>
+          <ContraVoucherMasterSection
+            form={form}
+            companies={companies}
+            locations={locations}
+            currency={currency}
+          />
+          <ContraVoucherDetailsSection
+            form={form}
+            onRemoveEntry={removeEntry}
+            chartOfAccounts={chartOfAccounts}
+            costCenters={costCenters}
+            departments={departments}
+            partners={partners}
+            searchPartners={searchPartners}
+          />
+          <ContraVoucherSubmit
+            form={form}
+            onSubmit={form.handleSubmit(onSubmit)}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       )
-
     default:
       return (
         <p className="text-sm text-muted-foreground">

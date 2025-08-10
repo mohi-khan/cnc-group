@@ -90,8 +90,8 @@ export async function createJournalEntryWithDetails(
 }
 
 //http://localhost:4000/api/journal/edit
-export async function editJournalMasterWithDetail(data: JournalPayload, token: string) {
-  return fetchApi<JournalPayload>({
+export async function editJournalMasterWithDetail(data: JournalEntryWithDetails, token: string) {
+  return fetchApi<JournalEntryWithDetails>({
     url: `api/journal/edit`,
     method: 'PATCH',
     body: data,
