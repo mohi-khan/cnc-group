@@ -278,6 +278,7 @@ export default function SingleTrialBalance() {
         setTransactions([]) // ✅ Clear previous data on error
       } else {
         setTransactions(response.data || [])
+        console.log('ledger data:', response.data || [])
 
        
       }

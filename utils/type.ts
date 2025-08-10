@@ -840,6 +840,7 @@ export interface TrialBalanceData {
 export interface GeneralLedgerType {
   voucherid: number
   voucherno: string
+  date: string
   accountname: string
   debit: number
   credit: number

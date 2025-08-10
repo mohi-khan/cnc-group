@@ -3,7 +3,7 @@
   "files.autoSave": "afterDelay",
   "editor.cursorSmoothCaretAnimation": "explicit",
   "editor.cursorBlinking": "expand",
-  "editor.minimap.autohide": false,
+  "editor.minimap.autohide": "none",
   "editor.minimap.maxColumn": 100,
   "editor.cursorSurroundingLines": 0,
   "typescript.tsdk": "node_modules/typescript/lib",
