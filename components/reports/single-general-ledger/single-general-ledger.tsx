@@ -202,6 +202,12 @@ export default function SingleGenralLedger() {
     <Card ref={contentRef} className="w-full max-w-5xl mx-auto mt-24">
       <CardContent className="p-6">
         {/* Header Section */}
+        <h1 className="text-center text-3xl font-bold">
+          {data[0].companyname}
+        </h1>
+        <p className="text-center mb-10 text-xl font-semibold">
+          {data[0].location}{' '}
+        </p>
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div className="space-y-4">
             <div className="grid grid-cols-[120px,1fr] gap-2">

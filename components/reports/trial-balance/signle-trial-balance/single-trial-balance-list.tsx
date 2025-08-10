@@ -463,8 +463,10 @@ export default function SingleTrialBalanceList({
       <table className="min-w-full bg-white border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
-            <SortableHeader field="voucherid">Voucher ID</SortableHeader>
             <SortableHeader field="voucherno">Voucher No</SortableHeader>
+            <SortableHeader field="date">Date</SortableHeader>
+            <SortableHeader field="voucherid">Voucher ID</SortableHeader>
+
             <SortableHeader field="accountname">Account Name</SortableHeader>
             <SortableHeader field="debit">Debit</SortableHeader>
             <SortableHeader field="credit">Credit</SortableHeader>
@@ -485,14 +487,14 @@ export default function SingleTrialBalanceList({
                     : ''
                 }`}
               >
-                <td className="py-2 px-4 border-b">{transaction.voucherid}</td>
                 <td className="py-2 px-4 border-b">
                   {isBalanceRow(transaction) ? (
                     <span className="text-blue-700">
                       {transaction.voucherno}
                     </span>
                   ) : (
-                    <Link
+                      <Link
+                        target='_blank'
                       href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
                       className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
@@ -500,6 +502,9 @@ export default function SingleTrialBalanceList({
                     </Link>
                   )}
                 </td>
+                <td className="py-2 px-4 border-b w-full">{transaction.date}</td>
+                <td className="py-2 px-4 border-b">{transaction.voucherid}</td>
+
                 <td className="py-2 px-4 border-b">
                   {transaction.accountname}
                 </td>
