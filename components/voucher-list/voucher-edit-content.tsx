@@ -53,7 +53,7 @@ const transformVoucherData = (
       amountTotal: amountTotal,
       exchangeRate: 1, // Added fallback for safety
       payTo: firstEntry.payTo || '',
-      notes: firstEntry.notes || '',
+      notes: firstEntry.MasterNotes || '',
       periodid: 0,
       createdBy: userId,
       state: 0, // Always start as Draft for edit vouchers
@@ -83,6 +83,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
   onClose,
   isOpen, // Accept the new prop
 }) => {
+  console.log("🚀 ~ VoucherEditContent ~ voucherData:", voucherData)
   // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL
   const [token] = useAtom(tokenAtom)
 

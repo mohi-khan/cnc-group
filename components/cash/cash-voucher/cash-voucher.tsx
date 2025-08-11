@@ -461,140 +461,139 @@ export default function CashVoucher({
         updateValueswithCash as JournalEditWithDetails,
         token
       )
-      console.log("🚀 ~ onSubmit ~ updateValueswithCash:", updateValueswithCash)
+      console.log('🚀 ~ onSubmit ~ updateValueswithCash:', updateValueswithCash)
       // Check for errors in the response. if no error, show success message
-    if (response.error || !response.data) {
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Error creating Journal',
-      })
-    } else {
-      const mycompanies = getCompanyIds(companies)
-      const mylocations = getLocationIds(locations)
-      getallVoucher(mycompanies, mylocations)
-      toast({
-        title: 'Success',
-        description: 'Voucher is edited successfully',
-      })
-      onClose?.() // Close the modal after successful submission
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error creating Journal',
+        })
+      } else {
+        const mycompanies = getCompanyIds(companies)
+        const mylocations = getLocationIds(locations)
+        getallVoucher(mycompanies, mylocations)
+        toast({
+          title: 'Success',
+          description: 'Voucher is edited successfully',
+        })
+        onClose?.() // Close the modal after successful submission
 
-      // Reset the form after successful submission
-      form.reset({
-        journalEntry: {
-          date: new Date().toISOString().split('T')[0],
-          journalType: '',
-          companyId: 0,
-          locationId: 0,
-          currencyId: 0,
-          amountTotal: 0,
-          notes: '',
-          createdBy: 0,
-        },
-        journalDetails: [
-          {
-            accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
-            costCenterId: null,
-            departmentId: null,
-            debit: 0,
-            credit: 0,
-            analyticTags: null,
-            taxId: null,
-            resPartnerId: null,
+        // Reset the form after successful submission
+        form.reset({
+          journalEntry: {
+            date: new Date().toISOString().split('T')[0],
+            journalType: '',
+            companyId: 0,
+            locationId: 0,
+            currencyId: 0,
+            amountTotal: 0,
             notes: '',
-            type: 'Receipt', // Default type set to 'Receipt'
             createdBy: 0,
           },
-        ],
-      })
-      // remove all the rows from journalDetails
-      remove()
-      // set the default value for journalDetails to the first row
-      append({
-        accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
-        costCenterId: null,
-        departmentId: null,
-        debit: 0,
-        credit: 0,
-        analyticTags: null,
-        taxId: null,
-        resPartnerId: null,
-        notes: '',
-        type: 'Receipt', // Default type set to 'Receipt'
-        createdBy: 0,
-      })
-      // Reset voucher type to default
-      setCurrentVoucherType('')
-    }
+          journalDetails: [
+            {
+              accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+              costCenterId: null,
+              departmentId: null,
+              debit: 0,
+              credit: 0,
+              analyticTags: null,
+              taxId: null,
+              resPartnerId: null,
+              notes: '',
+              type: 'Receipt', // Default type set to 'Receipt'
+              createdBy: 0,
+            },
+          ],
+        })
+        // remove all the rows from journalDetails
+        remove()
+        // set the default value for journalDetails to the first row
+        append({
+          accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+          costCenterId: null,
+          departmentId: null,
+          debit: 0,
+          credit: 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: '',
+          type: 'Receipt', // Default type set to 'Receipt'
+          createdBy: 0,
+        })
+        // Reset voucher type to default
+        setCurrentVoucherType('')
+      }
     } else {
       const response = await createJournalEntryWithDetails(
         updateValueswithCash,
         token
       )
       // Check for errors in the response. if no error, show success message
-    if (response.error || !response.data) {
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Error creating Journal',
-      })
-    } else {
-      const mycompanies = getCompanyIds(companies)
-      const mylocations = getLocationIds(locations)
-      getallVoucher(mycompanies, mylocations)
-      toast({
-        title: 'Success',
-        description: 'Voucher is created successfully',
-      })
-      onClose?.() // Close the modal after successful submission
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error creating Journal',
+        })
+      } else {
+        const mycompanies = getCompanyIds(companies)
+        const mylocations = getLocationIds(locations)
+        getallVoucher(mycompanies, mylocations)
+        toast({
+          title: 'Success',
+          description: 'Voucher is created successfully',
+        })
+        onClose?.() // Close the modal after successful submission
 
-      // Reset the form after successful submission
-      form.reset({
-        journalEntry: {
-          date: new Date().toISOString().split('T')[0],
-          journalType: '',
-          companyId: 0,
-          locationId: 0,
-          currencyId: 0,
-          amountTotal: 0,
-          notes: '',
-          createdBy: 0,
-        },
-        journalDetails: [
-          {
-            accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
-            costCenterId: null,
-            departmentId: null,
-            debit: 0,
-            credit: 0,
-            analyticTags: null,
-            taxId: null,
-            resPartnerId: null,
+        // Reset the form after successful submission
+        form.reset({
+          journalEntry: {
+            date: new Date().toISOString().split('T')[0],
+            journalType: '',
+            companyId: 0,
+            locationId: 0,
+            currencyId: 0,
+            amountTotal: 0,
             notes: '',
-            type: 'Receipt', // Default type set to 'Receipt'
             createdBy: 0,
           },
-        ],
-      })
-      // remove all the rows from journalDetails
-      remove()
-      // set the default value for journalDetails to the first row
-      append({
-        accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
-        costCenterId: null,
-        departmentId: null,
-        debit: 0,
-        credit: 0,
-        analyticTags: null,
-        taxId: null,
-        resPartnerId: null,
-        notes: '',
-        type: 'Receipt', // Default type set to 'Receipt'
-        createdBy: 0,
-      })
-      // Reset voucher type to default
-      setCurrentVoucherType('')
+          journalDetails: [
+            {
+              accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+              costCenterId: null,
+              departmentId: null,
+              debit: 0,
+              credit: 0,
+              analyticTags: null,
+              taxId: null,
+              resPartnerId: null,
+              notes: '',
+              type: 'Receipt', // Default type set to 'Receipt'
+              createdBy: 0,
+            },
+          ],
+        })
+        // remove all the rows from journalDetails
+        remove()
+        // set the default value for journalDetails to the first row
+        append({
+          accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+          costCenterId: null,
+          departmentId: null,
+          debit: 0,
+          credit: 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: '',
+          type: 'Receipt', // Default type set to 'Receipt'
+          createdBy: 0,
+        })
+        // Reset voucher type to default
+        setCurrentVoucherType('')
+      }
     }
-    }
-    
   }
   //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
   const { fields, append, remove } = useFieldArray<
