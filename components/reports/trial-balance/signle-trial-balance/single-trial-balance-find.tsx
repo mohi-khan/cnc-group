@@ -17,6 +17,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { getAllChartOfAccounts } from '@/api/common-shared-api'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface SingleTrialBalanceFindProps {
   initialAccountCode: string
@@ -35,12 +36,12 @@ export default function SingleTrialBalanceFind({
   generatePdf,
   generateExcel,
 }: SingleTrialBalanceFindProps) {
-    //getting userData from jotai atom component
-        useInitializeUser()
-        const [userData] = useAtom(userDataAtom)
-        const [token] = useAtom(tokenAtom)
-      
-        const router = useRouter()
+  //getting userData from jotai atom component
+  useInitializeUser()
+  const [userData] = useAtom(userDataAtom)
+  const [token] = useAtom(tokenAtom)
+
+  const router = useRouter()
   const [fromDate, setFromDate] = useState<string>(initialFromDate)
   const [toDate, setToDate] = useState<string>(initialToDate)
   const [selectedAccountCode, setSelectedAccountCode] =
@@ -48,7 +49,7 @@ export default function SingleTrialBalanceFind({
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   const fetchChartOfAccounts = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const fetchedAccounts = await getAllChartOfAccounts(token)
     if (fetchedAccounts.error || !fetchedAccounts.data) {
       console.error('Error getting chart of accounts:', fetchedAccounts.error)
@@ -80,7 +81,13 @@ export default function SingleTrialBalanceFind({
     if (initialFromDate && initialToDate && initialAccountCode) {
       onSearch(Number(initialAccountCode), initialFromDate, initialToDate)
     }
-  }, [initialFromDate, initialToDate, initialAccountCode, onSearch, fetchChartOfAccounts])
+  }, [
+    initialFromDate,
+    initialToDate,
+    initialAccountCode,
+    onSearch,
+    fetchChartOfAccounts,
+  ])
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
@@ -134,31 +141,33 @@ export default function SingleTrialBalanceFind({
             className="px-3 py-2 border rounded-md"
           />
         </div>
-        <Select
-          value={selectedAccountCode}
-          onValueChange={setSelectedAccountCode}
-          defaultValue={initialAccountCode}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select account" />
-          </SelectTrigger>
-          <SelectContent>
-            {accounts.length > 0 ? (
-              accounts.map((account) => (
-                <SelectItem
-                  key={account.accountId}
-                  value={account.accountId.toString()}
-                >
-                  {account.name}
-                </SelectItem>
-              ))
-            ) : (
-              <SelectItem value="default" disabled>
-                No accounts available
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
+        <CustomCombobox
+          items={accounts
+            .filter((account) => account.isActive)
+            .map((account) => ({
+              id: account.accountId,
+              name: account.name,
+            }))}
+          value={
+            selectedAccountCode
+              ? {
+                  id: Number(selectedAccountCode),
+                  name:
+                    accounts.find(
+                      (account) =>
+                        account.accountId === Number(selectedAccountCode)
+                    )?.name || '',
+                }
+              : null
+          }
+          onChange={(selectedItem) => {
+            const value = selectedItem?.id ? String(selectedItem.id) : ''
+            setSelectedAccountCode(value)
+          }}
+          placeholder="Select an Account"
+          disabled={accounts.length === 0}
+        />
+
         <Button onClick={handleSearch}>Show</Button>
       </div>
       <div className="flex items-center gap-2">
