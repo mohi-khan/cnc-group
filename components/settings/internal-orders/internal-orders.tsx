@@ -154,7 +154,7 @@ export default function InternalOrders() {
     }
 
     checkUserData()
-  }, [])
+  }, [router])
 
   return (
     <div className="container mx-auto py-10">

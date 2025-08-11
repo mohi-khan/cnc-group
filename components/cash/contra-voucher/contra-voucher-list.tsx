@@ -79,7 +79,7 @@ export default function ContraVoucherTable() {
     } else {
       
     }
-  }, [userData, fetchAllVoucher])
+  }, [userData, fetchAllVoucher, router])
 
   // Function to fetch all vouchers based on company and location IDs
 

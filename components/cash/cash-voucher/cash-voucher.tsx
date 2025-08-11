@@ -14,6 +14,7 @@ import {
   type CostCenter,
   type FormData,
   type GetDepartment,
+  JournalEditWithDetails,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   type JournalQuery,
@@ -43,7 +44,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 interface CashVoucherProps {
   initialData?: JournalEntryWithDetails
   onClose?: () => void // Callback to close the modal/popup
-  isEdit: boolean
+  isEdit?: boolean
 }
 
 export default function CashVoucher({
@@ -396,7 +397,7 @@ export default function CashVoucher({
 
   //Function to handle form submission. It takes the form data and a reset function as arguments
   const onSubmit = async (
-    values: z.infer<typeof JournalEntryWithDetailsSchema>,
+    values: JournalEntryWithDetails,
     status: 'Draft' | 'Posted'
   ) => {
     if (userData) {
@@ -457,7 +458,7 @@ export default function CashVoucher({
 
     if (isEdit === true) {
       const response = await editJournalEntryWithDetails(
-        updateValueswithCash,
+        updateValueswithCash as JournalEditWithDetails,
         token
       )
       console.log("🚀 ~ onSubmit ~ updateValueswithCash:", updateValueswithCash)
@@ -627,7 +628,6 @@ export default function CashVoucher({
     { key: 'currency' as const, label: 'Currency' },
     { key: 'location' as const, label: 'Location' },
     { key: 'date' as const, label: 'Date' },
-    { key: 'notes' as const, label: 'Remarks' },
     { key: 'totalamount' as const, label: 'Total Amount' },
     { key: 'state' as const, label: 'Status' },
   ]

@@ -507,8 +507,23 @@ export const JournalEntryWithDetailsSchema = z.object({
   journalDetails: z.array(JournalDetailSchema),
 })
 
+export const JournalEditWithDetailsSchema = z.object({
+  journalEntry: JournalEntrySchema.extend({
+    id: z.number().int(),
+  }),
+  journalDetails: z.array(
+    JournalDetailSchema.extend({
+      id: z.number().int(),
+    })
+  ),
+})
+
 export type JournalEntryWithDetails = z.infer<
   typeof JournalEntryWithDetailsSchema
+  >
+
+export type JournalEditWithDetails = z.infer<
+  typeof JournalEditWithDetailsSchema
   >
 
   export const editJournalNotesSchema = z.object({

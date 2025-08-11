@@ -1,8 +1,8 @@
 import React from 'react'
-import { GeneralLedgerType } from '@/utils/type'
+import { PartnerLedgerType } from '@/utils/type'
 
 interface GeneralLedgerListProps {
-  transactions: GeneralLedgerType[]
+  transactions: PartnerLedgerType[]
   targetRef: React.RefObject<HTMLDivElement>
 }
 

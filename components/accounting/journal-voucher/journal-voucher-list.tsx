@@ -41,7 +41,6 @@ export default function VoucherTable() {
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
     { key: 'date' as const, label: 'Voucher Date' },
-    { key: 'notes' as const, label: 'Notes' },
     { key: 'companyname' as const, label: 'Company Name' },
     { key: 'location' as const, label: 'Location' },
     { key: 'currency' as const, label: 'Currency' },

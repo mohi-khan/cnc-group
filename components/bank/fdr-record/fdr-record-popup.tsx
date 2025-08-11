@@ -126,10 +126,10 @@ const FdrRecordPopUp: React.FC<FdrRecordPopUpProps> = ({
   }, [form.formState.errors])
 
   // Auto-set maturedDate based on fdrDate + term
-  useEffect(() => {
-    const term = form.watch('term')
-    const fdrDate = form.watch('fdrDate')
+  const term = form.watch('term')
+  const fdrDate = form.watch('fdrDate')
 
+  useEffect(() => {
     if (!fdrDate || !term || term <= 0) {
       form.setValue('maturedDate', '')
       return
@@ -138,7 +138,6 @@ const FdrRecordPopUp: React.FC<FdrRecordPopUpProps> = ({
     const startDate = new Date(fdrDate)
     if (isNaN(startDate.getTime())) return
 
-    // Add months to fdrDate
     startDate.setMonth(startDate.getMonth() + term)
 
     const year = startDate.getFullYear()
@@ -147,7 +146,7 @@ const FdrRecordPopUp: React.FC<FdrRecordPopUpProps> = ({
 
     const maturedDate = `${year}-${month}-${day}`
     form.setValue('maturedDate', maturedDate)
-  }, [form.watch('term'), form.watch('fdrDate')])
+  }, [term, fdrDate, form])
 
   const onSubmit = async (values: z.infer<typeof fdrSchema>) => {
     if (!userData?.userId) {
@@ -366,8 +365,8 @@ const FdrRecordPopUp: React.FC<FdrRecordPopUpProps> = ({
             <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-md">
               <p>
                 <strong>Note:</strong> You can either select a company from the
-                dropdown OR enter a custom company name in the "Other Company"
-                field. At least one must be filled.
+                dropdown OR enter a custom company name in the &quot;Other
+                Company&quot; field. At least one must be filled.
               </p>
             </div>
 
