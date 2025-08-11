@@ -175,7 +175,7 @@ const UtilityDashboard = () => {
         console.error('Error fetching gas data:', error)
         setUtilityMeters([])
       }
-    }, [token, selectedCompanyId, selectedLocationGas])
+    }, [token])
   
 
   // Helper function to get location parameter

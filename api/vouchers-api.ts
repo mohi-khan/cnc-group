@@ -6,6 +6,7 @@ import {
   Department,
   EditJournalEditNotesType,
   GetDepartment,
+  JournalEditWithDetails,
   JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   JournalQuery,
@@ -34,9 +35,9 @@ export async function createJournalEntryWithDetails(
 }
 
 export async function editJournalEntryWithDetails(
-  data: JournalEntryWithDetails, token: string
+  data: JournalEditWithDetails, token: string
 ) {
-  return fetchApi<JournalEntryWithDetails>({
+  return fetchApi<JournalEditWithDetails>({
     url: 'api/journal/edit',
     method: 'PATCH',
     body: data,

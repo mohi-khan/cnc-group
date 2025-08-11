@@ -18,6 +18,7 @@ import { JournalVoucherMasterSection } from './journal-voucher-master-section'
 import { JournalVoucherDetailsSection } from './journal-voucher-details-section'
 import { JournalVoucherSubmit } from './journal-voucher-submit'
 import {
+  JournalEditWithDetails,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   VoucherTypes,
@@ -28,9 +29,9 @@ import { Popup } from '@/utils/popup'
 interface JournalVoucherPopupProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  handleSubmit: (data: JournalEntryWithDetails, resetForm: () => void) => void
+  handleSubmit: (data: JournalEntryWithDetails | JournalEditWithDetails, resetForm: () => void) => void
   isSubmitting: boolean
-  initialData?: JournalEntryWithDetails // Added optional initialData prop
+  initialData?: JournalEntryWithDetails | JournalEditWithDetails// Added optional initialData prop
 }
 
 export function JournalVoucherPopup({
@@ -67,7 +68,7 @@ export function JournalVoucherPopup({
     [initialData]
   )
 
-  const form = useForm<JournalEntryWithDetails>({
+  const form = useForm<JournalEntryWithDetails | JournalEditWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues,
   })
@@ -130,7 +131,7 @@ export function JournalVoucherPopup({
     return () => subscription.unsubscribe()
   }, [form])
 
-  const onSubmit = (data: JournalEntryWithDetails) => {
+  const onSubmit = (data: JournalEntryWithDetails | JournalEditWithDetails) => {
     handleSubmit(data, resetForm)
   }
 

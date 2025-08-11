@@ -1,7 +1,7 @@
 'use client'
 import {
   VoucherById,
-  JournalEntryWithDetails,
+  JournalEditWithDetails,
   VoucherTypes,
 } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
@@ -21,11 +21,11 @@ interface VoucherDuplicationContentProps {
   isOpen: boolean // New prop to control visibility of internal dialogs
 }
 
-// Helper function to transform VoucherById[] to JournalEntryWithDetails
+// Helper function to transform VoucherById[] to JournalEditWithDetails
 const transformVoucherData = (
   voucherData: VoucherById[],
   userId: number
-): JournalEntryWithDetails | null => {
+): JournalEditWithDetails | null => {
   if (!voucherData || voucherData.length === 0) {
     return null
   }
@@ -44,24 +44,28 @@ const transformVoucherData = (
 
   return {
     journalEntry: {
+      id: firstEntry.id,
       date: new Date().toISOString().split('T')[0], // New date for duplication
       journalType: firstEntry.journaltype,
       companyId: firstEntry.companyId || 0, // Added fallback for safety
       locationId: firstEntry.locationId || 0, // Added fallback for safety
       currencyId: firstEntry.currencyId || 1, // Added fallback, assuming 1 is default currency ID
       amountTotal: amountTotal,
-      exchangeRate: 0, // Added fallback for safety
+      exchangeRate: 1, // Added fallback for safety
       payTo: firstEntry.payTo || '',
       notes: firstEntry.notes || '',
+      periodid: 0,
       createdBy: userId,
-      state: 0, // Always start as Draft for duplicated vouchers
+      state: 0, // Always start as Draft for edit vouchers
     },
     journalDetails: voucherData.map((detail) => ({
+      id: detail.id,
       accountId: detail.accountId || 0, // Added fallback for safety
       costCenterId: detail.costCenterId || 0,
       departmentId: detail.departmentID || 0,
       debit: detail.debit || 0, // Added fallback for safety
       credit: detail.credit || 0, // Added fallback for safety
+      balance: 0,
       analyticTags: null, // Reset or handle as needed
       taxId: null, // Reset or handle as needed
       resPartnerId: detail.partner || null,
@@ -97,7 +101,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
 
   // Generic handleSubmit for Journal Vouchers (as JournalVoucherPopup expects it)
   const handleJournalSubmit = useCallback(
-    async (data: JournalEntryWithDetails, resetForm: () => void) => {
+    async (data: JournalEditWithDetails, resetForm: () => void) => {
       try {
         const response = await editJournalEntryWithDetails(data, token)
         console.log('🚀 ~ VoucherEditContent ~ data:', data)
@@ -142,7 +146,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
           isOpen={isOpen} // Pass the isOpen prop from parent
           onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
-          handleSubmit={handleJournalSubmit} // Pass the generic submit handler
+          handleSubmit={handleJournalSubmit as any} // Pass the generic submit handler
           isSubmitting={false} // Managed internally by the popup
         />
       )
@@ -178,7 +182,7 @@ export default VoucherEditContent
 //   CostCenter,
 //   CurrencyType,
 //   GetDepartment,
-//   JournalEntryWithDetails,
+//   JournalEditWithDetails,
 //   LocationFromLocalstorage,
 //   ResPartner,
 //   VoucherById,
@@ -220,7 +224,7 @@ export default VoucherEditContent
 //   voucherData: VoucherById[],
 //   userId: number
 // ): {
-//   initial: JournalEntryWithDetails | null
+//   initial: JournalEditWithDetails | null
 //   meta: {
 //     voucherId?: number
 //     voucherNo?: string
@@ -259,7 +263,7 @@ export default VoucherEditContent
 //     updatedBy: (detail as any).updatedBy || userId,
 //   }))
 
-//   const initial: JournalEntryWithDetails = {
+//   const initial: JournalEditWithDetails = {
 //     journalEntry: {
 //       date: (first as any).date || new Date().toISOString().split('T')[0],
 //       journalType: (first as any).journaltype,
@@ -323,7 +327,7 @@ export default VoucherEditContent
 //     (initial?.journalEntry.journalType as unknown as VoucherTypes) ?? null
 
 //   // React Hook Form setup
-//   const form = useForm<JournalEntryWithDetails>({
+//   const form = useForm<JournalEditWithDetails>({
 //     resolver: zodResolver(JournalEntryWithDetailsSchema),
 //     defaultValues: initial || {
 //       journalEntry: {
@@ -575,7 +579,7 @@ export default VoucherEditContent
 
 //   // Submit handler specifically for JournalVoucherPopup editing
 //   const handleJournalEditSubmit = useCallback(
-//     async (data: JournalEntryWithDetails, resetForm: () => void) => {
+//     async (data: JournalEditWithDetails, resetForm: () => void) => {
 //       if (!token) {
 //         toast({
 //           title: 'Unauthorized',
@@ -661,7 +665,7 @@ export default VoucherEditContent
 
 //   // Generic onSubmit handler for all voucher types
 //   const onSubmit = useCallback(
-//     async (data: JournalEntryWithDetails) => {
+//     async (data: JournalEditWithDetails) => {
 //       switch (voucherType) {
 //         case VoucherTypes.JournalVoucher:
 //           await handleJournalEditSubmit(data, form.reset)
