@@ -3,8 +3,8 @@ import React from 'react'
 
 const SingleTrialBalanceReportPage = () => {
   return (
-      <div>
-          <SingleTrialBalance />
+    <div>
+      <SingleTrialBalance />
     </div>
   )
 }

@@ -219,9 +219,15 @@ export default function SingleTrialBalance() {
   const [transactions, setTransactions] = useState<GeneralLedgerType[]>([])
 
   const { id } = useParams()
-  const searchParams = useSearchParams()
-  const startDate = searchParams.get('startDate') || ''
-  const endDate = searchParams.get('endDate') || ''
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+  useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setSearchParams(new URLSearchParams(window.location.search))
+  }
+}, [])
+
+const startDate = searchParams?.get('startDate') || ''
+const endDate = searchParams?.get('endDate') || ''
 
   const formattedStartDate = formatDateString(startDate)
   const formattedEndDate = formatDateString(endDate)
