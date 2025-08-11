@@ -16,12 +16,13 @@ import type {
   BoeGet,
 } from '@/utils/type'
 import type React from 'react'
-import { useEffect, useCallback } from 'react' // Import useCallback
+import { useEffect, useCallback, useState } from 'react' // Import useCallback
 import { useAtom } from 'jotai' // Import useAtom to get token
 import { tokenAtom } from '@/utils/user' // Import tokenAtom
 import { getResPartnersBySearch } from '@/api/common-shared-api' // Import API function
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CustomComboboxWithApi } from '@/utils/custom-combobox-with-api'
+import { getSettings } from '@/api/shared-api'
 
 interface BoeReceiptFormProps {
   selectedBoe: BoeGet | null
@@ -50,18 +51,22 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
   const watchedAmount = watch('journalEntry.amountTotal')
   const originalBoeAmount = selectedBoe?.usdAmount || 0
   const [token] = useAtom(tokenAtom) // Get token for API calls
+  const [accountId,setAccountId]=useState<number>(0)
 
+ // const accountId=  getSettings(token,'Secured BOE')
   // Define the search function for partners
   const searchPartners = useCallback(
     async (query: string) => {
       if (!token) return []
       try {
+      
         const response = await getResPartnersBySearch(query, token)
         if (response.data) {
           return response.data.map((p) => ({
             id: p.id.toString(),
             name: p.name || 'Unnamed Partner',
           }))
+          
         }
       } catch (error) {
         console.error('Failed to search partners:', error)
@@ -70,33 +75,46 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
     },
     [token]
   )
+    const loadAccountId = async () => {
+  try {
+    const settings = await getSettings(token, 'Secured BOE');
+    if (settings.data) 
+      setAccountId(settings.data);
 
+    // If you want to log immediately, log from settings instead:
+    console.log('Account Id',settings.data);
+  } catch (err) {
+    console.error('Failed to load account ID', err);
+  }
+}
   // Update the form's amountTotal and related details when the selectedBoe changes
-  useEffect(() => {
+ useEffect(() => {
+  const init = async () => {
+    const settings = await getSettings(token, 'Secured BOE');
+    const accId = settings?.data ?? 0;
+    setAccountId(accId);
+
     if (selectedBoe) {
-      setValue('journalEntry.amountTotal', selectedBoe.usdAmount)
-      const currentDetails = getValues('journalDetails')
+      setValue('journalEntry.amountTotal', selectedBoe.usdAmount);
+      const currentDetails = getValues('journalDetails');
       if (currentDetails && currentDetails.length >= 2) {
-        // Partner detail (credit for receipt)
-        setValue(`journalDetails.0.debit`, 0)
-        setValue(`journalDetails.0.credit`, selectedBoe.usdAmount)
-        setValue(
-          `journalDetails.0.notes`,
-          `Receipt for BOE ${selectedBoe.boeNo}`
-        )
-        // Bank detail (debit for receipt)
-        setValue(`journalDetails.1.debit`, selectedBoe.usdAmount)
-        setValue(`journalDetails.1.credit`, 0)
-        setValue(
-          `journalDetails.1.notes`,
-          `Receipt for BOE ${selectedBoe.boeNo}`
-        )
+        setValue(`journalDetails.0.debit`, 0);
+        setValue(`journalDetails.0.credit`, selectedBoe.usdAmount);
+        setValue(`journalDetails.0.notes`, `Receipt for BOE ${selectedBoe.boeNo}`);
+        setValue('journalDetails.0.accountId', accId); // use accId here
+
+        setValue(`journalDetails.1.debit`, selectedBoe.usdAmount);
+        setValue(`journalDetails.1.credit`, 0);
+        setValue(`journalDetails.1.notes`, `Receipt for BOE ${selectedBoe.boeNo}`);
       }
-      setValue('journalEntry.notes', selectedBoe.boeNo || '')
-      setValue('journalEntry.payTo', selectedBoe.boeNo || '')
-      setValue('journalEntry.currencyId', 1) // Assuming USD (ID 1) as per usdAmount
+      setValue('journalEntry.notes', selectedBoe.boeNo || '');
+      setValue('journalEntry.payTo', selectedBoe.boeNo || '');
+      setValue('journalEntry.currencyId', 1);
     }
-  }, [selectedBoe, setValue, getValues])
+  };
+
+  init();
+}, [selectedBoe, setValue, getValues, token]);
 
   return (
     <form
@@ -265,45 +283,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
             </FormItem>
           )}
         />
-        {/* Chart of Account (for Partner's GL Account) */}
-        <FormField
-          control={control}
-          name="journalDetails.0.accountId" // This is the accountId for the partner's detail
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Chart of Account</FormLabel>
-              <FormControl>
-                <CustomCombobox
-                  items={formState.filteredChartOfAccounts
-                    .filter((account) => account.isActive)
-                    .map((account) => ({
-                      id: account.accountId.toString(),
-                      name: account.name || 'Unnamed Account',
-                    }))}
-                  value={
-                    field.value
-                      ? {
-                          id: field.value.toString(),
-                          name:
-                            formState.filteredChartOfAccounts.find(
-                              (a) => a.accountId === field.value
-                            )?.name || '',
-                        }
-                      : null
-                  }
-                  onChange={(value) => {
-                    const newAccountId = value
-                      ? Number.parseInt(value.id, 10)
-                      : null
-                    field.onChange(newAccountId)
-                  }}
-                  placeholder="Select account"
-                />
-              </FormControl>
-              <FormMessage /> {/* This will display validation errors */}
-            </FormItem>
-          )}
-        />
+        
         {/* Amount */}
         <FormField
           control={control}

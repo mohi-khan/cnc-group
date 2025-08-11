@@ -1872,7 +1872,7 @@ export default function SingleVoucherDetails() {
                 </TableHeader>
                 <TableBody>
                   {(data[0].journaltype === VoucherTypes.CashVoucher
-                    ? [data[0]] // Only the first item
+                    ? data // Only the first item
                     : data
                   ) // All items
                     .map((item, index) => (

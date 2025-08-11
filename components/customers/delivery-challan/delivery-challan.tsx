@@ -157,13 +157,13 @@ const DeliveryChallan = () => {
               },
               
             journalDetails:[{
-              accountId:parseInt(debitData),
+              accountId:debitData,
               departmentId:selectedItem.divisionId,
               debit:selectedItem.amount*exchangeRate,
               credit:0,
               createdBy: userData?.userId || 0
             },{
-              accountId:parseInt(creditData),
+              accountId:creditData,
               partnerId:selectedItem.res_partnerId,
               debit:0,
               credit:selectedItem.amount*exchangeRate,
