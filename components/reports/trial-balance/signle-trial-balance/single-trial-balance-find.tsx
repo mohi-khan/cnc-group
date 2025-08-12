@@ -3,27 +3,43 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { AccountsHead } from '@/utils/type'
-
 import { FileText } from 'lucide-react'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { getAllChartOfAccounts } from '@/api/common-shared-api'
+import {
+  getAllChartOfAccounts,
+  getAllCompanies,
+  getAllLocations,
+} from '@/api/common-shared-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+
+// Define types for Company and Location
+interface Company {
+  id: number
+  name: string
+}
+
+interface Location {
+  id: number
+  name: string
+  companyId?: number
+}
 
 interface SingleTrialBalanceFindProps {
   initialAccountCode: string
   initialFromDate: string
   initialToDate: string
-  onSearch: (accountcode: number, fromdate: string, todate: string) => void
+  initialCompanyId?: number
+  initialLocationId?: number
+  onSearch: (
+    accountcode: number,
+    fromdate: string,
+    todate: string,
+    locationId: number,
+    companyId: number
+  ) => void
   generatePdf: () => void
   generateExcel: () => void
 }
@@ -32,11 +48,12 @@ export default function SingleTrialBalanceFind({
   initialAccountCode,
   initialFromDate,
   initialToDate,
+  initialCompanyId,
+  initialLocationId,
   onSearch,
   generatePdf,
   generateExcel,
 }: SingleTrialBalanceFindProps) {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
@@ -46,7 +63,64 @@ export default function SingleTrialBalanceFind({
   const [toDate, setToDate] = useState<string>(initialToDate)
   const [selectedAccountCode, setSelectedAccountCode] =
     useState<string>(initialAccountCode)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+    initialCompanyId || null
+  )
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    initialLocationId || null
+  )
+
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [filteredLocations, setFilteredLocations] = useState<Location[]>([])
+
+  const fetchCompanies = React.useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllCompanies(token)
+      const apiData = response.data || []
+
+      // Handle different API response formats
+      const mappedCompanies = apiData.map((company: any) => ({
+        id: company.companyId || company.id,
+        name: company.companyName || company.name,
+      }))
+
+      setCompanies(mappedCompanies)
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch companies',
+      })
+    }
+  }, [token])
+
+  const fetchLocations = React.useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getAllLocations(token)
+      const apiData = response.data ?? []
+
+      // Handle different API response formats and ensure companyId is included
+      const mappedLocations: Location[] = apiData.map((loc: any) => ({
+        id: loc.locationId || loc.id,
+        name: loc.address || loc.locationName || loc.name,
+        companyId: loc.companyId, // This is crucial for filtering
+      }))
+
+      setLocations(mappedLocations)
+    } catch (error) {
+      console.error('Error fetching locations:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch locations',
+      })
+    }
+  }, [token])
 
   const fetchChartOfAccounts = React.useCallback(async () => {
     if (!token) return
@@ -63,8 +137,30 @@ export default function SingleTrialBalanceFind({
     }
   }, [token])
 
+  // Filter locations based on selected company
+  useEffect(() => {
+    if (selectedCompanyId) {
+      const filtered = locations.filter(
+        (location) => location.companyId === selectedCompanyId
+      )
+      setFilteredLocations(filtered)
+
+      // Reset location selection if current location doesn't belong to selected company
+      if (
+        selectedLocationId &&
+        !filtered.find((loc) => loc.id === selectedLocationId)
+      ) {
+        setSelectedLocationId(null)
+      }
+    } else {
+      setFilteredLocations(locations)
+    }
+  }, [selectedCompanyId, locations, selectedLocationId])
+
   useEffect(() => {
     fetchChartOfAccounts()
+    fetchCompanies()
+    fetchLocations()
 
     // Only set dates if they are valid
     if (initialFromDate) {
@@ -78,15 +174,31 @@ export default function SingleTrialBalanceFind({
     }
 
     // Trigger search automatically if we have all required values
-    if (initialFromDate && initialToDate && initialAccountCode) {
-      onSearch(Number(initialAccountCode), initialFromDate, initialToDate)
+    if (
+      initialFromDate &&
+      initialToDate &&
+      initialAccountCode &&
+      initialCompanyId &&
+      initialLocationId
+    ) {
+      onSearch(
+        Number(initialAccountCode),
+        initialFromDate,
+        initialToDate,
+        initialLocationId,
+        initialCompanyId
+      )
     }
   }, [
     initialFromDate,
     initialToDate,
     initialAccountCode,
+    initialCompanyId,
+    initialLocationId,
     onSearch,
     fetchChartOfAccounts,
+    fetchCompanies,
+    fetchLocations,
   ])
 
   const handleSearch = () => {
@@ -117,60 +229,36 @@ export default function SingleTrialBalanceFind({
       return
     }
 
-    onSearch(Number(selectedAccountCode), fromDate, toDate)
+    if (!selectedCompanyId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select a company',
+      })
+      return
+    }
+
+    if (!selectedLocationId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select a location',
+      })
+      return
+    }
+
+    onSearch(
+      Number(selectedAccountCode),
+      fromDate,
+      toDate,
+      selectedLocationId,
+      selectedCompanyId
+    )
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 p-4 border rounded-lg bg-card">
-      <div className="flex items-center gap-4 p-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">From Date:</span>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="px-3 py-2 border rounded-md"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">To Date:</span>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="px-3 py-2 border rounded-md"
-          />
-        </div>
-        <CustomCombobox
-          items={accounts
-            .filter((account) => account.isActive)
-            .map((account) => ({
-              id: account.accountId,
-              name: account.name,
-            }))}
-          value={
-            selectedAccountCode
-              ? {
-                  id: Number(selectedAccountCode),
-                  name:
-                    accounts.find(
-                      (account) =>
-                        account.accountId === Number(selectedAccountCode)
-                    )?.name || '',
-                }
-              : null
-          }
-          onChange={(selectedItem) => {
-            const value = selectedItem?.id ? String(selectedItem.id) : ''
-            setSelectedAccountCode(value)
-          }}
-          placeholder="Select an Account"
-          disabled={accounts.length === 0}
-        />
-
-        <Button onClick={handleSearch}>Show</Button>
-      </div>
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card">
+      <div className="flex items-center justify-self-center gap-2">
         <Button
           onClick={generatePdf}
           variant="ghost"
@@ -231,6 +319,112 @@ export default function SingleTrialBalanceFind({
           <span className="font-medium">Excel</span>
         </Button>
       </div>
+      {/* First Row - Dates and Account */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">From Date:</span>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">To Date:</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Account:</span>
+          <CustomCombobox
+            items={accounts
+              .filter((account) => account.isActive)
+              .map((account) => ({
+                id: account.accountId,
+                name: account.name,
+              }))}
+            value={
+              selectedAccountCode
+                ? {
+                    id: Number(selectedAccountCode),
+                    name:
+                      accounts.find(
+                        (account) =>
+                          account.accountId === Number(selectedAccountCode)
+                      )?.name || '',
+                  }
+                : null
+            }
+            onChange={(selectedItem) => {
+              const value = selectedItem?.id ? String(selectedItem.id) : ''
+              setSelectedAccountCode(value)
+            }}
+            placeholder="Select an Account"
+            disabled={accounts.length === 0}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Company:</span>
+          <CustomCombobox
+            items={companies.map((company) => ({
+              id: company.id,
+              name: company.name,
+            }))}
+            value={
+              selectedCompanyId
+                ? {
+                    id: selectedCompanyId,
+                    name:
+                      companies.find(
+                        (company) => company.id === selectedCompanyId
+                      )?.name || '',
+                  }
+                : null
+            }
+            onChange={(selectedItem) => {
+              setSelectedCompanyId(selectedItem?.id || null)
+              // Reset location when company changes
+              setSelectedLocationId(null)
+            }}
+            placeholder="Select a Company"
+            disabled={companies.length === 0}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Location:</span>
+          <CustomCombobox
+            items={filteredLocations.map((location) => ({
+              id: location.id,
+              name: location.name,
+            }))}
+            value={
+              selectedLocationId
+                ? {
+                    id: selectedLocationId,
+                    name:
+                      filteredLocations.find(
+                        (location) => location.id === selectedLocationId
+                      )?.name || '',
+                  }
+                : null
+            }
+            onChange={(selectedItem) => {
+              setSelectedLocationId(selectedItem?.id || null)
+            }}
+            placeholder="Select a Location"
+            disabled={!selectedCompanyId || filteredLocations.length === 0}
+          />
+        </div>
+
+        <Button onClick={handleSearch}>Show</Button>
+      </div>
+
+      {/* Third Row - Export Buttons */}
     </div>
   )
 }
