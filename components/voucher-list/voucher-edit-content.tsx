@@ -32,17 +32,6 @@ const transformVoucherData = (
   }
   const firstEntry = voucherData[0]
 
-  // Calculate total debit and credit for the journal entry amountTotal
-  const totalDebit = voucherData.reduce(
-    (sum, detail) => sum + (detail.debit || 0),
-    0
-  )
-  const totalCredit = voucherData.reduce(
-    (sum, detail) => sum + (detail.credit || 0),
-    0
-  )
-  const amountTotal = Math.max(totalDebit, totalCredit)
-
   return {
     journalEntry: {
       id: firstEntry.voucherid,
@@ -51,7 +40,7 @@ const transformVoucherData = (
       companyId: firstEntry.companyId || 0, // Added fallback for safety
       locationId: firstEntry.locationId || 0, // Added fallback for safety
       currencyId: firstEntry.currencyId || 1, // Added fallback, assuming 1 is default currency ID
-      amountTotal: amountTotal,
+      amountTotal: firstEntry.totalamount,
       exchangeRate: 1, // Added fallback for safety
       payTo: firstEntry.payTo || '',
       notes: (firstEntry as any).MasterNotes || '',
@@ -72,7 +61,7 @@ const transformVoucherData = (
       resPartnerId: detail.partner || null,
       notes: detail.detail_notes || '',
       type: 'Receipt',
-      bankAccountid: detail.bankAccountid || null,
+      bankAccountid: (detail as any).bankAccountid || null,
       createdBy: userId,
     })),    
   }
@@ -142,7 +131,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.CashVoucher:
       return <CashVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
     case VoucherTypes.BankVoucher:
-      return <BankVoucher initialData={initialFormData} onClose={onClose} />
+      return <BankVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
     case VoucherTypes.JournalVoucher:
       return (
         <JournalVoucherPopup

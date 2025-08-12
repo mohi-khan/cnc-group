@@ -1,5 +1,5 @@
 'use client'
-import { Fragment, useState, useRef } from 'react'
+import { Fragment, useState, useRef, useEffect } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
@@ -35,17 +35,21 @@ export function CustomCombobox<T extends ComboboxItem>({
             .includes(query.toLowerCase().replace(/\s+/g, ''))
         )
 
+  // Auto-select single match AFTER typing
+  useEffect(() => {
+  if (filteredItems.length === 1 && value?.id !== filteredItems[0].id) {
+    onChange(filteredItems[0])
+  }
+}, [filteredItems, value, onChange])
+
   const handleContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
     if ((event.target as HTMLElement).closest('.combobox-option')) {
-      // If an option was clicked, do not trigger our custom behavior.
       return
     }
     if (inputRef.current) {
-      // Focus the input element.
       inputRef.current.focus()
-      // Dispatch an ArrowDown key event to open the dropdown.
       const arrowDownEvent = new KeyboardEvent('keydown', {
         key: 'ArrowDown',
         bubbles: true,
@@ -100,15 +104,15 @@ export function CustomCombobox<T extends ComboboxItem>({
                       <div className="flex items-center">
                         {selected && (
                           <span
-                            className={`inset-y-0 left-0 flex items-center ${
-                              active ? 'text-teal-600' : 'text-teal-600'
-                            }`}
+                            className={`inset-y-0 left-0 flex items-center text-teal-600`}
                           >
                             <Check className="h-5 w-5" aria-hidden="true" />
                           </span>
                         )}
                         <span
-                          className={`block truncate px-3 ${selected ? 'font-bold' : 'font-normal'}`}
+                          className={`block truncate px-3 ${
+                            selected ? 'font-bold' : 'font-normal'
+                          }`}
                         >
                           {item.name}
                         </span>

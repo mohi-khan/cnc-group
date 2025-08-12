@@ -29,6 +29,7 @@ interface BankVoucherMasterProps {
   setFormState: React.Dispatch<React.SetStateAction<FormStateType>>
   requisition: any
   disableJournalType?: boolean // This will disable ONLY the Type field when coming from invoice
+  initialData?: any // Added initialData prop
 }
 
 export default function BankVoucherMaster({
@@ -37,6 +38,7 @@ export default function BankVoucherMaster({
   setFormState,
   requisition,
   disableJournalType = false,
+  initialData, // Added initialData prop
 }: BankVoucherMasterProps) {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -92,6 +94,69 @@ export default function BankVoucherMaster({
       setEmployeeData([])
     }
   }, [token])
+
+  useEffect(() => {
+    if (
+      initialData &&
+      filteredBankAccounts.length > 0 &&
+      !formState.selectedBankAccount
+    ) {
+      console.log('Initializing bank account from initialData', {
+        initialData,
+        filteredBankAccounts,
+      })
+
+      if (initialData.journalDetails && initialData.journalDetails.length > 0) {
+        // Find the detail that has bankAccountid (handle both possible field names)
+        const bankDetail = initialData.journalDetails.find(
+          (d: {
+            bankAccountid?: number
+            bankaccountid?: number
+            debit?: number
+          }) => d.bankAccountid || d.bankaccountid
+        )
+
+        if (
+          bankDetail &&
+          (bankDetail.bankAccountid || bankDetail.bankaccountid)
+        ) {
+          const bankAccountId =
+            bankDetail.bankAccountid || bankDetail.bankaccountid
+          const selectedBank = filteredBankAccounts.find(
+            (acc) => acc.id === bankAccountId
+          )
+
+          console.log(
+            'Looking for bank account with ID:',
+            bankAccountId,
+            'Found:',
+            selectedBank
+          )
+
+          if (selectedBank) {
+            setFormState((prev) => ({
+              ...prev,
+              selectedBankAccount: {
+                id: selectedBank.id,
+                glCode: selectedBank.glAccountId || 0,
+              },
+              // Determine formType based on debit/credit of the bank account detail
+              formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
+            }))
+            console.log(
+              'Successfully set bank account from initialData:',
+              selectedBank
+            )
+          }
+        }
+      }
+    }
+  }, [
+    initialData,
+    filteredBankAccounts,
+    formState.selectedBankAccount,
+    setFormState,
+  ])
 
   useEffect(() => {
     fetchCurrency()
