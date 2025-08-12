@@ -1,5 +1,4 @@
 'use client'
-
 import type React from 'react'
 import { getAllCurrency, getEmployee } from '@/api/common-shared-api'
 import {
@@ -55,7 +54,6 @@ export default function BankVoucherMaster({
     if (!selectedCompanyId) {
       return [] // Return empty array if no company is selected
     }
-
     return formState.locations.filter(
       (location) => location.location.companyId === selectedCompanyId
     )
@@ -66,7 +64,6 @@ export default function BankVoucherMaster({
     if (!selectedCompanyId) {
       return [] // Return empty array if no company is selected
     }
-
     return formState.bankAccounts.filter(
       (account) => account.isActive && account.companyId === selectedCompanyId
     )
@@ -175,7 +172,6 @@ export default function BankVoucherMaster({
                     ? Number.parseInt(value.id, 10)
                     : null
                   field.onChange(newCompanyId)
-
                   // Clear location and bank account when company changes
                   form.setValue('journalEntry.locationId', null)
                   setFormState({ ...formState, selectedBankAccount: null })
