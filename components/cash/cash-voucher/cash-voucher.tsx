@@ -408,8 +408,9 @@ export default function CashVoucher({
       (sum, detail) => sum + (detail.debit || 0) + (detail.credit || 0),
       0
     )
-    // Update the total Amount
-    const updatedValues = {
+
+    // Update the total Amount - fix circular reference by creating object step by step
+    const updatedValues: JournalEntryWithDetails = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
@@ -419,54 +420,69 @@ export default function CashVoucher({
         amountTotal: totalAmount, // Set the calculated total amount
         exchangeRate: values.journalEntry.exchangeRate || 1,
         createdBy: user?.userId || 0,
+        // Add updatedBy for edit mode
+        ...(isEdit && { updatedBy: user?.userId || 0 }),
       },
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         notes: detail.notes || '', // Ensure notes is always a string for each detail
         createdBy: user?.userId || 0,
+        // Add updatedBy for edit mode
+        ...(isEdit && { updatedBy: user?.userId || 0 }),
+        // Add voucherId for edit mode
+        ...(isEdit &&
+          (values.journalEntry as any).voucherid && { voucherId: (values.journalEntry as any).voucherid }),
       })),
     }
 
-    /// To add new row for Bank Transaction on JournalDetails
-    const updateValueswithCash = {
-      ...updatedValues,
-      journalDetails: [
-        ...updatedValues.journalDetails, // Spread existing journalDetails
-        {
-          accountId: cashCoa[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
-          departmentId: null,
-          debit: updatedValues.journalDetails.reduce(
-            (sum, detail) =>
-              sum + (detail.type === 'Receipt' ? detail.credit : 0),
-            0
-          ),
-          credit: updatedValues.journalDetails.reduce(
-            (sum, detail) =>
-              sum + (detail.type === 'Payment' ? detail.debit : 0),
-            0
-          ),
-          analyticTags: null,
-          taxId: null,
-          resPartnerId: null,
-          bankaccountid: null,
-          notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
-          createdBy: user?.userId || 0,
-        },
-      ],
-    }
-    // Call the API to create the journal entry with details
+    // <CHANGE> For edit mode, don't add the automatic cash account entry - just use the existing journal details
+    let finalValues: JournalEntryWithDetails
 
     if (isEdit === true) {
+      // For editing, use the journal details as-is without adding cash account entry
+      finalValues = updatedValues
+    } else {
+      // For creating new voucher, add the cash account entry
+      finalValues = {
+        ...updatedValues,
+        journalDetails: [
+          ...updatedValues.journalDetails, // Spread existing journalDetails
+          {
+            accountId: cashCoa[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+            departmentId: null,
+            debit: updatedValues.journalDetails.reduce(
+              (sum, detail) =>
+                sum + (detail.type === 'Receipt' ? detail.credit : 0),
+              0
+            ),
+            credit: updatedValues.journalDetails.reduce(
+              (sum, detail) =>
+                sum + (detail.type === 'Payment' ? detail.debit : 0),
+              0
+            ),
+            analyticTags: null,
+            taxId: null,
+            resPartnerId: null,
+            bankaccountid: null,
+            notes: updatedValues.journalEntry.notes || '', // Ensure notes is always a string
+            createdBy: user?.userId || 0,
+          },
+        ],
+      }
+    }
+
+    // Call the API to create the journal entry with details
+    if (isEdit === true) {
       const response = await editJournalEntryWithDetails(
-        updateValueswithCash as JournalEditWithDetails,
+        finalValues as JournalEditWithDetails,
         token
       )
-      console.log('🚀 ~ onSubmit ~ updateValueswithCash:', updateValueswithCash)
+      console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
       // Check for errors in the response. if no error, show success message
       if (response.error || !response.data) {
         toast({
           title: 'Error',
-          description: response.error?.message || 'Error creating Journal',
+          description: response.error?.message || 'Error editing Journal',
         })
       } else {
         const mycompanies = getCompanyIds(companies)
@@ -477,7 +493,6 @@ export default function CashVoucher({
           description: 'Voucher is edited successfully',
         })
         onClose?.() // Close the modal after successful submission
-
         // Reset the form after successful submission
         form.reset({
           journalEntry: {
@@ -492,7 +507,7 @@ export default function CashVoucher({
           },
           journalDetails: [
             {
-              accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+              accountId: filteredChartOfAccounts[0]?.accountId,
               costCenterId: null,
               departmentId: null,
               debit: 0,
@@ -501,7 +516,7 @@ export default function CashVoucher({
               taxId: null,
               resPartnerId: null,
               notes: '',
-              type: 'Receipt', // Default type set to 'Receipt'
+              type: 'Receipt',
               createdBy: 0,
             },
           ],
@@ -510,7 +525,7 @@ export default function CashVoucher({
         remove()
         // set the default value for journalDetails to the first row
         append({
-          accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+          accountId: filteredChartOfAccounts[0]?.accountId,
           costCenterId: null,
           departmentId: null,
           debit: 0,
@@ -519,17 +534,14 @@ export default function CashVoucher({
           taxId: null,
           resPartnerId: null,
           notes: '',
-          type: 'Receipt', // Default type set to 'Receipt'
+          type: 'Receipt',
           createdBy: 0,
         })
         // Reset voucher type to default
         setCurrentVoucherType('')
       }
     } else {
-      const response = await createJournalEntryWithDetails(
-        updateValueswithCash,
-        token
-      )
+      const response = await createJournalEntryWithDetails(finalValues, token)
       // Check for errors in the response. if no error, show success message
       if (response.error || !response.data) {
         toast({
@@ -545,7 +557,6 @@ export default function CashVoucher({
           description: 'Voucher is created successfully',
         })
         onClose?.() // Close the modal after successful submission
-
         // Reset the form after successful submission
         form.reset({
           journalEntry: {
@@ -560,7 +571,7 @@ export default function CashVoucher({
           },
           journalDetails: [
             {
-              accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+              accountId: filteredChartOfAccounts[0]?.accountId,
               costCenterId: null,
               departmentId: null,
               debit: 0,
@@ -569,7 +580,7 @@ export default function CashVoucher({
               taxId: null,
               resPartnerId: null,
               notes: '',
-              type: 'Receipt', // Default type set to 'Receipt'
+              type: 'Receipt',
               createdBy: 0,
             },
           ],
@@ -578,7 +589,7 @@ export default function CashVoucher({
         remove()
         // set the default value for journalDetails to the first row
         append({
-          accountId: filteredChartOfAccounts[0]?.accountId, // Ensure accountId is always a number (default to 0 if undefined)
+          accountId: filteredChartOfAccounts[0]?.accountId,
           costCenterId: null,
           departmentId: null,
           debit: 0,
@@ -587,7 +598,7 @@ export default function CashVoucher({
           taxId: null,
           resPartnerId: null,
           notes: '',
-          type: 'Receipt', // Default type set to 'Receipt'
+          type: 'Receipt',
           createdBy: 0,
         })
         // Reset voucher type to default
