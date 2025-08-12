@@ -2,7 +2,6 @@
 import * as React from 'react'
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type * as z from 'zod'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
@@ -16,9 +15,11 @@ import {
   VoucherTypes,
   type User,
   type FormStateType,
+  type JournalEditWithDetails,
 } from '@/utils/type'
 import {
   createJournalEntryWithDetails,
+  editJournalEntryWithDetails, // Added import for edit function
   getAllVoucher,
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
@@ -47,9 +48,9 @@ interface BankVoucherProps {
 export default function BankVoucher({
   initialData,
   onClose,
-  isEdit
+  isEdit,
 }: BankVoucherProps) {
-  console.log("🚀 ~ BankVoucher ~ initialData:", initialData)
+  console.log('🚀 ~ BankVoucher ~ initialData:', initialData)
   //getting userData from jotai atom component
   useInitializeUser()
   const router = useRouter()
@@ -196,20 +197,25 @@ export default function BankVoucher({
       // Also set formState for bank-specific fields if needed
       if (initialData.journalDetails.length > 0) {
         // Find the detail that represents the bank account - handle both field name variations
-        const bankDetail = initialData.journalDetails.find((d) => d.bankaccountid || (d as any).bankAccountid)
+        const bankDetail = initialData.journalDetails.find(
+          (d) => d.bankaccountid || (d as any).bankAccountid
+        )
 
-        console.log("Found bank detail in edit mode:", bankDetail)
+        console.log('Found bank detail in edit mode:', bankDetail)
 
         if (bankDetail) {
           // Handle both field name variations - your console shows bankAccountid (camelCase)
-          const bankAccountId = (bankDetail as any).bankAccountid || bankDetail.bankaccountid
+          const bankAccountId =
+            (bankDetail as any).bankAccountid || bankDetail.bankaccountid
 
           if (bankAccountId && formState.bankAccounts.length > 0) {
-            console.log("Looking for bank account with ID:", bankAccountId)
+            console.log('Looking for bank account with ID:', bankAccountId)
 
-            const selectedBank = formState.bankAccounts.find((acc) => acc.id === bankAccountId)
+            const selectedBank = formState.bankAccounts.find(
+              (acc) => acc.id === bankAccountId
+            )
 
-            console.log("Found bank account:", selectedBank)
+            console.log('Found bank account:', selectedBank)
 
             if (selectedBank) {
               setFormState((prev) => ({
@@ -219,14 +225,19 @@ export default function BankVoucher({
                   glCode: selectedBank.glAccountId || 0,
                 },
                 // Determine formType based on debit/credit of the bank account detail
-                formType: bankDetail.debit > 0 ? "Debit" : "Credit",
+                formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
               }))
-              console.log("Successfully set selected bank account:", selectedBank)
+              console.log(
+                'Successfully set selected bank account:',
+                selectedBank
+              )
             } else if (bankAccountId) {
               // Retry mechanism in case bank accounts are still loading
-              console.log("Bank account not found, retrying in 500ms...")
+              console.log('Bank account not found, retrying in 500ms...')
               setTimeout(() => {
-                const retrySelectedBank = formState.bankAccounts.find((acc) => acc.id === bankAccountId)
+                const retrySelectedBank = formState.bankAccounts.find(
+                  (acc) => acc.id === bankAccountId
+                )
                 if (retrySelectedBank) {
                   setFormState((prev) => ({
                     ...prev,
@@ -234,11 +245,14 @@ export default function BankVoucher({
                       id: retrySelectedBank.id,
                       glCode: retrySelectedBank.glAccountId || 0,
                     },
-                    formType: bankDetail.debit > 0 ? "Debit" : "Credit",
+                    formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
                   }))
-                  console.log("Retry successful - Set selected bank account:", retrySelectedBank)
+                  console.log(
+                    'Retry successful - Set selected bank account:',
+                    retrySelectedBank
+                  )
                 } else {
-                  console.log("Bank account still not found after retry")
+                  console.log('Bank account still not found after retry')
                 }
               }, 500)
             }
@@ -364,113 +378,176 @@ export default function BankVoucher({
   // 1. Validate Data
   // 2. Check Toal Amount and ensure both debit and credit are same
   // 3. Save Data
-  const onSubmit = async (
-    values: z.infer<typeof JournalEntryWithDetailsSchema>,
-    status: 'Draft' | 'Posted'
-  ) => {
-    const totalDetailsAmount = values.journalDetails.reduce(
-      (sum, detail) => sum + (detail.debit || detail.credit || 0),
-      0
-    )
-
-    if (Math.abs(values.journalEntry.amountTotal - totalDetailsAmount) > 0.01) {
-      setValidationError(
-        "The total amount in journal details doesn't match the journal entry amount total."
-      )
-      return
-    }
-
-    setValidationError(null)
-
+  const onSubmit = async (values: any, status: 'Draft' | 'Posted') => {
     const updatedValues = {
       ...values,
       journalEntry: {
         ...values.journalEntry,
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
-        journalType: VoucherTypes.BankVoucher,
+        journalType: 'Bank Voucher',
         currencyId: values.journalEntry.currencyId || 1,
-        amountTotal: totalDetailsAmount,
+        amountTotal: values.journalEntry.amountTotal,
         createdBy: user?.userId ?? 0,
+        ...(isEdit && { updatedBy: user?.userId || 0 }),
       },
-      journalDetails: values.journalDetails.map((detail) => ({
+      journalDetails: values.journalDetails.map((detail: any) => ({
         ...detail,
         notes: detail.notes || '',
         createdBy: user?.userId ?? 0,
-        bankaccountid: formState.selectedBankAccount?.id || null, // Add bank account ID to all details
+        ...(isEdit && { updatedBy: user?.userId || 0 }),
+        ...(isEdit &&
+          (values.journalEntry as any).voucherid && {
+            voucherId: (values.journalEntry as any).voucherid,
+          }),
+        bankaccountid: formState.selectedBankAccount?.id || null,
       })),
     }
-    console.log("🚀 ~ onSubmit ~ formState.selectedBankAccount:", formState.selectedBankAccount)
 
-    const updateValueswithBank = {
-      ...updatedValues,
-      journalDetails: [
-        ...updatedValues.journalDetails,
-        {
-          accountId: formState.selectedBankAccount?.glCode || 0,
-          costCenterId: null,
-          departmentId: null,
-          debit:
-            formState.formType === 'Debit'
-              ? updatedValues.journalEntry.amountTotal
-              : 0,
-          credit:
-            formState.formType === 'Credit'
-              ? updatedValues.journalEntry.amountTotal
-              : 0,
-          analyticTags: null,
-          taxId: null,
-          resPartnerId: null,
-          bankaccountid: formState.selectedBankAccount?.id,
-          notes: updatedValues.journalEntry.notes || '',
-          createdBy: user?.userId ?? 0,
-        },
-      ],
+    let finalValues: any
+
+    if (isEdit === true) {
+      // For editing, use the journal details as-is without adding bank account entry
+      finalValues = updatedValues
+    } else {
+      // For creating new voucher, add the bank account entry
+      finalValues = {
+        ...updatedValues,
+        journalDetails: [
+          ...updatedValues.journalDetails,
+          {
+            accountId: formState.selectedBankAccount?.glCode || 0,
+            costCenterId: null,
+            departmentId: null,
+            debit:
+              formState.formType === 'Debit'
+                ? updatedValues.journalEntry.amountTotal
+                : 0,
+            credit:
+              formState.formType === 'Credit'
+                ? updatedValues.journalEntry.amountTotal
+                : 0,
+            analyticTags: null,
+            taxId: null,
+            resPartnerId: null,
+            bankaccountid: formState.selectedBankAccount?.id,
+            notes: updatedValues.journalEntry.notes || '',
+            createdBy: user?.userId ?? 0,
+          },
+        ],
+      }
     }
 
-    const response = await createJournalEntryWithDetails(
-      updateValueswithBank,
-      token
-    )
-
-    console.log('🚀 ~ onSubmit ~ updateValueswithBank:', updateValueswithBank)
-    console.log(
-      '🚀 ~ onSubmit ~ selectedBankAccount:',
-      formState.selectedBankAccount
-    )
-
-    if (response.error || !response.data) {
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Error creating Journal',
-      })
+    if (isEdit === true) {
+      const response = await editJournalEntryWithDetails(
+        finalValues as JournalEditWithDetails,
+        token
+      )
+      console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+      // Check for errors in the response. if no error, show success message
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error editing Journal',
+        })
+      } else {
+        setDataLoaded(false)
+        const mycompanies = getCompanyIds(formState.companies)
+        const mylocations = getLocationIds(formState.locations)
+        getallVoucher(mycompanies, mylocations)
+        toast({
+          title: 'Success',
+          description: 'Voucher is edited successfully',
+        })
+        onClose?.() // Close the modal after successful submission
+        // Reset the form after successful submission
+        form.reset({
+          journalEntry: {
+            date: new Date().toISOString().split('T')[0],
+            journalType: VoucherTypes.BankVoucher,
+            companyId: 0,
+            locationId: 0,
+            currencyId: 1,
+            exchangeRate: 1,
+            amountTotal: 0,
+            payTo: '',
+            notes: '',
+            createdBy: 0,
+          },
+          journalDetails: [
+            {
+              accountId: 0,
+              costCenterId: null,
+              departmentId: null,
+              debit: 0,
+              credit: 0,
+              analyticTags: null,
+              taxId: null,
+              resPartnerId: null,
+              bankaccountid: null,
+              notes: '',
+              createdBy: 0,
+            },
+          ],
+        })
+      }
     } else {
-      setDataLoaded(false)
-      const mycompanies = getCompanyIds(formState.companies)
-      const mylocations = getLocationIds(formState.locations)
-      getallVoucher(mycompanies, mylocations)
+      const response = await createJournalEntryWithDetails(finalValues, token)
 
-      toast({
-        title: 'Success',
-        description: 'Voucher is created successfully',
-      })
-      onClose?.() // Close the modal after successful submission
-      // Close popup and reset form
-      setIsDialogOpen(false)
-      form.reset()
-      setFormState({
-        ...formState,
-        selectedBankAccount: null,
-        formType: 'Credit',
-        status: 'Draft',
-      })
+      console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+      console.log(
+        '🚀 ~ onSubmit ~ selectedBankAccount:',
+        formState.selectedBankAccount
+      )
+
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error creating Journal',
+        })
+      } else {
+        setDataLoaded(false)
+        const mycompanies = getCompanyIds(formState.companies)
+        const mylocations = getLocationIds(formState.locations)
+        getallVoucher(mycompanies, mylocations)
+        toast({
+          title: 'Success',
+          description: 'Voucher is created successfully',
+        })
+        onClose?.() // Close the modal after successful submission
+        // Reset the form after successful submission
+        form.reset({
+          journalEntry: {
+            date: new Date().toISOString().split('T')[0],
+            journalType: VoucherTypes.BankVoucher,
+            companyId: 0,
+            locationId: 0,
+            currencyId: 1,
+            exchangeRate: 1,
+            amountTotal: 0,
+            payTo: '',
+            notes: '',
+            createdBy: 0,
+          },
+          journalDetails: [
+            {
+              accountId: 0,
+              costCenterId: null,
+              departmentId: null,
+              debit: 0,
+              credit: 0,
+              analyticTags: null,
+              taxId: null,
+              resPartnerId: null,
+              bankaccountid: null,
+              notes: '',
+              createdBy: 0,
+            },
+          ],
+        })
+      }
     }
   }
-
-  //Submission Data Logic:
-  // 1. Validate Data
-  // 2. Check Toal Amount and ensure both debit and credit are same
-  // 3. Save Data
 
   const columns = [
     { key: 'voucherno' as const, label: 'Voucher No.' },
