@@ -41,11 +41,13 @@ import {
 interface BankVoucherProps {
   initialData?: JournalEntryWithDetails
   onClose?: () => void
+  isEdit?: boolean
 }
 
 export default function BankVoucher({
   initialData,
   onClose,
+  isEdit
 }: BankVoucherProps) {
   console.log("🚀 ~ BankVoucher ~ initialData:", initialData)
   //getting userData from jotai atom component
@@ -187,6 +189,64 @@ export default function BankVoucher({
 
     fetchInitialData()
   }, [token, router])
+
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset(initialData)
+      // Also set formState for bank-specific fields if needed
+      if (initialData.journalDetails.length > 0) {
+        // Find the detail that represents the bank account - handle both field name variations
+        const bankDetail = initialData.journalDetails.find((d) => d.bankaccountid || (d as any).bankAccountid)
+
+        console.log("Found bank detail in edit mode:", bankDetail)
+
+        if (bankDetail) {
+          // Handle both field name variations - your console shows bankAccountid (camelCase)
+          const bankAccountId = (bankDetail as any).bankAccountid || bankDetail.bankaccountid
+
+          if (bankAccountId && formState.bankAccounts.length > 0) {
+            console.log("Looking for bank account with ID:", bankAccountId)
+
+            const selectedBank = formState.bankAccounts.find((acc) => acc.id === bankAccountId)
+
+            console.log("Found bank account:", selectedBank)
+
+            if (selectedBank) {
+              setFormState((prev) => ({
+                ...prev,
+                selectedBankAccount: {
+                  id: selectedBank.id,
+                  glCode: selectedBank.glAccountId || 0,
+                },
+                // Determine formType based on debit/credit of the bank account detail
+                formType: bankDetail.debit > 0 ? "Debit" : "Credit",
+              }))
+              console.log("Successfully set selected bank account:", selectedBank)
+            } else if (bankAccountId) {
+              // Retry mechanism in case bank accounts are still loading
+              console.log("Bank account not found, retrying in 500ms...")
+              setTimeout(() => {
+                const retrySelectedBank = formState.bankAccounts.find((acc) => acc.id === bankAccountId)
+                if (retrySelectedBank) {
+                  setFormState((prev) => ({
+                    ...prev,
+                    selectedBankAccount: {
+                      id: retrySelectedBank.id,
+                      glCode: retrySelectedBank.glAccountId || 0,
+                    },
+                    formType: bankDetail.debit > 0 ? "Debit" : "Credit",
+                  }))
+                  console.log("Retry successful - Set selected bank account:", retrySelectedBank)
+                } else {
+                  console.log("Bank account still not found after retry")
+                }
+              }, 500)
+            }
+          }
+        }
+      }
+    }
+  }, [initialData, formState.bankAccounts])
 
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
@@ -340,6 +400,7 @@ export default function BankVoucher({
         bankaccountid: formState.selectedBankAccount?.id || null, // Add bank account ID to all details
       })),
     }
+    console.log("🚀 ~ onSubmit ~ formState.selectedBankAccount:", formState.selectedBankAccount)
 
     const updateValueswithBank = {
       ...updatedValues,

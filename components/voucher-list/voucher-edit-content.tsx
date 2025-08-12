@@ -72,7 +72,7 @@ const transformVoucherData = (
       resPartnerId: detail.partner || null,
       notes: detail.detail_notes || '',
       type: 'Receipt',
-      bankAccountid: detail.bankAccountid || null,
+      bankAccountid: (detail as any).bankAccountid || null,
       createdBy: userId,
     })),    
   }
@@ -142,7 +142,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.CashVoucher:
       return <CashVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
     case VoucherTypes.BankVoucher:
-      return <BankVoucher initialData={initialFormData} onClose={onClose} />
+      return <BankVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
     case VoucherTypes.JournalVoucher:
       return (
         <JournalVoucherPopup
