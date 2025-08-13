@@ -260,7 +260,7 @@ export default function BankVoucher({
         }
       }
     }
-  }, [initialData, formState.bankAccounts])
+  }, [initialData, formState.bankAccounts,form])
 
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
