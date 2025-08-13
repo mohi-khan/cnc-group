@@ -659,12 +659,10 @@ export default function CashVoucher({
             />
             <CashVoucherDetails
               form={form}
-              fields={fields}
               filteredChartOfAccounts={filteredChartOfAccounts}
               costCenters={costCenters}
               departments={departments}
               partners={partners}
-              addDetailRow={addDetailRow}
               onSubmit={onSubmit}
               onVoucherTypeChange={handleVoucherTypeChange}
             />
