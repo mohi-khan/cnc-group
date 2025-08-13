@@ -1884,7 +1884,7 @@ export default function SingleVoucherDetails() {
                         <TableCell>{item.partner || "N/A"}</TableCell>
                         <TableCell>
                           {editingReferenceIndex === index ? (
-                            <div className="flex gap-2 items-center">
+                            <div className="flex gap-2 items-start align-top">
                               <Input
                                 type="text"
                                 value={editingReferenceText}

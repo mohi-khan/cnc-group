@@ -322,6 +322,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
                     <TableCell key={key}>
                       {key === 'voucherno' ? (
                         <Link
+                          target='_blank'
                           href={linkGenerator(voucher.voucherid)}
                           className="text-blue-600 hover:underline"
                         >
