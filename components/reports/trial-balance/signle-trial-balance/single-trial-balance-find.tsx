@@ -172,6 +172,9 @@ export default function SingleTrialBalanceFind({
     if (initialAccountCode) {
       setSelectedAccountCode(initialAccountCode)
     }
+    if(initialCompanyId){
+      setSelectedCompanyId(initialCompanyId)
+    }
 
     // Trigger search automatically if we have all required values
     if (
