@@ -1553,6 +1553,8 @@ export interface User {
   roleId: number
   active: boolean
   roleName: string
+  companyId: number
+  locationId: number
 }
 
 export type SalesInvoiceType = {
