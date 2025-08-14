@@ -309,7 +309,7 @@ const BillOfExchange = () => {
       (sum, detail) => sum + (detail.credit || 0),
       0
     )
-  
+
     if (Math.abs(totalDebits - totalCredits) > 0.01) {
       setValidationError(
         'The total debits and credits in journal details do not balance.'
@@ -328,8 +328,8 @@ const BillOfExchange = () => {
     // Removed: Validation for bank account GL code as per user's request to copy accountId
 
     setValidationError(null)
-    const accountid= (await getSettings(token,'Secured BOE')).data;
-    console.log(values.journalDetails);
+    const accountid = (await getSettings(token, 'Secured BOE')).data
+    console.log(values.journalDetails)
     const finalValues = {
       ...values,
       journalEntry: {
@@ -349,15 +349,16 @@ const BillOfExchange = () => {
           userData?.userLocations[0]?.location.locationId ||
           0,
       },
-      
+
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         notes: detail.notes || '',
-      // accountId: detail.debit==0 ? accountid || 1:0,
+        accountId: formState.selectedBankAccount?.glAccountId,
         createdBy: userData?.userId ?? 0,
       })),
     }
-      console.log('secured BOE',getSettings(token,'Secured BOE'));
+    console.log("🚀 ~ onSubmit ~ formState.selectedBankAccount:", formState.selectedBankAccount)
+    console.log('secured BOE', getSettings(token, 'Secured BOE'))
     // Ensure the first detail is for the partner (credit) and second for bank (debit)
     // and their amounts are correctly set from journalEntry.amountTotal
     if (finalValues.journalDetails[0]) {
@@ -372,7 +373,7 @@ const BillOfExchange = () => {
       finalValues.journalDetails[1].credit = 0
       // FIX: Set the accountId of the second journal detail to be the same as the first one
       finalValues.journalDetails[1].accountId =
-      finalValues.journalDetails[0].accountId
+        finalValues.journalDetails[0].accountId
       finalValues.journalDetails[1].bankaccountid =
         formState.selectedBankAccount?.id || null
     }
