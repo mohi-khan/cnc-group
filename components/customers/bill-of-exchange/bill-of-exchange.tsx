@@ -294,7 +294,7 @@ const BillOfExchange = () => {
     status: 'Draft' | 'Posted'
   ) => {
     // Re-validate amount before submission
-    console.log(values.journalDetails);
+    console.log(values.journalDetails)
     if (values.journalEntry.amountTotal > originalBoeAmount) {
       setValidationError(
         `Amount cannot be greater than the original BOE amount of ${formatCurrency(originalBoeAmount, 'USD')}`
@@ -331,9 +331,9 @@ const BillOfExchange = () => {
 
     setValidationError(null)
     const accountid = (await getSettings(token, 'Secured BOE')).data
-    const currencyId=(await getCurrency('USD',token)).data
+    const currencyId = (await getCurrency('USD', token)).data
     console.log(currencyId)
-//    console.log(values.journalDetails)
+    //    console.log(values.journalDetails)
     const finalValues = {
       ...values,
       journalEntry: {
@@ -341,7 +341,7 @@ const BillOfExchange = () => {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
-        currencyId: currencyId||0,
+        currencyId: currencyId || 0,
         amountTotal: values.journalEntry.amountTotal,
         createdBy: userData?.userId ?? 0,
         companyId:
@@ -354,15 +354,21 @@ const BillOfExchange = () => {
           0,
       },
 
-      journalDetails: values.journalDetails.map((detail) => ({
+      journalDetails: values.journalDetails.map((detail, index, arr) => ({
         ...detail,
         notes: detail.notes || '',
-      
-       accountId: detail.credit>0?accountid: formState.selectedBankAccount?.glAccountId,
+        accountId:
+          index === arr.length - 1
+            ? 108
+            : formState.selectedBankAccount?.glAccountId,
         createdBy: userData?.userId ?? 0,
       })),
     }
-    console.log("🚀 ~ onSubmit ~ formState.selectedBankAccount:", formState.selectedBankAccount)
+
+    console.log(
+      '🚀 ~ onSubmit ~ formState.selectedBankAccount:',
+      formState.selectedBankAccount
+    )
     console.log('secured BOE', getSettings(token, 'Secured BOE'))
     // Ensure the first detail is for the partner (credit) and second for bank (debit)
     // and their amounts are correctly set from journalEntry.amountTotal
@@ -377,7 +383,7 @@ const BillOfExchange = () => {
       finalValues.journalDetails[1].debit = finalValues.journalEntry.amountTotal
       finalValues.journalDetails[1].credit = 0
       // FIX: Set the accountId of the second journal detail to be the same as the first one
- /*     finalValues.journalDetails[1].accountId =
+      /*     finalValues.journalDetails[1].accountId =
         finalValues.journalDetails[0].accountId*/
       finalValues.journalDetails[1].bankaccountid =
         formState.selectedBankAccount?.id || null
