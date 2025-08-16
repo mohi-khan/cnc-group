@@ -75,18 +75,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
     },
     [token]
   )
-    const loadAccountId = async () => {
-  try {
-    const settings = await getSettings(token, 'Secured BOE');
-    if (settings.data) 
-      setAccountId(settings.data);
-
-    // If you want to log immediately, log from settings instead:
-    console.log('Account Id',settings.data);
-  } catch (err) {
-    console.error('Failed to load account ID', err);
-  }
-}
+   
   // Update the form's amountTotal and related details when the selectedBoe changes
  useEffect(() => {
   const init = async () => {
@@ -101,7 +90,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
         setValue(`journalDetails.0.debit`, 0);
         setValue(`journalDetails.0.credit`, selectedBoe.usdAmount);
         setValue(`journalDetails.0.notes`, `Receipt for BOE ${selectedBoe.boeNo}`);
-        setValue('journalDetails.0.accountId', accId); // use accId here
+        setValue('journalDetails.0.accountId', accountId); // use accId here
 
         setValue(`journalDetails.1.debit`, selectedBoe.usdAmount);
         setValue(`journalDetails.1.credit`, 0);
@@ -144,8 +133,9 @@ useEffect(() => {
 
   return (
     <form
-      onSubmit={form.handleSubmit((values) =>
-        onSubmit(values, formState.status)
+      onSubmit={form.handleSubmit((values) =>{
+        console.log(values)
+        onSubmit(values, formState.status)}
       )}
       className="space-y-6 p-4"
     >
@@ -261,7 +251,9 @@ useEffect(() => {
                       ...prev,
                       selectedBankAccount: selectedBank || null,
                     }))
+                    console.log(selectedBank)
                     setValue(
+
                       'journalDetails.1.accountId',
                       selectedBank?.glCode || 0
                     ) // Set GL code for journal detail

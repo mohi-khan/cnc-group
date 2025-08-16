@@ -34,6 +34,7 @@ export function CustomComboboxWithApi<T extends ComboboxItem>({
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Ensure selected value is always in the list
+
   useEffect(() => {
     if (value) {
       setItems((prev) => {

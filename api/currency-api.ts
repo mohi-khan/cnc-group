@@ -10,3 +10,14 @@ export async function getAllCurrency() {
     },
   })
 }
+export async function getCurrency(currencyName:string,token:string) {
+  return fetchApi<number>({
+    url: `api/currency/get/${currencyName}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+       Authorization: `${token}`
+    },
+  })
+}
+

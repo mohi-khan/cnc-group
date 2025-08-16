@@ -38,6 +38,7 @@ import { createJournalEntryWithDetails } from '@/api/vouchers-api'
 import { useRouter } from 'next/navigation'
 import BoeReceiptForm from './boe-receipt-form'
 import { getSettings } from '@/api/shared-api'
+import { getAllCurrency, getCurrency } from '@/api/currency-api'
 
 // ✅ Corrected Date Formatting Function
 const formatDate = (date: string | Date | null | undefined) => {
@@ -293,6 +294,7 @@ const BillOfExchange = () => {
     status: 'Draft' | 'Posted'
   ) => {
     // Re-validate amount before submission
+    console.log(values.journalDetails);
     if (values.journalEntry.amountTotal > originalBoeAmount) {
       setValidationError(
         `Amount cannot be greater than the original BOE amount of ${formatCurrency(originalBoeAmount, 'USD')}`
@@ -329,7 +331,9 @@ const BillOfExchange = () => {
 
     setValidationError(null)
     const accountid = (await getSettings(token, 'Secured BOE')).data
-    console.log(values.journalDetails)
+    const currencyId=(await getCurrency('USD',token)).data
+    console.log(currencyId)
+//    console.log(values.journalDetails)
     const finalValues = {
       ...values,
       journalEntry: {
@@ -337,7 +341,7 @@ const BillOfExchange = () => {
         state: status === 'Draft' ? 0 : 1,
         notes: values.journalEntry.notes || '',
         journalType: 'Bank Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
-        currencyId: values.journalEntry.currencyId || 1,
+        currencyId: currencyId||0,
         amountTotal: values.journalEntry.amountTotal,
         createdBy: userData?.userId ?? 0,
         companyId:
@@ -353,7 +357,8 @@ const BillOfExchange = () => {
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         notes: detail.notes || '',
-        accountId: formState.selectedBankAccount?.glAccountId,
+      
+       accountId: detail.credit>0?accountid: formState.selectedBankAccount?.glAccountId,
         createdBy: userData?.userId ?? 0,
       })),
     }
@@ -372,8 +377,8 @@ const BillOfExchange = () => {
       finalValues.journalDetails[1].debit = finalValues.journalEntry.amountTotal
       finalValues.journalDetails[1].credit = 0
       // FIX: Set the accountId of the second journal detail to be the same as the first one
-      finalValues.journalDetails[1].accountId =
-        finalValues.journalDetails[0].accountId
+ /*     finalValues.journalDetails[1].accountId =
+        finalValues.journalDetails[0].accountId*/
       finalValues.journalDetails[1].bankaccountid =
         formState.selectedBankAccount?.id || null
     }
