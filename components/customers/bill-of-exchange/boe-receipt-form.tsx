@@ -19,7 +19,7 @@ import type React from 'react'
 import { useEffect, useCallback, useState } from 'react' // Import useCallback
 import { useAtom } from 'jotai' // Import useAtom to get token
 import { tokenAtom } from '@/utils/user' // Import tokenAtom
-import { getResPartnersBySearch } from '@/api/common-shared-api' // Import API function
+import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api' // Import API function
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { CustomComboboxWithApi } from '@/utils/custom-combobox-with-api'
 import { getSettings } from '@/api/shared-api'
@@ -52,7 +52,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
   const originalBoeAmount = selectedBoe?.usdAmount || 0
   const [token] = useAtom(tokenAtom) // Get token for API calls
   const [accountId,setAccountId]=useState<number>(0)
-
+  const [partnerValue, setPartnerValue] = useState<{ id: number|string, name: string } | null>(null)
  // const accountId=  getSettings(token,'Secured BOE')
   // Define the search function for partners
   const searchPartners = useCallback(
@@ -112,9 +112,35 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
       setValue('journalEntry.currencyId', 1);
     }
   };
-
+  
   init();
 }, [selectedBoe, setValue, getValues, token]);
+const watchedPartnerId = watch("journalDetails.0.resPartnerId");
+
+useEffect(() => {
+  const loadPartner = async () => {
+    if (!watchedPartnerId) {
+      setPartnerValue(null)
+      return
+    }
+
+    // Check local list first
+    const local = formState.partners.find((p) => p.id === Number(watchedPartnerId))
+    if (local) {
+      setPartnerValue(local)
+      return
+    }
+
+    // Fetch from API if not found locally
+    const partner = await getPartnerById(Number(watchedPartnerId), token)
+    if (partner?.data) {
+      setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
+    }
+  }
+
+  loadPartner()
+}, [watchedPartnerId, formState.partners, token])
+
 
   return (
     <form
@@ -259,23 +285,33 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
                 <CustomComboboxWithApi
                   items={formState.partners.map((partner) => ({
                     id: partner.id.toString(),
-                    name: partner.name || 'Unnamed Partner',
+                    name: partner.name || '',
                   }))}
-                  value={
-                    field.value
-                      ? {
-                          id: field.value.toString(),
-                          name:
-                            formState.partners.find((p) => p.id === field.value)
-                              ?.name || '',
-                        }
-                      : null
-                  }
-                  onChange={(item) =>
-                    field.onChange(item ? Number.parseInt(item.id) : null)
+                   value={
+    field.value
+      ? formState.partners.find((p) => p.id === Number(field.value)) ?? { id: field.value, name: partnerValue?.name }
+      : null
+  } 
+                  onChange={(item) =>{
+                   /// console.log('On Change',item)
+                    field.onChange(item ? Number.parseInt(item.id) : null)}
                   }
                   placeholder="Select partner"
                   searchFunction={searchPartners}
+                   fetchByIdFunction={async (id) => {
+                     const numericId:number = typeof id === "string" && /^\d+$/.test(id) 
+    ? parseInt(id, 10) 
+    : (id as number);
+                    console.log(id)
+                    const partner = await getPartnerById(numericId,token) // <- implement API
+                    console.log(partner.data)
+                     return partner?.data
+    ? {
+        id: partner.data.id.toString(),
+        name: partner.data.name ?? '',
+      }
+    : null;
+  }}
                   // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                 />
               </FormControl>
