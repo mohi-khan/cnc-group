@@ -16,7 +16,7 @@ import {
   type FormStateType,
   DetailNoteSchema,
 } from '@/utils/type'
-import { getAllBillOfExchange } from '@/api/bill-of-exchange-api'
+import { getAllBillOfExchange, updateBOEStatus } from '@/api/bill-of-exchange-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import React, { useCallback, useState, useEffect } from 'react'
@@ -109,7 +109,7 @@ const BillOfExchange = () => {
       const filteredData = result.data?.filter((boe) => {
         return boe.status !== 'Paid'
       })
-      setData(filteredData || [])
+      setData(filteredData?.reverse() || [])
       console.log('Fetched Bill of Exchange data:', filteredData || [])
     } catch (err) {
       console.error('Failed to fetch Bill of Exchange data:', err)
@@ -296,7 +296,8 @@ const BillOfExchange = () => {
 
   const onSubmit = async (
     values: JournalEntryWithDetails,
-    status: 'Draft' | 'Posted'
+    status: 'Draft' | 'Posted',
+    boeNo:string,
   ) => {
     // Re-validate amount before submission
     console.log(values.journalDetails)
@@ -392,16 +393,17 @@ const BillOfExchange = () => {
 
     console.log('Final values before API call:', finalValues) // Add this for debugging
     const response = await createJournalEntryWithDetails(finalValues, token)
-    console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
-    if (exchangeDiff !== 0) {
-      const gainLossAccounts =
-        (await getSettings(token, 'Gain-Loss Foreign Exchange')).data ?? 0
+    console.log('jOUNRAL eNTRY sAVED')
+    const Upresponse = await updateBOEStatus(token,boeNo)
+    console.log('Update BOE Success for'+boeNo)
+    if (exchangeDiff!==0){
+      const gainLossAccounts=(await getSettings(token,'Gain-Loss Foreign Exchange')).data ??0
       const finalValues = {
         journalEntry: {
           date: values.journalEntry.date,
-          state: status === 'Draft' ? 0 : 1,
+          state: 1,
           notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
-          journalType: 'Jounral Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
+          journalType: 'Journal Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
           currencyId: 1, //Base Currency
           amountTotal: values.journalEntry.amountTotal * exchangeDiff,
           companyId: values.journalEntry.companyId,
@@ -431,6 +433,7 @@ const BillOfExchange = () => {
         finalValues,
         token
       )
+      console.log('Exchange Rate Journal Entered')
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -526,7 +529,7 @@ const BillOfExchange = () => {
                       ${boe.usdAmount.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      ৳{boe.bdtAmount.toFixed(2)}
+                      ৳{boe.bdtAmount?.toFixed(2)}
                     </TableCell>
                     <TableCell>{getBoeStatus(boe)}</TableCell>
                     <TableCell>

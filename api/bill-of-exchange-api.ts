@@ -42,3 +42,18 @@ export async function updateBillOfExchange(
     body: JSON.stringify(data),
   })
 }
+
+export async function updateBOEStatus(
+  token: string,
+  boeNo: string,
+
+) {
+  return fetchApi({
+    url: `api/BillOffExchange/updateStatus/${boeNo}`,
+    method: 'PATCH',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}

@@ -32,7 +32,8 @@ interface BoeReceiptFormProps {
   amountError: string | null
   onSubmit: (
     values: JournalEntryWithDetails,
-    status: 'Draft' | 'Posted'
+    status: 'Draft' | 'Posted',
+    boeNo:string
   ) => Promise<void>
   onClose: () => void
 }
@@ -143,7 +144,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
     <form
       onSubmit={form.handleSubmit((values) => {
         console.log(values)
-        onSubmit(values, formState.status)
+        onSubmit(values, formState.status,selectedBoe?.boeNo||'')
       })}
       className="space-y-6 p-4"
     >
