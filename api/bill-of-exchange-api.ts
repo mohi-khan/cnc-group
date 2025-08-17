@@ -49,7 +49,7 @@ export async function updateBOEStatus(
 
 ) {
   return fetchApi({
-    url: `api/updateBOEStatus/${boeNo}`,
+    url: `api/BillOffExchange/updateStatus/${boeNo}`,
     method: 'PATCH',
     headers: {
       Authorization: `${token}`,

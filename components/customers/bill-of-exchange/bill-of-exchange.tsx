@@ -393,8 +393,9 @@ const BillOfExchange = () => {
 
     console.log('Final values before API call:', finalValues) // Add this for debugging
     const response = await createJournalEntryWithDetails(finalValues, token)
-    console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+    console.log('jOUNRAL eNTRY sAVED')
     const Upresponse = await updateBOEStatus(token,boeNo)
+    console.log('Update BOE Success for'+boeNo)
     if (exchangeDiff!==0){
       const gainLossAccounts=(await getSettings(token,'Gain-Loss Foreign Exchange')).data ??0
       const finalValues = {
@@ -402,7 +403,7 @@ const BillOfExchange = () => {
           date: values.journalEntry.date,
           state: status === 'Draft' ? 0 : 1,
           notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
-          journalType: 'Jounral Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
+          journalType: 'Journal Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
           currencyId: 1, //Base Currency
           amountTotal: values.journalEntry.amountTotal * exchangeDiff,
           companyId: values.journalEntry.companyId,
@@ -432,6 +433,7 @@ const BillOfExchange = () => {
         finalValues,
         token
       )
+      console.log('Exchange Rate Journal Entered')
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -527,7 +529,7 @@ const BillOfExchange = () => {
                       ${boe.usdAmount.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      ৳{boe.bdtAmount.toFixed(2)}
+                      ৳{boe.bdtAmount?.toFixed(2)}
                     </TableCell>
                     <TableCell>{getBoeStatus(boe)}</TableCell>
                     <TableCell>
