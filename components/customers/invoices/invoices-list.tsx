@@ -215,6 +215,7 @@ const InvoicesList = () => {
         })
       } else {
         setInvoices(response.data)
+          console.log('invoice data: ', response.data)
       }
       
     } catch (err) {
@@ -226,6 +227,7 @@ const InvoicesList = () => {
     async (id: number) => {
       const response = await getInvoiceById(token, id)
       setSelectedInvoice(response.data)
+    
       setIsDialogOpen(true)
     },
     [token]
