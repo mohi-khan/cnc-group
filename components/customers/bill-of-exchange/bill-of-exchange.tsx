@@ -109,7 +109,7 @@ const BillOfExchange = () => {
       const filteredData = result.data?.filter((boe) => {
         return boe.status !== 'Paid'
       })
-      setData(filteredData || [])
+      setData(filteredData?.reverse() || [])
       console.log('Fetched Bill of Exchange data:', filteredData || [])
     } catch (err) {
       console.error('Failed to fetch Bill of Exchange data:', err)
@@ -401,7 +401,7 @@ const BillOfExchange = () => {
       const finalValues = {
         journalEntry: {
           date: values.journalEntry.date,
-          state: status === 'Draft' ? 0 : 1,
+          state: 1,
           notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
           journalType: 'Journal Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
           currencyId: 1, //Base Currency

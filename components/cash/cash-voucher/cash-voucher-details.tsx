@@ -25,8 +25,8 @@ import {
 } from '@/utils/custom-combobox-with-api'
 import { useAtom } from 'jotai'
 import { tokenAtom } from '@/utils/user'
-import { getResPartnersBySearch } from '@/api/common-shared-api'
-import { useEffect, useCallback } from 'react'
+import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api'
+import { useEffect, useCallback, useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { Trash } from 'lucide-react'
 
@@ -51,6 +51,13 @@ export default function CashVoucherDetails({
 }: CashVoucherDetailsProps) {
   const [token] = useAtom(tokenAtom)
 
+  const [partnerValue, setPartnerValue] = useState<{
+    id: number | string
+    name: string
+  } | null>(null)
+
+  const { watch } = form
+
   // UseFieldArray for dynamic journalDetails
   const { fields, remove, append } = useFieldArray({
     control: form.control,
@@ -73,6 +80,32 @@ export default function CashVoucherDetails({
       return []
     }
   }
+
+  const watchedPartnerId = watch('journalDetails.0.resPartnerId')
+
+  useEffect(() => {
+    const loadPartner = async () => {
+      if (!watchedPartnerId) {
+        setPartnerValue(null)
+        return
+      }
+
+      // Check local list first
+      const local = partners.find((p) => p.id === Number(watchedPartnerId))
+      if (local) {
+        setPartnerValue(local)
+        return
+      }
+
+      // Fetch from API if not found locally
+      const partner = await getPartnerById(Number(watchedPartnerId), token)
+      if (partner?.data) {
+        setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
+      }
+    }
+
+    loadPartner()
+  }, [watchedPartnerId, partners, token])
 
   const determineVoucherType = useCallback((): string => {
     const currentDetails = form.getValues('journalDetails') || []
@@ -319,31 +352,47 @@ export default function CashVoucherDetails({
                             }`}
                           >
                             <CustomComboboxWithApi
-                              items={partners
-                                .filter((partner) => partner.active)
-                                .map((partner) => ({
-                                  id: partner.id.toString(),
-                                  name: partner.name || 'Unnamed Partner',
-                                }))}
+                              items={partners.map((partner) => ({
+                                id: partner.id.toString(),
+                                name: partner.name || '',
+                              }))}
                               value={
                                 field.value
-                                  ? {
-                                      id: field.value.toString(),
-                                      name:
-                                        partners.find(
-                                          (p) => p.id === field.value
-                                        )?.name || '',
-                                    }
+                                  ? (partners.find(
+                                      (p) => p.id === Number(field.value)
+                                    ) ?? {
+                                      id: field.value,
+                                      name: partnerValue?.name || '',
+                                    })
                                   : null
                               }
-                              onChange={(value) =>
+                              onChange={(item) => {
+                                /// console.log('On Change',item)
                                 field.onChange(
-                                  value ? Number.parseInt(value.id, 10) : null
+                                  item ? Number.parseInt(item.id) : null
                                 )
-                              }
-                              placeholder="Select a partner"
+                              }}
+                              placeholder="Select partner"
                               searchFunction={searchPartners}
-                              disabled={!isPartnerFieldEnabled}
+                              fetchByIdFunction={async (id) => {
+                                const numericId: number =
+                                  typeof id === 'string' && /^\d+$/.test(id)
+                                    ? parseInt(id, 10)
+                                    : (id as number)
+                                console.log(id)
+                                const partner = await getPartnerById(
+                                  numericId,
+                                  token
+                                ) // <- implement API
+                                console.log(partner.data)
+                                return partner?.data
+                                  ? {
+                                      id: partner.data.id.toString(),
+                                      name: partner.data.name ?? '',
+                                    }
+                                  : null
+                              }}
+                              // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                             />
                           </div>
                         </FormControl>
