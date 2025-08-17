@@ -549,6 +549,16 @@ export const JournalQuerySchema = z.object({
 })
 export type JournalQuery = z.infer<typeof JournalQuerySchema>
 
+//For Sending Journal Query by Date range
+export const JournalQuerySchemaDateRange = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+  companyId: z.array(z.number()),
+  locationId: z.array(z.number()),
+  voucherType: z.nativeEnum(VoucherTypes).optional(),
+})
+export type JournalQueryDateRange = z.infer<typeof JournalQuerySchemaDateRange>
+
 //For holding Journal Deta
 export const JournalResultSchema = z.object({
   voucherid: z.number(),
