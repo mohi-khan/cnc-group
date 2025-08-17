@@ -14,12 +14,12 @@ import {
 import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type { FormStateType, ResPartner } from '@/utils/type'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   type ComboboxItem,
   CustomComboboxWithApi,
 } from '@/utils/custom-combobox-with-api'
-import { getResPartnersBySearch } from '@/api/common-shared-api'
+import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api'
 import { useAtom } from 'jotai'
 import { tokenAtom } from '@/utils/user'
 
@@ -46,6 +46,12 @@ export default function BankVoucherDetails({
 
   const [token] = useAtom(tokenAtom)
 
+  const [partnerValue, setPartnerValue] = useState<{
+    id: number | string
+    name: string
+  } | null>(null)
+  const { watch } = form
+
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {
       const response = await getResPartnersBySearch(query, token)
@@ -62,6 +68,32 @@ export default function BankVoucherDetails({
       return []
     }
   }
+
+  const watchedPartnerId = watch('journalDetails.0.resPartnerId')
+
+  useEffect(() => {
+    const loadPartner = async () => {
+      if (!watchedPartnerId) {
+        setPartnerValue(null)
+        return
+      }
+
+      // Check local list first
+      const local = partners.find((p) => p.id === Number(watchedPartnerId))
+      if (local) {
+        setPartnerValue(local)
+        return
+      }
+
+      // Fetch from API if not found locally
+      const partner = await getPartnerById(Number(watchedPartnerId), token)
+      if (partner?.data) {
+        setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
+      }
+    }
+
+    loadPartner()
+  }, [watchedPartnerId, partners, token])
 
   // Update amounts when rows are added or removed
   useEffect(() => {
@@ -271,31 +303,47 @@ export default function BankVoucherDetails({
                               className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
                             >
                               <CustomComboboxWithApi
-                                items={partners
-                                  .filter((partner) => partner.active)
-                                  .map((partner) => ({
-                                    id: partner.id.toString(),
-                                    name: partner.name || 'Unnamed Partner',
-                                  }))}
+                                items={partners.map((partner) => ({
+                                  id: partner.id.toString(),
+                                  name: partner.name || '',
+                                }))}
                                 value={
                                   field.value
-                                    ? {
-                                        id: field.value.toString(),
-                                        name:
-                                          partners.find(
-                                            (p) => p.id === field.value
-                                          )?.name || '',
-                                      }
+                                    ? (partners.find(
+                                        (p) => p.id === Number(field.value)
+                                      ) ?? {
+                                        id: field.value,
+                                        name: partnerValue?.name || '',
+                                      })
                                     : null
                                 }
-                                onChange={(value) =>
+                                onChange={(item) => {
+                                  /// console.log('On Change',item)
                                   field.onChange(
-                                    value ? Number.parseInt(value.id, 10) : null
+                                    item ? Number.parseInt(item.id) : null
                                   )
-                                }
+                                }}
                                 placeholder="Select partner"
                                 searchFunction={searchPartners}
-                                disabled={!isPartnerFieldEnabled}
+                                fetchByIdFunction={async (id) => {
+                                  const numericId: number =
+                                    typeof id === 'string' && /^\d+$/.test(id)
+                                      ? parseInt(id, 10)
+                                      : (id as number)
+                                  console.log(id)
+                                  const partner = await getPartnerById(
+                                    numericId,
+                                    token
+                                  ) // <- implement API
+                                  console.log(partner.data)
+                                  return partner?.data
+                                    ? {
+                                        id: partner.data.id.toString(),
+                                        name: partner.data.name ?? '',
+                                      }
+                                    : null
+                                }}
+                                // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                               />
                             </div>
                           )}
