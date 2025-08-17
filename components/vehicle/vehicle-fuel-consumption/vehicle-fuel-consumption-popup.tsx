@@ -37,7 +37,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
 > = ({ isOpen, onClose, refreshFuelData, loading, vehicles }) => {
   //getting userData from jotai atom component
   useInitializeUser()
- const [userData] = useAtom(userDataAtom)
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const {
@@ -156,23 +156,6 @@ const VehicleFuelConsumptionPopUp: React.FC<
             )}
           </div>
 
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Total Consumption
-            </label>
-            <Input
-              type="number"
-              step="0.1"
-              {...register('totalConsumption', { valueAsNumber: true })} // Convert to number
-              className="mt-1 w-full"
-            />
-            {errors.totalConsumption && (
-              <p className="text-red-500 text-sm">
-                {errors.totalConsumption.message}
-              </p>
-            )}
-          </div> */}
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Kilometer Run
@@ -225,3 +208,5 @@ const VehicleFuelConsumptionPopUp: React.FC<
 }
 
 export default VehicleFuelConsumptionPopUp
+
+

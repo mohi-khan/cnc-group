@@ -36,6 +36,7 @@ const MeterEntry = () => {
       })
     } else {
       setMeterEntry(response.data)
+      console.log("meter data: ", response.data)
     }
   }, [token, router])
 

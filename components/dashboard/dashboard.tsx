@@ -174,7 +174,7 @@ export default function Dashboard() {
     if (!token) return
     const data = await getAllDepartments(token)
     if (data.error || !data.data) {
-      console.error('Error getting departments:', data.error)
+      // console.error('Error getting departments:', data.error)
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get departments',

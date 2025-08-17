@@ -24,7 +24,14 @@ const VehiclePerformanceReportList: React.FC<VehiclePerformanceReportListProps> 
   )
 
   return (
-    <div ref={targetRef} className="mt-10 mx-4">
+    <div
+      ref={targetRef}
+      style={{
+       
+        padding: '16px', // this acts as a 4px margin inside the PDF
+      }}
+      className="mt-10 mx-4"
+    >
       <Table className="border shadow-md mt-10  ">
         <TableHeader className="bg-slate-200 shadow-md sticky top-28">
           <TableRow>
@@ -43,7 +50,11 @@ const VehiclePerformanceReportList: React.FC<VehiclePerformanceReportListProps> 
             (item: vehiclePerLitreCost, index: number) => (
               <TableRow key={index}>
                 <TableCell>{item.year}</TableCell>
-                <TableCell>{new Date(0, item.month - 1).toLocaleString('default', { month: 'long' })}</TableCell>
+                <TableCell>
+                  {new Date(0, item.month - 1).toLocaleString('default', {
+                    month: 'long',
+                  })}
+                </TableCell>
                 <TableCell>{item.gasConsumption}</TableCell>
                 <TableCell>{item.octaneConsumption}</TableCell>
                 <TableCell>{item.kmrsperlitre}</TableCell>
