@@ -14,6 +14,7 @@ import {
   type BoeGet,
   type JournalEntryWithDetails,
   type FormStateType,
+  DetailNoteSchema,
 } from '@/utils/type'
 import { getAllBillOfExchange } from '@/api/bill-of-exchange-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
@@ -80,6 +81,7 @@ const BillOfExchange = () => {
   const [selectedBoe, setSelectedBoe] = useState<BoeGet | null>(null)
   const [originalBoeAmount, setOriginalBoeAmount] = useState<number>(0)
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false)
+   const [exchangeRate, setExchangeRate] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -242,6 +244,7 @@ const BillOfExchange = () => {
     (boe: BoeGet) => {
       setSelectedBoe(boe)
       setOriginalBoeAmount(boe.usdAmount)
+      setExchangeRate(boe.exchangeRate)
       // Pre-populate the form with BOE data
       form.reset({
         journalEntry: {
@@ -330,9 +333,11 @@ const BillOfExchange = () => {
     // Removed: Validation for bank account GL code as per user's request to copy accountId
 
     setValidationError(null)
-    const accountid = (await getSettings(token, 'Secured BOE')).data
+    const accountid = (await getSettings(token, 'Secured BOE')).data 
     const currencyId=(await getCurrency('USD',token)).data
-    console.log(currencyId)
+    //console.log(currencyId)
+    const exchangeDiff=values.journalEntry.exchangeRate-exchangeRate
+    console.log('diff',exchangeDiff)
 //    console.log(values.journalDetails)
     const finalValues = {
       ...values,
@@ -345,13 +350,9 @@ const BillOfExchange = () => {
         amountTotal: values.journalEntry.amountTotal,
         createdBy: userData?.userId ?? 0,
         companyId:
-          values.journalEntry.companyId ||
-          userData?.userCompanies[0]?.company.companyId ||
-          0,
+          values.journalEntry.companyId,
         locationId:
-          values.journalEntry.locationId ||
-          userData?.userLocations[0]?.location.locationId ||
-          0,
+          values.journalEntry.locationId ,
       },
 
       journalDetails: values.journalDetails.map((detail) => ({
@@ -386,7 +387,40 @@ const BillOfExchange = () => {
     console.log('Final values before API call:', finalValues) // Add this for debugging
     const response = await createJournalEntryWithDetails(finalValues, token)
     console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+    if (exchangeDiff!==0){
+      const gainLossAccounts=(await getSettings(token,'Gain-Loss Foreign Exchange')).data ??0
+      const finalValues = {
+      journalEntry: {
+        date:values.journalEntry.date,
+        state: status === 'Draft' ? 0 : 1,
+        notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
+        journalType: 'Jounral Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
+        currencyId: 1, //Base Currency
+        amountTotal: values.journalEntry.amountTotal*exchangeDiff,
+        companyId:values.journalEntry.companyId,
+        locationId:values.journalEntry.locationId,
+        exchangeRate:1,
+        createdBy:values.journalEntry.createdBy
+      },
 
+      journalDetails: [{
+       accountId:exchangeDiff>0?gainLossAccounts:accountid || 0,
+       debit:values.journalEntry.amountTotal*exchangeDiff,
+       credit:0,
+       createdBy:values.journalEntry.createdBy||0
+      },
+      {
+       accountId:exchangeDiff>0?accountid || 0:gainLossAccounts,
+       credit:values.journalEntry.amountTotal*exchangeDiff,
+       debit:0,
+       createdBy:values.journalEntry.createdBy ||0
+      }
+    
+    ],
+    }
+    
+    console.log('Final values before API call:', finalValues) // Add this for debugging
+    const exchangeResponse = await createJournalEntryWithDetails(finalValues, token)
     if (response.error || !response.data) {
       toast({
         title: 'Error',
@@ -397,7 +431,7 @@ const BillOfExchange = () => {
         title: 'Success',
         description: 'Receipt created successfully',
       })
-      // Close popup and reset form
+    }  // Close popup and reset form
       setIsReceiptDialogOpen(false)
       form.reset()
       setFormState({

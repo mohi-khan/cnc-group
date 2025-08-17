@@ -1715,6 +1715,7 @@ export type BoeGet = {
   maturityDate: Date
   usdAmount: number
   bdtAmount: number
+  exchangeRate:number
 }
 
 // create billofexchange type
@@ -1778,4 +1779,17 @@ export interface GetFdrReport {
   last_updated_value: number | null;
   last_update_date: string | null; // Date only
 }
-
+//Get Response of BeoApiResponse
+export interface BoeApiResponse {
+  boeNo: string
+  boeDate: string // ISO date string
+  lcLogNo: string
+  companyId: number
+  boeSubDate: string | null
+  boeRecDate: string | null
+  negotiationDate: string | null
+  maturityDate: string | null
+  usdAmount: number
+  bdtAmount: number
+  exchangeRate: number | null
+}

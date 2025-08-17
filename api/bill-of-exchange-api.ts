@@ -1,9 +1,9 @@
 import { fetchApi } from '@/utils/http'
-import { BoeGet, CreateBoe } from '@/utils/type'
+import { BoeApiResponse, BoeGet, CreateBoe } from '@/utils/type'
 
 // Create Bill of Exchange
 export async function createBillOfExchange(token: string, data: CreateBoe) {
-  return fetchApi({
+  return fetchApi<BoeApiResponse[]>({
     url: 'api/create-bill-of-exchange',
     method: 'POST',
     headers: {
