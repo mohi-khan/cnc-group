@@ -358,10 +358,7 @@ const BillOfExchange = () => {
       journalDetails: values.journalDetails.map((detail, index, arr) => ({
         ...detail,
         notes: detail.notes || '',
-        accountId:
-          index === arr.length - 1
-            ? 108
-            : formState.selectedBankAccount?.glAccountId,
+        accountId: detail.credit>0?accountid: formState.selectedBankAccount?.glAccountId,
         createdBy: userData?.userId ?? 0,
       })),
     }

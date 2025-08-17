@@ -51,22 +51,23 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
   const watchedAmount = watch('journalEntry.amountTotal')
   const originalBoeAmount = selectedBoe?.usdAmount || 0
   const [token] = useAtom(tokenAtom) // Get token for API calls
-  const [accountId,setAccountId]=useState<number>(0)
-  const [partnerValue, setPartnerValue] = useState<{ id: number|string, name: string } | null>(null)
- // const accountId=  getSettings(token,'Secured BOE')
+  const [accountId, setAccountId] = useState<number>(0)
+  const [partnerValue, setPartnerValue] = useState<{
+    id: number | string
+    name: string
+  } | null>(null)
+  // const accountId=  getSettings(token,'Secured BOE')
   // Define the search function for partners
   const searchPartners = useCallback(
     async (query: string) => {
       if (!token) return []
       try {
-      
         const response = await getResPartnersBySearch(query, token)
         if (response.data) {
           return response.data.map((p) => ({
             id: p.id.toString(),
             name: p.name || 'Unnamed Partner',
           }))
-          
         }
       } catch (error) {
         console.error('Failed to search partners:', error)
@@ -75,68 +76,75 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
     },
     [token]
   )
-   
+
   // Update the form's amountTotal and related details when the selectedBoe changes
- useEffect(() => {
-  const init = async () => {
-    const settings = await getSettings(token, 'Secured BOE');
-    const accId = settings?.data ?? 0;
-    setAccountId(accId);
+  useEffect(() => {
+    const init = async () => {
+      const settings = await getSettings(token, 'Secured BOE')
+      const accId = settings?.data ?? 0
+      setAccountId(accId)
 
-    if (selectedBoe) {
-      setValue('journalEntry.amountTotal', selectedBoe.usdAmount);
-      const currentDetails = getValues('journalDetails');
-      if (currentDetails && currentDetails.length >= 2) {
-        setValue(`journalDetails.0.debit`, 0);
-        setValue(`journalDetails.0.credit`, selectedBoe.usdAmount);
-        setValue(`journalDetails.0.notes`, `Receipt for BOE ${selectedBoe.boeNo}`);
-        setValue('journalDetails.0.accountId', accountId); // use accId here
+      if (selectedBoe) {
+        setValue('journalEntry.amountTotal', selectedBoe.usdAmount)
+        const currentDetails = getValues('journalDetails')
+        if (currentDetails && currentDetails.length >= 2) {
+          setValue(`journalDetails.0.debit`, 0)
+          setValue(`journalDetails.0.credit`, selectedBoe.usdAmount)
+          setValue(
+            `journalDetails.0.notes`,
+            `Receipt for BOE ${selectedBoe.boeNo}`
+          )
+          setValue('journalDetails.0.accountId', accountId) // use accId here
 
-        setValue(`journalDetails.1.debit`, selectedBoe.usdAmount);
-        setValue(`journalDetails.1.credit`, 0);
-        setValue(`journalDetails.1.notes`, `Receipt for BOE ${selectedBoe.boeNo}`);
+          setValue(`journalDetails.1.debit`, selectedBoe.usdAmount)
+          setValue(`journalDetails.1.credit`, 0)
+          setValue(
+            `journalDetails.1.notes`,
+            `Receipt for BOE ${selectedBoe.boeNo}`
+          )
+        }
+        setValue('journalEntry.notes', selectedBoe.boeNo || '')
+        setValue('journalEntry.payTo', selectedBoe.boeNo || '')
+        setValue('journalEntry.currencyId', 1)
       }
-      setValue('journalEntry.notes', selectedBoe.boeNo || '');
-      setValue('journalEntry.payTo', selectedBoe.boeNo || '');
-      setValue('journalEntry.currencyId', 1);
-    }
-  };
-  
-  init();
-}, [selectedBoe, setValue, getValues, token]);
-const watchedPartnerId = watch("journalDetails.0.resPartnerId");
-
-useEffect(() => {
-  const loadPartner = async () => {
-    if (!watchedPartnerId) {
-      setPartnerValue(null)
-      return
     }
 
-    // Check local list first
-    const local = formState.partners.find((p) => p.id === Number(watchedPartnerId))
-    if (local) {
-      setPartnerValue(local)
-      return
+    init()
+  }, [selectedBoe, setValue, getValues, token])
+  const watchedPartnerId = watch('journalDetails.0.resPartnerId')
+
+  useEffect(() => {
+    const loadPartner = async () => {
+      if (!watchedPartnerId) {
+        setPartnerValue(null)
+        return
+      }
+
+      // Check local list first
+      const local = formState.partners.find(
+        (p) => p.id === Number(watchedPartnerId)
+      )
+      if (local) {
+        setPartnerValue(local)
+        return
+      }
+
+      // Fetch from API if not found locally
+      const partner = await getPartnerById(Number(watchedPartnerId), token)
+      if (partner?.data) {
+        setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
+      }
     }
 
-    // Fetch from API if not found locally
-    const partner = await getPartnerById(Number(watchedPartnerId), token)
-    if (partner?.data) {
-      setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
-    }
-  }
-
-  loadPartner()
-}, [watchedPartnerId, formState.partners, token])
-
+    loadPartner()
+  }, [watchedPartnerId, formState.partners, token])
 
   return (
     <form
-      onSubmit={form.handleSubmit((values) =>{
+      onSubmit={form.handleSubmit((values) => {
         console.log(values)
-        onSubmit(values, formState.status)}
-      )}
+        onSubmit(values, formState.status)
+      })}
       className="space-y-6 p-4"
     >
       {validationError && (
@@ -253,7 +261,6 @@ useEffect(() => {
                     }))
                     console.log(selectedBank)
                     setValue(
-
                       'journalDetails.1.accountId',
                       selectedBank?.glCode || 0
                     ) // Set GL code for journal detail
@@ -279,31 +286,34 @@ useEffect(() => {
                     id: partner.id.toString(),
                     name: partner.name || '',
                   }))}
-                   value={
-    field.value
-      ? formState.partners.find((p) => p.id === Number(field.value)) ?? { id: field.value, name: partnerValue?.name }
-      : null
-  } 
-                  onChange={(item) =>{
-                   /// console.log('On Change',item)
-                    field.onChange(item ? Number.parseInt(item.id) : null)}
+                  value={
+                    field.value
+                      ? (formState.partners.find(
+                          (p) => p.id === Number(field.value)
+                        ) ?? { id: field.value, name: partnerValue?.name })
+                      : null
                   }
+                  onChange={(item) => {
+                    /// console.log('On Change',item)
+                    field.onChange(item ? Number.parseInt(item.id) : null)
+                  }}
                   placeholder="Select partner"
                   searchFunction={searchPartners}
-                   fetchByIdFunction={async (id) => {
-                     const numericId:number = typeof id === "string" && /^\d+$/.test(id) 
-    ? parseInt(id, 10) 
-    : (id as number);
+                  fetchByIdFunction={async (id) => {
+                    const numericId: number =
+                      typeof id === 'string' && /^\d+$/.test(id)
+                        ? parseInt(id, 10)
+                        : (id as number)
                     console.log(id)
-                    const partner = await getPartnerById(numericId,token) // <- implement API
+                    const partner = await getPartnerById(numericId, token) // <- implement API
                     console.log(partner.data)
-                     return partner?.data
-    ? {
-        id: partner.data.id.toString(),
-        name: partner.data.name ?? '',
-      }
-    : null;
-  }}
+                    return partner?.data
+                      ? {
+                          id: partner.data.id.toString(),
+                          name: partner.data.name ?? '',
+                        }
+                      : null
+                  }}
                   // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                 />
               </FormControl>
@@ -311,7 +321,7 @@ useEffect(() => {
             </FormItem>
           )}
         />
-        
+
         {/* Amount */}
         <FormField
           control={control}
