@@ -1726,6 +1726,7 @@ export type BoeGet = {
   usdAmount: number
   bdtAmount: number
   exchangeRate:number
+  status: String
 }
 
 // create billofexchange type
