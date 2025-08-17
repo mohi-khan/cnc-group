@@ -81,7 +81,7 @@ const BillOfExchange = () => {
   const [selectedBoe, setSelectedBoe] = useState<BoeGet | null>(null)
   const [originalBoeAmount, setOriginalBoeAmount] = useState<number>(0)
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false)
-   const [exchangeRate, setExchangeRate] = useState(0)
+  const [exchangeRate, setExchangeRate] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -106,9 +106,11 @@ const BillOfExchange = () => {
   const fetchData = useCallback(async () => {
     try {
       const result = await getAllBillOfExchange(token)
-      const fetchedData = result.data ? result.data : []
-      setData(fetchedData)
-      console.log('Fetched Bill of Exchange data:', result.data || [])
+      const filteredData = result.data?.filter((boe) => {
+        return boe.status !== 'Paid'
+      })
+      setData(filteredData || [])
+      console.log('Fetched Bill of Exchange data:', filteredData || [])
     } catch (err) {
       console.error('Failed to fetch Bill of Exchange data:', err)
       setError('Failed to load data. Please try again later.')
@@ -334,12 +336,12 @@ const BillOfExchange = () => {
     // Removed: Validation for bank account GL code as per user's request to copy accountId
 
     setValidationError(null)
-    const accountid = (await getSettings(token, 'Secured BOE')).data 
-    const currencyId=(await getCurrency('USD',token)).data
+    const accountid = (await getSettings(token, 'Secured BOE')).data
+    const currencyId = (await getCurrency('USD', token)).data
     //console.log(currencyId)
-    const exchangeDiff=values.journalEntry.exchangeRate-exchangeRate
-    console.log('diff',exchangeDiff)
-//    console.log(values.journalDetails)
+    const exchangeDiff = values.journalEntry.exchangeRate - exchangeRate
+    console.log('diff', exchangeDiff)
+    //    console.log(values.journalDetails)
     const finalValues = {
       ...values,
       journalEntry: {
@@ -350,16 +352,17 @@ const BillOfExchange = () => {
         currencyId: currencyId || 0,
         amountTotal: values.journalEntry.amountTotal,
         createdBy: userData?.userId ?? 0,
-        companyId:
-          values.journalEntry.companyId,
-        locationId:
-          values.journalEntry.locationId ,
+        companyId: values.journalEntry.companyId,
+        locationId: values.journalEntry.locationId,
       },
 
       journalDetails: values.journalDetails.map((detail, index, arr) => ({
         ...detail,
         notes: detail.notes || '',
-        accountId: detail.credit>0?accountid: formState.selectedBankAccount?.glAccountId,
+        accountId:
+          detail.credit > 0
+            ? accountid
+            : formState.selectedBankAccount?.glAccountId,
         createdBy: userData?.userId ?? 0,
       })),
     }
@@ -395,48 +398,51 @@ const BillOfExchange = () => {
     if (exchangeDiff!==0){
       const gainLossAccounts=(await getSettings(token,'Gain-Loss Foreign Exchange')).data ??0
       const finalValues = {
-      journalEntry: {
-        date:values.journalEntry.date,
-        state: status === 'Draft' ? 0 : 1,
-        notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
-        journalType: 'Jounral Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
-        currencyId: 1, //Base Currency
-        amountTotal: values.journalEntry.amountTotal*exchangeDiff,
-        companyId:values.journalEntry.companyId,
-        locationId:values.journalEntry.locationId,
-        exchangeRate:1,
-        createdBy:values.journalEntry.createdBy
-      },
+        journalEntry: {
+          date: values.journalEntry.date,
+          state: status === 'Draft' ? 0 : 1,
+          notes: `Gain/Loss Foreign Exchange on Bill of Entry against ${values.journalEntry.notes}`,
+          journalType: 'Jounral Voucher', // Still 'Bank Voucher' as per schema, but conceptually a Receipt
+          currencyId: 1, //Base Currency
+          amountTotal: values.journalEntry.amountTotal * exchangeDiff,
+          companyId: values.journalEntry.companyId,
+          locationId: values.journalEntry.locationId,
+          exchangeRate: 1,
+          createdBy: values.journalEntry.createdBy,
+        },
 
-      journalDetails: [{
-       accountId:exchangeDiff>0?gainLossAccounts:accountid || 0,
-       debit:values.journalEntry.amountTotal*exchangeDiff,
-       credit:0,
-       createdBy:values.journalEntry.createdBy||0
-      },
-      {
-       accountId:exchangeDiff>0?accountid || 0:gainLossAccounts,
-       credit:values.journalEntry.amountTotal*exchangeDiff,
-       debit:0,
-       createdBy:values.journalEntry.createdBy ||0
+        journalDetails: [
+          {
+            accountId: exchangeDiff > 0 ? gainLossAccounts : accountid || 0,
+            debit: values.journalEntry.amountTotal * exchangeDiff,
+            credit: 0,
+            createdBy: values.journalEntry.createdBy || 0,
+          },
+          {
+            accountId: exchangeDiff > 0 ? accountid || 0 : gainLossAccounts,
+            credit: values.journalEntry.amountTotal * exchangeDiff,
+            debit: 0,
+            createdBy: values.journalEntry.createdBy || 0,
+          },
+        ],
       }
-    
-    ],
-    }
-    
-    console.log('Final values before API call:', finalValues) // Add this for debugging
-    const exchangeResponse = await createJournalEntryWithDetails(finalValues, token)
-    if (response.error || !response.data) {
-      toast({
-        title: 'Error',
-        description: response.error?.message || 'Error creating Receipt',
-      })
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Receipt created successfully',
-      })
-    }  // Close popup and reset form
+
+      console.log('Final values before API call:', finalValues) // Add this for debugging
+      const exchangeResponse = await createJournalEntryWithDetails(
+        finalValues,
+        token
+      )
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error creating Receipt',
+        })
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Receipt created successfully',
+        })
+      } // Close popup and reset form
       setIsReceiptDialogOpen(false)
       form.reset()
       setFormState({
