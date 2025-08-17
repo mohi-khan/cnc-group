@@ -16,7 +16,7 @@ import {
   type FormStateType,
   DetailNoteSchema,
 } from '@/utils/type'
-import { getAllBillOfExchange } from '@/api/bill-of-exchange-api'
+import { getAllBillOfExchange, updateBOEStatus } from '@/api/bill-of-exchange-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import React, { useCallback, useState, useEffect } from 'react'
@@ -294,7 +294,8 @@ const BillOfExchange = () => {
 
   const onSubmit = async (
     values: JournalEntryWithDetails,
-    status: 'Draft' | 'Posted'
+    status: 'Draft' | 'Posted',
+    boeNo:string,
   ) => {
     // Re-validate amount before submission
     console.log(values.journalDetails)
@@ -390,6 +391,7 @@ const BillOfExchange = () => {
     console.log('Final values before API call:', finalValues) // Add this for debugging
     const response = await createJournalEntryWithDetails(finalValues, token)
     console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+    const Upresponse = await updateBOEStatus(token,boeNo)
     if (exchangeDiff!==0){
       const gainLossAccounts=(await getSettings(token,'Gain-Loss Foreign Exchange')).data ??0
       const finalValues = {
