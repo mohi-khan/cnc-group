@@ -20,7 +20,7 @@ export async function createBillEntry(
 // Fetch all Bill entry
 export async function getBillEntry(token: string) {
   return fetchApi<GetElectricityBillType[]>({
-    url: 'api/utility/getBills',
+    url: 'api/utilities/getBills',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

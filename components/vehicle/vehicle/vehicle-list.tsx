@@ -189,9 +189,7 @@ export const VehicleList: React.FC<VehicleListProps> = ({
                   {new Date(vehicle.purchaseDate).toLocaleDateString()}
                 </TableCell>
                 <TableCell>{getAssetName(vehicle.assetId)}</TableCell>
-                <TableCell>
-                {vehicle.driverName}
-                </TableCell>
+                <TableCell>{vehicle.driverName}</TableCell>
 
                 <TableCell>
                   {editingVehicle === vehicle.vehicleNo ? (
@@ -256,20 +254,52 @@ export const VehicleList: React.FC<VehicleListProps> = ({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className={
+                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                }
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink onClick={() => setCurrentPage(i + 1)}>
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+
+            {[...Array(totalPages)].map((_, index) => {
+              if (
+                index === 0 ||
+                index === totalPages - 1 ||
+                (index >= currentPage - 2 && index <= currentPage + 2)
+              ) {
+                return (
+                  <PaginationItem key={`page-${index}`}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(index + 1)}
+                      isActive={currentPage === index + 1}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              } else if (
+                index === currentPage - 3 ||
+                index === currentPage + 3
+              ) {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationLink>...</PaginationLink>
+                  </PaginationItem>
+                )
+              }
+
+              return null
+            })}
+
             <PaginationItem>
               <PaginationNext
                 onClick={() =>
-                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : ''
                 }
               />
             </PaginationItem>

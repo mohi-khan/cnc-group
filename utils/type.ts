@@ -1311,15 +1311,38 @@ export interface GetVehicleConsumptionType {
 }
 
 //Create createVehicleFuelConsumptionSchema
+// export const createVehicleFuelConsumptionSchema = z.object({
+//   vehicleId: z.number().int(),
+//   octConsumption: z.number().nullable(),
+//   gasConsumption: z.number().nullable(),
+//   totalConsumption: z.number().nullable(),
+//   kmrsPerLitr: z.number().nullable(),
+//   transDate: z.coerce.date(),
+//   createdBy: z.number().int(),
+// })
+
+
+
 export const createVehicleFuelConsumptionSchema = z.object({
-  vehicleId: z.number().int(),
-  octConsumption: z.number().nullable(),
-  gasConsumption: z.number().nullable(),
-  totalConsumption: z.number().nullable(),
-  kmrsPerLitr: z.number().nullable(),
+  vehicleId: z
+    .number({ invalid_type_error: 'Vehicle is required' })
+    .min(1, 'Vehicle is required'),
+  octConsumption: z
+    .number({ invalid_type_error: 'Octane Consumption is required' })
+    .min(0, 'Value cannot be negative'),
+  gasConsumption: z
+    .number({ invalid_type_error: 'Gas Consumption is required' })
+    .min(0, 'Value cannot be negative'),
+  kmrsPerLitr: z
+    .number({ invalid_type_error: 'Kilometer Run is required' })
+    .min(0, 'Value cannot be negative'),
   transDate: z.coerce.date(),
-  createdBy: z.number().int(),
-})
+  createdBy: z.number(),
+  totalConsumption: z.number().optional(),
+});
+
+
+
 
 export type createVehicleFuelConsumptionType = z.infer<
   typeof createVehicleFuelConsumptionSchema

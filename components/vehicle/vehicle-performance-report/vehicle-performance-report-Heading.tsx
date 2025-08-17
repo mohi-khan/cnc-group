@@ -1,16 +1,7 @@
 'use client'
-import React, { JSX } from 'react'
-
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Popover,
   PopoverContent,
@@ -18,8 +9,9 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { Employee, GetAllVehicleType } from '@/utils/type'
+import { GetAllVehicleType } from '@/utils/type'
 import { CustomCombobox } from '@/utils/custom-combobox'
+
 interface VehiclePerformanceReportHeadingProps {
   vehicles: GetAllVehicleType[]
   generatePdf: () => void
@@ -27,7 +19,6 @@ interface VehiclePerformanceReportHeadingProps {
   selectedVehicleId?: string
   generateExcel: () => void
   onDateChange?: (start: string, end: string) => void
-  
 }
 
 const VehiclePerformanceReportHeading: React.FC<
@@ -39,14 +30,11 @@ const VehiclePerformanceReportHeading: React.FC<
   selectedVehicleId: propSelectedVehicleId,
   generateExcel,
   onDateChange,
-  
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [isShowData, setIsShowData] = useState<boolean>(false)
-  const [isStartDateOpen, setIsStartDateOpen] = useState(false)
-  const [isEndDateOpen, setIsEndDateOpen] = useState(false)
 
   useEffect(() => {
     if (startDate && endDate && propSelectedVehicleId) {
@@ -56,7 +44,10 @@ const VehiclePerformanceReportHeading: React.FC<
 
   useEffect(() => {
     if (startDate && endDate && onDateChange) {
-      onDateChange(format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'))
+      onDateChange(
+        format(startDate, 'yyyy-MM-dd'),
+        format(endDate, 'yyyy-MM-dd')
+      )
     }
   }, [startDate, endDate, onDateChange])
 
@@ -64,6 +55,7 @@ const VehiclePerformanceReportHeading: React.FC<
     <div className="mt-4">
       <div className="p-4 border-b w-full">
         <div className="flex items-center justify-between">
+          {/* PDF Button */}
           <div>
             <Button
               onClick={generatePdf}
@@ -75,6 +67,8 @@ const VehiclePerformanceReportHeading: React.FC<
               <span className="font-medium">PDF</span>
             </Button>
           </div>
+
+          {/* Date & Vehicle */}
           <div className="flex items-center gap-4">
             <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <PopoverTrigger asChild>
@@ -84,7 +78,10 @@ const VehiclePerformanceReportHeading: React.FC<
                 >
                   <CalendarIcon className="mr-2 h-5 w-5" />
                   {startDate && endDate
-                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
+                        endDate,
+                        'dd/MM/yyyy'
+                      )}`
                     : 'Select Date Range'}
                 </Button>
               </PopoverTrigger>
@@ -105,13 +102,22 @@ const VehiclePerformanceReportHeading: React.FC<
                     value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
                     onChange={(e) => {
                       setEndDate(new Date(e.target.value))
-                      setIsDropdownOpen(false)
                     }}
                     className="w-full p-2 border rounded"
                   />
+
+                  {/* Apply Button */}
+                  <Button
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="bg-blue-500 text-white hover:bg-blue-600"
+                  >
+                    Apply
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Vehicle Combobox */}
             <CustomCombobox
               items={vehicles.map((vehicle) => ({
                 id: vehicle.vehicleNo.toString(),
@@ -124,7 +130,8 @@ const VehiclePerformanceReportHeading: React.FC<
                       name:
                         vehicles.find(
                           (vehicle) =>
-                            vehicle.vehicleNo.toString() === propSelectedVehicleId
+                            vehicle.vehicleNo.toString() ===
+                            propSelectedVehicleId
                         )?.description || 'Unnamed Vehicle',
                     }
                   : null
@@ -137,6 +144,8 @@ const VehiclePerformanceReportHeading: React.FC<
               placeholder="Select a Vehicle"
             />
           </div>
+
+          {/* Excel Button */}
           <div>
             <Button
               onClick={generateExcel}
@@ -191,6 +200,8 @@ const VehiclePerformanceReportHeading: React.FC<
           </div>
         </div>
       </div>
+
+      {/* Show Selected Data */}
       {isShowData && propSelectedVehicleId && startDate && endDate && (
         <div className="mt-4">
           <div className="flex justify-between items-center mx-4">
@@ -212,7 +223,7 @@ const VehiclePerformanceReportHeading: React.FC<
             </div>
           </div>
         </div>
-      )}{' '}
+      )}
     </div>
   )
 }

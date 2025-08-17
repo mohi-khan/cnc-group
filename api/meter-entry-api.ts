@@ -8,7 +8,7 @@ import {
 // Create a new meter entry
 export async function createMeterEntry(data: CreateElectricityMeterType, token: string) {
   return fetchApi<CreateElectricityMeterType>({
-    url: 'api/utility/createMeter',
+    url: 'api/utilities/createMeter',
     method: 'POST',
     body: data, // pass the data object directly if fetchApi stringifies it
     headers: {
@@ -21,7 +21,7 @@ export async function createMeterEntry(data: CreateElectricityMeterType, token: 
 // Fetch all meter entry
 export async function getMeterEntry(token: string) {
   return fetchApi<GetElectricityMeterType[]>({
-    url: 'api/utility/getMeters',
+    url: 'api/utilities/getMeters',
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

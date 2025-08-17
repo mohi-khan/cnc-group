@@ -23,6 +23,7 @@ const VehiclePerformanceReport = () => {
   const [endDate, setEndDate] = useState<string>('')
   const { toPDF, targetRef } = usePDF({
     filename: 'vehicle_performance_report.pdf',
+    
   })
   const [vehiclePerformanceData, setVehiclePerformanceData] = useState<vehiclePerLitreCost[]>([])
 
@@ -136,8 +137,8 @@ const VehiclePerformanceReport = () => {
         onDateChange={handleDateChange}
         
       />
-      <VehiclePerformanceReportList 
-        targetRef={targetRef} 
+      <VehiclePerformanceReportList
+        targetRef={targetRef}
         vehiclePerformanceData={vehiclePerformanceData}
       />
     </div>
@@ -145,3 +146,5 @@ const VehiclePerformanceReport = () => {
 }
 
 export default VehiclePerformanceReport
+
+
