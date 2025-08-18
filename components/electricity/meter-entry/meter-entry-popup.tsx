@@ -82,7 +82,8 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
       costCenterId: 0,
       meterDescription: '',
       provAccountId: 0,
-      accountId: 0,
+      expenseaccountId: 0,
+      location: '',
     },
   })
 
@@ -157,6 +158,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   <FormControl>
                     <Input
                       type="number"
+                      min="1"
                       placeholder="Enter Electricity Meter ID"
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -207,6 +209,19 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     }
                     placeholder="Select company"
                   />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter Location name" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -371,7 +386,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
             />
             <FormField
               control={form.control}
-              name="accountId"
+              name="expenseaccountId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expense Account Name</FormLabel>

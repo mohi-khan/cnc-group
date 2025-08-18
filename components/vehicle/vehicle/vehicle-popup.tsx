@@ -99,7 +99,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTrigger asChild></DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[625px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Vehicle</DialogTitle>
         </DialogHeader>
@@ -364,3 +364,5 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
 }
 
 export default VehicleFormModal
+
+

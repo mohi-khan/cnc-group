@@ -42,11 +42,11 @@ export interface SubItemGroup {
 
 export interface MenuItem {
   name: string
-  subItemGroups: SubItemGroup[]  
+  subItemGroups: SubItemGroup[]
 }
 export interface SubItem {
   name: string
-  
+
   subItemGroups?: SubItem[]
 }
 
@@ -520,19 +520,19 @@ export const JournalEditWithDetailsSchema = z.object({
 
 export type JournalEntryWithDetails = z.infer<
   typeof JournalEntryWithDetailsSchema
-  >
+>
 
 export type JournalEditWithDetails = z.infer<
   typeof JournalEditWithDetailsSchema
-  >
+>
 
-  export const editJournalNotesSchema = z.object({
-    id: z.number(),
-    notes: z.string()
-  })
-  
-  export type EditJournalEditNotesType = z.infer<typeof editJournalNotesSchema>
-  
+export const editJournalNotesSchema = z.object({
+  id: z.number(),
+  notes: z.string()
+})
+
+export type EditJournalEditNotesType = z.infer<typeof editJournalNotesSchema>
+
 //Voucher Type Enum
 export enum VoucherTypes {
   CashVoucher = 'Cash Voucher',
@@ -1290,8 +1290,8 @@ export const createVehicleSchema = z.object({
   purchaseDate: z.coerce.date().nullable(),
   assetId: z.number().int().min(1, 'Asset ID is required').nullable(),
   employeeid: z.number().int(),
-  driverid:z.number().int(),
-  companyid:z.number().int(),
+  driverid: z.number().int(),
+  companyid: z.number().int(),
   createdBy: z.number().int(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
@@ -1431,15 +1431,16 @@ export const CreateElectricityMeterSchema = z.object({
   // meterDescription: z.string().max(80),
   // provAccountId: z.number().nonnegative(),
   // accountId: z.number().nonnegative(),
-   meterId: z.number().int().positive(),
-    meterName: z.string().max(45),
+  meterId: z.number().int().positive(),
+  meterName: z.string().max(45),
   utilityType: z.enum(['Electricity', 'Gas', 'Water']),
-    companyId: z.number().int(),
-    meterType: z.number().int().default(0),
-    costCenterId: z.number().int(),
-    meterDescription: z.string().max(80),
-    provAccountId: z.number().nonnegative(),
-    accountId: z.number().nonnegative()
+  companyId: z.number().int(),
+  meterType: z.number().int().default(0),
+  costCenterId: z.number().int(),
+  meterDescription: z.string().max(80),
+  provAccountId: z.number().nonnegative(),
+  expenseaccountId: z.number().nonnegative(),
+  location: z.string()
 })
 
 export type CreateElectricityMeterType = z.infer<
@@ -1517,8 +1518,8 @@ export interface GetCostBreakdownType {
   balance: number
 }
 
-export interface settings{
-  value:string;
+export interface settings {
+  value: string;
 }
 
 //Get cost breakdown Details data type
@@ -1677,12 +1678,12 @@ export interface UtilityReportParams {
 
 export type GetDeliveryChallan = {
   id: number;
-  challanId:string;
+  challanId: string;
   date: string; // ISO date string, e.g., "2025-07-23T00:00:00.000Z"
   orderId: string; // Also an ISO date string in your data, though this name might suggest a number or string ID
   orderDate: string; // ISO date string
   division: string;
-  divisionId:number;
+  divisionId: number;
   amount: number;
   res_partnerId: number;
   res_partnerName: string;
@@ -1748,7 +1749,7 @@ export type BoeGet = {
   maturityDate: Date
   usdAmount: number
   bdtAmount: number
-  exchangeRate:number
+  exchangeRate: number
   status: String
 }
 
