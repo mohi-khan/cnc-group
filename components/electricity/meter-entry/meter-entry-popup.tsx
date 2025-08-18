@@ -77,7 +77,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
       meterId: 0, // Added field
       meterName: '',
       companyId: 0,
-      utilityType: 'gas',
+      utilityType: 'Gas',
       meterType: 0,
       costCenterId: 0,
       meterDescription: '',
@@ -111,7 +111,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   }, [fetchCompany, fetchCostCenters, fetchChartOfAccounts])
 
   const onSubmit = async (data: CreateElectricityMeterType) => {
-    
+    console.log('Form Data Submitted:', data) // 👈 log form data
 
     try {
       const response = await createMeterEntry(data, token)
@@ -134,6 +134,10 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
       })
     }
   }
+
+
+
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -202,7 +206,7 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                       )
                     }
                     placeholder="Select company"
-                  />{' '}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -248,33 +252,37 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                   <div className="flex space-x-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="electricity"
-                        checked={field.value === 'electricity'}
+                        id="Electricity"
+                        checked={field.value === 'Electricity'}
                         onCheckedChange={(checked) =>
-                          checked ? field.onChange('electricity') : field.onChange(null)
+                          checked
+                            ? field.onChange('Electricity')
+                            : field.onChange(null)
                         }
                       />
-                      <label htmlFor="electricity">Electricity</label>
+                      <label htmlFor="Electricity">Electricity</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="gas"
-                        checked={field.value === 'gas'}
+                        id="Gas"
+                        checked={field.value === 'Gas'}
                         onCheckedChange={(checked) =>
-                          checked ? field.onChange('gas') : field.onChange(null)
+                          checked ? field.onChange('Gas') : field.onChange(null)
                         }
                       />
-                      <label htmlFor="gas">Gas</label>
+                      <label htmlFor="Gas">Gas</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="water"
-                        checked={field.value === 'water'}
+                        id="Water"
+                        checked={field.value === 'Water'}
                         onCheckedChange={(checked) =>
-                          checked ? field.onChange('water') : field.onChange(null)
+                          checked
+                            ? field.onChange('Water')
+                            : field.onChange(null)
                         }
                       />
-                      <label htmlFor="water">Water</label>
+                      <label htmlFor="Water">Water</label>
                     </div>
                   </div>
                   <FormMessage />
@@ -379,9 +387,13 @@ const MeterEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                         ? {
                             id: field.value.toString(),
                             name:
-                              getChartOfAccounts.filter((account) => account.accountType === 'expense').find(
-                                (account) => account.accountId === field.value
-                              )?.name || 'Unnamed Account',
+                              getChartOfAccounts
+                                .filter(
+                                  (account) => account.accountType === 'expense'
+                                )
+                                .find(
+                                  (account) => account.accountId === field.value
+                                )?.name || 'Unnamed Account',
                           }
                         : null
                     }

@@ -1433,7 +1433,7 @@ export const CreateElectricityMeterSchema = z.object({
   // accountId: z.number().nonnegative(),
    meterId: z.number().int().positive(),
     meterName: z.string().max(45),
-    utilityType: z.enum(['electricity', 'gas', 'water']),
+  utilityType: z.enum(['Electricity', 'Gas', 'Water']),
     companyId: z.number().int(),
     meterType: z.number().int().default(0),
     costCenterId: z.number().int(),

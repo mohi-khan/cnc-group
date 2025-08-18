@@ -150,7 +150,6 @@ const UtilityDashboard = () => {
         if (companiesData.length > 0 && !selectedCompanyId) {
           setSelectedCompanyId(String(companiesData[0].companyId ?? ''))
         }
-        
       } else {
         setCompanies([])
       }
@@ -161,22 +160,20 @@ const UtilityDashboard = () => {
   }, [token, selectedCompanyId])
 
   const fetchUtilityMeter = React.useCallback(async () => {
-      try {
-        const response = await getUtilityMeter(token)
-        if (response.data) {
-          setUtilityMeters(
-            Array.isArray(response.data) ? response.data : [response.data]
-          )
-          
-        } else {
-          setUtilityMeters([])
-        }
-      } catch (error) {
-        console.error('Error fetching gas data:', error)
+    try {
+      const response = await getUtilityMeter(token)
+      if (response.data) {
+        setUtilityMeters(
+          Array.isArray(response.data) ? response.data : [response.data]
+        )
+      } else {
         setUtilityMeters([])
       }
-    }, [token])
-  
+    } catch (error) {
+      console.error('Error fetching gas data:', error)
+      setUtilityMeters([])
+    }
+  }, [token])
 
   // Helper function to get location parameter
   const getLocationParam = (location: string) => {
@@ -415,14 +412,13 @@ const UtilityDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Locations</SelectItem>
-                    {utilityMeters.map((meter, index) => (
-                      <SelectItem
-                        key={index}
-                        value={String(meter.location ?? '')}
-                      >
-                        {meter.location}
-                      </SelectItem>
-                    ))}
+                    {utilityMeters
+                      .filter((meter) => meter.location) // ignore null/empty locations
+                      .map((meter, index) => (
+                        <SelectItem key={index} value={String(meter.location)}>
+                          {meter.location}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -480,14 +476,13 @@ const UtilityDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Locations</SelectItem>
-                    {utilityMeters.map((meter, index) => (
-                      <SelectItem
-                        key={index}
-                        value={String(meter.location ?? '')}
-                      >
-                        {meter.location}
-                      </SelectItem>
-                    ))}
+                    {utilityMeters
+                      .filter((meter) => meter.location) // ignore null/empty locations
+                      .map((meter, index) => (
+                        <SelectItem key={index} value={String(meter.location)}>
+                          {meter.location}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -545,14 +540,13 @@ const UtilityDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Locations</SelectItem>
-                    {utilityMeters.map((meter, index) => (
-                      <SelectItem
-                        key={index}
-                        value={String(meter.location ?? '')}
-                      >
-                        {meter.location}
-                      </SelectItem>
-                    ))}
+                    {utilityMeters
+                      .filter((meter) => meter.location) // ignore null/empty locations
+                      .map((meter, index) => (
+                        <SelectItem key={index} value={String(meter.location)}>
+                          {meter.location}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

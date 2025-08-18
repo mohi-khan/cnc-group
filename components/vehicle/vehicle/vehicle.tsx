@@ -13,6 +13,7 @@ import { VehicleList } from './vehicle-list'
 import { toast } from '@/hooks/use-toast'
 
 import {
+  getAllCompanies,
   getAllCostCenters,
   getAssets,
   getEmployee,
@@ -20,6 +21,7 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { CompanyType } from '@/api/company-api'
 
 const Vehicle = () => {
   //getting userData from jotai atom component
@@ -34,6 +36,7 @@ const Vehicle = () => {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [asset, setAsset] = useState<GetAssetData[]>([])
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
+    const [getCompany, setGetCompany] = useState<CompanyType[]>([])
 
   const handleAddVehicle = () => {
     setIsOpen(true)
@@ -100,6 +103,12 @@ const Vehicle = () => {
     
   }, [token])
 
+   const fetchCompany = useCallback(async () => {
+     if (!token) return
+     const response = await getAllCompanies(token)
+     setGetCompany(response.data ?? [])
+   }, [token])
+
   useEffect(() => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
@@ -117,7 +126,8 @@ const Vehicle = () => {
     fetchVehicles()
     fetchAssets()
     fetchEmployeeData()
-  }, [fetchgetAllCostCenters, fetchVehicles, fetchAssets, fetchEmployeeData, router])
+    fetchCompany()
+  }, [fetchgetAllCostCenters, fetchVehicles, fetchAssets, fetchEmployeeData, fetchCompany, router])
 
   return (
     <div>
@@ -136,6 +146,7 @@ const Vehicle = () => {
         costCenters={costCenters}
         asset={asset}
         employeeData={employeeData}
+        CompanyData={getCompany}
       />
     </div>
   )

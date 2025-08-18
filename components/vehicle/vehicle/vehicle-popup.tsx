@@ -23,6 +23,7 @@ import { createVehicle } from '@/api/vehicle.api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
+import { CompanyType } from '@/api/company-api'
 
 interface VehicleFormModalProps {
   isOpen: boolean
@@ -31,6 +32,7 @@ interface VehicleFormModalProps {
   costCenters: CostCenter[]
   asset: GetAssetData[]
   employeeData: { id: number; employeeName: string }[]
+  CompanyData: CompanyType[]
 }
 
 const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
@@ -40,6 +42,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
   costCenters,
   asset,
   employeeData,
+  CompanyData,
 }) => {
   useInitializeUser()
 
@@ -61,13 +64,13 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       assetId: 0,
       employeeid: 0,
       driverid: 0,
-      companyid: userData?.userCompanies?.[0]?.company.companyId || 0,
+      companyid: 0,
       createdBy: userData?.userId || 0,
     },
   })
-  
 
   const handleFormSubmit = async (data: CreateVehicleType) => {
+    console.log('Form Data Submitted:', data) // 👈 log form data
     const formattedData = {
       ...data,
       costCenterId: Number(data.costCenterId),
@@ -77,7 +80,6 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
     }
 
     try {
-      
       await createVehicle(formattedData, token)
       reset()
       onClose()
@@ -87,13 +89,13 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
       alert('Failed to create vehicle. Please try again later.')
     }
   }
-  
-  const watch = (fieldName: string) => {
-    const values = control._formValues || {};
-    return values[fieldName];
-  };
 
-  // 
+  const watch = (fieldName: string) => {
+    const values = control._formValues || {}
+    return values[fieldName]
+  }
+
+  //
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTrigger asChild></DialogTrigger>
@@ -164,7 +166,9 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             </label>
             <Input
               type="date"
-              {...register('purchaseDate', { required: "Purchase Date is required" })}
+              {...register('purchaseDate', {
+                required: 'Purchase Date is required',
+              })}
               className="mt-1 w-full"
             />
             {errors.purchaseDate && (
@@ -173,7 +177,9 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               </p>
             )}
             {!errors.purchaseDate && !watch('purchaseDate') && (
-              <p className="text-red-500 text-sm">Please select a purchase date to submit the form</p>
+              <p className="text-red-500 text-sm">
+                Please select a purchase date to submit the form
+              </p>
             )}
           </div>
 
@@ -296,6 +302,43 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               <p className="text-red-500 text-sm">{errors.driverid.message}</p>
             )}
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Company Name
+            </label>
+
+            <Controller
+              control={control}
+              name="companyid"
+              render={({ field }) => (
+                <CustomCombobox
+                  items={CompanyData?.map((company) => ({
+                    id: (company.companyId ?? '').toString(),
+                    name: company.companyName || 'Unnamed Company',
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          id: field.value.toString(),
+                          name:
+                            CompanyData?.find(
+                              (company) => company.companyId === field.value
+                            )?.companyName || 'Unnamed Company',
+                        }
+                      : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) =>
+                    field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                  }
+                  placeholder="Select company"
+                />
+              )}
+            />
+
+            {errors.driverid && (
+              <p className="text-red-500 text-sm">{errors.driverid.message}</p>
+            )}
+          </div>
 
           <div className="flex justify-end mt-4">
             <Button
@@ -306,13 +349,18 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             >
               Close
             </Button>
-            <Button type="submit" variant="default" disabled={isSubmitting || !watch('purchaseDate')}>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={isSubmitting || !watch('purchaseDate')}
+            >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>  )
+    </Dialog>
+  )
 }
 
 export default VehicleFormModal
