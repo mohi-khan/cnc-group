@@ -213,7 +213,6 @@
 
 // export default VehicleFuelConsumptionList
 
-
 'use client'
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
@@ -268,34 +267,32 @@ const VehicleFuelConsumptionList: React.FC<VehicleFuelConsumptionListProps> = ({
   const itemsPerPage = 10
 
   // Fetch gas conversion ratio from API
-const getGasConversionRatio = async () => {
-  try {
-    const settingName = 'Gas Conversion Ratio'
+  const getGasConversionRatio = useCallback(async () => {
+    try {
+      const settingName = 'Gas Conversion Ratio'
 
-    const response = await fetchApi<number>({
-      url: `api/settings/get/${(settingName)}`,
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `${token}`,
-      },
-    })
+      const response = await fetchApi<number>({
+        url: `api/settings/get/${settingName}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${token}`,
+        },
+      })
 
-    // Extract the numeric value safely; fallback to 1 if null
-    setGasConversionRatio(response.data ?? 1.23)
+      // Extract the numeric value safely; fallback to 1 if null
+      setGasConversionRatio(response.data ?? 1.23)
 
-    console.log('Gas Conversion Ratio:', response.data)
-  } catch (error) {
-    console.error('Failed to fetch Gas Conversion Ratio:', error)
-    setGasConversionRatio(1) // fallback if API call fails
-  }
-}
+      console.log('Gas Conversion Ratio:', response.data)
+    } catch (error) {
+      console.error('Failed to fetch Gas Conversion Ratio:', error)
+      setGasConversionRatio(1) // fallback if API call fails
+    }
+  }, [token])
 
-useEffect(() => {
-  getGasConversionRatio()
-}, [])
-
-
+  useEffect(() => {
+    getGasConversionRatio()
+  }, [getGasConversionRatio])
 
   const getVehicleName = useCallback(
     (vehicleNo: number) => {
