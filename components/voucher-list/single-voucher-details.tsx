@@ -1043,7 +1043,7 @@ export default function SingleVoucherDetails() {
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount in word:</span>
                 <span className="capitalize">
-                  {new ToWords().convert(data[data.length - 1].totalamount)}{' '}
+                  {new ToWords().convert(Number(data[data.length - 1].totalamount.toFixed(2)))}{' '}
                   {data[data.length - 1].currency} only
                 </span>
               </div>
