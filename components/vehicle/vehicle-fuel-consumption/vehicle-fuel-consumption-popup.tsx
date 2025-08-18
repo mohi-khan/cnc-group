@@ -74,7 +74,7 @@ const VehicleFuelConsumptionPopUp: React.FC<
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTrigger asChild></DialogTrigger>
-      <DialogContent>
+       <DialogContent className="sm:max-w-[625px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Fuel Consumption</DialogTitle>
         </DialogHeader>
