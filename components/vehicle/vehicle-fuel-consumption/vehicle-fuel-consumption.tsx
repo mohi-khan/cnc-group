@@ -96,6 +96,7 @@ checkUserData()
         vehicleFuel={vehicleFuel}
         onAddVehicle={handleAddVehicle}
         vehicles={vehicles}
+        token={token}
       />
       <VehicleFuelConsumptionPopUp
         vehicles={vehicles}

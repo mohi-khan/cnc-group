@@ -111,7 +111,7 @@ const BoeReceiptForm: React.FC<BoeReceiptFormProps> = ({
     }
 
     init()
-  }, [selectedBoe, setValue, getValues, token])
+  }, [selectedBoe, setValue, getValues, token, accountId])
   const watchedPartnerId = watch('journalDetails.0.resPartnerId')
 
   useEffect(() => {
