@@ -278,8 +278,8 @@ export const MENU_ITEMS: MenuItem[] = [
         name: 'Reports',
         items: [
           { name: 'Dashboard', source: '/utility/dashboard' },
-          { name: 'Summary Report ', source: '/electricity/electricity-' },
-          { name: 'Details Report', source: '/electricity/bill-entry' },
+          // { name: 'Summary Report ', source: '/electricity/electricity-' },
+          // { name: 'Details Report', source: '/electricity/bill-entry' },
           { name: 'Utility Report', source: '/utility/utility-report' },
         ],
       },

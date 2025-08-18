@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
-import { GetAllVehicleType } from '@/utils/type'
+import type { GetAllVehicleType } from '@/utils/type'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface VehiclePerformanceReportHeadingProps {
@@ -51,6 +51,17 @@ const VehiclePerformanceReportHeading: React.FC<
     }
   }, [startDate, endDate, onDateChange])
 
+  const createValidDate = (dateString: string): Date | undefined => {
+    if (!dateString) return undefined
+    const date = new Date(dateString)
+    return isNaN(date.getTime()) ? undefined : date
+  }
+
+  const formatDate = (date: Date | undefined): string => {
+    if (!date || isNaN(date.getTime())) return ''
+    return format(date, 'yyyy-MM-dd')
+  }
+
   return (
     <div className="mt-4">
       <div className="p-4 border-b w-full">
@@ -74,14 +85,14 @@ const VehiclePerformanceReportHeading: React.FC<
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-[230px] h-10 justify-start text-left truncate"
+                  className="w-[230px] h-10 justify-start text-left truncate bg-transparent"
                 >
                   <CalendarIcon className="mr-2 h-5 w-5" />
-                  {startDate && endDate
-                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
-                        endDate,
-                        'dd/MM/yyyy'
-                      )}`
+                  {startDate &&
+                  endDate &&
+                  !isNaN(startDate.getTime()) &&
+                  !isNaN(endDate.getTime())
+                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
                     : 'Select Date Range'}
                 </Button>
               </PopoverTrigger>
@@ -90,29 +101,39 @@ const VehiclePerformanceReportHeading: React.FC<
                 <div className="flex flex-col gap-4">
                   <input
                     type="date"
-                    value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                    value={formatDate(startDate)}
                     onChange={(e) => {
-                      setStartDate(new Date(e.target.value))
+                      const newDate = createValidDate(e.target.value)
+                      setStartDate(newDate)
                     }}
                     className="w-full p-2 border rounded"
                   />
 
                   <input
                     type="date"
-                    value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                    value={formatDate(endDate)}
                     onChange={(e) => {
-                      setEndDate(new Date(e.target.value))
+                      const newDate = createValidDate(e.target.value)
+                      setEndDate(newDate)
+                    }}
+                    onBlur={(e) => {
+                      const newDate = createValidDate(e.target.value)
+                      if (newDate && startDate) {
+                        setIsDropdownOpen(false)
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const newDate = createValidDate(
+                          (e.target as HTMLInputElement).value
+                        )
+                        if (newDate && startDate) {
+                          setIsDropdownOpen(false)
+                        }
+                      }
                     }}
                     className="w-full p-2 border rounded"
                   />
-
-                  {/* Apply Button */}
-                  <Button
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="bg-blue-500 text-white hover:bg-blue-600"
-                  >
-                    Apply
-                  </Button>
                 </div>
               </PopoverContent>
             </Popover>

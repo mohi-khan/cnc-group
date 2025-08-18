@@ -7,7 +7,7 @@ export async function createBillEntry(
 ) {
   
   return fetchApi<CreateElectricityBillType>({
-    url: 'api/utility/createElectricityBill',
+    url: 'api/utilities/createElectricityBill',
     method: 'POST',
     body: data,
     headers: {
