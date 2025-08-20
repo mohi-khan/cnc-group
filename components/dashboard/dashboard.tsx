@@ -799,9 +799,11 @@ export default function Dashboard() {
                     {incomeData.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -845,9 +847,11 @@ export default function Dashboard() {
                     {expenseData.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -891,9 +895,11 @@ export default function Dashboard() {
                     {gpData.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -937,9 +943,11 @@ export default function Dashboard() {
                     {npData.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -983,9 +991,11 @@ export default function Dashboard() {
                     {incomeDataYearly.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -1029,9 +1039,11 @@ export default function Dashboard() {
                     {expenseDataYearly.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -1075,9 +1087,11 @@ export default function Dashboard() {
                     {gpDataYearly.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -1121,9 +1135,11 @@ export default function Dashboard() {
                     {npDataYearly.map((expense, index) => (
                       <tr key={index} className="bg-slate-300 border-b">
                         <td className="p-2 text-sm">{expense.groupName}</td>
-                        <td className="p-2 text-sm">{expense.netExpense}</td>
                         <td className="p-2 text-sm">
-                          {expense.lastMonthNetExpense}
+                          {expense.netExpense.toFixed(2)}
+                        </td>
+                        <td className="p-2 text-sm">
+                          {expense.lastMonthNetExpense.toFixed(2)}
                         </td>
                       </tr>
                     ))}
