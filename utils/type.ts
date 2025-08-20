@@ -147,7 +147,16 @@ export const bankAccountSchema = z.object({
     .optional()
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
-  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  accountType: z.enum([
+    "DEPOSIT AWAITING FOR DISPOSAL",
+    "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
+    "Fund Buildup Account",
+    "MARGIN AGAINST ACCEPTANCE",
+    "USD RETENTION QUOTA",
+    "Current",
+    "OD Against Non-Cash Security",
+    "Fixed",
+  ]),
   openingBalance: z.number(),
   validityDate: z
     .string()
@@ -213,7 +222,16 @@ export const createBankAccountSchema = z.object({
     .optional()
     .nullable(),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
-  accountType: z.enum(['Savings', 'Current', 'Overdraft', 'Fixed']),
+  accountType: z.enum([
+    "DEPOSIT AWAITING FOR DISPOSAL",
+    "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
+    "Fund Buildup Account",
+    "MARGIN AGAINST ACCEPTANCE",
+    "USD RETENTION QUOTA",
+    "Current",
+    "OD Against Non-Cash Security",
+    "Fixed",
+  ]),
   openingBalance: z.string(),
 
   validityDate: z
@@ -245,6 +263,18 @@ export const createBankAccountSchema = z.object({
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
+  //new field added
+  limit: z.number().nonnegative("Limit must be a positive number"),
+  rate: z.number().nonnegative("Rate must be a positive number"),
+  loanType: z.enum([
+    "EDF",
+    "TR",
+    "IBP",
+    "OD",
+    "Term",
+    "Stimulas",
+    "UPAS",
+  ]),
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
