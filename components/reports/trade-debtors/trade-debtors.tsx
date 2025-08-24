@@ -1,6 +1,6 @@
 'use client'
 import { getAllTradeDebtors } from '@/api/trade-debtors-api'
-import { GetTradeDebtorsType } from '@/utils/type'
+import type { GetTradeDebtorsType } from '@/utils/type'
 import React, { useEffect, useCallback } from 'react'
 import {
   Table,
@@ -11,10 +11,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { CompanyType } from '@/api/company-api'
+import type { CompanyType } from '@/api/company-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { usePDF } from 'react-to-pdf'
-import { FileText } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { File, FileText } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { getAllCompanies } from '@/api/common-shared-api'
@@ -32,36 +33,131 @@ const TradeDebtors = () => {
   const [tradeDebtors, setTradeDebtors] = React.useState<GetTradeDebtorsType[]>(
     []
   )
-  const { toPDF, targetRef } = usePDF({ filename: 'trade_debtors.pdf' })
   const [companies, setCompanies] = React.useState<CompanyType[]>([])
   const [selectedCompanyName, setSelectedCompanyName] =
     React.useState<string>('')
 
-  const generatePdf = () => {
-    toPDF()
+  const generatePdf = async () => {
+    const element = document.getElementById('trade-debtors-content')
+    if (!element) return
+
+    try {
+      // Create canvas with normal scale for readable fonts
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      })
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.8) // Using JPEG with 80% quality
+      const pdf = new jsPDF('p', 'mm', 'a4')
+
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+
+      // Calculate scaling to fit page width while maintaining aspect ratio
+      const scale = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
+      const scaledHeight = imgHeight * 0.264583 * scale
+
+      const margin = 10
+      const contentWidth = pdfWidth - 2 * margin
+      const contentHeight = pdfHeight - 2 * margin
+
+      if (scaledHeight <= contentHeight) {
+        // Content fits on one page
+        pdf.addImage(
+          imgData,
+          'JPEG',
+          margin,
+          margin,
+          contentWidth,
+          scaledHeight
+        )
+      } else {
+        // Content needs multiple pages
+        const pageHeight = contentHeight
+        const totalPages = Math.ceil(scaledHeight / pageHeight)
+
+        for (let i = 0; i < totalPages; i++) {
+          if (i > 0) pdf.addPage()
+
+          // Add company name header on each page
+          pdf.setFontSize(16)
+          pdf.setFont('helvetica', 'bold')
+          const companyName = selectedCompanyName || 'All Companies'
+          pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+
+          pdf.setFontSize(14)
+          pdf.text('Trade Debtors', pdfWidth / 2, 25, { align: 'center' })
+
+          // Calculate the portion of image for this page
+          const sourceY = (i * pageHeight) / scale / 0.264583
+          const sourceHeight = Math.min(
+            pageHeight / scale / 0.264583,
+            imgHeight - sourceY
+          )
+
+          // Create temporary canvas for this page slice
+          const tempCanvas = document.createElement('canvas')
+          const tempCtx = tempCanvas.getContext('2d')
+          tempCanvas.width = imgWidth
+          tempCanvas.height = sourceHeight
+
+          if (tempCtx) {
+            tempCtx.drawImage(
+              canvas,
+              0,
+              sourceY,
+              imgWidth,
+              sourceHeight,
+              0,
+              0,
+              imgWidth,
+              sourceHeight
+            )
+            const pageImgData = tempCanvas.toDataURL('image/jpeg')
+            pdf.addImage(
+              pageImgData,
+              'JPEG',
+              margin,
+              35,
+              contentWidth,
+              sourceHeight * 0.264583 * scale
+            )
+          }
+        }
+      }
+
+      pdf.save('trade_debtors.pdf')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+    }
   }
 
   const fetchTradeDebtors = useCallback(async () => {
     if (!token) return
     const response = await getAllTradeDebtors(token)
-    
+
     setTradeDebtors(response.data || [])
+    console.log("🚀 ~ TradeDebtors ~ response.data:", response.data)
   }, [token])
 
   const fetchCompanies = useCallback(async () => {
     if (!token) return
     const response = await getAllCompanies(token)
-    
+
     setCompanies(response.data || [])
   }, [token])
   useEffect(() => {
-    
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -110,7 +206,6 @@ const TradeDebtors = () => {
         <div className="w-96">
           <CustomCombobox
             items={companies.map((company) => {
-              
               return {
                 id: company.companyId?.toString() || '',
                 name: company.companyName || 'Unnamed Company',
@@ -150,57 +245,16 @@ const TradeDebtors = () => {
           size="sm"
           className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
         >
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M14.5 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7.5L14.5 2Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 2V8H20"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 13H16"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 17H16"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M10 9H8"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <File />
           <span className="font-medium">Excel</span>
         </Button>
       </div>
-      <div ref={targetRef} className="overflow-x-auto mx-4">
+      <div id="trade-debtors-content" className="overflow-x-auto mx-4">
         <h1 className="text-3xl font-bold mb-4 flex justify-center">
           {selectedCompanyName || 'All Companies'}
         </h1>
         <h2 className="text-2xl font-bold mb-4">Trade Debtors</h2>
-        <Table className="border shadow-md ">
+        <Table className="border shadow-md pdf-table-header">
           <TableHeader className="bg-slate-200 sticky top- shadow-md">
             <TableRow className="mb-4">
               <TableHead>Partner Name</TableHead>

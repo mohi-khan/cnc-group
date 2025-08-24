@@ -172,7 +172,7 @@ export default function SingleTrialBalanceFind({
     if (initialAccountCode) {
       setSelectedAccountCode(initialAccountCode)
     }
-    if(initialCompanyId){
+    if (initialCompanyId) {
       setSelectedCompanyId(initialCompanyId)
     }
 

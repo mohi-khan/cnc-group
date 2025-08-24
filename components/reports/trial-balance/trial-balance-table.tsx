@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { getTrialBalance } from '@/api/trial-balance-api'
 import { ChevronRight, ChevronDown } from 'lucide-react'
-import { TrialBalanceData } from '@/utils/type'
+import type { TrialBalanceData } from '@/utils/type'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import Loader from '@/utils/loader'
@@ -43,12 +43,14 @@ export default function TrialBalanceTable({
   startDate,
   endDate,
   companyId,
+  isGeneratingPdf = false,
 }: {
   targetRef: React.RefObject<HTMLDivElement>
   setTrialBalanceData: React.Dispatch<React.SetStateAction<TrialBalanceData[]>>
   startDate: Date | undefined
   endDate: Date | undefined
   companyId: string
+  isGeneratingPdf?: boolean
 }) {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -79,7 +81,6 @@ export default function TrialBalanceTable({
       if (response.data) {
         setTrialBalanceDataLocal(response.data)
         setTrialBalanceData(response.data)
-        
       } else {
         console.error(
           'Error fetching trial balance data:',
@@ -97,7 +98,6 @@ export default function TrialBalanceTable({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -123,13 +123,13 @@ export default function TrialBalanceTable({
     return data.map((item, index) => (
       <React.Fragment key={item.id}>
         <div
-          onClick={() => toggleRowExpansion(item.id)}
-          className={`grid grid-cols-12 gap-4 cursor-pointer p-2 border-b hover:bg-gray-100 ${
+          onClick={() => !isGeneratingPdf && toggleRowExpansion(item.id)}
+          className={`grid grid-cols-12 gap-4 ${!isGeneratingPdf ? 'cursor-pointer' : ''} p-2 border-b hover:bg-gray-100 ${
             expandedRows.has(item.id) ? 'font-bold bg-gray-50' : 'font-normal'
           } ${index % 2 === 0 ? 'bg-gray-50' : ''}`}
         >
           <div className="flex justify-center items-left">
-            {item.children && item.children.length > 0 && (
+            {!isGeneratingPdf && item.children && item.children.length > 0 && (
               <span
                 className={`text-xs ${expandedRows.has(item.id) ? 'text-blue-600' : 'text-gray-600'}`}
                 tabIndex={0}
@@ -152,22 +152,43 @@ export default function TrialBalanceTable({
                   : 'text-purple-500'
             }`}
           >
-           <Link
-  href={`/reports/trial-balance/single-trial-balance/${item.id}?startDate=${startDate ? encodeURIComponent(startDate.toISOString().split('T')[0]) : ''}&endDate=${endDate ? encodeURIComponent(endDate.toISOString().split('T')[0]) : ''}&companyId=${encodeURIComponent(companyId)}`}
->
-  {item.name}
-</Link>
-
+            {isGeneratingPdf ? (
+              item.name
+            ) : (
+              <Link
+                href={`/reports/trial-balance/single-trial-balance/${item.id}?startDate=${startDate ? encodeURIComponent(startDate.toISOString().split('T')[0]) : ''}&endDate=${endDate ? encodeURIComponent(endDate.toISOString().split('T')[0]) : ''}&companyId=${encodeURIComponent(companyId)}`}
+              >
+                {item.name}
+              </Link>
+            )}
           </div>
-         <div className="col-span-1 text-center">{formatInternationalNumber(item.initialDebit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.initialCredit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.initialBalance)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.periodDebit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.periodCredit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.periodDebit - item.periodCredit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.closingDebit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.closingCredit)}</div>
-          <div className="col-span-1 text-center">{formatInternationalNumber(item.closingBalance)}</div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.initialDebit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.initialCredit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.initialBalance)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.periodDebit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.periodCredit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.periodDebit - item.periodCredit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.closingDebit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.closingCredit)}
+          </div>
+          <div className="col-span-1 text-center">
+            {formatInternationalNumber(item.closingBalance)}
+          </div>
         </div>
 
         {expandedRows.has(item.id) &&
@@ -182,7 +203,7 @@ export default function TrialBalanceTable({
     <div ref={targetRef}>
       <Card className="border rounded-lg">
         <CardContent>
-          <div className="grid grid-cols-12 gap-4 p-2">
+          <div className="grid grid-cols-12 gap-4 p-2 pdf-table-header">
             <div className="col-span-1"></div>
             <div className="col-span-1"></div>
 
@@ -249,4 +270,3 @@ export default function TrialBalanceTable({
     </div>
   )
 }
-

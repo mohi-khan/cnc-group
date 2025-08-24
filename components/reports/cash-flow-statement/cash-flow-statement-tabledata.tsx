@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import type React from 'react'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 
 interface CashFlowStatementItem {
@@ -39,8 +39,9 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
       !item.cashflowTag?.toLowerCase().includes('financing')
   )
 
-  const formatAmount = (amount: string | number, isCredit: boolean = false) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+  const formatAmount = (amount: string | number, isCredit = false) => {
+    const numAmount =
+      typeof amount === 'string' ? Number.parseFloat(amount) : amount
     if (!numAmount) return '0.00'
     const formattedNumber = numAmount.toFixed(2)
     return isCredit ? `-${formattedNumber}` : `+${formattedNumber}`
@@ -55,12 +56,12 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
         <TableBody>
           {/* Beginning Balance */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell className="bg-gray-100 p-2">
+            <TableCell className="bg-gray-100 p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash and cash equivalents, beginning of period
               </span>
             </TableCell>
-            <TableCell className="bg-gray-100 p-2 text-right">
+            <TableCell className="bg-gray-100 p-2 text-right pdf-table-header">
               <span className="text-gray-700">
                 {formatAmount(cashFlowStatements[0]?.credit, true)}
               </span>
@@ -69,7 +70,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Net Increase Section */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell colSpan={2} className="bg-gray-100 p-2">
+            <TableCell colSpan={2} className="bg-gray-100 p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Net increase in cash and cash equivalents
               </span>
@@ -78,7 +79,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Operating Activities */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell colSpan={2} className="p-2">
+            <TableCell colSpan={2} className="p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash flows from operating activities
               </span>
@@ -97,7 +98,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Investing Activities */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell colSpan={2} className="p-2">
+            <TableCell colSpan={2} className="p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash flows from investing & extraordinary activities
               </span>
@@ -108,7 +109,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 investingAndExtraordinary.reduce(
-                  (sum, item) => sum + (parseFloat(item.debit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 )
               )}
@@ -119,7 +121,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 investingAndExtraordinary.reduce(
-                  (sum, item) => sum + (parseFloat(item.credit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.credit as string) || 0),
                   0
                 ),
                 true
@@ -129,7 +132,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Financing Activities */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell colSpan={2} className="p-2">
+            <TableCell colSpan={2} className="p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash flows from financing activities
               </span>
@@ -140,7 +143,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 financingActivities.reduce(
-                  (sum, item) => sum + (parseFloat(item.debit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 )
               )}
@@ -151,7 +155,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 financingActivities.reduce(
-                  (sum, item) => sum + (parseFloat(item.credit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.credit as string) || 0),
                   0
                 ),
                 true
@@ -161,7 +166,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Unclassified Activities */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell colSpan={2} className="p-2">
+            <TableCell colSpan={2} className="p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash flows from unclassified activities
               </span>
@@ -172,7 +177,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 unclassifiedActivities.reduce(
-                  (sum, item) => sum + (parseFloat(item.debit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 )
               )}
@@ -183,7 +189,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             <TableCell className="text-right p-2">
               {formatAmount(
                 unclassifiedActivities.reduce(
-                  (sum, item) => sum + (parseFloat(item.credit as string) || 0),
+                  (sum, item) =>
+                    sum + (Number.parseFloat(item.credit as string) || 0),
                   0
                 ),
                 true
@@ -193,13 +200,18 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
 
           {/* Closing Balance */}
           <TableRow className="hover:bg-muted/50">
-            <TableCell className="bg-gray-100 p-2">
+            <TableCell className="bg-gray-100 p-2 pdf-table-header">
               <span className="text-gray-700 font-bold">
                 Cash and cash equivalents, closing balance
               </span>
             </TableCell>
-            <TableCell className="bg-gray-100 p-2 text-right">
-              <span className="text-gray-700"> {formatAmount(cashFlowStatements[cashFlowStatements.length-1]?.credit, true)}</span>
+            <TableCell className="bg-gray-100 p-2 text-right pdf-table-header">
+              <span className="text-gray-700">
+                {formatAmount(
+                  cashFlowStatements[cashFlowStatements.length - 1]?.credit,
+                  true
+                )}
+              </span>
             </TableCell>
           </TableRow>
         </TableBody>
