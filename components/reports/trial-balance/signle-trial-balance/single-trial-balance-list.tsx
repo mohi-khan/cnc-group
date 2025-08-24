@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import type React from 'react'
@@ -12,6 +10,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 interface SingleTrialBalanceListProps {
   transactions: GeneralLedgerType[]
   targetRef: React.RefObject<HTMLDivElement>
+  showLogoInPdf?: boolean
 }
 
 type SortField = Exclude<
@@ -23,6 +22,7 @@ type SortDirection = 'asc' | 'desc' | null
 export default function SingleTrialBalanceList({
   transactions,
   targetRef,
+  showLogoInPdf = false,
 }: SingleTrialBalanceListProps) {
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -200,14 +200,18 @@ export default function SingleTrialBalanceList({
     children: React.ReactNode
   }) => (
     <th className="py-2 px-4 border-b">
-      <Button
-        variant="ghost"
-        onClick={() => handleSort(field)}
-        className="h-auto p-0 font-semibold text-left justify-start hover:bg-transparent"
-      >
-        {children}
-        {getSortIcon(field)}
-      </Button>
+      {showLogoInPdf ? (
+        <span className="font-semibold text-left">{children}</span>
+      ) : (
+        <Button
+          variant="ghost"
+          onClick={() => handleSort(field)}
+          className="h-auto p-0 font-semibold text-left justify-start hover:bg-transparent"
+        >
+          {children}
+          {getSortIcon(field)}
+        </Button>
+      )}
     </th>
   )
 
@@ -227,7 +231,7 @@ export default function SingleTrialBalanceList({
       }}
     >
       <table className="min-w-full bg-white border border-gray-300">
-        <thead>
+        <thead className="pdf-table-header">
           <tr className="bg-gray-100">
             <SortableHeader field="voucherno">Voucher No</SortableHeader>
             <SortableHeader field="date">Date</SortableHeader>
@@ -294,4 +298,3 @@ export default function SingleTrialBalanceList({
     </div>
   )
 }
-
