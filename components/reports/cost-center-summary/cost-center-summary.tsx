@@ -1,10 +1,11 @@
 'use client'
 import CostCenterSummaryHeading from './cost-center-summary-heading'
 import CostCenterSummaryTableData from './cost-center-summary-table-data'
-import React, { useState, useEffect, useCallback } from 'react'
-import { CostCenter, CostCenterSummaryType } from '@/utils/type'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { CostCenter, CostCenterSummaryType } from '@/utils/type'
 
-import { usePDF } from 'react-to-pdf'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { getCostCenterSummary } from '@/api/cost-center-summary-api'
@@ -20,7 +21,7 @@ const CostCenterSummary = () => {
   const [token] = useAtom(tokenAtom)
 
   const router = useRouter()
-  const { toPDF, targetRef } = usePDF({ filename: 'cost_center_summary.pdf' })
+  const targetRef = useRef<HTMLDivElement>(null)
   const [costCenterSummary, setCostCenterSummary] = useState<
     CostCenterSummaryType[]
   >([])
@@ -30,8 +31,83 @@ const CostCenterSummary = () => {
   const [costCenterId, setCostCenterId] = useState<string>('')
   const [costCenterData, setCostCenterData] = useState<CostCenter[]>([])
 
-  const generatePdf = () => {
-    toPDF()
+  const generatePdf = async () => {
+    if (!targetRef.current) return
+
+    try {
+      // Get company name
+      let companyName = 'Cost Center Summary'
+      if (userData && companyId) {
+        const selectedCompany = userData.userCompanies.find(
+          (uc) => uc.company.companyId === Number(companyId)
+        )
+        if (selectedCompany) {
+          companyName = selectedCompany.company.companyName
+        }
+      }
+
+      const element = targetRef.current
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      })
+
+      const imgData = canvas.toDataURL('image/jpeg')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+
+      // Calculate scaling to fit width while maintaining aspect ratio
+      const ratio = pdfWidth / imgWidth
+      const scaledHeight = imgHeight * ratio
+
+      // Header height for company name
+      const headerHeight = 20
+      const availableHeight = pdfHeight - headerHeight - 10
+
+      let yPosition = 0
+      let pageNumber = 1
+
+      while (yPosition < scaledHeight) {
+        if (pageNumber > 1) {
+          pdf.addPage()
+        }
+
+        // Add company name header on each page
+        pdf.setFontSize(16)
+        pdf.setFont('helvetica', 'bold')
+        pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+
+        // Calculate the portion of image to show on this page
+        const sourceY = yPosition / ratio
+        const sourceHeight = Math.min(
+          availableHeight / ratio,
+          imgHeight - sourceY
+        )
+        const destHeight = sourceHeight * ratio
+
+        // Add the image portion to PDF
+        pdf.addImage(
+          imgData,
+          'JPEG',
+          0,
+          headerHeight,
+          pdfWidth,
+          destHeight
+        )
+
+        yPosition += availableHeight
+        pageNumber++
+      }
+
+      pdf.save('cost-center-summary.pdf')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+    }
   }
 
   const exportToExcel = (data: CostCenterSummaryType[], fileName: string) => {
@@ -77,7 +153,6 @@ const CostCenterSummary = () => {
     if (!token) return
     const respons = await getAllCostCenters(token)
     setCostCenterData(respons.data || [])
-    
   }, [token])
 
   const fetchData = useCallback(async () => {
@@ -90,7 +165,6 @@ const CostCenterSummary = () => {
       token: token,
     })
     if (response.data) {
-      
       const formattedData = response.data.map((item) => ({
         costCenterId: item.costCenterId,
         costCenterName: item.costCenterName,
@@ -100,20 +174,16 @@ const CostCenterSummary = () => {
         totalCredit: item.totalCredit,
       }))
       setCostCenterSummary(formattedData)
-      
     } else {
       setCostCenterSummary([])
-      
     }
   }, [token, startDate, endDate, companyId, costCenterId])
   useEffect(() => {
-    
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }

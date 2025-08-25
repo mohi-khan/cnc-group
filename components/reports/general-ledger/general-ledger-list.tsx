@@ -1,15 +1,12 @@
-import React from 'react'
-import { GeneralLedgerType } from '@/utils/type'
+import type { GeneralLedgerType } from '@/utils/type'
 import Link from 'next/link'
 
 interface GeneralLedgerListProps {
   transactions: GeneralLedgerType[]
-  targetRef: React.RefObject<HTMLDivElement>
 }
 
 export default function GeneralLedgerList({
   transactions,
-  targetRef,
 }: GeneralLedgerListProps) {
   if (transactions.length === 0) {
     return (
@@ -18,9 +15,9 @@ export default function GeneralLedgerList({
   }
 
   return (
-    <div className="overflow-x-auto" ref={targetRef}>
+    <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-300">
-        <thead>
+        <thead className="pdf-table-header">
           <tr className="bg-gray-100">
             <th className="py-2 px-4 border-b">Voucher ID</th>
             <th className="py-2 px-4 border-b">Voucher No</th>
@@ -38,11 +35,14 @@ export default function GeneralLedgerList({
             <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
               <td className="py-2 px-4 border-b">{transaction.voucherid}</td>
               <td className="py-2 px-4 border-b">
-                <Link
-                  href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
-                >
-                  {transaction.voucherno}
-                </Link>
+                <span className="pdf-hide">
+                  <Link
+                    href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
+                  >
+                    {transaction.voucherno}
+                  </Link>
+                </span>
+                <span className="pdf-show hidden">{transaction.voucherno}</span>
               </td>
               <td className="py-2 px-4 border-b">{transaction.accountname}</td>
               <td className="py-2 px-4 border-b">{transaction.debit}</td>

@@ -1,7 +1,7 @@
 'use client'
-import React from 'react'
+import type React from 'react'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { ProfitAndLossType } from '@/utils/type'
+import type { ProfitAndLossType } from '@/utils/type'
 
 interface ProfitAndLossProps {
   data: ProfitAndLossType[]
@@ -28,12 +28,12 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
   return (
     <div
       ref={targetRef}
-      className="w-full mt-2 max-w-3xl mx-auto px-6 py-3 border shadow-lg"
+      className="w-full mt-2 max-w-[98%] mx-auto px-6 py-3 border shadow-lg"
     >
       <Table>
         <TableBody>
           {/* Static rows */}
-          <TableRow className="hover:bg-gray-200 p-2">
+          <TableRow className="hover:bg-gray-200 p-2 pdf-table-header">
             <TableCell className="font-normal p-2">Revenue</TableCell>
             <TableCell className="text-right p-2">
               {data
@@ -56,7 +56,7 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
 
           {/* Static Headline: Gross Profit Section */}
           <TableRow className="bg-gray-100 p-2"></TableRow>
-          <TableRow className="hover:bg-gray-200 font-bold p-2">
+          <TableRow className="hover:bg-gray-200 font-bold p-2 pdf-table-header">
             <TableCell className="p-2">Gross Profit</TableCell>
             <TableCell className="text-right p-2">
               {grossProfit.toLocaleString(undefined, {
@@ -100,7 +100,7 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
 
           {/* Static Headline: Operating Income Section */}
           <TableRow className="bg-gray-100 p-2"></TableRow>
-          <TableRow className="hover:bg-gray-200 font-bold p-2">
+          <TableRow className="hover:bg-gray-200 font-bold p-2 pdf-table-header">
             <TableCell className="p-2">Operating Income</TableCell>
             <TableCell className="text-right p-2">
               {operatingIncome.toLocaleString(undefined, {
@@ -111,7 +111,7 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
 
           {/* Static Headline: Net Profit Section */}
           <TableRow className="bg-gray-100 p-2"></TableRow>
-          <TableRow className="hover:bg-gray-200 font-bold p-2">
+          <TableRow className="hover:bg-gray-200 font-bold p-2 pdf-table-header">
             <TableCell className="p-2">Net Profit</TableCell>
             <TableCell className="text-right p-2">
               {netProfit.toLocaleString(undefined, {
@@ -126,4 +126,3 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
 }
 
 export default ProfitAndLossTableData
-

@@ -1,24 +1,25 @@
-import React from 'react'
-import { PartnerLedgerType } from '@/utils/type'
+import type React from 'react'
+import type { PartnerLedgerType } from '@/utils/type'
 
 interface GeneralLedgerListProps {
   transactions: PartnerLedgerType[]
   targetRef: React.RefObject<HTMLDivElement>
 }
 
-export default function PartnerLedgerList({ transactions, targetRef }: GeneralLedgerListProps) {
+export default function PartnerLedgerList({
+  transactions,
+  targetRef,
+}: GeneralLedgerListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        No available data
-      </div>
+      <div className="text-center py-10 text-gray-500">No available data</div>
     )
   }
 
   return (
     <div className="overflow-x-auto" ref={targetRef}>
       <table className="min-w-full bg-white border border-gray-300">
-        <thead>
+        <thead className="pdf-table-header">
           <tr className="bg-gray-100">
             <th className="py-2 px-4 border-b">Voucher ID</th>
             <th className="py-2 px-4 border-b">Voucher No</th>
@@ -50,4 +51,3 @@ export default function PartnerLedgerList({ transactions, targetRef }: GeneralLe
     </div>
   )
 }
-

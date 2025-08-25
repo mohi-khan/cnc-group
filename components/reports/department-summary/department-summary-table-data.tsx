@@ -1,9 +1,7 @@
 'use client'
-import React from 'react'
-import { CostCenterSummaryType, DepartmentSummaryType } from '@/utils/type'
+import type React from 'react'
+import type { DepartmentSummaryType } from '@/utils/type'
 import Loader from '@/utils/loader'
-import { start } from 'repl'
-import { de } from 'date-fns/locale'
 
 interface Props {
   data: DepartmentSummaryType[]
@@ -53,12 +51,12 @@ const DepartmentSummaryTableData: React.FC<Props> = ({
 
   return (
     <div ref={targetRef} className="flex justify-center">
-      <div className="w-full max-w-7xl rounded-md border mt-2 shadow-md">
+      <div className="w-full max-w-[98%] rounded-md border mt-2 shadow-md">
         <table className="min-w-full table-auto">
           <thead>
-            <tr className="bg-muted/50 hover:bg-muted/30 transition-colors">
+            <tr className="bg-muted/50 hover:bg-muted/30 transition-colors pdf-table-header">
               <th className="w-[200px] border px-4 py-2">
-                Account Name/Cost Center Name
+                Account Name/Department Name
               </th>
               {costCenterNames.map((costCenterName, index) => (
                 <th key={index} className="text-center border px-4 py-2">
@@ -86,7 +84,8 @@ const DepartmentSummaryTableData: React.FC<Props> = ({
                 ))}
               </tr>
             ))}
-            {!startDate || !endDate || !companyId || !departmentId ? (              <tr>
+            {!startDate || !endDate || !companyId || !departmentId ? (
+              <tr>
                 <td className="border px-4 py-2 text-center" colSpan={4}>
                   Please select start date, end date, company and department
                 </td>

@@ -24,6 +24,7 @@ export interface Company {
 }
 
 export interface CompanyFromLocalstorage {
+  companyId: number
   company: {
     companyId: number
     companyName: string
