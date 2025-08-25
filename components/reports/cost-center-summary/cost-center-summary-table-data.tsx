@@ -1,6 +1,6 @@
 'use client'
-import React from 'react'
-import { CostCenterSummaryType } from '@/utils/type'
+import type React from 'react'
+import type { CostCenterSummaryType } from '@/utils/type'
 import Loader from '@/utils/loader'
 
 interface Props {
@@ -47,10 +47,10 @@ const CostCenterSummaryTableData: React.FC<Props> = ({
 
   return (
     <div ref={targetRef} className="flex justify-center">
-      <div className="w-full max-w-7xl rounded-md border mt-2 shadow-md">
+      <div className="w-full max-w-[98%] rounded-md border mt-2 shadow-md">
         <table className="min-w-full table-auto">
           <thead>
-            <tr className="bg-muted/50 hover:bg-muted/30 transition-colors">
+            <tr className="bg-muted/50 hover:bg-muted/30 transition-colors pdf-table-header">
               <th className="w-[200px] border px-4 py-2">
                 Account Name/Cost Center Name
               </th>

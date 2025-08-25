@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAtom } from 'jotai'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -16,6 +17,10 @@ import { getFdrReport } from '@/api/fdr-report-api'
 import { getAllCompanies } from '@/api/common-shared-api'
 import type { CompanyType } from '@/api/company-api'
 import Loader from '@/utils/loader'
+import { FileText, Download, File } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
 
 // ----- Types to support both snake_case and camelCase FDR payloads -----
 type Snake = {
@@ -284,82 +289,263 @@ export default function Page() {
   const grand = useMemo(() => calcGrandTotals(groups), [groups])
   const isLoading = loadingFdr || companyLoading
 
+  const generatePdf = async () => {
+    const element = document.getElementById('fdr-report-content')
+    if (!element) return
+
+    try {
+      // Get company name for header
+      const companyName =
+        companyData.length > 0
+          ? companyData[0]?.companyName || 'CNC GROUP'
+          : 'CNC GROUP'
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      })
+
+      const imgData = canvas.toDataURL('image/jpeg')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+
+      // Calculate scaling to fit width while maintaining aspect ratio
+      const scale = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
+      const scaledHeight = imgHeight * 0.264583 * scale
+
+      const headerHeight = 20
+      const pageContentHeight = pdfHeight - headerHeight - 10
+
+      let yPosition = 0
+      let pageNumber = 1
+
+      while (yPosition < scaledHeight) {
+        if (pageNumber > 1) {
+          pdf.addPage()
+        }
+
+        // Add company name header on each page
+        pdf.setFontSize(16)
+        pdf.setFont('helvetica', 'bold')
+        pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+
+        // Add report title
+        pdf.setFontSize(14)
+        pdf.text('FDR Statement', pdfWidth / 2, 25, { align: 'center' })
+
+        // Calculate the portion of image to show on this page
+        const remainingHeight = scaledHeight - yPosition
+        const currentPageHeight = Math.min(pageContentHeight, remainingHeight)
+
+        // Add the image portion to PDF
+        pdf.addImage(
+          imgData,
+          'JPEG',
+          0,
+          headerHeight,
+          pdfWidth,
+          currentPageHeight
+        )
+
+        yPosition += pageContentHeight
+        pageNumber++
+      }
+
+      pdf.save('fdr-report.pdf')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+    }
+  }
+
+  const exportToExcel = () => {
+    try {
+      const worksheetData: any[][] = []
+
+      // Add headers
+      worksheetData.push([
+        'Company',
+        'Sl #',
+        'FDR Date',
+        'FDR No.',
+        'Account No.',
+        'Bank & Branch',
+        'Actual Face Value',
+        'Present Face Value Amount',
+        'Matured Date',
+        'Period Date',
+        'Interest Rate',
+      ])
+
+      // Add data rows
+      groups.forEach((group) => {
+        group.rows.forEach((row, idx) => {
+          const bankBranch = [g.bank(row), g.branch(row)]
+            .filter(Boolean)
+            .join(', ')
+          worksheetData.push([
+            group.name,
+            idx + 1,
+            formatDate(g.fdrDate(row)),
+            g.fdrNo(row),
+            g.accountNo(row),
+            bankBranch,
+            toNumber(g.faceValue(row)),
+            toNumber(g.presentValue(row)),
+            formatDate(g.maturedDate(row)),
+            periodMonthsLabel(g.fdrDate(row), g.maturedDate(row)),
+            `${toNumber(g.interestRate(row)).toFixed(2)}%`,
+          ])
+        })
+
+        // Add company total row
+        worksheetData.push([
+          `${group.name} Total:`,
+          '',
+          '',
+          '',
+          '',
+          '',
+          group.totalActual,
+          group.totalPresent,
+          '',
+          '',
+          '',
+        ])
+      })
+
+      // Add grand total row
+      worksheetData.push([
+        'Grand Total',
+        '',
+        '',
+        '',
+        '',
+        '',
+        grand.actual,
+        grand.present,
+        '',
+        '',
+        '',
+      ])
+
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'FDR Report')
+
+      XLSX.writeFile(workbook, 'fdr-report.xlsx')
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+    }
+  }
+
   return (
     <main className="w-full p-6 space-y-6">
-      <Card>
+      <div className="flex gap-2 justify-end pr-5">
+        <Button
+          onClick={generatePdf}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-900 hover:bg-purple-200"
+          disabled={isLoading || groups.length === 0}
+        >
+          <FileText className="h-4 w-4" />
+          PDF
+        </Button>
+        <Button
+          onClick={exportToExcel}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200"
+          disabled={isLoading || groups.length === 0}
+        >
+          <File className="h-4 w-4" />
+          Excel
+        </Button>
+      </div>
+      <div>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            {'CNC GROUP - FDR Statement'}
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-bold text-center flex-1">
+              {'CNC GROUP - FDR Statement'}
+            </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-sm text-muted-foreground">
-              <Loader />
-            </div>
-          ) : groups.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              {'No FDR records found.'}
-            </div>
-          ) : (
-            <div className="space-y-8">
-              <div className="overflow-x-auto">
-                <Table className="border shadow-md">
-                  <TableHeader className="bg-slate-200 shadow-md">
-                    <TableRow>
-                      <TableHead className="w-12">{'Sl #'}</TableHead>
-                      <TableHead>{'FDR Date'}</TableHead>
-                      <TableHead>{'FDR No.'}</TableHead>
-                      <TableHead>{'Account No.'}</TableHead>
-                      <TableHead>{'Bank & Branch'}</TableHead>
-                      <TableHead className="text-right">
-                        {'Actual Face Value'}
-                      </TableHead>
-                      <TableHead className="text-right">
-                        {'Present Face Value Amount'}
-                      </TableHead>
-                      <TableHead>{'maturedDate'}</TableHead>
-                      <TableHead>{'Period Date'}</TableHead>
-                      <TableHead>{'Interest @'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {groups.map((gGroup) => (
-                      <FragmentGroup key={gGroup.name} group={gGroup} />
-                    ))}
-                  </TableBody>
-                </Table>
+          <div id="fdr-report-content">
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground">
+                <Loader />
               </div>
-
-              <div className="mt-8">
+            ) : groups.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                {'No FDR records found.'}
+              </div>
+            ) : (
+              <div className="space-y-8">
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableBody>
-                      <TableRow className="bg-yellow-200 hover:bg-yellow-200 font-bold">
-                        <TableCell className="font-bold">
-                          {'Grand Total'}
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right font-bold">
-                          {formatCurrency(grand.actual)}
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          {formatCurrency(grand.present)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
+                  <Table className="border shadow-md">
+                    <TableHeader className="bg-slate-200 shadow-md pdf-table-header">
+                      <TableRow>
+                        <TableHead className="w-12">{'Sl #'}</TableHead>
+                        <TableHead>{'FDR Date'}</TableHead>
+                        <TableHead>{'FDR No.'}</TableHead>
+                        <TableHead>{'Account No.'}</TableHead>
+                        <TableHead>{'Bank & Branch'}</TableHead>
+                        <TableHead className="text-right">
+                          {'Actual Face Value'}
+                        </TableHead>
+                        <TableHead className="text-right">
+                          {'Present Face Value Amount'}
+                        </TableHead>
+                        <TableHead>{'maturedDate'}</TableHead>
+                        <TableHead>{'Period Date'}</TableHead>
+                        <TableHead>{'Interest @'}</TableHead>
                       </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {groups.map((gGroup) => (
+                        <FragmentGroup key={gGroup.name} group={gGroup} />
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
+
+                <div className="mt-8">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableBody>
+                        <TableRow className="bg-yellow-200 hover:bg-yellow-200 font-bold">
+                          <TableCell className="font-bold">
+                            {'Grand Total'}
+                          </TableCell>
+                          <TableCell></TableCell>
+                          <TableCell></TableCell>
+                          <TableCell></TableCell>
+                          <TableCell></TableCell>
+                          <TableCell className="text-right font-bold">
+                            {formatCurrency(grand.actual)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            {formatCurrency(grand.present)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
-      </Card>
+      </div>
     </main>
   )
 }

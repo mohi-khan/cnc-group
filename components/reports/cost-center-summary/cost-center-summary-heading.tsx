@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -17,13 +17,8 @@ import {
 import { format, subMonths } from 'date-fns'
 import { CalendarIcon, FileText } from 'lucide-react'
 
-import {
-  Company,
-  CompanyFromLocalstorage,
-  CostCenter,
-  User,
-} from '@/utils/type'
-import { getAllCompanies, getAllCostCenters } from '@/api/common-shared-api'
+import type { CompanyFromLocalstorage, CostCenter, User } from '@/utils/type'
+import { getAllCostCenters } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -72,7 +67,6 @@ const CostCenterSummaryHeading = ({
       setUser(userData)
       setCompanies(userData.userCompanies)
     } else {
-      
     }
   }, [userData])
 
@@ -81,7 +75,6 @@ const CostCenterSummaryHeading = ({
     if (!token) return
     const respons = await getAllCostCenters(token)
     setCostCenterData(respons.data || [])
-    
   }, [token])
   useEffect(() => {
     fetchAllCostCenter()
@@ -182,15 +175,12 @@ const CostCenterSummaryHeading = ({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-[230px] h-10 justify-start text-left truncate"
+                className="w-[230px] h-10 justify-start text-left truncate bg-transparent"
                 onClick={() => setIsDropdownOpen(true)}
               >
                 <CalendarIcon className="mr-2 h-5 w-5" />
                 {startDate && endDate
-                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
-                      endDate,
-                      'dd/MM/yyyy'
-                    )}`
+                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
                   : 'Select Date Range'}
               </Button>
             </PopoverTrigger>
