@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AccountsHead } from '@/utils/type'
+import type { AccountsHead } from '@/utils/type'
 
 import { FileText } from 'lucide-react'
 import { getAllChartOfAccounts } from '@/api/common-shared-api'
@@ -22,12 +22,14 @@ interface GeneralLedgerFindProps {
   onSearch: (accountcode: number, fromdate: string, todate: string) => void
   generatePdf: () => void
   generateExcel: () => void
+  isGeneratingPdf?: boolean
 }
 
 export default function GeneralLedgerFind({
   onSearch,
   generatePdf,
   generateExcel,
+  isGeneratingPdf = false,
 }: GeneralLedgerFindProps) {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -60,7 +62,6 @@ export default function GeneralLedgerFind({
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -154,9 +155,12 @@ export default function GeneralLedgerFind({
           variant="ghost"
           size="sm"
           className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-900 hover:bg-purple-200"
+          disabled={isGeneratingPdf}
         >
           <FileText className="h-4 w-4" />
-          <span className="font-medium">PDF</span>
+          <span className="font-medium">
+            {isGeneratingPdf ? 'Generating...' : 'PDF'}
+          </span>
         </Button>
         <Button
           onClick={generateExcel}

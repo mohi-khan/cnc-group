@@ -1,5 +1,4 @@
-import React from 'react'
-import { BankAccountDateRange } from '@/utils/type'
+import type { BankAccountDateRange } from '@/utils/type'
 
 interface BankLedgerListProps {
   transactions: BankAccountDateRange[]
@@ -8,16 +7,14 @@ interface BankLedgerListProps {
 export default function BankLedgerList({ transactions }: BankLedgerListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        No available data
-      </div>
+      <div className="text-center py-10 text-gray-500">No available data</div>
     )
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-300">
-        <thead>
+        <thead className="pdf-table-header">
           <tr className="bg-gray-100">
             <th className="py-2 px-4 border-b">Bank Account</th>
             <th className="py-2 px-4 border-b">From Date</th>
@@ -37,4 +34,3 @@ export default function BankLedgerList({ transactions }: BankLedgerListProps) {
     </div>
   )
 }
-
