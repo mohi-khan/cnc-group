@@ -1087,6 +1087,21 @@ export interface CashBalance {
   closingBalance: number
 }
 
+// src/types/loanReport.ts
+
+export interface LoanReport {
+  companyName: string
+  BankAccount: string
+  BankName: string
+  BranchName: string
+  AccountType: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
+
+
 export const exchangeSchema = z.object({
   exchangeDate: z.coerce.date(),
   baseCurrency: z.number().int(),

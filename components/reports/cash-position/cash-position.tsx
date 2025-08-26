@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react'
 import CashPositionTable from './cash-position-table'
 import CashPositonHeading from './cash-position-heading'
-import { BankBalance, CashBalance } from '@/utils/type'
+import { BankBalance, CashBalance, LoanReport } from '@/utils/type'
 import { usePDF } from 'react-to-pdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import { getBankBalance, getCashBalance } from '@/api/cash-position-api'
+import {
+  getBankBalance,
+  getCashBalance,
+  getLoanReport,
+} from '@/api/cash-position-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -21,6 +25,7 @@ const CashPositon = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'Cash_Position.pdf' })
   const [bankBalances, setBankBalances] = useState<BankBalance[]>([])
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([])
+  const [loanReport, setLoanReport] = useState<LoanReport[]>([])
   const [fromDate, setFromDate] = useState<string>('')
 
   // Use companyName (instead of companyId) for filtering
@@ -37,23 +42,34 @@ const CashPositon = () => {
       )
     }
     setBankBalances(data)
-    console.log("bank data: ", data)
-    
+    console.log('bank data: ', data)
   }, [fromDate, companyName, token])
 
-
   const fetchGetCashBalance = React.useCallback(async () => {
-  if (!token) return
-  const response = await getCashBalance(fromDate, token) // using fromDate as single date
-  let data: CashBalance[] = response.data || []
-  if (companyName) {
-    data = data.filter(
-      (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
-    )
-  }
-  setCashBalances(data)
-  console.log("cash data: ", data)
-}, [fromDate, companyName, token])
+    if (!token) return
+    const response = await getCashBalance(fromDate, token) // using fromDate as single date
+    let data: CashBalance[] = response.data || []
+    if (companyName) {
+      data = data.filter(
+        (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+      )
+    }
+    setCashBalances(data)
+    console.log('cash data: ', data)
+  }, [fromDate, companyName, token])
+
+  const fetchGetLoanReport = React.useCallback(async () => {
+    if (!token) return
+    const response = await getLoanReport(fromDate, token) // using fromDate as single date
+    let data: LoanReport[] = response.data || []
+    if (companyName) {
+      data = data.filter(
+        (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+      )
+    }
+    setLoanReport(data)
+    console.log('loan report data: ', data)
+  }, [fromDate, companyName, token])
 
   // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
@@ -62,7 +78,6 @@ const CashPositon = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -71,7 +86,8 @@ const CashPositon = () => {
     checkUserData()
     fetchGetBankBalance()
     fetchGetCashBalance()
-  }, [fetchGetBankBalance, fetchGetCashBalance,router])
+    fetchGetLoanReport()
+  }, [fetchGetBankBalance, fetchGetCashBalance, fetchGetLoanReport, router])
 
   // Function to generate PDF
   const generatePdf = () => {
@@ -79,10 +95,39 @@ const CashPositon = () => {
   }
 
   // Flatten and combine both bankBalances and cashBalances for Excel export
+  // const flattenAllData = () => {
+  //   const bankData = bankBalances.map((item) => ({
+  //     Source: 'Bank',
+  //     CompanyName: item.companyName,
+  //     BankName: item.BankName,
+  //     BranchName: item.BranchName,
+  //     BankAccount: item.BankAccount,
+  //     AccountType: item.AccountType,
+  //     OpeningBalance: item.openingBalance,
+  //     DebitSum: item.debitSum,
+  //     CreditSum: item.creditSum,
+  //     ClosingBalance: item.closingBalance,
+  //   }))
+
+  //   const cashData = cashBalances.map((item) => ({
+  //     Source: 'Cash',
+  //     CompanyName: item.companyName,
+  //     Location: item.locationName,
+  //     OpeningBalance: item.openingBalance,
+  //     DebitSum: item.debitSum,
+  //     CreditSum: item.creditSum,
+  //     ClosingBalance: item.closingBalance,
+  //   }))
+
+  //   return [...bankData, ...cashData, ]
+  // }
+  // Flatten and combine bankBalances, cashBalances, and loanReport for Excel export
   const flattenAllData = () => {
     const bankData = bankBalances.map((item) => ({
       Source: 'Bank',
       CompanyName: item.companyName,
+      BankName: item.BankName,
+      BranchName: item.BranchName,
       BankAccount: item.BankAccount,
       AccountType: item.AccountType,
       OpeningBalance: item.openingBalance,
@@ -101,7 +146,20 @@ const CashPositon = () => {
       ClosingBalance: item.closingBalance,
     }))
 
-    return [...bankData, ...cashData]
+    const loanData = loanReport.map((item) => ({
+      Source: 'Loan',
+      CompanyName: item.companyName,
+      BankName: item.BankName,
+      BranchName: item.BranchName,
+      BankAccount: item.BankAccount,
+      AccountType: item.AccountType,
+      OpeningBalance: item.openingBalance,
+      DebitSum: item.debitSum,
+      CreditSum: item.creditSum,
+      ClosingBalance: item.closingBalance,
+    }))
+
+    return [...bankData, ...cashData, ...loanData]
   }
 
   // Export data to Excel (both bank and cash)
@@ -151,6 +209,7 @@ const CashPositon = () => {
         targetRef={targetRef}
         bankBalances={bankBalances}
         cashBalances={cashBalances}
+        loanReport={loanReport}
       />
     </div>
   )
