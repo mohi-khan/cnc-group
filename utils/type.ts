@@ -1066,6 +1066,8 @@ export interface BankBalance {
   companyId: string
   companyName: string
   BankAccount: string
+  BankName: string
+  BranchName: string
   AccountType: string
   openingBalance: number
   debitSum: number
