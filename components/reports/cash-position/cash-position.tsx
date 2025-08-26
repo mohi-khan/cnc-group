@@ -21,15 +21,15 @@ const CashPositon = () => {
   const { toPDF, targetRef } = usePDF({ filename: 'Cash_Position.pdf' })
   const [bankBalances, setBankBalances] = useState<BankBalance[]>([])
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([])
-  const [fromDate, setFromDate] = useState<string>('2024-01-01')
-  const [toDate, setToDate] = useState<string>('2025-03-02')
+  const [fromDate, setFromDate] = useState<string>('')
+
   // Use companyName (instead of companyId) for filtering
   const [companyName, setCompanyName] = useState<string>('')
 
   // Fetch bank balance data and filter by companyName if one is selected
   const fetchGetBankBalance = React.useCallback(async () => {
     if (!token) return
-    const response = await getBankBalance(fromDate, toDate, token)
+    const response = await getBankBalance(fromDate, token)
     let data: BankBalance[] = response.data || []
     if (companyName) {
       data = data.filter(
@@ -37,22 +37,24 @@ const CashPositon = () => {
       )
     }
     setBankBalances(data)
+    console.log("bank data: ", data)
     
-  }, [fromDate, toDate, companyName, token])
+  }, [fromDate, companyName, token])
 
-  // Fetch cash balance data and filter by companyName if one is selected
+
   const fetchGetCashBalance = React.useCallback(async () => {
-    if (!token) return
-    const response = await getCashBalance(fromDate, toDate, token)
-    let data: CashBalance[] = response.data || []
-    if (companyName) {
-      data = data.filter(
-        (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
-      )
-    }
-    setCashBalances(data)
-    
-  }, [fromDate, toDate, companyName, token])
+  if (!token) return
+  const response = await getCashBalance(fromDate, token) // using fromDate as single date
+  let data: CashBalance[] = response.data || []
+  if (companyName) {
+    data = data.filter(
+      (item) => item.companyName.toLowerCase() === companyName.toLowerCase()
+    )
+  }
+  setCashBalances(data)
+  console.log("cash data: ", data)
+}, [fromDate, companyName, token])
+
   // Refetch data whenever fromDate, toDate, or companyName changes
   useEffect(() => {
     const checkUserData = () => {
@@ -134,7 +136,7 @@ const CashPositon = () => {
     newCompanyName: string
   ) => {
     setFromDate(newStartDate ? newStartDate.toISOString().split('T')[0] : '')
-    setToDate(newEndDate ? newEndDate.toISOString().split('T')[0] : '')
+
     setCompanyName(newCompanyName)
   }
 

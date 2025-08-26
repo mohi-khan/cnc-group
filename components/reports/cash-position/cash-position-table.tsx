@@ -132,7 +132,9 @@ const CashPositionTable: React.FC<Props> = ({
           <TableBody>
             {bankTransactions.map((bank, index) => (
               <TableRow key={index}>
-                <TableCell className="border"></TableCell>
+                <TableCell className="border">
+               {bank.BankName} - {bank.BranchName}
+                </TableCell>
                 <TableCell className="border">
                   {bank.openingBalance + bank.closingBalance}
                 </TableCell>
@@ -200,7 +202,7 @@ const CashPositionTable: React.FC<Props> = ({
         </Table>
 
         {/* Second Section: Bank Finance */}
-        <Table>
+        {/* <Table>
           <thead>
             <TableRow className="border bg-slate-50 font-bold">
               <TableHead colSpan={7}>B. Bank Finance:</TableHead>
@@ -245,7 +247,7 @@ const CashPositionTable: React.FC<Props> = ({
                 </TableCell>
               </TableRow>
             ))}
-            {/* Total Row for Bank Finance */}
+        
             <TableRow className="font-semibold bg-slate-100">
               <TableCell className="border text-right" colSpan={1}>
                 Total:
@@ -268,7 +270,7 @@ const CashPositionTable: React.FC<Props> = ({
               </TableCell>
             </TableRow>
           </TableBody>
-        </Table>
+        </Table> */}
       </div>
     </div>
   )
