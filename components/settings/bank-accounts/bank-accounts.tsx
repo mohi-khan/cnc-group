@@ -155,7 +155,7 @@ export default function BankAccounts() {
       isActive: true,
       isReconcilable: true,
       createdBy: userId,
-      glAccountId: 0, // Initialize as a number
+      glAccountId: 0,
     },
   })
 
@@ -310,6 +310,7 @@ export default function BankAccounts() {
         { ...values, openingBalance: Number(values.openingBalance) },
         token
       )
+      console.log(`🚀 ~ onSubmit ~ bank create`, { ...values, openingBalance: Number(values.openingBalance) })
 
       if (response.error || !response.data) {
         console.error('Error creating bank account:', response.error)
@@ -731,6 +732,86 @@ export default function BankAccounts() {
                           )}
                         />
                       )}
+                      <FormField
+                        control={form.control}
+                        name="installmentStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel> Installment Start Date</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                value={
+                                  field.value
+                                    ? format(field.value, 'yyyy-MM-dd')
+                                    : ''
+                                }
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="installmentAmount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Installment Amount</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value
+                                  if (value === '' || value === '.') {
+                                    field.onChange(value)
+                                  } else {
+                                    const parsed = Number.parseFloat(value)
+                                    if (!isNaN(parsed) && parsed >= 0) {
+                                      field.onChange(parsed)
+                                    }
+                                  }
+                                }}
+                                value={field.value || ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="installmentFreq"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Installment Frequency</FormLabel>
+                            <CustomCombobox
+                              items={[
+                                { id: 'Monthly', name: 'Monthly' },
+                                { id: 'Quarterly', name: 'Quarterly' },
+                                { id: 'Half Yearly', name: 'Half Yearly' },
+                                { id: 'Yearly', name: 'Yearly' },
+                                { id: 'One Time', name: 'One Time' },
+                              ]}
+                              value={
+                                field.value
+                                  ? { id: field.value, name: field.value }
+                                  : null
+                              }
+                              onChange={(
+                                value: { id: string; name: string } | null
+                              ) => field.onChange(value ? value.id : null)}
+                              placeholder="Select installment frequency"
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                     <div className="flex space-x-4 py-5">
                       <FormField
