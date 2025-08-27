@@ -188,6 +188,29 @@ export const bankAccountSchema = z.object({
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
+  limit: z.number().nonnegative("Limit must be a positive number"),
+  rate: z.number().nonnegative("Rate must be a positive number"),
+  loanType: z.enum([
+    "EDF",
+    "TR",
+    "IBP",
+    "OD",
+    "Term",
+    "Stimulas",
+    "UPAS",
+  ]),
+  installmentStartDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+  installmentFreq: z.enum([
+    "Monthly",
+    "Quarterly",
+    "Half Yearly",
+    "Yearly",
+    "One Time",
+  ])
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
@@ -276,6 +299,18 @@ export const createBankAccountSchema = z.object({
     "Stimulas",
     "UPAS",
   ]),
+  installmentStartDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+  installmentFreq: z.enum([
+    "Monthly",
+    "Quarterly",
+    "Half Yearly",
+    "Yearly",
+    "One Time",
+  ])
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
