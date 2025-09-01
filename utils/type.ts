@@ -157,6 +157,7 @@ export const bankAccountSchema = z.object({
     "Current",
     "OD Against Non-Cash Security",
     "Fixed",
+    "Loan Account",
   ]),
   openingBalance: z.number(),
   validityDate: z
@@ -255,6 +256,7 @@ export const createBankAccountSchema = z.object({
     "Current",
     "OD Against Non-Cash Security",
     "Fixed",
+    "Loan Account",
   ]),
   openingBalance: z.string(),
 
@@ -310,7 +312,8 @@ export const createBankAccountSchema = z.object({
     "Half Yearly",
     "Yearly",
     "One Time",
-  ])
+  ]),
+  noOfInstallments: z.number().int().nonnegative().optional(),
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
@@ -1911,3 +1914,5 @@ export interface BoeApiResponse {
   bdtAmount: number
   exchangeRate: number | null
 }
+
+
