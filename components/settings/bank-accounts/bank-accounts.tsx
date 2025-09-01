@@ -79,15 +79,6 @@ type SortColumn =
 
 type SortDirection = 'asc' | 'desc'
 
-// enum AccountType {
-//   Savings = "Savings",
-//   Current = "Current",
-//   Overdraft = "Overdraft",
-//   Fixed = "Fixed",
-//   DEPOSITAWAITINGFORDISPOSAL ="DEPOSIT AWAITING FOR DISPOSAL"
-
-// }
-
 const AccountTypes = [
   'DEPOSIT AWAITING FOR DISPOSAL',
   'SPECIAL NOTICE DEPOSIT ( 7 DAYS)',
@@ -97,6 +88,7 @@ const AccountTypes = [
   'Current',
   'OD Against Non-Cash Security',
   'Fixed',
+  'Loan Account',
 ] as const
 
 type AccountType = (typeof AccountTypes)[number]
@@ -275,6 +267,7 @@ export default function BankAccounts() {
         isReconcilable: true,
         createdBy: userId,
         glAccountId: 0,
+        noOfInstallments: 0,
       })
     }
   }, [editingAccount, form, userId])
@@ -310,7 +303,10 @@ export default function BankAccounts() {
         { ...values, openingBalance: Number(values.openingBalance) },
         token
       )
-      console.log(`🚀 ~ onSubmit ~ bank create`, { ...values, openingBalance: Number(values.openingBalance) })
+      console.log(`🚀 ~ onSubmit ~ bank create`, {
+        ...values,
+        openingBalance: Number(values.openingBalance),
+      })
 
       if (response.error || !response.data) {
         console.error('Error creating bank account:', response.error)
@@ -394,6 +390,9 @@ export default function BankAccounts() {
       setSortDirection('asc')
     }
   }
+
+  // Watch accountType field
+  const watchedAccountType = form.watch('accountType')
 
   return (
     <div className="mx-auto py-10 ">
@@ -560,7 +559,7 @@ export default function BankAccounts() {
                           </FormItem>
                         )}
                       />
-                      <FormField
+                      {/* <FormField
                         control={form.control}
                         name="accountType"
                         render={({ field }) => (
@@ -585,6 +584,90 @@ export default function BankAccounts() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={form.control}
+                        name="noOfInstallments"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Installments</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                placeholder="Enter number of installments"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(
+                                    e.target.value === ''
+                                      ? undefined
+                                      : Number(e.target.value)
+                                  )
+                                }}
+                                value={field.value ?? ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      /> */}
+
+                      <FormField 
+                        control={form.control}
+                        name="accountType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account Type</FormLabel>
+                            <CustomCombobox
+                              items={AccountTypes.map((type) => ({
+                                id: type,
+                                name: type,
+                              }))}
+                              value={
+                                field.value
+                                  ? { id: field.value, name: field.value }
+                                  : null
+                              }
+                              onChange={(
+                                value: { id: string; name: string } | null
+                              ) => field.onChange(value ? value.id : null)}
+                              placeholder="Select account type"
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Conditionally render Number of Installments */}
+                      {watchedAccountType === 'Loan Account' && (
+                        <FormField
+                          control={form.control}
+                          name="noOfInstallments"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Number of Installments</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  placeholder="Enter number of installments"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(
+                                      e.target.value === ''
+                                        ? undefined
+                                        : Number(e.target.value)
+                                    )
+                                  }}
+                                  value={field.value ?? ''}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
                       <FormField
                         control={form.control}
                         name="openingBalance"
