@@ -1915,4 +1915,18 @@ export interface BoeApiResponse {
   exchangeRate: number | null
 }
 
+// Loan Sancton Report type
+export interface LoanBalanceType {
+  date: string
+  accountNumber: string
+  bankName: string
+  branchName: string
+  limit: number | null
+  rate: number | null
+  accountType: string
+  balance: string
+  companyName: string
+}
+
+
 
