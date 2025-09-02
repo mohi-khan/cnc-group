@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -31,7 +31,7 @@ import {
 import { createBillEntry } from '@/api/bill-entry-api'
 import { toast } from '@/hooks/use-toast'
 import { getMeterEntry } from '@/api/meter-entry-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -50,7 +50,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   fetchBillEntry,
 }) => {
   useInitializeUser()
-
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
 
@@ -62,6 +62,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
       amount: 0,
       billDate: '',
       payment: undefined,
+      createdBy: userData?.userId || 0,
     },
   })
 
@@ -70,16 +71,15 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
   )
 
   const onSubmit = async (data: CreateElectricityBillType) => {
-    // Log the form data to inspect it before submission
-    console.log('Form Data Submitted:', data) // 👈 log form data
+    console.log('Form Data Submitted:', data)
 
-    // Convert fields to proper types
     const submitData = {
       ...data,
       billId: Number(data.billId),
       meterNo: Number(data.meterNo),
       amount: Number(data.amount),
-      payment: Number(data.payment),
+      payment: Number(data.payment ?? 0), // Ensure payment is always a number
+      createdBy: userData?.userId || 0,
     }
 
     try {
@@ -92,12 +92,10 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
         })
         fetchBillEntry()
         onCategoryAdded()
-        onOpenChange(false)
-
+        onOpenChange(false) // close only on success
         form.reset()
       }
     } catch (error: any) {
-      // Check if error has a response from the server
       if (error.response && error.response.data) {
         console.error('API Error Details:', error.response.data)
       } else {
@@ -116,7 +114,6 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
     if (!token) return
     const response = await getMeterEntry(token)
     setMeterEntry(response.data ?? [])
-    
   }, [token])
 
   useEffect(() => {
@@ -132,6 +129,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Bill ID */}
               <FormField
                 control={form.control}
                 name="billId"
@@ -140,10 +138,10 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     <FormLabel>Bill ID</FormLabel>
                     <FormControl>
                       <Input
-                       
                         type="number"
                         onChange={(e) => onChange(Number(e.target.value))}
                         placeholder="Enter bill ID"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -151,6 +149,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
+              {/* Meter No */}
               <FormField
                 control={form.control}
                 name="meterNo"
@@ -161,7 +160,9 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                       <CustomCombobox
                         items={meterEntry.map((meter) => ({
                           id: meter.meterid.toString(),
-                          name: `${meter.meterName} - ${meter.utilityType}` || 'Unnamed Meter',
+                          name:
+                            `${meter.meterName} - ${meter.utilityType}` ||
+                            'Unnamed Meter',
                         }))}
                         value={
                           field.value
@@ -170,9 +171,11 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                                 name:
                                   meterEntry.find(
                                     (meter) => meter.meterid === field.value
-                                  )?.meterName + ' - ' + meterEntry.find(
-                                    (meter) => meter.meterid === field.value
-                                  )?.utilityType || 'Unnamed Meter',
+                                  )?.meterName +
+                                    ' - ' +
+                                    meterEntry.find(
+                                      (meter) => meter.meterid === field.value
+                                    )?.utilityType || 'Unnamed Meter',
                               }
                             : null
                         }
@@ -189,6 +192,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
+              {/* Bill Date */}
               <FormField
                 control={form.control}
                 name="billDate"
@@ -211,6 +215,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
+              {/* Amount */}
               <FormField
                 control={form.control}
                 name="amount"
@@ -219,10 +224,10 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     <FormLabel>Bill Amount</FormLabel>
                     <FormControl>
                       <Input
-                       
                         type="number"
                         onChange={(e) => onChange(Number(e.target.value))}
                         placeholder="Enter bill amount"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -230,6 +235,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
+              {/* Payment */}
               <FormField
                 control={form.control}
                 name="payment"
@@ -239,18 +245,21 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                     <FormControl>
                       <CustomCombobox
                         items={[
-                          { id: "0", name: "Prepaid" },
-                          { id: "1", name: "Postpaid" }
+                          { id: '0', name: 'Prepaid' },
+                          { id: '1', name: 'Postpaid' },
                         ]}
                         value={
                           field.value !== undefined && field.value !== null
                             ? {
                                 id: field.value.toString(),
-                                name: field.value === 0 ? "Prepaid" : "Postpaid"
+                                name:
+                                  field.value === 0 ? 'Prepaid' : 'Postpaid',
                               }
                             : null
                         }
-                        onChange={(value: { id: string; name: string } | null) =>
+                        onChange={(
+                          value: { id: string; name: string } | null
+                        ) =>
                           onChange(value ? Number.parseInt(value.id, 10) : null)
                         }
                         placeholder="Select payment type"
@@ -261,6 +270,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 )}
               />
 
+              {/* Actions */}
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
@@ -269,9 +279,7 @@ const BillEntryPopUp: React.FC<MeterEntryPopUpProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" onClick={() => onOpenChange(false)}>
-                  Submit
-                </Button>
+                <Button type="submit">Submit</Button>
               </div>
             </form>
           </Form>

@@ -1,5 +1,6 @@
 import { fetchApi } from "@/utils/http"
-import { LoanBalanceType } from "@/utils/type" // or the correct type for LoanPosition
+import { LoanPosition } from "@/utils/type"
+
 
 export async function getLoanPosition({
   date,
@@ -10,7 +11,7 @@ export async function getLoanPosition({
   month: number
   token: string
 }) {
-  return fetchApi<LoanBalanceType>({ // replace LoanBalanceType with correct type if different
+  return fetchApi<LoanPosition>({ // replace LoanBalanceType with correct type if different
     url: `api/fundPosition/getLoanPosition?date=${date}&month=${month}`,
     method: 'GET',
     headers: {

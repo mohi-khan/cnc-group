@@ -166,6 +166,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: 'Loan Sancton Report',
             source: '/bank/loan-sanction-report',
           },
+           {
+            name: 'Loan Graph Report',
+            source: '/bank/loan-graph-report',
+          },
          
         ],
 },

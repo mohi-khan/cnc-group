@@ -3,6 +3,7 @@ import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
 import exp from 'constants'
 import { de } from 'date-fns/locale'
+import { create } from 'domain'
 
 // export interface User {
 //   userId: number
@@ -1567,6 +1568,7 @@ export const CreateElectricityBillSchema = z.object({
   billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // Date in YYYY-MM-DD format, // Date in YYYY-MM-DD format
   amount: z.number(), // Double column for the amount
   payment: z.number().int().min(0).max(1), // Tinyint column for payment status (0 or 1)
+  createdBy: z.number().int(),
 })
 
 export type CreateElectricityBillType = z.infer<
@@ -1927,6 +1929,15 @@ export interface LoanBalanceType {
   balance: string
   companyName: string
 }
+
+export interface LoanPosition {
+  date: string
+  accountNumber: string
+  accountType: string
+  balance: number
+  companyName: string
+}
+
 
 
 
