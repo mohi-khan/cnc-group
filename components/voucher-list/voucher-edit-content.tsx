@@ -58,7 +58,7 @@ const transformVoucherData = (
       balance: 0,
       analyticTags: null,
       taxId: null,
-      resPartnerId: detail.partner || null,
+      resPartnerId: detail.partnar || null,
       notes: detail.detail_notes || '',
       type: 'Receipt',
       bankAccountid: (detail as any).bankAccountid || null,
