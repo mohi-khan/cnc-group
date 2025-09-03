@@ -1,5 +1,6 @@
 
 
+
 // 'use client'
 
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,13 +13,16 @@
 //   SelectTrigger,
 //   SelectValue,
 // } from '@/components/ui/select'
-// import { CalendarIcon } from 'lucide-react'
+// import { Button } from '@/components/ui/button'
+// import { FileText, Download } from 'lucide-react'
 
 // interface LoanGraphReportHeadingProps {
 //   date: string
 //   month: string
 //   onDateChange: (newDate: string) => void
 //   onMonthChange: (newMonth: string) => void
+//   onExportPDF: () => void
+//   onExportExcel: () => void
 // }
 
 // const LoanGraphReportHeading = ({
@@ -26,9 +30,10 @@
 //   month,
 //   onDateChange,
 //   onMonthChange,
+//   onExportPDF,
+//   onExportExcel,
 // }: LoanGraphReportHeadingProps) => {
 //   const periods = [
- 
 //     { value: '1', label: 'Last 1 Month' },
 //     { value: '3', label: 'Last 3 Months' },
 //     { value: '6', label: 'Last 6 Months' },
@@ -38,9 +43,18 @@
 //   return (
 //     <Card className="mb-6">
 //       <CardHeader>
-//         <CardTitle className="flex items-center gap-2">
-         
-        
+//         <CardTitle className="flex items-center justify-between">
+//           <span>Report Filters</span>
+//           <div className="flex gap-2">
+//             <Button onClick={onExportPDF} variant="outline" size="sm">
+//               <FileText className="w-4 h-4 mr-2" />
+//               Export PDF
+//             </Button>
+//             <Button onClick={onExportExcel} variant="outline" size="sm">
+//               <Download className="w-4 h-4 mr-2" />
+//               Export Excel
+//             </Button>
+//           </div>
 //         </CardTitle>
 //       </CardHeader>
 //       <CardContent>
