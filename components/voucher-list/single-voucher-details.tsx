@@ -282,7 +282,7 @@ export default function SingleVoucherDetails() {
         const account = getAccountByName(item.accountsname || '')
         const costCenter = getCostCenterByName(item.costcenter || '')
         const department = getDepartmentByName(item.department || '')
-        const partner = getPartnerByName(item.partner || '')
+        const partner = getPartnerByName(item.partnar || '')
 
         const mapped = {
           accountId: account?.accountId || 0,
@@ -908,7 +908,7 @@ export default function SingleVoucherDetails() {
                       requisition={undefined}
                       partners={formState.partners}
                       isFromInvoice={true} // Add this when coming from invoice
-                      invoicePartnerName={data?.[0]?.partner || ''} // Add partner name from voucher data
+                      invoicePartnerName={data?.[0]?.partnar || ''} // Add partner name from voucher data
                     />
                     <BankVoucherSubmit
                       form={form}
@@ -962,7 +962,7 @@ export default function SingleVoucherDetails() {
                         <TableCell>{item.bankaccount || 'N/A'}</TableCell>
                         <TableCell>{item.costcenter || 'N/A'}</TableCell>
                         <TableCell>{item.department || 'N/A'}</TableCell>
-                        <TableCell>{item.partner || 'N/A'}</TableCell>
+                        <TableCell>{item.partnar || 'N/A'}</TableCell>
                         <TableCell>
                           {editingReferenceIndex === index ? (
                             <div className="flex gap-2 items-start align-top">
@@ -1043,7 +1043,9 @@ export default function SingleVoucherDetails() {
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount in word:</span>
                 <span className="capitalize">
-                  {new ToWords().convert(Number(data[data.length - 1].totalamount.toFixed(2)))}{' '}
+                  {new ToWords().convert(
+                    Number(data[data.length - 1].totalamount.toFixed(2))
+                  )}{' '}
                   {data[data.length - 1].currency} only
                 </span>
               </div>
