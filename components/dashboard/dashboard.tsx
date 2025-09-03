@@ -419,8 +419,10 @@ export default function Dashboard() {
     const bankDates = fundPositionData.BankBalance.flatMap((bankArray) =>
       bankArray.map((entry) => entry.date)
     )
-
-    const allDates = [...cashDates, ...bankDates]
+    const loanDates = fundPositionData.loanBalance.flatMap((bankArray) =>
+      bankArray.map((entry) => entry.date)
+    )
+    const allDates = [...cashDates, ...bankDates,...loanDates]
 
     const distinctDates = Array.from(new Set(allDates)).sort((a, b) => {
       // Sort by latest first
@@ -447,13 +449,20 @@ export default function Dashboard() {
           (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
           0
         )
+         const loanBalance = fundPositionData.loanBalance.flat()
+        .filter((item) => item.date === date)
+        .reduce(
+          (sum, item) => sum + (Number.parseFloat(item.balance || '0') || 0),
+          0
+        )
       console.log(`Date: ${date}, Cash: ${cashBalance}, Bank: ${bankBalance}`)
       const [month, day, year] = date.split('/')
       return {
         date: `${month}/${day}`,
         cashBalance,
         bankBalance,
-        netBalance: cashBalance + bankBalance,
+        loanBalance,
+        netBalance: cashBalance + bankBalance-loanBalance,
       }
     })
   }, [fundPositionData])
@@ -1249,6 +1258,10 @@ export default function Dashboard() {
                   label: 'Bank Balance',
                   color: 'hsl(180, 100%, 70%)',
                 },
+                loanBalance: {
+                  label: 'Loan Balance',
+                  color: 'hsla(110, 100%, 70%, 1.00)',
+                },
                 netBalance: {
                   label: 'Net Balance',
                   color: 'hsl(0, 100%, 70%)',
@@ -1284,6 +1297,17 @@ export default function Dashboard() {
                   strokeWidth={2}
                   dot={{
                     stroke: 'hsl(180, 100%, 70%)',
+                    fill: 'white',
+                    strokeWidth: 2,
+                  }}
+                />
+                 <Line
+                  type="monotone"
+                  dataKey="loanBalance"
+                  stroke="hsla(81, 94%, 51%, 1.00)"
+                  strokeWidth={2}
+                  dot={{
+                    stroke: 'hsla(123, 100%, 70%, 1.00)',
                     fill: 'white',
                     strokeWidth: 2,
                   }}

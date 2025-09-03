@@ -1430,6 +1430,7 @@ const BankBalanceSchema = z.array(z.array(BalanceEntrySchema))
 export const FundPositionSchema = z.object({
   cashBalance: CashBalanceSchema,
   BankBalance: BankBalanceSchema,
+  loanBalance: BankBalanceSchema
 })
 
 // Infer the TypeScript type from the schema
