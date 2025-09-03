@@ -4,13 +4,13 @@ import BillEntryList from './bill-entry-list'
 import BillEntryPopUp from './bill-entry-popup'
 import { GetElectricityBillType } from '@/utils/type'
 import { getBillEntry } from '@/api/bill-entry-api'
-import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 
 const BillEntry = () => {
   useInitializeUser()
-
+  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
 

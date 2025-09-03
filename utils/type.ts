@@ -3,6 +3,7 @@ import { locationSchema } from '@/api/company-api'
 import { z } from 'zod'
 import exp from 'constants'
 import { de } from 'date-fns/locale'
+import { create } from 'domain'
 
 // export interface User {
 //   userId: number
@@ -157,6 +158,7 @@ export const bankAccountSchema = z.object({
     "Current",
     "OD Against Non-Cash Security",
     "Fixed",
+    "Loan Account",
   ]),
   openingBalance: z.number(),
   validityDate: z
@@ -188,6 +190,29 @@ export const bankAccountSchema = z.object({
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
+  limit: z.number().nonnegative("Limit must be a positive number"),
+  rate: z.number().nonnegative("Rate must be a positive number"),
+  loanType: z.enum([
+    "EDF",
+    "TR",
+    "IBP",
+    "OD",
+    "Term",
+    "Stimulas",
+    "UPAS",
+  ]),
+  installmentStartDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+  installmentFreq: z.enum([
+    "Monthly",
+    "Quarterly",
+    "Half Yearly",
+    "Yearly",
+    "One Time",
+  ])
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
@@ -232,6 +257,7 @@ export const createBankAccountSchema = z.object({
     "Current",
     "OD Against Non-Cash Security",
     "Fixed",
+    "Loan Account",
   ]),
   openingBalance: z.string(),
 
@@ -276,6 +302,19 @@ export const createBankAccountSchema = z.object({
     "Stimulas",
     "UPAS",
   ]),
+  installmentStartDate: z
+    .string()
+    .optional()
+    .transform((str) => (str ? new Date(str) : undefined)),
+  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+  installmentFreq: z.enum([
+    "Monthly",
+    "Quarterly",
+    "Half Yearly",
+    "Yearly",
+    "One Time",
+  ]),
+  noOfInstallments: z.number().int().nonnegative().optional(),
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
@@ -1066,6 +1105,8 @@ export interface BankBalance {
   companyId: string
   companyName: string
   BankAccount: string
+  BankName: string
+  BranchName: string
   AccountType: string
   openingBalance: number
   debitSum: number
@@ -1084,6 +1125,21 @@ export interface CashBalance {
   creditSum: number
   closingBalance: number
 }
+
+// src/types/loanReport.ts
+
+export interface LoanReport {
+  companyName: string
+  BankAccount: string
+  BankName: string
+  BranchName: string
+  AccountType: string
+  openingBalance: number
+  debitSum: number
+  creditSum: number
+  closingBalance: number
+}
+
 
 export const exchangeSchema = z.object({
   exchangeDate: z.coerce.date(),
@@ -1513,6 +1569,7 @@ export const CreateElectricityBillSchema = z.object({
   billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // Date in YYYY-MM-DD format, // Date in YYYY-MM-DD format
   amount: z.number(), // Double column for the amount
   payment: z.number().int().min(0).max(1), // Tinyint column for payment status (0 or 1)
+  createdBy: z.number().int(),
 })
 
 export type CreateElectricityBillType = z.infer<
@@ -1860,3 +1917,28 @@ export interface BoeApiResponse {
   bdtAmount: number
   exchangeRate: number | null
 }
+
+// Loan Sancton Report type
+export interface LoanBalanceType {
+  date: string
+  accountNumber: string
+  bankName: string
+  branchName: string
+  limit: number | null
+  rate: number | null
+  accountType: string
+  balance: string
+  companyName: string
+}
+
+export interface LoanPosition {
+  date: string
+  accountNumber: string
+  accountType: string
+  balance: number
+  companyName: string
+}
+
+
+
+

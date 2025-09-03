@@ -155,6 +155,24 @@ export const MENU_ITEMS: MenuItem[] = [
           },
         ],
       },
+      {
+        name: 'Reports',
+        items: [
+           {
+            name: 'Cash Position',
+            source: '/reports/cash-position',
+          },
+           {
+            name: 'Loan Sancton Report',
+            source: '/bank/loan-sanction-report',
+          },
+           {
+            name: 'Loan Graph Report',
+            source: '/bank/loan-graph-report',
+          },
+         
+        ],
+},
     ],
   },
   {
@@ -220,10 +238,7 @@ export const MENU_ITEMS: MenuItem[] = [
       {
         name: 'Other Reports',
         items: [
-          {
-            name: 'Cash Position',
-            source: '/reports/cash-position',
-          },
+         
           {
             name: 'FDR Reports',
             source: '/reports/fdr-report',
