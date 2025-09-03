@@ -742,7 +742,7 @@ const VoucherSchemaById = z.object({
   // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
-  partner: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(),
   bankAccountId: z.number(),
   // If you know the type, replace `z.any()` with the correct type
