@@ -1939,5 +1939,14 @@ export interface LoanPosition {
 }
 
 
+export type QuickAssetType = {
+  from: string
+  to: string
+  balance: number
+  companyId: number
+}
+
+
+
 
 
