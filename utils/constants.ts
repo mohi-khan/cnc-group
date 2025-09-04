@@ -542,6 +542,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: "Loan Graph Report",
             source: "/bank/loan-graph-report",
           },
+          {
+            name: "Quick Assets Report",
+            source: "/bank/quick-asset-report",
+          },
         ],
       },
     ],
