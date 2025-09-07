@@ -45,6 +45,7 @@ import {
   getAllDepartments,
   getAllLocations,
 } from '@/api/common-shared-api'
+import { toast } from '@/hooks/use-toast'
 
 interface AssetPopupProps {
   isOpen: boolean
@@ -126,6 +127,10 @@ export const AssetPopUp: React.FC<AssetPopupProps> = ({
 
       
       await createAsset(formattedData, token)
+       toast({
+               title: 'Success',
+               description: 'Asset has been successfully added.',
+             })
       
       onCategoryAdded()
       onOpenChange(false)
