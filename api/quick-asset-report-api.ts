@@ -30,21 +30,19 @@ import { fetchApi } from "@/utils/http"
 import { QuickAssetType } from "@/utils/type"
 
 export async function getQuickAsset({
-    companyIds, // now accepts array of numbers
     startDate,
     endDate,
     token,
 }: {
-    companyIds: number[] // array of company IDs
+  
     startDate: string
     endDate: string
     token: string
 }) {
-    // Convert array to comma-separated string for query param
-    const companyIdParam = companyIds.join(",")
+  
 
     return fetchApi<QuickAssetType[]>({
-        url: `api/fundPosition/getQuickAsset?companyId=${companyIdParam}&startDate=${startDate}&endDate=${endDate}`,
+        url: `api/fundPosition/getQuickAsset?startDate=${startDate}&endDate=${endDate}`,
         method: "GET",
         headers: {
             Authorization: `${token}`,

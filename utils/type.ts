@@ -1943,7 +1943,7 @@ export type QuickAssetType = {
   from: string
   to: string
   balance: number
-  companyId: number
+  company: number
 }
 
 
