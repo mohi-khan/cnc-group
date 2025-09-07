@@ -1,15 +1,17 @@
-
-
-
 import type { QuickAssetType } from '@/utils/type'
 import type { CompanyType } from '@/api/company-api'
 
 interface QuickAssetReportTableProps {
   data: QuickAssetType[]
   companies: CompanyType[]
+  selectedCompanyIds?: string[]
 }
 
-const QuickAssetReportTable = ({ data, companies }: QuickAssetReportTableProps) => {
+const QuickAssetReportTable = ({
+  data,
+  companies,
+  selectedCompanyIds = [],
+}: QuickAssetReportTableProps) => {
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
@@ -18,8 +20,9 @@ const QuickAssetReportTable = ({ data, companies }: QuickAssetReportTableProps) 
     )
   }
 
+  // Only take 'to' dates and remove duplicates
   const dates = Array.from(
-    new Set(data.flatMap((item) => [item.from, item.to].filter(Boolean)))
+    new Set(data.map((item) => item.to).filter(Boolean))
   ).sort()
 
   const companyMap: Record<number, string> = {}
@@ -27,7 +30,18 @@ const QuickAssetReportTable = ({ data, companies }: QuickAssetReportTableProps) 
     if (c.companyId != null) companyMap[c.companyId] = c.companyName
   })
 
-  const companyIds = Array.from(new Set(data.map((item) => item.company)))
+  const allCompanyIds = Array.from(new Set(data.map((item) => item.company)))
+  const companyIds =
+    selectedCompanyIds.length > 0
+      ? allCompanyIds.filter((id) => selectedCompanyIds.includes(id.toString()))
+      : allCompanyIds
+
+  const filteredData =
+    selectedCompanyIds.length > 0
+      ? data.filter((item) =>
+          selectedCompanyIds.includes(item.company.toString())
+        )
+      : data
 
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -53,17 +67,16 @@ const QuickAssetReportTable = ({ data, companies }: QuickAssetReportTableProps) 
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {companyIds.map((companyId) => {
-              const companyName = companyMap[companyId] || `Company ${companyId}`
+              const companyName =
+                companyMap[companyId] || `Company ${companyId}`
               return (
                 <tr key={`row-${companyId}`} className="bg-white">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900 sticky left-0 bg-inherit z-10 border-r">
                     {companyName}
                   </td>
                   {dates.map((date) => {
-                    const item = data.find(
-                      (d) =>
-                        d.company === companyId &&
-                        (d.from === date || d.to === date)
+                    const item = filteredData.find(
+                      (d) => d.company === companyId && d.to === date
                     )
                     const value = item ? item.balance : null
                     return (
@@ -83,8 +96,8 @@ const QuickAssetReportTable = ({ data, companies }: QuickAssetReportTableProps) 
                 TOTAL
               </td>
               {dates.map((date) => {
-                const total = data.reduce((sum, item) => {
-                  if (item.from === date || item.to === date) {
+                const total = filteredData.reduce((sum, item) => {
+                  if (item.to === date) {
                     return sum + Number(item.balance)
                   }
                   return sum

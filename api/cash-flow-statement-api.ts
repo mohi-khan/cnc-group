@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { CashflowStatement } from '@/utils/type'
+import { CashflowStatement, GetCashFlowDFPType } from '@/utils/type'
 
 export async function getCashFowStatement({
   fromdate,
@@ -21,3 +21,4 @@ export async function getCashFowStatement({
     },
   })
 }
+

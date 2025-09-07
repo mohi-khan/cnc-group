@@ -1,6 +1,3 @@
-
-
-
 'use client'
 import { getQuickAsset } from '@/api/quick-asset-report-api'
 import { toast } from '@/hooks/use-toast'
@@ -26,7 +23,9 @@ const QuickAssetReport = () => {
   const [endDate, setEndDate] = React.useState(
     new Date().toISOString().split('T')[0]
   )
-  const [selectedCompanyIds, setSelectedCompanyIds] = React.useState<string[]>([])
+  const [selectedCompanyIds, setSelectedCompanyIds] = React.useState<string[]>(
+    []
+  )
   const [companies, setCompanies] = React.useState<CompanyType[]>([])
 
   // Fetch companies
@@ -65,7 +64,6 @@ const QuickAssetReport = () => {
         startDate,
         endDate,
         token,
-        
       })
 
       if (!response?.data) {
@@ -74,11 +72,15 @@ const QuickAssetReport = () => {
           description: 'Failed to load quick asset',
         })
         setQuickAsset([])
+
         return
       }
 
-      const data = Array.isArray(response.data) ? response.data : [response.data]
+      const data = Array.isArray(response.data)
+        ? response.data
+        : [response.data]
       setQuickAsset(data)
+      console.log('Quick Asset Data:', data)
     } catch {
       toast({
         title: 'Error',
@@ -90,11 +92,8 @@ const QuickAssetReport = () => {
 
   useEffect(() => {
     fetchQuickAsset()
-  }, [fetchQuickAsset])
-
-  useEffect(() => {
     fetchCompanies()
-  }, [fetchCompanies])
+  }, [fetchQuickAsset, fetchCompanies])
 
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
@@ -109,11 +108,13 @@ const QuickAssetReport = () => {
         onRefresh={fetchQuickAsset}
       />
 
-      <QuickAssetReportTable data={quickAsset} companies={companies} />
+      <QuickAssetReportTable
+        data={quickAsset}
+        companies={companies}
+        selectedCompanyIds={selectedCompanyIds}
+      />
     </div>
   )
 }
 
 export default QuickAssetReport
-
-

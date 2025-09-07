@@ -1946,6 +1946,15 @@ export type QuickAssetType = {
   company: number
 }
 
+// get cash flow DFP type
+export interface GetCashFlowDFPType {
+  company_name: string
+  LCUnderProcess: number
+  DocNegotiateWithBank: number
+  AcceptedValue: number
+  MaturedValue: number
+}
+
 
 
 
