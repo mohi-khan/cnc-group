@@ -219,7 +219,6 @@ export type BankAccount = z.infer<typeof bankAccountSchema> & {
   createdAt?: string
   updatedAt?: string
 }
-
 export const createBankAccountSchema = z.object({
   accountName: z
     .string()
@@ -290,7 +289,8 @@ export const createBankAccountSchema = z.object({
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
-  //new field added
+
+  // ✅ New fields
   limit: z.number().nonnegative("Limit must be a positive number"),
   rate: z.number().nonnegative("Rate must be a positive number"),
   loanType: z.enum([
@@ -315,12 +315,20 @@ export const createBankAccountSchema = z.object({
     "One Time",
   ]),
   noOfInstallments: z.number().int().nonnegative().optional(),
+
+  // ✅ New optional foreign key field
+  LcNumber: z
+    .string()
+    .max(12, "LcNumber must not exceed 12 characters")
+    .optional()
+    .nullable(),
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
   createdAt?: string
   updatedAt?: string
 }
+
 
 export type BankAccountCreate = Omit<
   BankAccount,
@@ -1956,6 +1964,31 @@ export interface GetCashFlowDFPType {
 }
 
 
+export interface LcInfoByCostIsActive {
+  LCREQNO: string;
+  IMPLCDATE: string;      // ISO date string
+  ISSUEPLACE: string;
+  PMTTERM: string;
+  IMPLCNO: string;
+  VENDCODE: number;
+  LCANO: string;
+  APPLCBANK: string;
+  IRCNO: string;
+  BENEFICBANK: string;
+  ADVISEBANK: string;
+  SHIPDATE: string;       // ISO date string
+  LCEXPDATE: string;      // ISO date string
+  PRICEMODE: string;
+  CANDF: string;
+  INSUCOMPANY: number;
+  INSCOVNOTE: string;
+  CRDTTERM: string;
+  TERMCOND: string;
+  costCenterId: number;
+  companyId: number;
+  created_by: number;
+  created_at: string;     // ISO date string
+}
 
 
 
