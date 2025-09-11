@@ -1991,4 +1991,19 @@ export interface LcInfoByCostIsActive {
 }
 
 
+// Define the type
+export interface DeferredPayment {
+  lcReqNo: string;
+  LC_ISSUE: string; // Could be Date if you convert strings to Date
+  goods_in: string | null; // Could also be Date | null
+  maturity: string;       // Could also be Date
+  loanType: string;
+  opening_balance: number;
+  company_name: string;
+  name: string;
+}
+
+// Define the report type as an array of deferred payments
+export type DeferredPaymentsReport = DeferredPayment[];
+
 

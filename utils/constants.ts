@@ -546,6 +546,10 @@ export const MENU_ITEMS: MenuItem[] = [
             name: "Quick Assets Report",
             source: "/bank/quick-asset-report",
           },
+          {
+            name: "Deferred Payments Report",
+            source: "/bank/deferred-payments-report",
+          },
         ],
       },
     ],
