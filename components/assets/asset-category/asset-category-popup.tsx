@@ -107,6 +107,10 @@ export const AssetCategoryPopup: React.FC<AssetCategoryPopupProps> = ({
       
       
       await createAssetCategory(data, token)
+       toast({
+         title: 'Success',
+         description: 'Asset category has been successfully added.',
+       })
       onCategoryAdded()
       onOpenChange(false)
       form.reset()

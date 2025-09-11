@@ -107,7 +107,8 @@ const FdrRecord = () => {
         onOpenChange={setIsPopupOpen}
         onRecordAdded={handleRecordAdded}
         refreshFdrData={fetchFdrData} // ✅ Pass fetch function here
-         companyData={companyData} // Pass the fetched company data
+        companyData={companyData} // Pass the fetched company data
+        fdrdata={fdrdata} // Pass the fetched FDR data
        
        
       />

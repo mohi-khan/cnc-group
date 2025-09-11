@@ -277,7 +277,7 @@ export default function SingleGenralLedger() {
                 <div>{item.accountsname}</div>
                 <div>{item.costcenter}</div>
                 <div>{item.department}</div>
-                <div>{item.partner}</div>
+                <div>{item.partnar}</div>
                 <div>
                   {editingReferenceIndex === index ? (
                     <input

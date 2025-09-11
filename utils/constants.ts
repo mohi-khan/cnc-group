@@ -542,6 +542,14 @@ export const MENU_ITEMS: MenuItem[] = [
             name: "Loan Graph Report",
             source: "/bank/loan-graph-report",
           },
+          {
+            name: "Quick Assets Report",
+            source: "/bank/quick-asset-report",
+          },
+          {
+            name: "Deferred Payments Report",
+            source: "/bank/deferred-payments-report",
+          },
         ],
       },
     ],
@@ -576,6 +584,10 @@ export const MENU_ITEMS: MenuItem[] = [
           {
             name: "Cash Flow Statement",
             source: "/reports/cash-flow-statement",
+          },
+          {
+            name: "Cash Flow DFP",
+            source: "/reports/cash-flow-DFP",
           },
           {
             name: "Cost Center Summary",
