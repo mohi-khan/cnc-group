@@ -24,14 +24,23 @@ import {
   VoucherTypes,
 } from '@/utils/type'
 import { Popup } from '@/utils/popup'
+import { editJournalEntryWithDetails } from '@/api/vouchers-api'
+import { useAtom } from 'jotai'
+import { tokenAtom } from '@/utils/user'
+import { toast } from '@/hooks/use-toast'
 
 // Updated interface to include initialData prop
 interface JournalVoucherPopupProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  handleSubmit: (data: JournalEntryWithDetails | JournalEditWithDetails, resetForm: () => void) => void
+  handleSubmit: (
+    data: JournalEntryWithDetails | JournalEditWithDetails,
+    resetForm: () => void
+  ) => void
   isSubmitting: boolean
-  initialData?: JournalEntryWithDetails | JournalEditWithDetails// Added optional initialData prop
+  initialData?: JournalEntryWithDetails | JournalEditWithDetails // Added optional initialData prop
+  isEdit?: boolean // Optional prop to indicate edit mode
+  onClose?: () => void // Optional callback when popup closes
 }
 
 export function JournalVoucherPopup({
@@ -40,8 +49,13 @@ export function JournalVoucherPopup({
   handleSubmit,
   isSubmitting,
   initialData, // Added initialData to destructuring
+  isEdit,
+  onClose,
 }: JournalVoucherPopupProps) {
+  const [token] = useAtom(tokenAtom)
   // Updated defaultValues to use initialData if provided
+  // console.log("🚀 ~ onSubmit ~ data:", data)
+  console.log('🚀 ~ onSubmit ~ initialData:', initialData)
   const defaultValues = useMemo(
     () =>
       initialData || {
@@ -131,8 +145,44 @@ export function JournalVoucherPopup({
     return () => subscription.unsubscribe()
   }, [form])
 
-  const onSubmit = (data: JournalEntryWithDetails | JournalEditWithDetails) => {
-    handleSubmit(data, resetForm)
+  const onSubmit = async (
+    data: JournalEntryWithDetails | JournalEditWithDetails
+  ) => {
+    if (!isEdit) {
+      // Create
+      handleSubmit(data, resetForm)
+    } else {
+      // Merge journalEntry and details with IDs
+      const payload: JournalEditWithDetails = {
+        ...(initialData as JournalEditWithDetails),
+        ...data,
+        journalEntry: {
+          ...(initialData as JournalEditWithDetails).journalEntry,
+          ...data.journalEntry,
+          id: (initialData as JournalEditWithDetails).journalEntry.id, // keep entry id
+        },
+        journalDetails: (data.journalDetails || []).map((detail, idx) => ({
+          ...(initialData as JournalEditWithDetails).journalDetails[idx], // gives id and other required props
+          ...detail, // override with edited values
+        })),
+      }
+
+      const response = await editJournalEntryWithDetails(payload, token)
+
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error editing Journal',
+        })
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Voucher is edited successfully',
+        })
+        resetForm()
+        onClose?.()
+      }
+    }
   }
 
   return (
