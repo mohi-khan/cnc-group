@@ -57,7 +57,7 @@ const transformVoucherData = (
       resPartnerId: detail.partnar || null,
       notes: detail.detail_notes || '',
       type: 'Receipt',
-      bankAccountid: (detail as any).bankAccountid || null,
+      bankaccountid: (detail as any).bankaccountid || null,
       createdBy: userId,
     })),
   }
@@ -159,6 +159,8 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
           onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
           fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          isEdit={true}
+          onClose={onClose} // Ensure the parent modal can be closed
         />
       )
     default:

@@ -17,6 +17,7 @@ import {
 import { Plus } from 'lucide-react'
 import {
   exchangeSchema,
+  JournalEditWithDetails,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
   VoucherTypes,
@@ -30,6 +31,7 @@ import { Popup } from '@/utils/popup'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { editJournalEntryWithDetails } from '@/api/vouchers-api'
 
 // Updated interface to support both normal usage and duplication
 interface ContraVoucherPopupProps {
@@ -37,6 +39,8 @@ interface ContraVoucherPopupProps {
   isOpen?: boolean // Optional for duplication mode
   onOpenChange?: (open: boolean) => void // Optional for duplication mode
   initialData?: JournalEntryWithDetails // Optional initial data for duplication
+  isEdit?: boolean // Optional flag to indicate edit mode
+  onClose?: () => void // Optional callback when popup closes
 }
 
 export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
@@ -44,6 +48,8 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
   isOpen: externalIsOpen,
   onOpenChange,
   initialData,
+  isEdit,
+  onClose
 }) => {
   // Initialize user data
   useInitializeUser()
@@ -58,6 +64,8 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
 
   // Determine if we're in duplication mode or normal mode
   const isDuplicationMode = initialData !== undefined
+  console.log("🚀 ~ ContraVoucherPopup ~ initialData -> bankaccountid:", initialData?.journalDetails.map(ba => ba.bankaccountid))
+  console.log("🚀 ~ ContraVoucherPopup ~ initialData:", initialData)
   const isOpen = isDuplicationMode ? (externalIsOpen ?? false) : internalIsOpen
   const setIsOpen = isDuplicationMode
     ? (open: boolean) => onOpenChange?.(open)
@@ -73,7 +81,6 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
   // Create default values with useMemo to handle initialData
   const defaultValues = useMemo(() => {
     if (initialData) {
-      // Use initialData but ensure createdBy is set to current user
       return {
         ...initialData,
         journalEntry: {
@@ -83,6 +90,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
         journalDetails: initialData.journalDetails.map((detail) => ({
           ...detail,
           createdBy: userData?.userId || 0,
+          bankaccountid: detail.bankaccountid || 0, // ✅ fix here
         })),
       }
     }
@@ -132,53 +140,84 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
   }, [isOpen, defaultValues, form])
 
   const handleSubmit = async (data: JournalEntryWithDetails) => {
-    setIsSubmitting(true)
+    if (!isEdit) {
+      setIsSubmitting(true)
 
-    const amountTotal = data.journalDetails.reduce(
-      (sum, detail) => sum + Number(detail.debit),
-      0
-    )
-
-    const submissionData = {
-      ...data,
-      journalEntry: {
-        ...data.journalEntry,
-        amountTotal,
-        exchangeRate: data.journalEntry.exchangeRate || 1,
-      },
-    }
-
-    try {
-      const response = await createJournalEntryWithDetails(
-        submissionData,
-        token
+      const amountTotal = data.journalDetails.reduce(
+        (sum, detail) => sum + Number(detail.debit),
+        0
       )
 
-      if (response.error || !response.data) {
-        throw new Error(response.error?.message || 'Failed to create voucher')
+      const submissionData = {
+        ...data,
+        journalEntry: {
+          ...data.journalEntry,
+          amountTotal,
+          exchangeRate: data.journalEntry.exchangeRate || 1,
+        },
       }
 
-      toast({
-        title: 'Success',
-        description: 'Voucher created successfully',
-      })
+      try {
+        const response = await createJournalEntryWithDetails(
+          submissionData,
+          token
+        )
 
-      form.reset(defaultValues)
-    } catch (error) {
-      console.error('Error creating voucher:', error)
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to create voucher',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsSubmitting(false)
-      fetchAllVoucher(
-        [data.journalEntry.companyId],
-        [data.journalEntry.locationId]
-      )
-      setIsOpen(false)
+        if (response.error || !response.data) {
+          throw new Error(response.error?.message || 'Failed to create voucher')
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Voucher created successfully',
+        })
+
+        form.reset(defaultValues)
+      } catch (error) {
+        console.error('Error creating voucher:', error)
+        toast({
+          title: 'Error',
+          description:
+            error instanceof Error ? error.message : 'Failed to create voucher',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsSubmitting(false)
+        fetchAllVoucher(
+          [data.journalEntry.companyId],
+          [data.journalEntry.locationId]
+        )
+        setIsOpen(false)
+      }
+    } else {
+      const payload: JournalEditWithDetails = {
+        ...(initialData as JournalEditWithDetails),
+        ...data,
+        journalEntry: {
+          ...(initialData as JournalEditWithDetails).journalEntry,
+          ...data.journalEntry,
+          id: (initialData as JournalEditWithDetails).journalEntry.id, // keep entry id
+        },
+        journalDetails: (data.journalDetails || []).map((detail, idx) => ({
+          ...(initialData as JournalEditWithDetails).journalDetails[idx], // gives id and other required props
+          ...detail, // override with edited values
+        })),
+      }
+      const response = await editJournalEntryWithDetails(payload, token)
+
+      if (response.error || !response.data) {
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Error editing Journal',
+        })
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Voucher is edited successfully',
+        })
+        form.reset()
+        onClose?.()
+      }
     }
   }
 
