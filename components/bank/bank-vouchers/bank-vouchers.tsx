@@ -198,15 +198,15 @@ export default function BankVoucher({
       if (initialData.journalDetails.length > 0) {
         // Find the detail that represents the bank account - handle both field name variations
         const bankDetail = initialData.journalDetails.find(
-          (d) => d.bankaccountid || (d as any).bankAccountid
+          (d) => d.bankaccountid || (d as any).bankaccountid
         )
 
         console.log('Found bank detail in edit mode:', bankDetail)
 
         if (bankDetail) {
-          // Handle both field name variations - your console shows bankAccountid (camelCase)
+          // Handle both field name variations - your console shows bankaccountid (camelCase)
           const bankAccountId =
-            (bankDetail as any).bankAccountid || bankDetail.bankaccountid
+            (bankDetail as any).bankaccountid || bankDetail.bankaccountid
 
           if (bankAccountId && formState.bankAccounts.length > 0) {
             console.log('Looking for bank account with ID:', bankAccountId)
