@@ -924,7 +924,10 @@ export default function SingleVoucherDetails() {
           {/* Journal Items Table */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{data[0]?.journaltype}</CardTitle>
+              <CardTitle>
+                {data[0]?.journaltype}{' '}
+                {data[0]?.state === 0 && <span className='text-lg'> (Draft) </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Table className="shadow-md border">
