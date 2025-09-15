@@ -691,6 +691,7 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: "Cost Centers", source: "/settings/cost-centers" },
           { name: "Bank Accounts", source: "/settings/bank-accounts" },
+          { name: 'Level Entry', source: '/settings/level-entry' }
         ],
       },
       {
