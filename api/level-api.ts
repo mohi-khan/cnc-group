@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { AccountsHead, LevelType } from '@/utils/type'
+import {  LevelType } from '@/utils/type'
 
 export async function createLevel(data: LevelType[], token: string) {
   
