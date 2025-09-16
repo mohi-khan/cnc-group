@@ -598,7 +598,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: "/reports/department-summary",
           },
           {
-            name: "Profit and Loss",
+            name: "Income Statement",
             source: "/reports/profit-and-loss",
           },
         ],

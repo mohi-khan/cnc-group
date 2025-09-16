@@ -256,7 +256,7 @@ import type React from 'react'
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronDown, User2, Search, X } from 'lucide-react'
+import { ChevronDown, User2, Search, X, Folder, PackageMinusIcon, PackageX, PackageCheckIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CompanyFromLocalstorage, User } from '@/utils/type'
@@ -694,6 +694,19 @@ export default function Navbar() {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Contra Voucher</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/cash/contra-vouchers'}>
+                  <Button variant="ghost" size="icon">
+                    <PackageCheckIcon className="h-5 w-5" />
+                    <span className="sr-only">Opening Balance</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Opening Balance</p>
               </TooltipContent>
             </Tooltip>
           </div>
