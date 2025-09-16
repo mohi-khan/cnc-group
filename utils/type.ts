@@ -1040,11 +1040,12 @@ export type ProfitAndLossType = z.infer<typeof ProfitAndLossSchema>
 //level
 export interface LevelType {
   title: string
-  type?: 'Calculated Field' | 'COA Group'
-  COA_ID?: number | null
+  type: "Calculated Field" | "COA Group" | undefined
+  COA_ID: number | null
   position: number
-  formula?: string
+  formula: string
   negative: boolean
+  document: "Income Statement" | "Trial Balance" | undefined // Added document field
 }
 
 // IouRecord loan schema zod
