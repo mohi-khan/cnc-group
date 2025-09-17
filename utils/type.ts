@@ -1046,8 +1046,19 @@ export interface LevelType {
   position: number
   formula: string
   negative: boolean
-  document: "Income Statement" | "Trial Balance" | undefined // Added document field
+  document: "Income Statement" | "Balance Sheet" | undefined // Added document field
 }
+
+export interface CoaPlMappingReport {
+  accountId: number | null
+  name: string | null
+  position: number
+  formula: string | null
+  Label: string
+  document: string
+  balance: number
+}
+
 
 // IouRecord loan schema zod
 export const IouRecordGetSchema = z.object({

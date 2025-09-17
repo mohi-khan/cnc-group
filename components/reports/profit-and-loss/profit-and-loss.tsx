@@ -2,7 +2,7 @@
 import ProfitAndLossHeading from './profit-and-loss-heading'
 import ProfitAndLossTableData from './profit-and-loss-table-data'
 import React, { useState, useEffect, useCallback } from 'react'
-import type { ProfitAndLossType } from '@/utils/type'
+import type { CoaPlMappingReport, ProfitAndLossType } from '@/utils/type'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
@@ -11,6 +11,7 @@ import { getProfitAndLoss } from '@/api/profit-and-loss-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { getCoaWithMapping } from '@/api/level-api'
 
 const ProfitAndLoss = () => {
   //getting userData from jotai atom component
@@ -20,7 +21,7 @@ const ProfitAndLoss = () => {
 
   const router = useRouter()
   const targetRef = React.useRef<HTMLDivElement>(null)
-  const [profitAndLoss, setProfitAndLoss] = useState<ProfitAndLossType[]>([])
+  const [profitAndLoss, setProfitAndLoss] = useState<CoaPlMappingReport[]>([])
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [companyId, setCompanyId] = useState<string>('')
@@ -156,9 +157,9 @@ const ProfitAndLoss = () => {
     }))
   }
 
-  const generateExcel = () => {
-    exportToExcel(profitAndLoss, 'profit-and-loss')
-  }
+  // const generateExcel = () => {
+  //   exportToExcel(profitAndLoss, 'profit-and-loss')
+  // }
 
   const handleFilterChange = (
     newStartDate: Date | undefined,
@@ -170,17 +171,24 @@ const ProfitAndLoss = () => {
     setCompanyId(newCompanyId)
   }
 
+  // const fetchData = useCallback(async () => {
+  //   if (startDate && endDate && companyId) {
+  //     const response = await getProfitAndLoss({
+  //       fromdate: startDate.toISOString().split('T')[0],
+  //       enddate: endDate.toISOString().split('T')[0],
+  //       companyId: companyId,
+  //       token: token,
+  //     })
+  //     setProfitAndLoss(response.data || [])
+  //   }
+  // }, [startDate, endDate, companyId, token])
   const fetchData = useCallback(async () => {
-    if (startDate && endDate && companyId) {
-      const response = await getProfitAndLoss({
-        fromdate: startDate.toISOString().split('T')[0],
-        enddate: endDate.toISOString().split('T')[0],
-        companyId: companyId,
-        token: token,
-      })
+  
+      const response = await getCoaWithMapping(token)
       setProfitAndLoss(response.data || [])
-    }
-  }, [startDate, endDate, companyId, token])
+      console.log('this income statement: ',response.data || []);
+    
+  }, [ token])
 
   useEffect(() => {
     const checkUserData = () => {
@@ -198,12 +206,13 @@ const ProfitAndLoss = () => {
   }, [fetchData, router])
 
   return (
+    
     <div>
-      <ProfitAndLossHeading
+      {/* <ProfitAndLossHeading
         generatePdf={generatePdf}
-        generateExcel={generateExcel}
+        // generateExcel={generateExcel}
         onFilterChange={handleFilterChange}
-      />
+      /> */}
       <ProfitAndLossTableData targetRef={targetRef} data={profitAndLoss} />
     </div>
   )

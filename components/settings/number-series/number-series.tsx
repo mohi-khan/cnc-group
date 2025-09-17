@@ -77,6 +77,7 @@ const voucherTypes = [
   'Bank Voucher',
   'Journal Voucher',
   'Contra Voucher',
+  'OB Voucher',
 ]
 
 export function NumberSeries() {
@@ -123,10 +124,10 @@ export function NumberSeries() {
     setIsLoading(true)
     setIsError(false)
     const response = await getAllNumberSeries(token)
-    
+
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
+
       return
     } else if (response.error || !response.data) {
       console.error('Error fetching number series:', response.error)
@@ -146,10 +147,10 @@ export function NumberSeries() {
     setIsLoading(true)
     setIsError(false)
     const response = await getFinancialYear(token)
-    
+
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
+
       return
     } else if (response.error || !response.data) {
       console.error('Error fetching fynancial year:', response.error)
@@ -167,10 +168,10 @@ export function NumberSeries() {
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
     const data = await getAllCompanies(token)
-    
+
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
+
       return
     } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
@@ -186,10 +187,10 @@ export function NumberSeries() {
   const fetchAllLocations = React.useCallback(async () => {
     if (!token) return
     const response = await getAllLocations(token)
-    
+
     if (response?.error?.status === 401) {
       router.push('/unauthorized-access')
-      
+
       return
     } else if (response.error || !response.data) {
       console.error('Error getting locations:', response.error)
@@ -208,7 +209,6 @@ export function NumberSeries() {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -224,11 +224,10 @@ export function NumberSeries() {
     fetchCompanies,
     fetchNumberSeries,
     fetchFinancialYears,
-    router
+    router,
   ])
 
   const onSubmit = async (values: NumberSeriesType) => {
-    
     // Ensure all numeric fields are properly converted to numbers
     const formattedValues = {
       ...values,
@@ -240,8 +239,6 @@ export function NumberSeries() {
       createdBy: userData?.userId,
       currentNumber: Number(values.startingNumber),
     }
-    
-    
 
     if (formattedValues.endingNumber < formattedValues.startingNumber) {
       toast({
@@ -255,7 +252,7 @@ export function NumberSeries() {
 
     try {
       const response = await createNumberSeries(formattedValues, token)
-      
+
       if (response.error) {
         throw new Error(
           response.error.message || 'Failed to create number series'
@@ -467,14 +464,18 @@ export function NumberSeries() {
                             }))}
                             value={
                               companies
-                                .filter((company) => company.companyId === field.value)
+                                .filter(
+                                  (company) => company.companyId === field.value
+                                )
                                 .map((company) => ({
                                   id: company.companyId ?? '', // Ensure id is never undefined
                                   name: company.companyName,
                                   ...company,
                                 }))[0] ?? null
                             }
-                            onChange={(item) => field.onChange(item?.companyId ?? undefined)}
+                            onChange={(item) =>
+                              field.onChange(item?.companyId ?? undefined)
+                            }
                             placeholder="Select Company"
                           />
                           <FormMessage />
@@ -498,14 +499,19 @@ export function NumberSeries() {
                             }))}
                             value={
                               locations
-                                .filter((location) => location.locationId === field.value)
+                                .filter(
+                                  (location) =>
+                                    location.locationId === field.value
+                                )
                                 .map((location) => ({
                                   id: location.locationId ?? '',
                                   name: location.address,
                                   ...location,
                                 }))[0] ?? null
                             }
-                            onChange={(item) => field.onChange(item?.locationId ?? undefined)}
+                            onChange={(item) =>
+                              field.onChange(item?.locationId ?? undefined)
+                            }
                             placeholder="Select Location"
                           />
                           <FormMessage />
@@ -534,7 +540,9 @@ export function NumberSeries() {
                                   name: type,
                                 }))[0] ?? null
                             }
-                            onChange={(item) => field.onChange(item?.id ?? undefined)}
+                            onChange={(item) =>
+                              field.onChange(item?.id ?? undefined)
+                            }
                             placeholder="Select voucher type"
                           />
                           <FormMessage />
@@ -565,7 +573,9 @@ export function NumberSeries() {
                                   ...year,
                                 }))[0] ?? null
                             }
-                            onChange={(item) => field.onChange(item?.yearid ?? undefined)}
+                            onChange={(item) =>
+                              field.onChange(item?.yearid ?? undefined)
+                            }
                             placeholder="Select Financial Year"
                           />
                           <FormMessage />
