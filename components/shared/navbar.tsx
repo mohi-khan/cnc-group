@@ -698,7 +698,7 @@ export default function Navbar() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/cash/contra-vouchers'}>
+                <Link href={'/opening-balance'}>
                   <Button variant="ghost" size="icon">
                     <PackageCheckIcon className="h-5 w-5" />
                     <span className="sr-only">Opening Balance</span>

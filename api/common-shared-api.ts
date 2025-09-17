@@ -39,7 +39,7 @@ export async function getAllCompanies(token: string) {
 }
 export async function getFactoryLocaiton(token: string,companyId:number) {
   return fetchApi<number>({
-    url: `api//location/getFactoryLocaiton/${companyId}`,
+    url: `api/location/getFactoryLocaiton/${companyId}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,
@@ -183,6 +183,17 @@ export async function getAllCurrency(token: string) {
 export async function getEmployee(token: string) {
   return fetchApi<Employee[]>({
     url: 'api/employee/getEmployees',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+export async function getSettings(token: string, settingsName: string) {
+  return fetchApi<number>({
+    url: `api/settings/get/${settingsName}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,
