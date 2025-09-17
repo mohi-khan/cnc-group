@@ -617,6 +617,7 @@ export enum VoucherTypes {
   BankVoucher = 'Bank Voucher',
   JournalVoucher = 'Journal Voucher',
   ContraVoucher = 'Contra Voucher',
+  OpeningBalance = 'OB  Voucher',
 }
 //For Sending Journal Query
 export const JournalQuerySchema = z.object({

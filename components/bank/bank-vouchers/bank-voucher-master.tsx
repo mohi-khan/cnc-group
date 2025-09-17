@@ -112,7 +112,6 @@ export default function BankVoucherMaster({
         const bankDetail = initialData.journalDetails.find(
           (d: {
             bankaccountid?: number
-            bankaccountid?: number
             debit?: number
           }) => d.bankaccountid || d.bankaccountid
         )
