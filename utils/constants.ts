@@ -598,7 +598,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: "/reports/department-summary",
           },
           {
-            name: "Profit and Loss",
+            name: "Income Statement",
             source: "/reports/profit-and-loss",
           },
         ],
@@ -691,6 +691,7 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: "Cost Centers", source: "/settings/cost-centers" },
           { name: "Bank Accounts", source: "/settings/bank-accounts" },
+          { name: 'Level Entry', source: '/settings/level-entry' }
         ],
       },
       {

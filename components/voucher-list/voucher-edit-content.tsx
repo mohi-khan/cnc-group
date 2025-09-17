@@ -1,9 +1,5 @@
 'use client'
-import {
-  VoucherById,
-  JournalEditWithDetails,
-  VoucherTypes,
-} from '@/utils/type'
+import { VoucherById, JournalEditWithDetails, VoucherTypes } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
 import { editJournalEntryWithDetails } from '@/api/vouchers-api' // Assuming this API is used for all voucher types
 import { useAtom } from 'jotai'
@@ -26,7 +22,7 @@ const transformVoucherData = (
   voucherData: VoucherById[],
   userId: number
 ): JournalEditWithDetails | null => {
-  console.log("🚀 ~ transformVoucherData ~ voucherData:", voucherData)
+  console.log('🚀 ~ transformVoucherData ~ voucherData:', voucherData)
   if (!voucherData || voucherData.length === 0) {
     return null
   }
@@ -61,9 +57,9 @@ const transformVoucherData = (
       resPartnerId: detail.partnar || null,
       notes: detail.detail_notes || '',
       type: 'Receipt',
-      bankAccountid: (detail as any).bankAccountid || null,
+      bankaccountid: (detail as any).bankaccountid || null,
       createdBy: userId,
-    })),    
+    })),
   }
 }
 
@@ -73,7 +69,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
   onClose,
   isOpen, // Accept the new prop
 }) => {
-  console.log("🚀 ~ VoucherEditContent ~ voucherData:", voucherData)
+  console.log('🚀 ~ VoucherEditContent ~ voucherData:', voucherData)
   // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL
   const [token] = useAtom(tokenAtom)
 
@@ -120,7 +116,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
 
   // Now, the conditional return comes AFTER all hook calls
   const initialFormData = transformVoucherData(voucherData, userId)
-  console.log("🚀 ~ VoucherEditContent ~ initialFormData:", initialFormData)
+  // console.log("🚀 ~ VoucherEditContent ~ initialFormData:", initialFormData)
   if (!initialFormData) {
     return <p>Error: Could not prepare data for duplication.</p>
   }
@@ -129,17 +125,31 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
 
   switch (voucherType) {
     case VoucherTypes.CashVoucher:
-      return <CashVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
+      return (
+        <CashVoucher
+          initialData={initialFormData}
+          onClose={onClose}
+          isEdit={true}
+        />
+      )
     case VoucherTypes.BankVoucher:
-      return <BankVoucher initialData={initialFormData} onClose={onClose} isEdit={true}/>
+      return (
+        <BankVoucher
+          initialData={initialFormData}
+          onClose={onClose}
+          isEdit={true}
+        />
+      )
     case VoucherTypes.JournalVoucher:
       return (
         <JournalVoucherPopup
-          isOpen={isOpen} // Pass the isOpen prop from parent
-          onOpenChange={onClose} // When this popup wants to close, close the parent modal
+          isOpen={isOpen}
+          onOpenChange={onClose}
           initialData={initialFormData}
-          handleSubmit={handleJournalSubmit as any} // Pass the generic submit handler
-          isSubmitting={false} // Managed internally by the popup
+          handleSubmit={handleJournalSubmit as any}
+          isSubmitting={false}
+          isEdit={true}
+          onClose={onClose}
         />
       )
     case VoucherTypes.ContraVoucher:
@@ -149,6 +159,8 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
           onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
           fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          isEdit={true}
+          onClose={onClose} // Ensure the parent modal can be closed
         />
       )
     default:

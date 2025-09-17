@@ -108,21 +108,20 @@ export default function BankVoucherMaster({
       })
 
       if (initialData.journalDetails && initialData.journalDetails.length > 0) {
-        // Find the detail that has bankAccountid (handle both possible field names)
+        // Find the detail that has bankaccountid (handle both possible field names)
         const bankDetail = initialData.journalDetails.find(
           (d: {
-            bankAccountid?: number
             bankaccountid?: number
             debit?: number
-          }) => d.bankAccountid || d.bankaccountid
+          }) => d.bankaccountid || d.bankaccountid
         )
 
         if (
           bankDetail &&
-          (bankDetail.bankAccountid || bankDetail.bankaccountid)
+          (bankDetail.bankaccountid || bankDetail.bankaccountid)
         ) {
           const bankAccountId =
-            bankDetail.bankAccountid || bankDetail.bankaccountid
+            bankDetail.bankaccountid || bankDetail.bankaccountid
           const selectedBank = filteredBankAccounts.find(
             (acc) => acc.id === bankAccountId
           )
