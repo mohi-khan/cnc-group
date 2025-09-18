@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import {  LevelType } from '@/utils/type'
+import {  CoaPlMappingReport, LevelType } from '@/utils/type'
 
 export async function createLevel(data: LevelType[], token: string) {
   
@@ -33,6 +33,19 @@ export async function editLevel(data: LevelType[], token: string) {
     url: 'api/coa-pl-map/edit-coa-pl-map',
     method: 'PATCH',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+
+//api/coa-pl-map/getCoaWithMapping report
+export async function getCoaWithMapping(token: string) {
+  return fetchApi<CoaPlMappingReport[]>({
+    url: 'api/coa-pl-map/getCoaWithMapping',
+    method: 'GET',
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
