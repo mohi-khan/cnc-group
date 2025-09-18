@@ -2,45 +2,30 @@
 import ProfitAndLossHeading from './profit-and-loss-heading'
 import ProfitAndLossTableData from './profit-and-loss-table-data'
 import React, { useState, useEffect, useCallback } from 'react'
-import type { CoaPlMappingReport, ProfitAndLossType } from '@/utils/type'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
-import { getProfitAndLoss } from '@/api/profit-and-loss-api'
-import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
-import { useAtom } from 'jotai'
+import saveAs from 'file-saver'
 import { useRouter } from 'next/navigation'
 import { getCoaWithMapping } from '@/api/level-api'
+import { tokenAtom, useInitializeUser } from '@/utils/user'
+import { useAtom } from 'jotai'
+import { CoaPlMappingReport } from '@/utils/type'
 
 const ProfitAndLoss = () => {
-  //getting userData from jotai atom component
   useInitializeUser()
-  const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
   const targetRef = React.useRef<HTMLDivElement>(null)
   const [profitAndLoss, setProfitAndLoss] = useState<CoaPlMappingReport[]>([])
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
-  const [companyId, setCompanyId] = useState<string>('')
+  const [selectedDocument, setSelectedDocument] =
+    useState<string>('Income Statement')
+  const [filteredData, setFilteredData] = useState<CoaPlMappingReport[]>([])
 
   const generatePdf = async () => {
     if (!targetRef.current) return
 
     try {
-      // Get company name
-      let companyName = 'Company Report'
-      if (userData && companyId) {
-        const selectedCompany = userData.userCompanies.find(
-          (uc) => uc.company.companyId === Number(companyId)
-        )
-        if (selectedCompany) {
-          companyName = selectedCompany.company.companyName
-        }
-      }
-
       const element = targetRef.current
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -67,10 +52,11 @@ const ProfitAndLoss = () => {
       let currentY = 0
       let pageNumber = 1
 
-      // Add company name header
       pdf.setFontSize(16)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+      pdf.text(`${selectedDocument} Report`, pdfWidth / 2, 15, {
+        align: 'center',
+      })
 
       while (currentY < scaledHeight) {
         if (pageNumber > 1) {
@@ -78,7 +64,9 @@ const ProfitAndLoss = () => {
           // Add header to new page
           pdf.setFontSize(16)
           pdf.setFont('helvetica', 'bold')
-          pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+          pdf.text(`${selectedDocument} Report`, pdfWidth / 2, 15, {
+            align: 'center',
+          })
         }
 
         // Calculate the portion of image to show on this page
@@ -128,16 +116,16 @@ const ProfitAndLoss = () => {
         pageNumber++
       }
 
-      pdf.save('profit-and-loss.pdf')
+      pdf.save(`${selectedDocument.toLowerCase().replace(' ', '-')}.pdf`)
     } catch (error) {
       console.error('Error generating PDF:', error)
     }
   }
 
-  const exportToExcel = (data: ProfitAndLossType[], fileName: string) => {
+  const exportToExcel = (data: CoaPlMappingReport[], fileName: string) => {
     const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Trial Balance')
+    XLSX.utils.book_append_sheet(workbook, worksheet, selectedDocument)
     const excelBuffer = XLSX.write(workbook, {
       bookType: 'xlsx',
       type: 'array',
@@ -148,72 +136,55 @@ const ProfitAndLoss = () => {
     saveAs(blob, `${fileName}.xlsx`)
   }
 
-  const flattenData = (data: ProfitAndLossType[]): any[] => {
+  const flattenData = (data: CoaPlMappingReport[]): any[] => {
     return data.map((item) => ({
-      title: item.title,
-      value: item.value,
-      position: item.position,
-      negative: item.negative,
+      Label: item.Label,
+      Balance: item.balance,
+      Position: item.position,
+      Document: item.document,
     }))
   }
 
-  // const generateExcel = () => {
-  //   exportToExcel(profitAndLoss, 'profit-and-loss')
-  // }
-
-  const handleFilterChange = (
-    newStartDate: Date | undefined,
-    newEndDate: Date | undefined,
-    newCompanyId: string
-  ) => {
-    setStartDate(newStartDate)
-    setEndDate(newEndDate)
-    setCompanyId(newCompanyId)
+  const generateExcel = () => {
+    exportToExcel(
+      filteredData,
+      `${selectedDocument.toLowerCase().replace(' ', '-')}`
+    )
   }
 
-  // const fetchData = useCallback(async () => {
-  //   if (startDate && endDate && companyId) {
-  //     const response = await getProfitAndLoss({
-  //       fromdate: startDate.toISOString().split('T')[0],
-  //       enddate: endDate.toISOString().split('T')[0],
-  //       companyId: companyId,
-  //       token: token,
-  //     })
-  //     setProfitAndLoss(response.data || [])
-  //   }
-  // }, [startDate, endDate, companyId, token])
+  const handleDocumentChange = (document: string) => {
+    setSelectedDocument(document)
+  }
+
   const fetchData = useCallback(async () => {
-  
-      const response = await getCoaWithMapping(token)
-      setProfitAndLoss(response.data || [])
-      console.log('this income statement: ',response.data || []);
-    
-  }, [ token])
+    const response = await getCoaWithMapping(token)
+    setProfitAndLoss(response.data || [])
+    console.log('this income statement: ', response.data || [])
+  }, [token])
 
   useEffect(() => {
-    const checkUserData = () => {
-      const storedUserData = localStorage.getItem('currentUser')
-      const storedToken = localStorage.getItem('authToken')
-
-      if (!storedUserData || !storedToken) {
-        router.push('/')
-        return
-      }
-    }
-
-    checkUserData()
     fetchData()
-  }, [fetchData, router])
+  }, [fetchData, router, token])
+
+  useEffect(() => {
+    const filtered = profitAndLoss.filter(
+      (item) => item.document === selectedDocument
+    )
+    setFilteredData(filtered)
+  }, [profitAndLoss, selectedDocument])
 
   return (
-    
     <div>
-      {/* <ProfitAndLossHeading
+      <ProfitAndLossHeading
         generatePdf={generatePdf}
-        // generateExcel={generateExcel}
-        onFilterChange={handleFilterChange}
-      /> */}
-      <ProfitAndLossTableData targetRef={targetRef} data={profitAndLoss} />
+        generateExcel={generateExcel}
+        onDocumentChange={handleDocumentChange}
+        selectedDocument={selectedDocument}
+        availableDocuments={[
+          ...new Set(profitAndLoss.map((item) => item.document)),
+        ]}
+      />
+      <ProfitAndLossTableData targetRef={targetRef} data={filteredData} />
     </div>
   )
 }
