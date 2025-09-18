@@ -762,21 +762,23 @@ export default function OpeningBalance({
   console.log('settings', settings)
 
   const fetchSettings = React.useCallback(async () => {
+    if (!token) return
     const data = await getSettings(token, 'Difference of Opening')
     if (data.error || !data.data) {
-      console.error('Error getting currency:', data.error)
+      
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get currency',
       })
     } else {
       setSettings(data.data)
+      console.log('Difference of Opening settings:', data.data)
     }
   }, [token])
 
   React.useEffect(() => {
     fetchSettings()
-  }, [settings])
+  }, [settings,token])
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -1129,7 +1131,7 @@ export default function OpeningBalance({
         journalDetails: [
           ...updatedValues.journalDetails,
           {
-            accountId: formState.selectedBankAccount?.glCode || 217,
+            accountId: formState.selectedBankAccount?.glCode || settings || 0,
             costCenterId: null,
             departmentId: null,
             debit:
