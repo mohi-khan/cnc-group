@@ -764,10 +764,10 @@ export default function OpeningBalance({
   const fetchSettings = React.useCallback(async () => {
     const data = await getSettings(token, 'Difference of Opening')
     if (data.error || !data.data) {
-      console.error('Error getting currency:', data.error)
+      console.error('Error getting Setting:', data.error)
       toast({
         title: 'Error',
-        description: data.error?.message || 'Failed to get currency',
+        description: data.error?.message || 'Failed to get Settings',
       })
     } else {
       setSettings(data.data)
@@ -831,6 +831,7 @@ export default function OpeningBalance({
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
+      console.log(storedUserData)
       if (!storedUserData || !storedToken) {
         router.push('/')
         return
