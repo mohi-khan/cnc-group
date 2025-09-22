@@ -367,7 +367,6 @@ export default function CashVoucherDetails({
                                   : null
                               }
                               onChange={(item) => {
-                                /// console.log('On Change',item)
                                 field.onChange(
                                   item ? Number.parseInt(item.id) : null
                                 )
@@ -379,12 +378,10 @@ export default function CashVoucherDetails({
                                   typeof id === 'string' && /^\d+$/.test(id)
                                     ? parseInt(id, 10)
                                     : (id as number)
-                                console.log(id)
                                 const partner = await getPartnerById(
                                   numericId,
                                   token
-                                ) // <- implement API
-                                console.log(partner.data)
+                                )
                                 return partner?.data
                                   ? {
                                       id: partner.data.id.toString(),
@@ -392,7 +389,6 @@ export default function CashVoucherDetails({
                                     }
                                   : null
                               }}
-                              // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                             />
                           </div>
                         </FormControl>
@@ -422,13 +418,17 @@ export default function CashVoucherDetails({
                 <TableCell>
                   <FormField
                     control={form.control}
-                    name={`journalDetails.${index}.${currentType === 'Payment' ? 'debit' : 'credit'}`}
+                    name={`journalDetails.${index}.${
+                      currentType === 'Payment' ? 'debit' : 'credit'
+                    }`}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder={`Enter ${currentType === 'Payment' ? 'payment' : 'receipt'} amount`}
+                            placeholder={`Enter ${
+                              currentType === 'Payment' ? 'payment' : 'receipt'
+                            } amount`}
                             {...field}
                             onChange={(e) =>
                               field.onChange(
@@ -478,18 +478,23 @@ export default function CashVoucherDetails({
           </Button>
           <Button
             type="button"
-            onClick={() =>
+            onClick={() => {
+              const lastType =
+                fields.length > 0
+                  ? form.getValues(`journalDetails.${fields.length - 1}.type`)
+                  : 'Receipt'
+
               append({
-                type: 'Receipt',
+                type: lastType, // automatically match last row type
                 accountId: null,
                 costCenterId: null,
                 departmentId: null,
                 resPartnerId: null,
                 notes: '',
-                debit: 0,
-                credit: 0,
+                debit: lastType === 'Payment' ? 0 : 0,
+                credit: lastType === 'Receipt' ? 0 : 0,
               })
-            }
+            }}
           >
             Add Another
           </Button>
