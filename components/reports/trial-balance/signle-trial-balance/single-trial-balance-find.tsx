@@ -81,7 +81,6 @@ export default function SingleTrialBalanceFind({
       const response = await getAllCompanies(token)
       const apiData = response.data || []
 
-      // Handle different API response formats
       const mappedCompanies = apiData.map((company: any) => ({
         id: company.companyId || company.id,
         name: company.companyName || company.name,
@@ -104,11 +103,10 @@ export default function SingleTrialBalanceFind({
       const response = await getAllLocations(token)
       const apiData = response.data ?? []
 
-      // Handle different API response formats and ensure companyId is included
       const mappedLocations: Location[] = apiData.map((loc: any) => ({
         id: loc.locationId || loc.id,
         name: loc.address || loc.locationName || loc.name,
-        companyId: loc.companyId, // This is crucial for filtering
+        companyId: loc.companyId,
       }))
 
       setLocations(mappedLocations)
@@ -137,7 +135,7 @@ export default function SingleTrialBalanceFind({
     }
   }, [token])
 
-  // Filter locations based on selected company
+  // Filter locations based on selected company & set default
   useEffect(() => {
     if (selectedCompanyId) {
       const filtered = locations.filter(
@@ -145,15 +143,22 @@ export default function SingleTrialBalanceFind({
       )
       setFilteredLocations(filtered)
 
-      // Reset location selection if current location doesn't belong to selected company
       if (
         selectedLocationId &&
         !filtered.find((loc) => loc.id === selectedLocationId)
       ) {
         setSelectedLocationId(null)
       }
+
+      if (filtered.length > 0 && !selectedLocationId) {
+        setSelectedLocationId(filtered[0].id)
+      }
     } else {
       setFilteredLocations(locations)
+
+      if (locations.length > 0 && !selectedLocationId) {
+        setSelectedLocationId(locations[0].id)
+      }
     }
   }, [selectedCompanyId, locations, selectedLocationId])
 
@@ -162,21 +167,11 @@ export default function SingleTrialBalanceFind({
     fetchCompanies()
     fetchLocations()
 
-    // Only set dates if they are valid
-    if (initialFromDate) {
-      setFromDate(initialFromDate)
-    }
-    if (initialToDate) {
-      setToDate(initialToDate)
-    }
-    if (initialAccountCode) {
-      setSelectedAccountCode(initialAccountCode)
-    }
-    if (initialCompanyId) {
-      setSelectedCompanyId(initialCompanyId)
-    }
+    if (initialFromDate) setFromDate(initialFromDate)
+    if (initialToDate) setToDate(initialToDate)
+    if (initialAccountCode) setSelectedAccountCode(initialAccountCode)
+    if (initialCompanyId) setSelectedCompanyId(initialCompanyId)
 
-    // Trigger search automatically if we have all required values
     if (
       initialFromDate &&
       initialToDate &&
@@ -281,7 +276,7 @@ export default function SingleTrialBalanceFind({
           <span className="font-medium">Excel</span>
         </Button>
       </div>
-      {/* First Row - Dates and Account */}
+
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">From Date:</span>
@@ -350,8 +345,7 @@ export default function SingleTrialBalanceFind({
             }
             onChange={(selectedItem) => {
               setSelectedCompanyId(selectedItem?.id || null)
-              // Reset location when company changes
-              setSelectedLocationId(null)
+              setSelectedLocationId(null) // reset location
             }}
             placeholder="Select a Company"
             disabled={companies.length === 0}
@@ -385,8 +379,6 @@ export default function SingleTrialBalanceFind({
 
         <Button onClick={handleSearch}>Show</Button>
       </div>
-
-      {/* Third Row - Export Buttons */}
     </div>
   )
 }
