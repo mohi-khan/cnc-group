@@ -778,7 +778,7 @@ export default function OpeningBalance({
 
   React.useEffect(() => {
     fetchSettings()
-  }, [settings,token])
+  }, [settings,token,fetchSettings])
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
