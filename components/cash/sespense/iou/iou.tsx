@@ -40,6 +40,7 @@ const Iou = () => {
         setLoanData([])
       } else {
         setLoanData(loansdata.data)
+        console.log(loansdata.data)
       }
     } catch (err) {
       console.error('Error:', err instanceof Error ? err.message : 'An error occurred')
@@ -112,7 +113,7 @@ checkUserData()
         employeeData={employeeData}
         getCompany={getCompany}
         getLoaction={getLoaction}
-       
+        fetchLoanData={fetchLoanData}
       />
       <IouPopUp
         isOpen={isPopupOpen}
@@ -120,8 +121,8 @@ checkUserData()
         onCategoryAdded={handleCategoryAdded}
         fetchLoanData={fetchLoanData}
         employeeData={employeeData}
-         getCompany={getCompany}
-         getLoaction={getLoaction}
+        getCompany={getCompany}
+        getLoaction={getLoaction}
       />
     </div>
   )
