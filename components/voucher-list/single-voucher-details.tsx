@@ -983,14 +983,22 @@ export default function SingleVoucherDetails() {
                             item.notes
                           )}
                         </TableCell>
-                        {data[0].journaltype === VoucherTypes.CashVoucher ? (
+                        {/* {data[0].journaltype === VoucherTypes.CashVoucher ? (
                           <TableCell>{item.totalamount}</TableCell>
                         ) : (
                           <>
                             <TableCell>{item.debit.toFixed(2)}</TableCell>
                             <TableCell>{item.credit.toFixed(2)}</TableCell>
                           </>
-                        )}
+                        )} */}
+                         
+          <TableCell>
+          {item.credit > 0
+            ? `${item.credit.toFixed(2)} `
+            : `${item.debit.toFixed(2)}`}
+        </TableCell>
+       
+
                         <TableCell className="no-print">
                           {editingReferenceIndex === index ? (
                             <div className="flex gap-2">
