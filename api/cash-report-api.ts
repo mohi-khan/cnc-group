@@ -32,7 +32,7 @@ export interface CashReportParams {
 
 export async function getCashReport(params: CashReportParams, token: string) {
   return fetchApi<GetCashReport>({
-    url: `api/cash/cashReport?date=${params.date}&companyId=${params.companyId}&location=${params.location}&`,
+    url: `api/cash/cashReport?date=${params.date}&companyId=${params.companyId}&location=${params.location}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,

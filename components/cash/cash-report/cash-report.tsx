@@ -10,15 +10,18 @@ import type {
   GetCashReport,
   User,
   LocationFromLocalstorage,
+  IouRecordGetType,
 } from '@/utils/type'
 import { getEmployee } from '@/api/common-shared-api'
 import CashReportHeading from './cash-report-heading'
-import CashReportList from './cash-report-list'
+
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { useRouter } from 'next/navigation'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import { getLoanData } from '@/api/iou-api'
+import CashReportList from './cash-report-list'
 
 export default function CashReport() {
   useInitializeUser()
@@ -36,6 +39,8 @@ export default function CashReport() {
   const [user, setUser] = useState<User | null>(null)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
 
   const generatePdf = async () => {
     setIsGeneratingPdf(true)
@@ -49,6 +54,8 @@ export default function CashReport() {
         (c) => c.company?.companyId === companyId
       )
       const companyName = selectedCompany?.company?.companyName || 'Cash Report'
+      const selectedLocation = locations.find((l) => l.location?.locationId === location)
+      const locationName = selectedLocation?.location?.address || ''
 
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -79,7 +86,12 @@ export default function CashReport() {
       // Add company name header on first page
       pdf.setFontSize(16)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+      pdf.text(companyName, pdfWidth / 2, 12, { align: 'center' })
+      if (locationName) {
+        pdf.setFontSize(10)
+        pdf.setFont('helvetica', 'normal')
+        pdf.text(locationName, pdfWidth / 2, 16, { align: 'center' })
+      }
 
       if (scaledHeight <= availableHeight) {
         // Content fits on one page
@@ -171,12 +183,49 @@ export default function CashReport() {
           ? [respons.data]
           : []
     )
+    console.log(respons.data)
   }, [token, date, companyId, location])
+
+  const fetchLoanData = useCallback(async () => {
+    if (!token) return
+    try {
+      setIsLoading(true)
+      const loansdata = await getLoanData(token)
+      if (loansdata?.error?.status === 401) {
+        router.push('/unauthorized-access')
+
+        return
+      } else if (loansdata.error || !loansdata.data) {
+        console.error('Error fetching loans:', loansdata.error)
+        setLoanData([])
+      } else {
+        setLoanData(loansdata.data)
+        console.log(loansdata.data)
+      }
+    } catch (err) {
+      console.error(
+        'Error:',
+        err instanceof Error ? err.message : 'An error occurred'
+      )
+      setLoanData([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [token, router])
+
+  // Filter loan data by selected date
+  const filteredLoanData = loanData.filter((loan) => {
+    if (!loan.dateIssued || !date) return false
+    // Convert both dates to YYYY-MM-DD format for comparison
+    const loanDate = new Date(loan.dateIssued).toISOString().split('T')[0]
+    return loanDate === date
+  })
 
   useEffect(() => {
     fetchCashReport()
     fetchEmployees()
-  }, [fetchCashReport, fetchEmployees])
+    fetchLoanData()
+  }, [fetchCashReport, fetchEmployees, fetchLoanData])
 
   const exportToExcel = (data: GetCashReport[], fileName: string) => {
     const worksheet = XLSX.utils.json_to_sheet(flattenData(data))
@@ -287,6 +336,7 @@ export default function CashReport() {
           location={location}
           getEmployeeName={getEmployeeName}
           isGeneratingPdf={isGeneratingPdf}
+          loanData={filteredLoanData}
         />
       </div>
     </div>

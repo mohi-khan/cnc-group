@@ -1736,6 +1736,8 @@ export type GetCashReport = {
     oppositeAccountId: number
     oppositeAccountName: string
     narration: string
+    oppositeNarration: string
+    oppositeAmount: number
   }[]
   closingBal: {
     balance: string
