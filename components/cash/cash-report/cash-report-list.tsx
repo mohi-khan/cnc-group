@@ -526,12 +526,7 @@ const CashReportList: React.FC<CashReportProps> = ({
                   <div className="border rounded p-2 ml-auto w-1/2">
                     <div className="mt-1 font-bold">
                       Total IOU:&nbsp;
-                      {loanData?.map((loan, index) => (
-                        <span key={loan.iouId}>
-                          {loan.amount}
-                          {index < loanData.length - 1 && ', '}
-                        </span>
-                      ))}
+                      {loanData?.reduce((sum, loan) => sum + loan.amount, 0)}
                     </div>
                   </div>
 
