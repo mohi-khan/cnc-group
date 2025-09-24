@@ -9,6 +9,7 @@ import BankVoucher from '@/components/bank/bank-vouchers/bank-vouchers'
 import { JournalVoucherPopup } from '@/components/accounting/journal-voucher/journal-voucher-popup'
 import { ContraVoucherPopup } from '@/components/cash/contra-voucher/contra-voucher-popup'
 import { tokenAtom } from '@/utils/user'
+import OpeningBalance from '../opening-balance/opening-balance'
 
 interface VoucherDuplicationContentProps {
   voucherData: VoucherById[]
@@ -155,6 +156,17 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.ContraVoucher:
       return (
         <ContraVoucherPopup
+          isOpen={isOpen} // Pass the isOpen prop from parent
+          onOpenChange={onClose} // When this popup wants to close, close the parent modal
+          initialData={initialFormData}
+          fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          isEdit={true}
+          onClose={onClose} // Ensure the parent modal can be closed
+        />
+      )
+    case VoucherTypes.OpeningBalance:
+      return (
+        <OpeningBalance
           isOpen={isOpen} // Pass the isOpen prop from parent
           onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
