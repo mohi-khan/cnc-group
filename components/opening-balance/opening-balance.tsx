@@ -1,5 +1,3 @@
-
-
 'use client'
 import * as React from 'react'
 import { useState } from 'react'
@@ -21,7 +19,7 @@ import {
 } from '@/utils/type'
 import {
   createJournalEntryWithDetails,
-  editJournalEntryWithDetails, // Added import for edit function
+  editJournalEntryWithDetails,
   getAllVoucher,
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
@@ -42,26 +40,28 @@ import OpeningBalanceSubmit from './opening-balance-submit'
 import OpeningBalanceMaster from './opening-balance-master'
 import OpeningBalanceDetails from './opening-balance-details'
 
-// Add props interface for duplication
 interface OpeningBalanceProps {
-  initialData?: JournalEntryWithDetails
+  fetchAllVoucher: (company: number[], location: number[]) => void
+  onOpenChange?: (open: boolean) => void // Optional for duplication mode
+  initialData?: JournalEntryWithDetails // Optional initial data for duplication
   onClose?: () => void
   isEdit?: boolean
+  isOpen?: boolean
 }
 
 export default function OpeningBalance({
+  fetchAllVoucher,
   initialData,
   onClose,
   isEdit,
+  isOpen,
+  onOpenChange,
 }: OpeningBalanceProps) {
-  console.log('🚀 ~ Opening balance ~ initialData:', initialData)
-  //getting userData from jotai atom component
   useInitializeUser()
   const router = useRouter()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
-  //State Variables
   const [voucherGrid, setVoucherGrid] = React.useState<JournalResult[]>([])
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -69,34 +69,30 @@ export default function OpeningBalance({
   const [user, setUser] = React.useState<User | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [settings, setSettings] = useState<number | null>(null)
-  console.log('settings', settings)
 
   const fetchSettings = React.useCallback(async () => {
     if (!token) return
     const data = await getSettings(token, 'Difference of Opening')
     if (data.error || !data.data) {
-      
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get currency',
       })
     } else {
       setSettings(data.data)
-      console.log('Difference of Opening settings:', data.data)
     }
   }, [token])
 
   React.useEffect(() => {
     fetchSettings()
-  }, [settings,token,fetchSettings])
+  }, [settings, token, fetchSettings])
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: initialData || {
-      // Use initialData if provided
       journalEntry: {
         date: new Date().toISOString().split('T')[0],
-        journalType: VoucherTypes.OpeningBalance, // Ensure correct type
+        journalType: VoucherTypes.OpeningBalance,
         companyId: 0,
         locationId: 0,
         currencyId: 1,
@@ -138,40 +134,23 @@ export default function OpeningBalance({
     status: 'Draft',
   })
 
-  // Retrivin user data and set companies and locations based on user Data
   React.useEffect(() => {
-    const checkUserData = () => {
-      const storedUserData = localStorage.getItem('currentUser')
-      const storedToken = localStorage.getItem('authToken')
-      if (!storedUserData || !storedToken) {
-        router.push('/')
-        return
-      }
-    }
-
     if (userData) {
       setFormState((prevState) => ({
         ...prevState,
         companies: userData.userCompanies,
         locations: userData.userLocations,
       }))
-      // Retrivin user data and set companies and locations based on user Data
-      //Check If user have the previlage
       if (!userData.voucherTypes.includes('OB  Voucher')) {
         router.push('/unauthorized-access')
       }
-    } else {
-      // router.push('/unauthorized-access')
     }
-    checkUserData()
   }, [router, userData])
 
-  //Check If user have the previlage
-  // Initialze all the Combo Box in the system
   React.useEffect(() => {
     const fetchInitialData = async () => {
-      const search = ''
       if (!token) return
+      const search = ''
 
       const [
         bankAccountsResponse,
@@ -198,9 +177,9 @@ export default function OpeningBalance({
         return
       }
 
-      const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
-        return account.isGroup === false
-      })
+      const filteredCoa = chartOfAccountsResponse.data?.filter(
+        (account) => account.isGroup === false
+      )
 
       setFormState((prevState) => ({
         ...prevState,
@@ -217,77 +196,11 @@ export default function OpeningBalance({
   }, [token, router])
 
   React.useEffect(() => {
-    if (initialData) {
-      form.reset(initialData)
-      // Also set formState for bank-specific fields if needed
-      if (initialData.journalDetails.length > 0) {
-        // Find the detail that represents the bank account - handle both field name variations
-        const bankDetail = initialData.journalDetails.find(
-          (d) => d.bankaccountid || (d as any).bankaccountid
-        )
-
-        console.log('Found bank detail in edit mode:', bankDetail)
-
-        if (bankDetail) {
-          // Handle both field name variations - your console shows bankaccountid (camelCase)
-          const bankAccountId =
-            (bankDetail as any).bankaccountid || bankDetail.bankaccountid
-
-          if (bankAccountId && formState.bankAccounts.length > 0) {
-            console.log('Looking for bank account with ID:', bankAccountId)
-
-            const selectedBank = formState.bankAccounts.find(
-              (acc) => acc.id === bankAccountId
-            )
-
-            console.log('Found bank account:', selectedBank)
-
-            if (selectedBank) {
-              setFormState((prev) => ({
-                ...prev,
-                selectedBankAccount: {
-                  id: selectedBank.id,
-                  glCode: selectedBank.glAccountId || 0,
-                },
-                // Determine formType based on debit/credit of the bank account detail
-                formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
-              }))
-              console.log(
-                'Successfully set selected bank account:',
-                selectedBank
-              )
-            } else if (bankAccountId) {
-              // Retry mechanism in case bank accounts are still loading
-              console.log('Bank account not found, retrying in 500ms...')
-              setTimeout(() => {
-                const retrySelectedBank = formState.bankAccounts.find(
-                  (acc) => acc.id === bankAccountId
-                )
-                if (retrySelectedBank) {
-                  setFormState((prev) => ({
-                    ...prev,
-                    selectedBankAccount: {
-                      id: retrySelectedBank.id,
-                      glCode: retrySelectedBank.glAccountId || 0,
-                    },
-                    formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
-                  }))
-                  console.log(
-                    'Retry successful - Set selected bank account:',
-                    retrySelectedBank
-                  )
-                } else {
-                  console.log('Bank account still not found after retry')
-                }
-              }, 500)
-            }
-          }
-        }
-      }
+    if (userData) {
+      setUser(userData)
     }
-  }, [initialData, formState.bankAccounts, form])
+  }, [userData])
 
-  // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
     return data.map((company) => company.company.companyId)
   }, [])
@@ -296,7 +209,6 @@ export default function OpeningBalance({
     return data.map((location) => location.location.locationId)
   }, [])
 
-  // fetch today's Voucher List from Database and populate the grid
   const getallVoucher = React.useCallback(
     async (company: number[], location: number[]) => {
       if (!token) return
@@ -325,30 +237,20 @@ export default function OpeningBalance({
     [token, router]
   )
 
-  // fetch today's Voucher List from Database and populate the grid
   React.useEffect(() => {
-    if (userData) {
-      setUser(userData)
-    } else {
-    }
-  }, [userData])
-
-  //Calling function for fetching voucherlist to populate the form state variables
-  React.useEffect(() => {
-    const fetchVoucherData = async () => {
-      if (
-        formState.companies.length > 0 &&
-        formState.locations.length > 0 &&
-        !dataLoaded
-      ) {
-        setIsLoading(true)
+    if (
+      formState.companies.length > 0 &&
+      formState.locations.length > 0 &&
+      !dataLoaded
+    ) {
+      setIsLoading(true)
+      const fetchVoucherData = async () => {
         try {
           const mycompanies = getCompanyIds(formState.companies)
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
           setDataLoaded(true)
         } catch (error) {
-          console.error('Error fetching voucher data:', error)
           toast({
             title: 'Error',
             description: 'Failed to load voucher data. Please try again.',
@@ -357,9 +259,8 @@ export default function OpeningBalance({
           setIsLoading(false)
         }
       }
+      fetchVoucherData()
     }
-
-    fetchVoucherData()
   }, [
     formState.companies,
     formState.locations,
@@ -369,40 +270,6 @@ export default function OpeningBalance({
     dataLoaded,
   ])
 
-  // Use useEffect to reset form if initialData changes
-  React.useEffect(() => {
-    if (initialData) {
-      form.reset(initialData)
-      // Also set formState for bank-specific fields if needed
-      if (initialData.journalDetails.length > 0) {
-        // Find the detail that represents the bank account (usually the last one added by the form)
-        const bankDetail = initialData.journalDetails.find(
-          (d) => d.bankaccountid
-        )
-        if (bankDetail && bankDetail.bankaccountid) {
-          const selectedBank = formState.bankAccounts.find(
-            (acc) => acc.id === bankDetail.bankaccountid
-          )
-          if (selectedBank) {
-            setFormState((prev) => ({
-              ...prev,
-              selectedBankAccount: {
-                id: selectedBank.id,
-                glCode: selectedBank.glAccountId || 0,
-              },
-              // Determine formType based on debit/credit of the bank account detail
-              formType: bankDetail.debit > 0 ? 'Debit' : 'Credit',
-            }))
-          }
-        }
-      }
-    }
-  }, [initialData, form, formState.bankAccounts])
-
-  //Submission Data Logic:
-  // 1. Validate Data
-  // 2. Check Toal Amount and ensure both debit and credit are same
-  // 3. Save Data
   const onSubmit = async (values: any, status: 'Draft' | 'Posted') => {
     const updatedValues = {
       ...values,
@@ -425,17 +292,13 @@ export default function OpeningBalance({
           (values.journalEntry as any).voucherid && {
             voucherId: (values.journalEntry as any).voucherid,
           }),
-        bankaccountid: formState.selectedBankAccount?.id || null,
       })),
     }
 
     let finalValues: any
-
     if (isEdit === true) {
-      // For editing, use the journal details as-is without adding bank account entry
       finalValues = updatedValues
     } else {
-      // For creating new voucher, add the bank account entry
       finalValues = {
         ...updatedValues,
         journalDetails: [
@@ -468,8 +331,6 @@ export default function OpeningBalance({
         finalValues as JournalEditWithDetails,
         token
       )
-      console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
-      // Check for errors in the response. if no error, show success message
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -484,47 +345,13 @@ export default function OpeningBalance({
           title: 'Success',
           description: 'Voucher is edited successfully',
         })
-        onClose?.() // Close the modal after successful submission
-        // Reset the form after successful submission
-        form.reset({
-          journalEntry: {
-            date: new Date().toISOString().split('T')[0],
-            journalType: VoucherTypes.OpeningBalance,
-            companyId: 0,
-            locationId: 0,
-            currencyId: 1,
-            exchangeRate: 1,
-            amountTotal: 0,
-            payTo: '',
-            notes: '',
-            createdBy: 0,
-          },
-          journalDetails: [
-            {
-              accountId: 0,
-              costCenterId: null,
-              departmentId: null,
-              debit: 0,
-              credit: 0,
-              analyticTags: null,
-              taxId: null,
-              resPartnerId: null,
-              bankaccountid: null,
-              notes: '',
-              createdBy: 0,
-            },
-          ],
-        })
+        onClose?.()
+        setIsDialogOpen(false) // ✅ close popup after submit
+        form.reset()
       }
     } else {
       const response = await createJournalEntryWithDetails(finalValues, token)
-
       console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
-      console.log(
-        '🚀 ~ onSubmit ~ selectedBankAccount:',
-        formState.selectedBankAccount
-      )
-
       if (response.error || !response.data) {
         toast({
           title: 'Error',
@@ -537,39 +364,11 @@ export default function OpeningBalance({
         getallVoucher(mycompanies, mylocations)
         toast({
           title: 'Success',
-          description: 'Voucher is created successfully',
+          description: 'Opening Voucher is created successfully',
         })
-        onClose?.() // Close the modal after successful submission
-        // Reset the form after successful submission
-        form.reset({
-          journalEntry: {
-            date: new Date().toISOString().split('T')[0],
-            journalType: VoucherTypes.OpeningBalance,
-            companyId: 0,
-            locationId: 0,
-            currencyId: 1,
-            exchangeRate: 1,
-            amountTotal: 0,
-            payTo: '',
-            notes: '',
-            createdBy: 0,
-          },
-          journalDetails: [
-            {
-              accountId: 0,
-              costCenterId: null,
-              departmentId: null,
-              debit: 0,
-              credit: 0,
-              analyticTags: null,
-              taxId: null,
-              resPartnerId: null,
-              bankaccountid: null,
-              notes: '',
-              createdBy: 0,
-            },
-          ],
-        })
+        onClose?.()
+        setIsDialogOpen(false) // ✅ close popup after submit
+        form.reset()
       }
     }
   }
@@ -584,13 +383,11 @@ export default function OpeningBalance({
     { key: 'state' as const, label: 'Status' },
   ]
 
-  //Creating Link for showing voucher details
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.OpeningBalance}`
 
   return (
     <div className="w-[97%] mx-auto py-10">
-      {/* Conditionally render ADD button and Popup */}
       {!initialData && (
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Opening Balance</h1>
@@ -605,9 +402,7 @@ export default function OpeningBalance({
         </div>
       )}
 
-      {/* The Popup is now controlled by the parent (SingleGenralLedger) when duplicating */}
-      {/* When not duplicating, this component's internal popup logic takes over */}
-      {initialData ? ( // If initialData is present, render form directly
+      {initialData ? (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((values) =>
@@ -632,7 +427,7 @@ export default function OpeningBalance({
             />
             <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
           </form>
-        </Form> // Otherwise, use existing popup logic
+        </Form>
       ) : (
         <Popup
           isOpen={isDialogOpen}
@@ -667,7 +462,6 @@ export default function OpeningBalance({
                 formState={formState}
                 requisition={undefined}
                 partners={formState.partners}
-                
               />
               <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
             </form>
@@ -675,7 +469,7 @@ export default function OpeningBalance({
         </Popup>
       )}
 
-      {!initialData && ( // Only show VoucherList if not in duplication mode
+      {!initialData && (
         <VoucherList
           vouchers={voucherGrid.map((v) => ({
             ...v,
@@ -694,3 +488,4 @@ export default function OpeningBalance({
     </div>
   )
 }
+
