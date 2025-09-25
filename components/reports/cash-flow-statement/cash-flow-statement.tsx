@@ -1,3 +1,5 @@
+
+
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import type { CashflowStatement } from '@/utils/type'
@@ -28,6 +30,13 @@ const CashFlowStatement = () => {
   const [companyId, setCompanyId] = useState<string>('')
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>('')
 
+  const formatDate = (date: Date) => {
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    const yyyy = date.getFullYear()
+    return `${mm}/${dd}/${yyyy}`
+  }
+
   const generatePdf = async () => {
     if (!targetRef.current) return
 
@@ -42,6 +51,12 @@ const CashFlowStatement = () => {
         if (company) {
           companyName = company.company.companyName || 'Cash Flow Statement'
         }
+      }
+
+      // Format date range text
+      let dateRange = ''
+      if (startDate && endDate) {
+        dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`
       }
 
       const element = targetRef.current
@@ -64,8 +79,8 @@ const CashFlowStatement = () => {
       const scale = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
       const scaledHeight = imgHeight * 0.264583 * scale
 
-      const headerHeight = 20
-      const pageContentHeight = pdfHeight - headerHeight - 10
+      const headerHeight = 30 // increased margin
+      const pageContentHeight = pdfHeight - headerHeight - 15 // extra margin
 
       let yPosition = 0
       let pageNumber = 1
@@ -80,6 +95,13 @@ const CashFlowStatement = () => {
         pdf.setFont('helvetica', 'bold')
         pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
 
+        // Add date range below company name
+        if (dateRange) {
+          pdf.setFontSize(12)
+          pdf.setFont('helvetica', 'normal')
+          pdf.text(dateRange, pdfWidth / 2, 22, { align: 'center' })
+        }
+
         // Add page content
         const sourceY = yPosition / scale / 0.264583
         const sourceHeight = Math.min(
@@ -91,9 +113,9 @@ const CashFlowStatement = () => {
           pdf.addImage(
             imgData,
             'JPEG',
-            0,
+            10, // left margin
             headerHeight,
-            pdfWidth,
+            pdfWidth - 20, // right margin
             sourceHeight * scale * 0.264583
           )
         }
@@ -176,6 +198,7 @@ const CashFlowStatement = () => {
         })
 
         setCashFlowStatements(response.data || [])
+        console.log(response.data || [])
       }
       fetchData()
     }

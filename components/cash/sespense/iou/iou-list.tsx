@@ -1,3 +1,6 @@
+
+
+
 'use client'
 
 import type React from 'react'
@@ -25,7 +28,13 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { CompanyType } from '@/api/company-api'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface LoanListProps {
   onAddCategory: () => void
@@ -34,6 +43,7 @@ interface LoanListProps {
   employeeData: Employee[]
   getCompany: CompanyType[]
   getLoaction: LocationData[]
+  fetchLoanData: () => Promise<void> // Type for the fetchLoanData function
 }
 const IouList: React.FC<LoanListProps> = ({
   onAddCategory,
@@ -42,6 +52,7 @@ const IouList: React.FC<LoanListProps> = ({
   employeeData,
   getCompany,
   getLoaction,
+  fetchLoanData,
 }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof IouRecordGetType
@@ -92,7 +103,6 @@ const IouList: React.FC<LoanListProps> = ({
   const totalPages = Math.ceil(loanAllData.length / itemsPerPage)
 
   const handleButtonClick = (loan: IouRecordGetType) => {
-    
     setPopupIouId(loan.iouId)
   }
 
@@ -159,7 +169,7 @@ const IouList: React.FC<LoanListProps> = ({
                     variant="ghost"
                     onClick={() => requestSort('companyId')}
                   >
-                   Company Name
+                    Company Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
@@ -168,13 +178,22 @@ const IouList: React.FC<LoanListProps> = ({
                     variant="ghost"
                     onClick={() => requestSort('locationId')}
                   >
-                   Location Name
+                    Location Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('amount')}>
                     Amount
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort('adjustedAmount')}
+                  >
+                    Adjusted Amount
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
@@ -196,14 +215,14 @@ const IouList: React.FC<LoanListProps> = ({
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                
+
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort('notes')}>
                     Notes
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-               
+
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -211,10 +230,22 @@ const IouList: React.FC<LoanListProps> = ({
               {paginatedLoanData.map((loan) => (
                 <TableRow key={loan.iouId}>
                   <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
-                  
+
                   <TableCell>{getCompanyName(loan.companyId)}</TableCell>
                   <TableCell>{getLocationName(loan.locationId)}</TableCell>
-                  <TableCell>{loan.amount}</TableCell>
+
+                  {/* Only show Amount and Adjusted Amount if they are different */}
+                  {loan.amount !== loan.adjustedAmount ? (
+                    <>
+                      <TableCell>{loan.amount}</TableCell>
+                      <TableCell>{loan.adjustedAmount}</TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </>
+                  )}
 
                   <TableCell>
                     {isNaN(new Date(loan.dateIssued).getTime())
@@ -226,10 +257,8 @@ const IouList: React.FC<LoanListProps> = ({
                       ? 'Invalid Date'
                       : new Date(loan.dueDate).toLocaleDateString()}
                   </TableCell>
-                         
-                 
+
                   <TableCell>{loan.notes}</TableCell>
-                 
 
                   <TableCell>
                     <Button
@@ -247,6 +276,7 @@ const IouList: React.FC<LoanListProps> = ({
         {/* Render the popup only for the selected IOU */}
         {popupIouId && (
           <IouAdjPopUp
+            fetchLoanData={fetchLoanData}
             iouId={popupIouId}
             isOpen={!!popupIouId}
             onOpenChange={closePopup}

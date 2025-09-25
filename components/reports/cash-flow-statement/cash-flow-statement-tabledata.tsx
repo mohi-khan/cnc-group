@@ -43,8 +43,16 @@ console.log(unclassifiedActivities);
     const numAmount =
       typeof amount === 'string' ? Number.parseFloat(amount) : amount
     if (!numAmount) return '0.00'
-    const formattedNumber = numAmount.toFixed(2)
-    return isCredit ? `-${formattedNumber}` : `+${formattedNumber}`
+
+    const formattedNumber = Math.abs(numAmount).toFixed(2)
+
+    // if negative -> show in brackets
+    if (numAmount < 0 || isCredit) {
+      return `(${formattedNumber})`
+    }
+
+    // if positive -> show plain number
+    return formattedNumber
   }
 
   return (

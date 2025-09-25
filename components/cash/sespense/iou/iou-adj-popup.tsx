@@ -1,3 +1,5 @@
+
+
 'use client'
 
 import type React from 'react'
@@ -40,75 +42,72 @@ interface IouAdjPopUpProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   iouId: number
+  fetchLoanData: () => Promise<void> // Type for the fetchLoanData function
 }
 
 const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
   isOpen,
   onOpenChange,
   iouId,
+  fetchLoanData,
+ 
 }) => {
-  //getting userData from jotai atom component
   useInitializeUser()
-
   const [token] = useAtom(tokenAtom)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [currentLoanAmount, setCurrentLoanAmount] = useState(0)
+  const [adjustmentError, setAdjustmentError] = useState('') // for validation message
 
-  const fetchLoanData = useCallback(async () => {
+  const fetchLoanDatas = useCallback(async () => {
     try {
       const loansdata = await getLoanData(token)
       if (loansdata.data) {
         setLoanData(loansdata.data)
+       
         const currentLoan = loansdata.data.find((loan) => loan.iouId === iouId)
         if (currentLoan) {
           setCurrentLoanAmount(currentLoan.amount - currentLoan.adjustedAmount)
         }
       } else {
         setLoanData([])
+        
       }
+
     } catch (error) {
       console.error('Failed to fetch Loan Data :', error)
     }
   }, [iouId, token])
 
   useEffect(() => {
-    fetchLoanData()
-  }, [iouId, fetchLoanData])
+    fetchLoanDatas()
+  }, [iouId, fetchLoanDatas])
 
   const form = useForm<IouAdjustmentCreateType>({
     resolver: zodResolver(IouAdjustmentCreateSchema),
     defaultValues: {
       iouId: iouId,
-      amountAdjusted: 0, // We'll update this with setValue after data loads
+      amountAdjusted: 0,
       adjustmentDate: new Date(),
-      adjustmentType: 'Refund',
+      adjustmentType: 'refund',
       notes: '',
     },
   })
 
   useEffect(() => {
-    fetchLoanData()
-    // Update form value when currentLoanAmount changes
     if (currentLoanAmount > 0) {
       form.setValue('amountAdjusted', currentLoanAmount)
     }
-  }, [iouId, currentLoanAmount, form, fetchLoanData])
-
-  const validateAdjustmentAmount = (amount: number) => {
-    if (amount > currentLoanAmount) {
-      toast({
-        title: 'Invalid Amount',
-        description: 'Adjustment amount cannot be higher than the loan amount.',
-        variant: 'destructive',
-      })
-      return false
-    }
-    return true
-  }
+  }, [currentLoanAmount, form])
 
   const onSubmit = async (data: IouAdjustmentCreateType) => {
-    if (!validateAdjustmentAmount(data.amountAdjusted)) {
+    if (data.amountAdjusted > currentLoanAmount) {
+      toast({
+        title: 'Invalid Amount',
+        description:
+          'Adjustment amount cannot exceed the remaining loan amount.',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -119,9 +118,10 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
         title: 'Success',
         description: 'Adjustment record has been created successfully.',
       })
-
       onOpenChange(false)
+     fetchLoanData()
       form.reset()
+      setAdjustmentError('')
     } catch (error) {
       console.error('Failed to create adjustment record:', error)
       toast({
@@ -146,12 +146,14 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
           {form.watch('amountAdjusted') > 0 && (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Remaining amount after adjustment:{' '}
-              {currentLoanAmount - form.watch('amountAdjusted')}
+              {currentLoanAmount - (form.watch('amountAdjusted') || 0)}
             </p>
           )}
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Adjusted Amount Field */}
             <FormField
               name="amountAdjusted"
               control={form.control}
@@ -165,17 +167,25 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                       step="0.01"
                       placeholder={`Enter adjusted amount (max: ${currentLoanAmount})`}
                       onChange={(e) => {
-                        const adjustedAmount =
-                          Number.parseFloat(e.target.value) || 0
-                        if (adjustedAmount <= currentLoanAmount) {
-                          field.onChange(adjustedAmount)
+                        const value = e.target.value
+                        const parsed =
+                          value === '' ? '' : Number.parseFloat(value)
+
+                        field.onChange(parsed)
+
+                        if (parsed !== '' && parsed > currentLoanAmount) {
+                          setAdjustmentError(
+                            'Amount cannot exceed remaining loan amount.'
+                          )
+                        } else {
+                          setAdjustmentError('')
+                        }
+
+                        if (parsed !== '' && parsed <= currentLoanAmount) {
                           setLoanData((prevData) =>
                             prevData.map((loan) =>
                               loan.iouId === iouId
-                                ? {
-                                    ...loan,
-                                    amount: loan.amount - adjustedAmount,
-                                  }
+                                ? { ...loan, amount: loan.amount - parsed }
                                 : loan
                             )
                           )
@@ -183,10 +193,17 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                       }}
                     />
                   </FormControl>
+                  {adjustmentError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {adjustmentError}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Adjustment Type */}
             <FormField
               name="adjustmentType"
               control={form.control}
@@ -210,10 +227,10 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                             }
                           : null
                       }
-                      onChange={(value: { id: string; name: string } | null) =>
+                      onChange={(value) =>
                         field.onChange(value ? value.id : null)
                       }
-                      placeholder="Select Adjustmen type"
+                      placeholder="Select Adjustment type"
                     />
                   </FormControl>
                   <FormMessage />
@@ -221,6 +238,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
               )}
             />
 
+            {/* Adjustment Date */}
             <FormField
               name="adjustmentDate"
               control={form.control}
@@ -231,7 +249,6 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
                     <Input
                       {...field}
                       type="date"
-                      placeholder="YYYY-MM-DD"
                       value={
                         field.value ? format(field.value, 'yyyy-MM-dd') : ''
                       }
@@ -242,6 +259,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
               )}
             />
 
+            {/* Notes */}
             <FormField
               name="notes"
               control={form.control}
@@ -259,6 +277,7 @@ const IouAdjPopUp: React.FC<IouAdjPopUpProps> = ({
               )}
             />
 
+            {/* Buttons */}
             <div className="flex justify-end space-x-4">
               <Button
                 type="button"
