@@ -32,13 +32,13 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
     item.cashflowTag?.toLowerCase().includes('financing')
   )
 
-  const unclassifiedActivities = cashFlowStatements.filter(
-    (item) =>
-      !item.cashflowTag?.toLowerCase().includes('operating') &&
-      !item.cashflowTag?.toLowerCase().includes('investing') &&
-      !item.cashflowTag?.toLowerCase().includes('financing')
-  )
-
+const unclassifiedActivities = cashFlowStatements.filter(
+  (item) =>
+    !['operating', 'investing', 'financing','period'].some((keyword) =>
+      item.cashflowTag?.toLowerCase().includes(keyword)
+    )
+);
+console.log(unclassifiedActivities);
   const formatAmount = (amount: string | number, isCredit = false) => {
     const numAmount =
       typeof amount === 'string' ? Number.parseFloat(amount) : amount
@@ -63,7 +63,12 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
             </TableCell>
             <TableCell className="bg-gray-100 p-2 text-right pdf-table-header">
               <span className="text-gray-700">
-                {formatAmount(cashFlowStatements[0]?.credit, true)}
+              {formatAmount(
+            cashFlowStatements[0]?.debit && cashFlowStatements[0].debit !== 0
+            ? cashFlowStatements[0].debit
+            : cashFlowStatements[0]?.credit,
+            cashFlowStatements[0]?.debit && cashFlowStatements[0].debit !== 0?false:true
+  )}
               </span>
             </TableCell>
           </TableRow>
@@ -90,8 +95,8 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               <TableCell className="pl-4 p-2">{item.cashflowTag}</TableCell>
               <TableCell className="text-right p-2">
                 {item.credit
-                  ? formatAmount(item.credit, true)
-                  : formatAmount(item.debit)}
+                  ? formatAmount(item.credit, false)
+                  : formatAmount(item.debit,true)}
               </TableCell>
             </TableRow>
           ))}
@@ -110,7 +115,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               {formatAmount(
                 investingAndExtraordinary.reduce(
                   (sum, item) =>
-                    sum + (Number.parseFloat(item.debit as string) || 0),
+                    sum + (Number.parseFloat(item.credit as string) || 0),
                   0
                 )
               )}
@@ -122,7 +127,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               {formatAmount(
                 investingAndExtraordinary.reduce(
                   (sum, item) =>
-                    sum + (Number.parseFloat(item.credit as string) || 0),
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 ),
                 true
@@ -144,7 +149,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               {formatAmount(
                 financingActivities.reduce(
                   (sum, item) =>
-                    sum + (Number.parseFloat(item.debit as string) || 0),
+                    sum + (Number.parseFloat(item.credit as string) || 0),
                   0
                 )
               )}
@@ -156,7 +161,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               {formatAmount(
                 financingActivities.reduce(
                   (sum, item) =>
-                    sum + (Number.parseFloat(item.credit as string) || 0),
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 ),
                 true
@@ -174,15 +179,16 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
           </TableRow>
           <TableRow className="hover:bg-muted/50">
             <TableCell className="pl-4 p-2">Cash in</TableCell>
-            <TableCell className="text-right p-2">
-              {formatAmount(
-                unclassifiedActivities.reduce(
-                  (sum, item) =>
-                    sum + (Number.parseFloat(item.debit as string) || 0),
-                  0
-                )
-              )}
-            </TableCell>
+        <TableCell className="text-right p-2">
+  {formatAmount(
+    unclassifiedActivities.reduce((sum, item) => {
+      const credit = Number.parseFloat(item.credit as string) || 0;
+  
+      return sum + credit;
+    }, 0)
+  )}
+</TableCell>
+
           </TableRow>
           <TableRow className="hover:bg-muted/50">
             <TableCell className="pl-4 p-2">Cash out</TableCell>
@@ -190,7 +196,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               {formatAmount(
                 unclassifiedActivities.reduce(
                   (sum, item) =>
-                    sum + (Number.parseFloat(item.credit as string) || 0),
+                    sum + (Number.parseFloat(item.debit as string) || 0),
                   0
                 ),
                 true
@@ -209,7 +215,7 @@ const CashFlowStatement: React.FC<CashFlowStatementProps> = ({
               <span className="text-gray-700">
                 {formatAmount(
                   cashFlowStatements[cashFlowStatements.length - 1]?.credit,
-                  true
+                  false
                 )}
               </span>
             </TableCell>
