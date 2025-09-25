@@ -34,7 +34,7 @@ export async function getLoanData(token: string) {
 // get iou list by date
 export async function getLoanDataByDate(token: string, date: string) {
   return fetchApi<IouRecordGetType[]>({
-    url: `api/iou/getIous?date=${encodeURIComponent(date)}`,
+    url: `api/iou/getIousByDate?date=${(date)}`,
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

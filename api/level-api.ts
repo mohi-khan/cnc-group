@@ -42,9 +42,19 @@ export async function editLevel(data: LevelType[], token: string) {
 
 
 //api/coa-pl-map/getCoaWithMapping report
-export async function getCoaWithMapping(token: string) {
+// export async function getCoaWithMapping(token: string) {
+//   return fetchApi<CoaPlMappingReport[]>({
+//     url: 'api/coa-pl-map/getCoaWithMapping',
+//     method: 'GET',
+//     headers: {
+//       Authorization: `${token}`,
+//       'Content-Type': 'application/json',
+//     },
+//   })
+// }
+export async function getCoaWithMapping(token: string, date: string) {
   return fetchApi<CoaPlMappingReport[]>({
-    url: 'api/coa-pl-map/getCoaWithMapping',
+    url: `api/coa-pl-map/getCoaWithMapping?date=${encodeURIComponent(date)}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,
