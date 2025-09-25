@@ -54,6 +54,29 @@ export default function OpeningBalanceMaster({
   // Watch the selected company ID
   const selectedCompanyId = form.watch('journalEntry.companyId')
 
+  // Watch journal details to calculate total amount
+  const journalDetails = form.watch('journalDetails') || []
+
+  // Also watch the specific field that changes based on formType
+  const currentField = formState.formType === 'Credit' ? 'debit' : 'credit'
+  const watchedAmounts = journalDetails.map((_: any, index: number) =>
+    form.watch(`journalDetails.${index}.${currentField}`)
+  )
+
+  // Calculate total amount from detail rows
+  useEffect(() => {
+    const totalAmount = journalDetails.reduce(
+      (sum: number, detail: any, index: number) => {
+        const amount = watchedAmounts[index] || detail[currentField] || 0
+        return sum + amount
+      },
+      0
+    )
+
+    // Update master amount (read-only)
+    form.setValue('journalEntry.amountTotal', totalAmount)
+  }, [watchedAmounts, journalDetails, currentField, form])
+
   // Filter locations based on selected company
   const filteredLocations = useMemo(() => {
     if (!selectedCompanyId) {
@@ -140,12 +163,8 @@ export default function OpeningBalanceMaster({
       if (requisition.companyid) {
         form.setValue('journalEntry.companyId', requisition.companyid)
       }
-      // Set amount
+      // Set amount - but now it will be overridden by detail calculations
       if (requisition.advanceamount) {
-        form.setValue(
-          'journalEntry.amountTotal',
-          Number.parseFloat(requisition.advanceamount)
-        )
         // Update the first detail row if it exists
         const detailsArray = form.getValues('journalDetails') || []
         if (detailsArray.length > 0) {
@@ -379,27 +398,15 @@ export default function OpeningBalanceMaster({
           name="journalEntry.amountTotal"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Amount (Auto-calculated)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="Enter amount"
+                  placeholder="Calculated from details"
                   {...field}
-                  onChange={(e) => {
-                    const amount = Number.parseFloat(e.target.value)
-                    field.onChange(amount)
-                    // Update only the first detail row if it exists
-                    const detailsArray = form.getValues('journalDetails') || []
-                    if (detailsArray.length > 0) {
-                      const updatedDetails = [...detailsArray]
-                      updatedDetails[0] = {
-                        ...updatedDetails[0],
-                        [formState.formType === 'Credit' ? 'debit' : 'credit']:
-                          amount,
-                      }
-                      form.setValue('journalDetails', updatedDetails)
-                    }
-                  }}
+                  value={field.value === undefined ? '' : field.value}
+                  disabled={true} // Make it read-only
+                  className="bg-gray-100 cursor-not-allowed" // Visual indication it's disabled
                 />
               </FormControl>
               <FormMessage />
