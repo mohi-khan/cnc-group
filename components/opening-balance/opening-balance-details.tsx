@@ -1,6 +1,3 @@
-
-
-
 'use client'
 import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -91,18 +88,8 @@ export default function OpeningBalanceDetails({
     loadPartner()
   }, [watchedPartnerId, partners, token])
 
-  useEffect(() => {
-    if (fields.length > 0 && fields.length === 1) {
-      const totalAmount = form.getValues('journalEntry.amountTotal') || 0
-      form.setValue(
-        `journalDetails.0.${formState.formType === 'Credit' ? 'debit' : 'credit'}`,
-        totalAmount
-      )
-    }
-  }, [fields.length, formState.formType, form])
-
-  // NOTE: Removed effect that mass-overwrote each detail.bankaccountid when selectedBankAccount changed.
-  // That overwrite caused detail-level bankaccountid to be lost in the payload.
+  // REMOVED: The effect that auto-populated first row amount from master amount
+  // Now the flow is reversed - detail amounts drive master amount calculation
 
   return (
     <div>
@@ -466,28 +453,19 @@ export default function OpeningBalanceDetails({
         size="sm"
         className="mt-5 bg-transparent"
         onClick={() => {
-          const totalAmount = form.getValues('journalEntry.amountTotal') || 0
-          const currentDetails = form.getValues('journalDetails') || []
-          const currentField =
-            formState.formType === 'Credit' ? 'debit' : 'credit'
-          const usedAmount = currentDetails.reduce(
-            (sum: number, detail: Record<string, number>) =>
-              sum + (detail[currentField] || 0),
-            0
-          )
-          const remainingAmount = totalAmount - usedAmount
-
+          // When adding a new row, don't auto-populate with remaining amount
+          // Let user enter the amount manually, which will then update master total
           append({
             voucherId: 0,
             accountId: 0,
             costCenterId: null,
             departmentId: null,
-            debit: formState.formType === 'Credit' ? remainingAmount : 0,
-            credit: formState.formType === 'Debit' ? remainingAmount : 0,
+            debit: formState.formType === 'Credit' ? 0 : 0,
+            credit: formState.formType === 'Debit' ? 0 : 0,
             analyticTags: null,
             taxId: null,
             resPartnerId: null,
-            bankaccountid: null, // do not force header bank account into each row
+            bankaccountid: null,
             notes: '',
             createdBy: 0,
           })
