@@ -926,7 +926,9 @@ export default function SingleVoucherDetails() {
             <CardHeader>
               <CardTitle>
                 {data[0]?.journaltype}{' '}
-                {data[0]?.state === 0 && <span className='text-lg'> (Draft) </span>}
+                {data[0]?.state === 0 && (
+                  <span className="text-lg"> (Draft) </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -962,7 +964,12 @@ export default function SingleVoucherDetails() {
                     .map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell>{item.accountsname || 'N/A'}</TableCell>
-                        <TableCell>{item.bankaccount || 'N/A'}</TableCell>
+                        <TableCell>
+                          {item.bankaccount && item.bankaccountName
+                            ? `${item.bankaccount} - ${item.bankaccountName}-${item.accountNumber}`
+                            : 'N/A'}
+                        </TableCell>
+
                         <TableCell>{item.costcenter || 'N/A'}</TableCell>
                         <TableCell>{item.department || 'N/A'}</TableCell>
                         <TableCell>{item.partnar || 'N/A'}</TableCell>
@@ -980,24 +987,15 @@ export default function SingleVoucherDetails() {
                               />
                             </div>
                           ) : (
-                            item.notes
+                            item.detail_notes
                           )}
                         </TableCell>
-                        {/* {data[0].journaltype === VoucherTypes.CashVoucher ? (
-                          <TableCell>{item.totalamount}</TableCell>
-                        ) : (
-                          <>
-                            <TableCell>{item.debit.toFixed(2)}</TableCell>
-                            <TableCell>{item.credit.toFixed(2)}</TableCell>
-                          </>
-                        )} */}
-                         
-          <TableCell>
-          {item.credit > 0
-            ? `${item.credit.toFixed(2)} `
-            : `${item.debit.toFixed(2)}`}
-        </TableCell>
-       
+
+                        <TableCell>
+                          {item.credit > 0
+                            ? `${item.credit.toFixed(2)} `
+                            : `${item.debit.toFixed(2)}`}
+                        </TableCell>
 
                         <TableCell className="no-print">
                           {editingReferenceIndex === index ? (
@@ -1041,7 +1039,7 @@ export default function SingleVoucherDetails() {
               </Table>
               <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Reference:</span>
-                <span>{data[data.length - 1].notes}</span>
+                <span>{data?.[0]?.detail_notes || 'Not available'}</span>
               </div>
               {/* Total Debit Amount */}
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
