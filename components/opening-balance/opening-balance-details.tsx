@@ -107,6 +107,9 @@ export default function OpeningBalanceDetails({
         </TableHeader>
         <TableBody>
           {fields.map((field, index) => {
+            const selectedBankAccountId = form.watch(
+              `journalDetails.${index}.bankaccountid`
+            )
             const selectedAccountId = form.watch(
               `journalDetails.${index}.accountId`
             )
@@ -115,6 +118,9 @@ export default function OpeningBalanceDetails({
             )
             const isPartnerFieldEnabled =
               selectedAccount?.withholdingTax === true
+            
+            // Partner field is disabled when bank account is selected
+            const isPartnerDisabled = !!selectedBankAccountId
 
             return (
               <TableRow key={field.id}>
@@ -354,7 +360,7 @@ export default function OpeningBalanceDetails({
                             />
                           ) : (
                             <div
-                              className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                              className={`${isPartnerDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
                             >
                               <CustomComboboxWithApi
                                 items={partners.map((partner) => ({
@@ -394,8 +400,8 @@ export default function OpeningBalanceDetails({
                                       }
                                     : null
                                 }}
-                                // Properly disable the input when partner shouldn't be chosen
-                                disabled={!isPartnerFieldEnabled}
+                                // Disable when bank account is selected
+                                disabled={isPartnerDisabled}
                               />
                             </div>
                           )}
