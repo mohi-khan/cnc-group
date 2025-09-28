@@ -17,10 +17,14 @@ const ProfitAndLoss = () => {
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
   const targetRef = React.useRef<HTMLDivElement>(null)
+
   const [profitAndLoss, setProfitAndLoss] = useState<CoaPlMappingReport[]>([])
   const [selectedDocument, setSelectedDocument] =
     useState<string>('Income Statement')
   const [filteredData, setFilteredData] = useState<CoaPlMappingReport[]>([])
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0] // default today
+  )
 
   const generatePdf = async () => {
     if (!targetRef.current) return
@@ -42,8 +46,7 @@ const ProfitAndLoss = () => {
       const imgWidth = canvas.width
       const imgHeight = canvas.height
 
-      // Calculate scaling to fit page width while maintaining aspect ratio
-      const scale = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
+      const scale = pdfWidth / (imgWidth * 0.264583)
       const scaledHeight = imgHeight * 0.264583 * scale
 
       const headerHeight = 20
@@ -61,7 +64,6 @@ const ProfitAndLoss = () => {
       while (currentY < scaledHeight) {
         if (pageNumber > 1) {
           pdf.addPage()
-          // Add header to new page
           pdf.setFontSize(16)
           pdf.setFont('helvetica', 'bold')
           pdf.text(`${selectedDocument} Report`, pdfWidth / 2, 15, {
@@ -69,7 +71,6 @@ const ProfitAndLoss = () => {
           })
         }
 
-        // Calculate the portion of image to show on this page
         const sourceY = currentY / scale / 0.264583
         const sourceHeight = Math.min(
           pageContentHeight / scale / 0.264583,
@@ -77,7 +78,6 @@ const ProfitAndLoss = () => {
         )
 
         if (sourceHeight > 0) {
-          // Create temporary canvas for this page slice
           const tempCanvas = document.createElement('canvas')
           tempCanvas.width = imgWidth
           tempCanvas.height = sourceHeight
@@ -156,15 +156,20 @@ const ProfitAndLoss = () => {
     setSelectedDocument(document)
   }
 
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date)
+  }
+
   const fetchData = useCallback(async () => {
-    const response = await getCoaWithMapping(token)
+    if (!token || !selectedDate) return
+    const response = await getCoaWithMapping(token, selectedDate)
     setProfitAndLoss(response.data || [])
     console.log('this income statement: ', response.data || [])
-  }, [token])
+  }, [token, selectedDate])
 
   useEffect(() => {
     fetchData()
-  }, [fetchData, router, token])
+  }, [fetchData, router])
 
   useEffect(() => {
     const filtered = profitAndLoss.filter(
@@ -183,6 +188,8 @@ const ProfitAndLoss = () => {
         availableDocuments={[
           ...new Set(profitAndLoss.map((item) => item.document)),
         ]}
+        selectedDate={selectedDate}
+        onDateChange={handleDateChange}
       />
       <ProfitAndLossTableData targetRef={targetRef} data={filteredData} />
     </div>

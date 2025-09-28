@@ -421,8 +421,12 @@ export const MENU_ITEMS: MenuItem[] = [
     subItemGroups: [
       {
         name: "Suspense ",
-        items: [{ name: "Iou", source: "/cash/sespense/iou" }],
+        items: [
+          { name: "Iou", source: "/cash/sespense/iou" },
+          { name: "Iou report", source: "/cash/sespense/iou-report" }
+        ],
       },
+
       {
         name: "Cash Management",
         items: [

@@ -1,50 +1,3 @@
-// 'use client'
-// import type React from 'react'
-// import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-// import type { CoaPlMappingReport } from '@/utils/type'
-
-// interface ProfitAndLossProps {
-//   data: CoaPlMappingReport[]
-//   targetRef: React.RefObject<HTMLDivElement>
-// }
-
-// const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
-//   data,
-//   targetRef,
-// }) => {
-//   // sort by position ascending
-//   const sortedData = [...data].sort((a, b) => a.position - b.position)
-
-//   return (
-//     <div
-//       ref={targetRef}
-//       className="w-full mt-2 max-w-[98%] mx-auto px-6 py-3 border shadow-lg"
-//     >
-//       <Table>
-//         <TableBody>
-//           {sortedData.map((item, index) => (
-//             <TableRow
-//               key={index}
-//               className={`hover:bg-gray-200 p-2 ${
-//                 item.balance < 0 ? 'text-red-500' : ''
-//               }`}
-//             >
-//               <TableCell className="p-2">{item.Label}</TableCell>
-//               <TableCell className="text-right p-2">
-//                 {item.balance.toLocaleString(undefined, {
-//                   minimumFractionDigits: 2,
-//                 })}
-//               </TableCell>
-//             </TableRow>
-//           ))}
-//         </TableBody>
-//       </Table>
-//     </div>
-//   )
-// }
-
-// export default ProfitAndLossTableData
-
 'use client'
 import type React from 'react'
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
@@ -68,7 +21,6 @@ const ProfitAndLossTableData: React.FC<ProfitAndLossProps> = ({
   data,
   targetRef,
 }) => {
-  // sort by position ascending
   const sortedData = [...data].sort((a, b) => a.position - b.position)
 
   return (
