@@ -35,11 +35,9 @@ export default function BankLedger() {
         },
         token
       )
-      console.log(`🚀 ~ BankLedger ~ params`, {
-        bankaccount,
-        fromdate,
-        todate,
-      })
+      console.log(`🚀 ~ BankLedger ~ params`, 
+        response.data || []
+     )
 
       if (response.error) {
         console.log('Error fetching transactions:', response.error)

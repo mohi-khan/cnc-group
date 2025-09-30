@@ -753,6 +753,8 @@ const VoucherSchemaById = z.object({
   credit: z.number(),
   partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(),
+  bankaccountName:z.string().nullable(),
+  accountNumber: z.string().nullable(),
   bankAccountId: z.number(),
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),

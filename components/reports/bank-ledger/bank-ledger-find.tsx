@@ -16,6 +16,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { FileText, Download, File } from 'lucide-react'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface BankLedgerFindProps {
   onSearch: (bankaccount: number, fromdate: string, todate: string) => void
@@ -131,28 +132,34 @@ export default function BankLedgerFind({
               className="px-3 py-2 border rounded-md"
             />
           </div>
-          <Select
-            value={selectedAccountId}
-            onValueChange={(value) => setSelectedAccountId(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select bank account" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.length > 0 ? (
-                accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id.toString()}>
-                    {account.accountName}-{account.accountNumber}-
-                    {account.bankName}-{account.branchName}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="default" disabled>
-                  No bank accounts available
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+        
+          <CustomCombobox
+            items={accounts
+              .filter((account) => account.isActive)
+              .map((account) => ({
+                id: account.id,
+                name: `${account.accountName}-${account.accountNumber}-${account.bankName}-${account.branchName}`,
+              }))}
+            value={
+              selectedAccountId
+                ? {
+                    id: Number(selectedAccountId),
+                    name: accounts.find(
+                      (account) => account.id === Number(selectedAccountId)
+                    )
+                      ? `${accounts.find((account) => account.id === Number(selectedAccountId))?.accountName}-${accounts.find((account) => account.id === Number(selectedAccountId))?.accountNumber}- ${accounts.find((account) => account.id === Number(selectedAccountId))?.bankName}-${accounts.find((account) => account.id === Number(selectedAccountId))?.branchName}`
+                      : '',
+                  }
+                : null
+            }
+            onChange={(selectedItem) => {
+              const value = selectedItem?.id ? String(selectedItem.id) : ''
+              setSelectedAccountId(value)
+            }}
+            placeholder="Select bank account"
+            disabled={accounts.length === 0}
+          />
+
           <Button onClick={handleSearch}>Show</Button>
         </div>
         <div className="flex items-center gap-2">
