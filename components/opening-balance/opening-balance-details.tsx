@@ -118,7 +118,7 @@ export default function OpeningBalanceDetails({
             )
             const isPartnerFieldEnabled =
               selectedAccount?.withholdingTax === true
-            
+
             // Partner field is disabled when bank account is selected
             const isPartnerDisabled = !!selectedBankAccountId
 
@@ -415,7 +415,8 @@ export default function OpeningBalanceDetails({
                 <TableCell>
                   <FormField
                     control={form.control}
-                    name={`journalDetails.${index}.${formState.formType === 'Credit' ? 'debit' : 'credit'}`}
+                    // name={`journalDetails.${index}.${formState.formType === 'Credit' ? 'debit' : 'credit'}`}
+                    name={`journalDetails.${index}.${formState.formType === 'Credit' ? 'credit' : 'debit'}`}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -466,8 +467,8 @@ export default function OpeningBalanceDetails({
             accountId: 0,
             costCenterId: null,
             departmentId: null,
-            debit: formState.formType === 'Credit' ? 0 : 0,
-            credit: formState.formType === 'Debit' ? 0 : 0,
+            debit: formState.formType === 'Debit' ? 0 : 0,
+            credit: formState.formType === 'Credit' ? 0 : 0,
             analyticTags: null,
             taxId: null,
             resPartnerId: null,
