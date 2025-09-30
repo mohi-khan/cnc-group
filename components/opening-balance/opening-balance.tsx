@@ -308,11 +308,11 @@ export default function OpeningBalance({
             costCenterId: null,
             departmentId: null,
             debit:
-              formState.formType === 'Debit'
+              formState.formType === 'Credit' // Reversed logic here
                 ? updatedValues.journalEntry.amountTotal
                 : 0,
             credit:
-              formState.formType === 'Credit'
+              formState.formType === 'Debit' // Reversed logic here
                 ? updatedValues.journalEntry.amountTotal
                 : 0,
             analyticTags: null,
@@ -488,4 +488,3 @@ export default function OpeningBalance({
     </div>
   )
 }
-
