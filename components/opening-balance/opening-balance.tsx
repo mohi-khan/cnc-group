@@ -41,21 +41,21 @@ import OpeningBalanceMaster from './opening-balance-master'
 import OpeningBalanceDetails from './opening-balance-details'
 
 interface OpeningBalanceProps {
-  fetchAllVoucher: (company: number[], location: number[]) => void
-  onOpenChange?: (open: boolean) => void // Optional for duplication mode
+  // fetchAllVoucher: (company: number[], location: number[]) => void
+  // onOpenChange?: (open: boolean) => void // Optional for duplication mode
   initialData?: JournalEntryWithDetails // Optional initial data for duplication
   onClose?: () => void
   isEdit?: boolean
-  isOpen?: boolean
+  // isOpen?: boolean
 }
 
 export default function OpeningBalance({
-  fetchAllVoucher,
+  // fetchAllVoucher,
   initialData,
   onClose,
   isEdit,
-  isOpen,
-  onOpenChange,
+  // isOpen,
+  // onOpenChange,
 }: OpeningBalanceProps) {
   useInitializeUser()
   const router = useRouter()
