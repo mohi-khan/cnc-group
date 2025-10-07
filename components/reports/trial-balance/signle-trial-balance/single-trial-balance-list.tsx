@@ -26,6 +26,7 @@ export default function SingleTrialBalanceList({
 }: SingleTrialBalanceListProps) {
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+  console.log(transactions)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -222,79 +223,6 @@ export default function SingleTrialBalanceList({
         boxSizing: 'border-box',
       }}
     >
-      {/* <table className="min-w-full table-fixed bg-white border border-gray-300">
-        <thead className="pdf-table-header sticky top-0 bg-white z-10">
-          <tr className="bg-gray-100">
-            <SortableHeader field="voucherno">Voucher No</SortableHeader>
-            <SortableHeader field="date">Date</SortableHeader>
-            <SortableHeader field="accountname">Account Name</SortableHeader>
-            <SortableHeader field="notes">Notes</SortableHeader>
-            <SortableHeader field="partner">Partner</SortableHeader>
-            <SortableHeader field="coscenter">Cost Center</SortableHeader>
-            <SortableHeader field="department">Department</SortableHeader>
-            <SortableHeader field="debit">Debit</SortableHeader>
-            <SortableHeader field="credit">Credit</SortableHeader>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedTransactions.length > 0 ? (
-            sortedTransactions.map((transaction, index) => (
-              <tr
-                key={`${transaction.voucherid}-${index}`}
-                className={`${index % 2 === 0 ? 'bg-gray-50' : ''} ${
-                  isBalanceRow(transaction)
-                    ? 'font-semibold bg-blue-50 border-l-4 border-blue-400'
-                    : ''
-                }`}
-              >
-                <td className="py-2 px-4 border-b text-center">
-                  <Link
-                    target="_blank"
-                    href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {transaction.voucherno}
-                  </Link>
-                </td>
-                <td className="py-2 px-4 border-b text-center  truncate">
-                  {transaction.date}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {transaction.accountname}
-                </td>
-                <td className="py-2 px-4 border-b text-center  ">
-                  {transaction.notes}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {transaction.partner}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {transaction.coscenter}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {transaction.department}
-                </td>
-                <td className="py-2 px-4 border-b text-center">
-                  {transaction.debit != null
-                    ? Number(transaction.debit).toFixed(2)
-                    : ''}
-                </td>
-                <td className="py-2 px-4 border-b text-right">
-                  {transaction.credit != null
-                    ? Number(transaction.credit).toFixed(2)
-                    : ''}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={12} className="text-center py-4 text-gray-500">
-                No data available
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table> */}
       <table className="min-w-full table-fixed bg-white border border-gray-300">
         <thead className="pdf-table-header sticky top-0 bg-white z-10">
           <tr className="bg-gray-100">
@@ -335,8 +263,12 @@ export default function SingleTrialBalanceList({
               <td className="py-2 px-2 border-b text-center w-[100px]">
                 {transaction.date}
               </td>
-              <td className="py-2 px-2 border-b text-center w-[150px]">
-                {transaction.accountname}
+              <td className="py-2 px-2 border-b text-start w-[150px]">
+                {index === 0
+                  ? 'Opening Balance'
+                  : index === sortedTransactions.length - 1
+                  ? 'Closing Balance'
+                  : transaction.accountname}
               </td>
               <td className="py-2 px-2 border-b text-left w-[300px]">
                 {transaction.notes}
@@ -363,3 +295,5 @@ export default function SingleTrialBalanceList({
     </div>
   )
 }
+
+
