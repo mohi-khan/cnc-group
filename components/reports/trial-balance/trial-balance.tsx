@@ -194,6 +194,7 @@ export default function TrialBalance() {
     newCompanyId: string,
     companyName: string
   ) => {
+    console.log('start Date',newStartDate)
     setStartDate(newStartDate)
     setEndDate(newEndDate)
     setCompanyId(newCompanyId)

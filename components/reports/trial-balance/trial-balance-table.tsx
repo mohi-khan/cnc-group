@@ -107,9 +107,18 @@ export default function TrialBalanceTable({
     }
 
     try {
+      console.log(startDate.toISOString().split('T')[0])
+      const year = startDate.getFullYear();
+      const month = String(startDate.getMonth() + 1).padStart(2, '0'); // Add 1 because month is 0-11
+      const day = String(startDate.getDate()).padStart(2, '0');
+      const fromDate = `${year}-${month}-${day}`;
+      const eyear = endDate.getFullYear();
+      const emonth = String(endDate.getMonth() + 1).padStart(2, '0'); // Add 1 because month is 0-11
+      const eday = String(endDate.getDate()).padStart(2, '0');
+      const toDate = `${year}-${month}-${day}`;
       const response = await getTrialBalance({
-        fromdate: startDate.toISOString().split('T')[0],
-        enddate: endDate.toISOString().split('T')[0],
+        fromdate: fromDate,
+        enddate: toDate,
         companyid: companyId,
         token,
       })
