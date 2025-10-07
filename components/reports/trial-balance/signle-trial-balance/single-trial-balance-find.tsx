@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import type { AccountsHead } from '@/utils/type'
-import { File, FileText } from 'lucide-react'
+import { File, FileText, Printer } from 'lucide-react'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -42,6 +42,7 @@ interface SingleTrialBalanceFindProps {
   ) => void
   generatePdf: () => void
   generateExcel: () => void
+  generatePrint: () => void
 }
 
 export default function SingleTrialBalanceFind({
@@ -53,6 +54,7 @@ export default function SingleTrialBalanceFind({
   onSearch,
   generatePdf,
   generateExcel,
+  generatePrint,
 }: SingleTrialBalanceFindProps) {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -135,7 +137,7 @@ export default function SingleTrialBalanceFind({
     }
   }, [token])
 
-  // Filter locations based on selected company & set default
+  // Filter locations based on selected company
   useEffect(() => {
     if (selectedCompanyId) {
       const filtered = locations.filter(
@@ -256,6 +258,7 @@ export default function SingleTrialBalanceFind({
 
   return (
     <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card">
+      {/* Export Buttons */}
       <div className="flex items-center justify-self-center gap-2">
         <Button
           onClick={generatePdf}
@@ -275,8 +278,18 @@ export default function SingleTrialBalanceFind({
           <File className="h-4 w-4" />
           <span className="font-medium">Excel</span>
         </Button>
+        <Button
+          onClick={generatePrint}
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-900 hover:bg-blue-200"
+        >
+          <Printer className="h-4 w-4" />
+          <span className="font-medium">Print</span>
+        </Button>
       </div>
 
+      {/* Filters */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">From Date:</span>

@@ -54,28 +54,35 @@ export default function OpeningBalanceMaster({
   // Watch the selected company ID
   const selectedCompanyId = form.watch('journalEntry.companyId')
 
-  // Watch journal details to calculate total amount
-  const journalDetails = form.watch('journalDetails') || []
+  
+  // Watch journal details reactively
+const journalDetails = form.watch("journalDetails") ?? []
 
-  // Also watch the specific field that changes based on formType
-  const currentField = formState.formType === 'Credit' ? 'debit' : 'credit'
-  const watchedAmounts = journalDetails.map((_: any, index: number) =>
-    form.watch(`journalDetails.${index}.${currentField}`)
+// Decide which field to read
+const currentField = formState.formType === "Credit" ? "debit" : "credit"
+
+
+// Determine which field to sum based on formType
+const fieldToSum = formState.formType === "Debit" ? "debit" : "credit"
+
+// Watch all amounts for reactivity
+const watchedAmounts = journalDetails.map((_: any, index: number) =>
+  form.watch(`journalDetails.${index}.${fieldToSum}`)
+)
+
+useEffect(() => {
+  const totalAmount = journalDetails.reduce(
+    (sum: number, detail: any, index: number) => {
+      const amount = watchedAmounts[index] || detail[fieldToSum] || 0
+      return sum + Number(amount)
+    },
+    0
   )
 
-  // Calculate total amount from detail rows
-  useEffect(() => {
-    const totalAmount = journalDetails.reduce(
-      (sum: number, detail: any, index: number) => {
-        const amount = watchedAmounts[index] || detail[currentField] || 0
-        return sum + amount
-      },
-      0
-    )
+  form.setValue("journalEntry.amountTotal", totalAmount)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [watchedAmounts, fieldToSum, form])
 
-    // Update master amount (read-only)
-    form.setValue('journalEntry.amountTotal', totalAmount)
-  }, [watchedAmounts, journalDetails, currentField, form])
 
   // Filter locations based on selected company
   const filteredLocations = useMemo(() => {

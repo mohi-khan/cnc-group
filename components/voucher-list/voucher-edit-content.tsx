@@ -167,10 +167,10 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.OpeningBalance:
       return (
         <OpeningBalance
-          isOpen={isOpen} // Pass the isOpen prop from parent
-          onOpenChange={onClose} // When this popup wants to close, close the parent modal
+          // isOpen={isOpen} // Pass the isOpen prop from parent
+          // onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
-          fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          // fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
           isEdit={true}
           onClose={onClose} // Ensure the parent modal can be closed
         />

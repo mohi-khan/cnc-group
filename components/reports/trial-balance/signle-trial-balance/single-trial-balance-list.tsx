@@ -29,7 +29,6 @@ export default function SingleTrialBalanceList({
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // Cycle through: asc -> desc -> null
       if (sortDirection === 'asc') {
         setSortDirection('desc')
       } else if (sortDirection === 'desc') {
@@ -44,14 +43,12 @@ export default function SingleTrialBalanceList({
     }
   }
 
-  // More comprehensive function to detect balance rows
   const isBalanceRow = (transaction: GeneralLedgerType) => {
     const accountName = (transaction.accountname || '').toLowerCase()
     const notes = (transaction.notes || '').toLowerCase()
     const voucherNo = (transaction.voucherno || '').toLowerCase()
     const voucherId = String(transaction.voucherid || '').toLowerCase()
 
-    // Check multiple possible indicators for balance rows
     const balanceIndicators = [
       'opening balance',
       'closing balance',
@@ -73,7 +70,6 @@ export default function SingleTrialBalanceList({
   }
 
   const sortedTransactions = useMemo(() => {
-    // Find the first and last balance rows to maintain their positions
     const firstBalanceIndex = transactions.findIndex(isBalanceRow)
     const lastBalanceIndex =
       transactions
@@ -81,7 +77,6 @@ export default function SingleTrialBalanceList({
         .reverse()
         .find(({ transaction }) => isBalanceRow(transaction))?.index ?? -1
 
-    // If no balance rows found, sort all transactions normally
     if (firstBalanceIndex === -1 && lastBalanceIndex === -1) {
       if (!sortField || !sortDirection) {
         return transactions
@@ -117,7 +112,6 @@ export default function SingleTrialBalanceList({
       })
     }
 
-    // Separate transactions into three groups
     const beforeBalance: GeneralLedgerType[] = []
     const balanceRows: GeneralLedgerType[] = []
     const regularTransactions: GeneralLedgerType[] = []
@@ -135,7 +129,6 @@ export default function SingleTrialBalanceList({
       }
     })
 
-    // Sort only regular transactions if sorting is applied
     let sortedRegularTransactions = regularTransactions
 
     if (sortField && sortDirection) {
@@ -169,12 +162,11 @@ export default function SingleTrialBalanceList({
       })
     }
 
-    // Reconstruct the array maintaining balance row positions
     return [
       ...beforeBalance,
-      ...balanceRows.filter((_, index) => index === 0), // Opening balance
+      ...balanceRows.filter((_, index) => index === 0),
       ...sortedRegularTransactions,
-      ...balanceRows.filter((_, index) => index > 0), // Closing balance(s)
+      ...balanceRows.filter((_, index) => index > 0),
       ...afterBalance,
     ]
   }, [transactions, sortField, sortDirection])
@@ -226,23 +218,22 @@ export default function SingleTrialBalanceList({
       className="overflow-x-auto mx-3 mb-3 shadow-md"
       ref={targetRef}
       style={{
-        padding: '40px 40px', // 40px top & bottom, 40px left & right
+        padding: '40px 40px',
         boxSizing: 'border-box',
       }}
     >
-      <table className="min-w-full bg-white border border-gray-300">
-        <thead className="pdf-table-header">
+      {/* <table className="min-w-full table-fixed bg-white border border-gray-300">
+        <thead className="pdf-table-header sticky top-0 bg-white z-10">
           <tr className="bg-gray-100">
             <SortableHeader field="voucherno">Voucher No</SortableHeader>
             <SortableHeader field="date">Date</SortableHeader>
-            <SortableHeader field="voucherid">Voucher ID</SortableHeader>
             <SortableHeader field="accountname">Account Name</SortableHeader>
-            <SortableHeader field="debit">Debit</SortableHeader>
-            <SortableHeader field="credit">Credit</SortableHeader>
             <SortableHeader field="notes">Notes</SortableHeader>
             <SortableHeader field="partner">Partner</SortableHeader>
             <SortableHeader field="coscenter">Cost Center</SortableHeader>
             <SortableHeader field="department">Department</SortableHeader>
+            <SortableHeader field="debit">Debit</SortableHeader>
+            <SortableHeader field="credit">Credit</SortableHeader>
           </tr>
         </thead>
         <tbody>
@@ -256,34 +247,43 @@ export default function SingleTrialBalanceList({
                     : ''
                 }`}
               >
-                <td className="py-2 px-4 border-b">
-                  {isBalanceRow(transaction) ? (
-                    <span className="text-blue-700">
-                      {transaction.voucherno}
-                    </span>
-                  ) : (
-                    <Link
-                      target="_blank"
-                      href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {transaction.voucherno}
-                    </Link>
-                  )}
+                <td className="py-2 px-4 border-b text-center">
+                  <Link
+                    target="_blank"
+                    href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {transaction.voucherno}
+                  </Link>
                 </td>
-                <td className="py-2 px-4 border-b w-full">
+                <td className="py-2 px-4 border-b text-center  truncate">
                   {transaction.date}
                 </td>
-                <td className="py-2 px-4 border-b">{transaction.voucherid}</td>
-                <td className="py-2 px-4 border-b">
+                <td className="py-2 px-4 border-b text-center">
                   {transaction.accountname}
                 </td>
-                <td className="py-2 px-4 border-b">{transaction.debit}</td>
-                <td className="py-2 px-4 border-b">{transaction.credit}</td>
-                <td className="py-2 px-4 border-b">{transaction.notes}</td>
-                <td className="py-2 px-4 border-b">{transaction.partner}</td>
-                <td className="py-2 px-4 border-b">{transaction.coscenter}</td>
-                <td className="py-2 px-4 border-b">{transaction.department}</td>
+                <td className="py-2 px-4 border-b text-center  ">
+                  {transaction.notes}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {transaction.partner}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {transaction.coscenter}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {transaction.department}
+                </td>
+                <td className="py-2 px-4 border-b text-center">
+                  {transaction.debit != null
+                    ? Number(transaction.debit).toFixed(2)
+                    : ''}
+                </td>
+                <td className="py-2 px-4 border-b text-right">
+                  {transaction.credit != null
+                    ? Number(transaction.credit).toFixed(2)
+                    : ''}
+                </td>
               </tr>
             ))
           ) : (
@@ -293,6 +293,71 @@ export default function SingleTrialBalanceList({
               </td>
             </tr>
           )}
+        </tbody>
+      </table> */}
+      <table className="min-w-full table-fixed bg-white border border-gray-300">
+        <thead className="pdf-table-header sticky top-0 bg-white z-10">
+          <tr className="bg-gray-100">
+            <SortableHeader field="voucherno">Voucher No</SortableHeader>
+            <SortableHeader field="date">
+              <span className="block w-[50px]">Date</span>
+            </SortableHeader>
+            <SortableHeader field="accountname">Account Name</SortableHeader>
+            <SortableHeader field="notes">
+              <span className="block w-[80px]">Notes</span>
+            </SortableHeader>
+            <SortableHeader field="partner">Partner</SortableHeader>
+            <SortableHeader field="coscenter">Cost Center</SortableHeader>
+            <SortableHeader field="department">Department</SortableHeader>
+            <SortableHeader field="debit">Debit</SortableHeader>
+            <SortableHeader field="credit">Credit</SortableHeader>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedTransactions.map((transaction, index) => (
+            <tr
+              key={`${transaction.voucherid}-${index}`}
+              className={`${index % 2 === 0 ? 'bg-gray-50' : ''} ${
+                isBalanceRow(transaction)
+                  ? 'font-semibold bg-blue-50 border-l-4 border-blue-400'
+                  : ''
+              }`}
+            >
+              <td className="py-2 px-4 border-b text-center">
+                <Link
+                  target="_blank"
+                  href={`/reports/general-ledger/single-general-ledger/${transaction.voucherid}`}
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  {transaction.voucherno}
+                </Link>
+              </td>
+              <td className="py-2 px-2 border-b text-center w-[100px]">
+                {transaction.date}
+              </td>
+              <td className="py-2 px-2 border-b text-center w-[150px]">
+                {transaction.accountname}
+              </td>
+              <td className="py-2 px-2 border-b text-left w-[300px]">
+                {transaction.notes}
+              </td>
+              <td className="py-2 px-2 border-b text-center w-[150px]">
+                {transaction.partner}
+              </td>
+              <td className="py-2 px-2 border-b text-center w-[120px]">
+                {transaction.coscenter}
+              </td>
+              <td className="py-2 px-2 border-b text-center w-[120px]">
+                {transaction.department}
+              </td>
+              <td className="py-2 px-2 border-b text-right w-[100px]">
+                {transaction.debit?.toFixed(2)}
+              </td>
+              <td className="py-2 px-2 border-b text-right w-[100px]">
+                {transaction.credit?.toFixed(2)}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

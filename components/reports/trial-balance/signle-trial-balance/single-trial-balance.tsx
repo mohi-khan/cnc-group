@@ -24,19 +24,16 @@ function formatDateString(dateStr: string) {
   try {
     const decodedStr = decodeURIComponent(dateStr).replace(/\+/g, ' ')
     let date = new Date(decodedStr)
-
     if (isNaN(date.getTime())) {
       const parts = decodedStr.split(' ')
       if (parts.length >= 4) {
         date = new Date(`${parts[1]} ${parts[2]} ${parts[3]}`)
       }
     }
-
     if (isNaN(date.getTime())) {
       const [month, day, year] = decodedStr.split('/')
       date = new Date(Number(year), Number(month) - 1, Number(day))
     }
-
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -71,6 +68,7 @@ export default function SingleTrialBalance() {
   const endDate = searchParams?.get('endDate') || ''
   const companyId = searchParams?.get('companyId') || ''
   const locationId = searchParams?.get('locationId') || ''
+  const accountId = id ? String(id) : ''
 
   const formattedStartDate = formatDateString(startDate)
   const formattedEndDate = formatDateString(endDate)
@@ -96,15 +94,15 @@ export default function SingleTrialBalance() {
 
   const flattenData = (data: GeneralLedgerType[]) => {
     return data.map((item) => ({
-      VoucherID: item.voucherid,
       VoucherNo: item.voucherno,
+      Date: item.date,
       AccountName: item.accountname,
-      Debit: item.debit,
-      Credit: item.credit,
       Notes: item.notes,
       Partner: item.partner,
       CostCenter: item.coscenter,
       Department: item.department,
+      Debit: item.debit != null ? Number(item.debit).toFixed(2) : '',
+      Credit: item.credit != null ? Number(item.credit).toFixed(2) : '',
     }))
   }
 
@@ -122,60 +120,110 @@ export default function SingleTrialBalance() {
     saveAs(blob, `${fileName}.xlsx`)
   }
 
+  // const generatePdf = async () => {
+  //   if (!targetRef.current) return
+  //   setShowLogoInPdf(true)
+  //   await new Promise((res) => setTimeout(res, 200))
+  //   const canvas = await html2canvas(targetRef.current, {
+  //     scale: 2,
+  //     useCORS: true,
+  //   })
+  //   const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' })
+  //   const pageWidth = pdf.internal.pageSize.getWidth()
+  //   const pageHeight = pdf.internal.pageSize.getHeight()
+  //   const marginTop = 90
+  //   const marginBottom = 40
+  //   const horizontalPadding = 30
+  //   const usablePageHeight = pageHeight - marginTop - marginBottom
+  //   const imgWidth = pageWidth - horizontalPadding * 2
+  //   const scale = imgWidth / canvas.width
+  //   let heightLeftPx = canvas.height
+  //   let sourceY = 0
+  //   let pageCount = 0
+  //   while (heightLeftPx > 0) {
+  //     const sliceHeightPx = Math.min(heightLeftPx, usablePageHeight / scale)
+  //     const tempCanvas = document.createElement('canvas')
+  //     const tempCtx = tempCanvas.getContext('2d')
+  //     tempCanvas.width = canvas.width
+  //     tempCanvas.height = sliceHeightPx
+  //     tempCtx?.drawImage(
+  //       canvas,
+  //       0,
+  //       sourceY,
+  //       canvas.width,
+  //       sliceHeightPx,
+  //       0,
+  //       0,
+  //       canvas.width,
+  //       sliceHeightPx
+  //     )
+  //     const imgDataSlice = tempCanvas.toDataURL('image/jpeg')
+  //     if (pageCount > 0) pdf.addPage()
+  //     pdf.addImage(
+  //       imgDataSlice,
+  //       'JPEG',
+  //       horizontalPadding,
+  //       marginTop,
+  //       imgWidth,
+  //       sliceHeightPx * scale
+  //     )
+  //     heightLeftPx -= sliceHeightPx
+  //     sourceY += sliceHeightPx
+  //     pageCount++
+  //   }
+  //   const totalPages = pdf.internal.pages.length - 1
+  //   const selectedCompany = companies.find((c) => c.id === Number(companyId))
+  //   const companyName = selectedCompany?.name || 'Company Name'
+  //   const dateRange =
+  //     formattedStartDate && formattedEndDate
+  //       ? `From ${formattedStartDate} To ${formattedEndDate}`
+  //       : ''
+  //   for (let i = 1; i <= totalPages; i++) {
+  //     pdf.setPage(i)
+  //     pdf.setFontSize(14).setFont('bold')
+  //     pdf.text(companyName, pageWidth / 2, 35, { align: 'center' })
+  //     if (dateRange) {
+  //       pdf.setFontSize(12).setFont('normal')
+  //       pdf.text(dateRange, pageWidth / 2, 55, { align: 'center' })
+  //     }
+  //     pdf.setFontSize(10).setFont('normal')
+  //     pdf.text(
+  //       `Page ${i} of ${totalPages}`,
+  //       pageWidth - horizontalPadding - 50,
+  //       pageHeight - marginBottom + 20
+  //     )
+  //   }
+  //   pdf.save(`single_trial_balance.pdf`)
+  //   setShowLogoInPdf(false)
+  // }
+
   const generatePdf = async () => {
     if (!targetRef.current) return
-
+    document.body.classList.add('pdf-mode') // 🟢 add this line
     setShowLogoInPdf(true)
     await new Promise((res) => setTimeout(res, 200))
-
     const canvas = await html2canvas(targetRef.current, {
       scale: 2,
       useCORS: true,
     })
-
-    const pdf = new jsPDF({
-      orientation: 'p',
-      unit: 'pt',
-      format: 'a4',
-    })
-
+    const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' })
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
-    const marginTop = 70
+    const marginTop = 90
     const marginBottom = 40
     const horizontalPadding = 30
     const usablePageHeight = pageHeight - marginTop - marginBottom
-
     const imgWidth = pageWidth - horizontalPadding * 2
     const scale = imgWidth / canvas.width
-
     let heightLeftPx = canvas.height
     let sourceY = 0
     let pageCount = 0
-
-    // Grab table header from DOM
-    const tableHeaderEl = targetRef.current.querySelector('.pdf-table-header')
-
-    let headerCanvas: HTMLCanvasElement | null = null
-    let headerHeightPx = 0
-
-    if (tableHeaderEl) {
-      headerCanvas = await html2canvas(tableHeaderEl as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-      })
-      headerHeightPx = headerCanvas.height
-    }
-
     while (heightLeftPx > 0) {
       const sliceHeightPx = Math.min(heightLeftPx, usablePageHeight / scale)
-
       const tempCanvas = document.createElement('canvas')
       const tempCtx = tempCanvas.getContext('2d')
-
       tempCanvas.width = canvas.width
       tempCanvas.height = sliceHeightPx
-
       tempCtx?.drawImage(
         canvas,
         0,
@@ -187,90 +235,130 @@ export default function SingleTrialBalance() {
         canvas.width,
         sliceHeightPx
       )
-
       const imgDataSlice = tempCanvas.toDataURL('image/jpeg')
-
-      if (pageCount > 0) {
-        pdf.addPage()
-      }
-
-      // If this is not the first page, draw header first
-      let yOffset = marginTop
-      if (pageCount > 0 && headerCanvas) {
-        const headerImgData = headerCanvas.toDataURL('image/jpeg')
-        const headerHeightPt = headerCanvas.height * scale
-        pdf.addImage(
-          headerImgData,
-          'JPEG',
-          horizontalPadding,
-          marginTop,
-          imgWidth,
-          headerHeightPt
-        )
-        yOffset += headerHeightPt // shift table down after header
-      }
-
-      // Draw the slice
+      if (pageCount > 0) pdf.addPage()
       pdf.addImage(
         imgDataSlice,
         'JPEG',
         horizontalPadding,
-        yOffset,
+        marginTop,
         imgWidth,
         sliceHeightPx * scale
       )
-
       heightLeftPx -= sliceHeightPx
       sourceY += sliceHeightPx
       pageCount++
     }
-
-    const leftTextMargin = horizontalPadding
     const totalPages = pdf.internal.pages.length - 1
-
-    const today = new Date()
-    const dayName = today.toLocaleDateString('en-US', { weekday: 'long' })
-    const monthName = today.toLocaleDateString('en-US', { month: 'long' })
-    const day = today.getDate()
-    const year = today.getFullYear()
-
     const selectedCompany = companies.find((c) => c.id === Number(companyId))
     const companyName = selectedCompany?.name || 'Company Name'
-
+    const dateRange =
+      formattedStartDate && formattedEndDate
+        ? `From ${formattedStartDate} To ${formattedEndDate}`
+        : ''
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i)
-      pdf.setFontSize(12)
-      pdf.setFont('bold')
-      pdf.text(companyName, leftTextMargin, 35)
-
-      pdf.setFontSize(10)
-      const baseText = 'Single Trial Balance Report ( Date : '
-      pdf.setFont('bold')
-      pdf.text(baseText, leftTextMargin, 50)
-      let currentX = leftTextMargin + pdf.getTextWidth(baseText)
-      pdf.text(dayName, currentX, 50)
-      currentX += pdf.getTextWidth(dayName)
-      pdf.text(', ', currentX, 50)
-      currentX += pdf.getTextWidth(', ')
-      pdf.text(monthName, currentX, 50)
-      currentX += pdf.getTextWidth(monthName)
-      pdf.text(` ${day}, ${year} )`, currentX, 50)
-
-      pdf.setFontSize(10)
-      pdf.setFont('normal')
+      pdf.setFontSize(14).setFont('bold')
+      pdf.text(companyName, pageWidth / 2, 35, { align: 'center' })
+      if (dateRange) {
+        pdf.setFontSize(12).setFont('normal')
+        pdf.text(dateRange, pageWidth / 2, 55, { align: 'center' })
+      }
+      pdf.setFontSize(10).setFont('normal')
       pdf.text(
         `Page ${i} of ${totalPages}`,
         pageWidth - horizontalPadding - 50,
         pageHeight - marginBottom + 20
       )
     }
-
     pdf.save(`single_trial_balance.pdf`)
+    document.body.classList.remove('pdf-mode') // 🟢 remove this line
     setShowLogoInPdf(false)
   }
 
+
   const generateExcel = () =>
     exportToExcel(transactions, 'single-trial-balance')
+
+  // const handlePrint = () => {
+  //   const selectedCompany = companies.find((c) => c.id === Number(companyId))
+  //   const companyName = selectedCompany?.name || 'Company Name'
+  //   const accountName = transactions.length ? transactions[0].accountname : ''
+
+  //   const dateRange =
+  //     formattedStartDate && formattedEndDate
+  //       ? `From ${formattedStartDate} To ${formattedEndDate}`
+  //       : ''
+  //   const printContents = `
+  //     <div style="text-align:center;margin-bottom:20px;">
+  //       <h2>${companyName}</h2>
+       
+      
+  //       <div>${dateRange}</div>
+  //     </div>
+  //     ${targetRef.current?.innerHTML || ''}
+  //     <style>
+  //       @media print {
+  //         .sort-icons, .lucide-arrow-up, .lucide-arrow-down { display:none !important; }
+  //       }
+  //       table { width:100%; border-collapse: collapse; }
+  //       th, td { border:1px solid #000; padding:4px; text-align:left; }
+  //     </style>
+  //   `
+  //   const newWin = window.open('', '', 'width=900,height=700')
+  //   if (!newWin) return
+  //   newWin.document.write(
+  //     `<html><head><title>Print</title></head><body>${printContents}</body></html>`
+  //   )
+  //   newWin.document.close()
+  //   newWin.focus()
+  //   newWin.print()
+  //   newWin.close()
+  // }
+const handlePrint = () => {
+  const selectedCompany = companies.find((c) => c.id === Number(companyId))
+  const companyName = selectedCompany?.name || 'Company Name'
+  const accountName = transactions.length ? transactions[0].accountname : ''
+
+  const dateRange =
+    formattedStartDate && formattedEndDate
+      ? `From ${formattedStartDate} To ${formattedEndDate}`
+      : ''
+
+  const printContents = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <h2>${companyName}</h2>
+      <div>${dateRange}</div>
+    </div>
+    ${targetRef.current?.innerHTML || ''}
+    <style>
+      @media print {
+        /* Hide all sort icons and arrow icons */
+        .sort-icons, .lucide-arrow-up, .lucide-arrow-down, svg { display: none !important; }
+
+        /* Table styles */
+        table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+        th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+      }
+      table { width:100%; border-collapse: collapse; }
+      th, td { border:1px solid #000; padding:4px; text-align:left; }
+    </style>
+  `
+
+  const newWin = window.open('', '', 'width=900,height=700')
+  if (!newWin) return
+  newWin.document.write(
+    `<html><head><title>Print</title></head><body>${printContents}</body></html>`
+  )
+  newWin.document.close()
+  newWin.focus()
+  newWin.print()
+  newWin.close()
+}
+
+
+
 
   const handleSearch = useCallback(
     async (
@@ -281,7 +369,6 @@ export default function SingleTrialBalance() {
       companyId: number
     ) => {
       if (!token) return
-
       const response = await getGeneralLedgerByDate({
         accountcode,
         fromdate,
@@ -290,17 +377,15 @@ export default function SingleTrialBalance() {
         locationId,
         token,
       })
-
       if (response.error) {
         toast({
           title: 'Alert',
           description: `transactions have No data`,
           variant: 'destructive',
         })
-        setTransactions([]) // ✅ Clear previous data on error
+        setTransactions([])
       } else {
         setTransactions(response.data || [])
-        console.log('ledger data:', response.data || [])
       }
     },
     [token]
@@ -334,7 +419,7 @@ export default function SingleTrialBalance() {
   return (
     <div className="space-y-4 container mx-auto mt-20">
       <SingleTrialBalanceFind
-        initialAccountCode={id ? String(id) : ''}
+        initialAccountCode={accountId}
         initialFromDate={formattedStartDate}
         initialToDate={formattedEndDate}
         initialCompanyId={companyId ? Number(companyId) : undefined}
@@ -342,6 +427,7 @@ export default function SingleTrialBalance() {
         onSearch={handleSearch}
         generatePdf={generatePdf}
         generateExcel={generateExcel}
+        generatePrint={handlePrint}
       />
       <SingleTrialBalanceList
         transactions={transactions}
@@ -351,3 +437,5 @@ export default function SingleTrialBalance() {
     </div>
   )
 }
+
+

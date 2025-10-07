@@ -41,21 +41,21 @@ import OpeningBalanceMaster from './opening-balance-master'
 import OpeningBalanceDetails from './opening-balance-details'
 
 interface OpeningBalanceProps {
-  fetchAllVoucher: (company: number[], location: number[]) => void
-  onOpenChange?: (open: boolean) => void // Optional for duplication mode
+  // fetchAllVoucher: (company: number[], location: number[]) => void
+  // onOpenChange?: (open: boolean) => void // Optional for duplication mode
   initialData?: JournalEntryWithDetails // Optional initial data for duplication
   onClose?: () => void
   isEdit?: boolean
-  isOpen?: boolean
+  // isOpen?: boolean
 }
 
 export default function OpeningBalance({
-  fetchAllVoucher,
+  // fetchAllVoucher,
   initialData,
   onClose,
   isEdit,
-  isOpen,
-  onOpenChange,
+  // isOpen,
+  // onOpenChange,
 }: OpeningBalanceProps) {
   useInitializeUser()
   const router = useRouter()
@@ -318,11 +318,11 @@ export default function OpeningBalance({
             costCenterId: null,
             departmentId: null,
             debit:
-              formState.formType === 'Debit'
+              formState.formType === 'Credit' // Reversed logic here
                 ? updatedValues.journalEntry.amountTotal
                 : 0,
             credit:
-              formState.formType === 'Credit'
+              formState.formType === 'Debit' // Reversed logic here
                 ? updatedValues.journalEntry.amountTotal
                 : 0,
             analyticTags: null,
@@ -498,4 +498,3 @@ export default function OpeningBalance({
     </div>
   )
 }
-
