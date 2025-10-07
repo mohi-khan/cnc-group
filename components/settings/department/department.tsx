@@ -94,7 +94,7 @@ export default function DepartmentManagement() {
     resolver: zodResolver(departmentSchema),
     defaultValues: {
       departmentName: '',
-      budget: 0,
+      budget: undefined,
       companyCode: 0,
       isActive: true,
       actual: 0,
@@ -329,7 +329,7 @@ export default function DepartmentManagement() {
                 <SortableTableHead column="departmentName">
                   Name
                 </SortableTableHead>
-                <SortableTableHead column="budget">Budget</SortableTableHead>
+                {/* <SortableTableHead column="budget">Budget</SortableTableHead> */}
                 <SortableTableHead column="currencyCode">
                   Company Name
                 </SortableTableHead>
@@ -345,7 +345,7 @@ export default function DepartmentManagement() {
               {paginatedDepartments.map((department, index) => (
                 <TableRow key={index}>
                   <TableCell>{department.departmentName}</TableCell>
-                  <TableCell>{department.budget}</TableCell>
+                  {/* <TableCell>{department.budget}</TableCell> */}
                   <TableCell>
                     {company.find((c) => c.companyId === department.companyCode)
                       ?.companyName || 'Unknown Company'}
@@ -435,7 +435,7 @@ export default function DepartmentManagement() {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="budget"
                 render={({ field }) => (
@@ -453,7 +453,7 @@ export default function DepartmentManagement() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name="companyCode"
@@ -557,25 +557,7 @@ export default function DepartmentManagement() {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="actual"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Actual</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value))
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
+              
               <div className="flex justify-end space-x-2">
                 <Button
                   variant="outline"
