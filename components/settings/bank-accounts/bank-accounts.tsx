@@ -43,6 +43,13 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   createBankAccount,
   editBankAccount,
 } from '../../../api/bank-accounts-api'
@@ -116,7 +123,7 @@ export default function BankAccounts() {
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
   const [companies, setCompanies] = React.useState<CompanyData[]>([])
   const [searchTerm, setSearchTerm] = React.useState('')
-  const itemsPerPage = 10
+  const [itemsPerPage, setItemsPerPage] = React.useState(10)
   const [lcInfo, setLcInfo] = React.useState<LcInfoByCostIsActive[]>()
 
   React.useEffect(() => {
@@ -387,7 +394,7 @@ export default function BankAccounts() {
   const paginatedAccounts = React.useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return sortedAccounts.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedAccounts, currentPage])
+  }, [sortedAccounts, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(sortedAccounts.length / itemsPerPage)
 
@@ -407,7 +414,27 @@ export default function BankAccounts() {
   return (
     <div className="mx-auto py-10 ">
       <div className="flex justify-between items-center m-4 mb-6">
-        <h1 className="text-2xl font-bold">Bank Accounts</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Bank Accounts</h1>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value))
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select items per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 per page</SelectItem>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="20">20 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -1233,16 +1260,36 @@ export default function BankAccounts() {
                   }
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, index) => (
-                <PaginationItem key={index}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(index + 1)}
-                    isActive={currentPage === index + 1}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
+              {[...Array(totalPages)].map((_, index) => {
+                if (
+                  index === 0 ||
+                  index === totalPages - 1 ||
+                  (index >= currentPage - 2 && index <= currentPage + 2)
+                ) {
+                  return (
+                    <PaginationItem key={`page-${index}`}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(index + 1)}
+                        isActive={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                } else if (
+                  index === currentPage - 3 ||
+                  index === currentPage + 3
+                ) {
+                  return (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <PaginationLink>...</PaginationLink>
+                    </PaginationItem>
+                  )
+                }
+                return null
+              })}
+
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>
@@ -1308,6 +1355,13 @@ export default function BankAccounts() {
 //   PaginationPrevious,
 // } from '@/components/ui/pagination'
 // import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select'
+// import {
 //   createBankAccount,
 //   editBankAccount,
 // } from '../../../api/bank-accounts-api'
@@ -1319,7 +1373,7 @@ export default function BankAccounts() {
 //   type AccountsHead,
 //   type BankAccount,
 //   type CreateBankAccount,
-//   LcInfoByCostIsActive,
+//   type LcInfoByCostIsActive,
 // } from '@/utils/type'
 // import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 // import { useAtom } from 'jotai'
@@ -1667,11 +1721,30 @@ export default function BankAccounts() {
 
 //   // Watch accountType field
 //   const watchedAccountType = form.watch('accountType')
+//   const watchedLoanType = form.watch('loanType')
 
 //   return (
 //     <div className="mx-auto py-10 ">
 //       <div className="flex justify-between items-center m-4 mb-6">
 //         <h1 className="text-2xl font-bold">Bank Accounts</h1>
+//         <Select
+//           value={itemsPerPage.toString()}
+//           onValueChange={(value) => {
+//             setItemsPerPage(Number(value))
+//             setCurrentPage(1)
+//           }}
+//         >
+//           <SelectTrigger className="w-[180px]">
+//             <SelectValue placeholder="Select items per page" />
+//           </SelectTrigger>
+//           <SelectContent>
+//             <SelectItem value="5">5 per page</SelectItem>
+//             <SelectItem value="10">10 per page</SelectItem>
+//             <SelectItem value="20">20 per page</SelectItem>
+//             <SelectItem value="50">50 per page</SelectItem>
+//             <SelectItem value="100">100 per page</SelectItem>
+//           </SelectContent>
+//         </Select>
 //         <div className="flex items-center gap-4">
 //           <div className="relative">
 //             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -1888,23 +1961,6 @@ export default function BankAccounts() {
 //                         />
 //                       )}
 //                       {watchedAccountType === 'Loan Account' && (
-//                         // <FormField
-//                         //   control={form.control}
-//                         //   name="LcNumber"
-//                         //   render={({ field }) => (
-//                         //     <FormItem>
-//                         //       <FormLabel>LC Number</FormLabel>
-//                         //       <FormControl>
-//                         //         <Input
-//                         //           placeholder="Enter LC number"
-//                         //           {...field}
-//                         //           value={field.value || ''}
-//                         //         />
-//                         //       </FormControl>
-//                         //       <FormMessage />
-//                         //     </FormItem>
-//                         //   )}
-//                         // />
 //                         <FormField
 //                           control={form.control}
 //                           name="LcNumber"
@@ -2100,16 +2156,63 @@ export default function BankAccounts() {
 //                           <FormItem>
 //                             <FormLabel> Installment Start Date</FormLabel>
 //                             <FormControl>
-//                               <Input
-//                                 type="date"
-//                                 {...field}
-//                                 value={
-//                                   field.value
-//                                     ? format(field.value, 'yyyy-MM-dd')
-//                                     : ''
-//                                 }
-//                                 onChange={(e) => field.onChange(e.target.value)}
-//                               />
+//                               {watchedLoanType === 'EDF' ||
+//                               watchedLoanType === 'UPAS' ? (
+//                                 <Input
+//                                   type="number"
+//                                   placeholder="Enter days from today"
+//                                   value={
+//                                     field.value &&
+//                                     typeof field.value === 'string'
+//                                       ? (() => {
+//                                           const fieldDate = new Date(
+//                                             field.value
+//                                           )
+//                                           const today = new Date()
+//                                           const diffTime =
+//                                             fieldDate.getTime() -
+//                                             today.getTime()
+//                                           const diffDays = Math.ceil(
+//                                             diffTime / (1000 * 60 * 60 * 24)
+//                                           )
+//                                           return diffDays > 0
+//                                             ? String(diffDays)
+//                                             : ''
+//                                         })()
+//                                       : ''
+//                                   }
+//                                   onChange={(e) => {
+//                                     const days = Number.parseInt(e.target.value)
+//                                     if (!isNaN(days) && days > 0) {
+//                                       const today = new Date()
+//                                       const futureDate = new Date(
+//                                         today.getTime() +
+//                                           days * 24 * 60 * 60 * 1000
+//                                       )
+//                                       field.onChange(
+//                                         format(futureDate, 'yyyy-MM-dd')
+//                                       )
+//                                     } else {
+//                                       field.onChange('')
+//                                     }
+//                                   }}
+//                                 />
+//                               ) : (
+//                                 <Input
+//                                   type="date"
+//                                   {...field}
+//                                   value={
+//                                     field.value
+//                                       ? typeof field.value === 'string'
+//                                         ? field.value
+//                                         : format(field.value, 'yyyy-MM-dd')
+//                                       : ''
+//                                   }
+//                                   onChange={(e) =>
+//                                     field.onChange(e.target.value)
+//                                   }
+//                                 />
+//                               )}
 //                             </FormControl>
 //                             <FormMessage />
 //                           </FormItem>
