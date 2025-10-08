@@ -1402,6 +1402,7 @@ export const createVehicleSchema = z.object({
   employeeid: z.number().int(),
   driverid: z.number().int(),
   companyid: z.number().int(),
+  companyOther: z.string().optional(),
   createdBy: z.number().int(),
 })
 export type CreateVehicleType = z.infer<typeof createVehicleSchema>
