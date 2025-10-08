@@ -170,7 +170,7 @@
 //             name: 'Loan Graph Report',
 //             source: '/bank/loan-graph-report',
 //           },
-         
+
 //         ],
 // },
 //     ],
@@ -238,7 +238,7 @@
 //       {
 //         name: 'Other Reports',
 //         items: [
-         
+
 //           {
 //             name: 'FDR Reports',
 //             source: '/reports/fdr-report',
@@ -695,7 +695,7 @@ export const MENU_ITEMS: MenuItem[] = [
         items: [
           { name: "Cost Centers", source: "/settings/cost-centers" },
           { name: "Bank Accounts", source: "/settings/bank-accounts" },
-          { name: 'Level Entry', source: '/settings/level-entry' }
+          { name: 'Define Income Statement', source: '/settings/level-entry' }
         ],
       },
       {
