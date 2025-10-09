@@ -56,7 +56,7 @@ const DepartmentSummaryTableData: React.FC<Props> = ({
           <thead>
             <tr className="bg-muted/50 hover:bg-muted/30 transition-colors pdf-table-header">
               <th className="w-[200px] border px-4 py-2">
-                Account Name/Department Name
+                Account Name/Unit Name
               </th>
               {costCenterNames.map((costCenterName, index) => (
                 <th key={index} className="text-center border px-4 py-2">
