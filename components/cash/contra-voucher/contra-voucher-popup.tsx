@@ -103,7 +103,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
         state: 0,
         companyId: 0,
         locationId: 0,
-        currencyId: 0,
+        currencyId: 1,
         exchangeRate: 1,
         amountTotal: 0,
         createdBy: userData?.userId || 0,

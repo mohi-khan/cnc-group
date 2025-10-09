@@ -321,16 +321,16 @@ const DeparmentSummaryHeading = ({
             </SelectContent>
           </Select>
 
-          {/* selected Department start here */}
+          {/* selected Unit start here */}
           <Select
             value={selectedCostCenterIds.join(',')}
             onValueChange={(value) => handleCostCenterSelect(value)}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select Department">
+              <SelectValue placeholder="Select Unit">
                 {selectedCostCenterIds.length > 0
                   ? `${selectedCostCenterIds.length} selected`
-                  : 'Select Department'}
+                  : 'Select Unit'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -358,7 +358,7 @@ const DeparmentSummaryHeading = ({
               ))}
             </SelectContent>
           </Select>
-          {/* selected Department End here */}
+          {/* selected Unit End here */}
         </div>
 
         <div className="w-[100px]" />

@@ -598,7 +598,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: "/reports/cost-center-summary",
           },
           {
-            name: "Department Summary",
+            name: "Unit Summary",
             source: "/reports/department-summary",
           },
           {
@@ -687,7 +687,7 @@ export const MENU_ITEMS: MenuItem[] = [
             source: "/settings/chart-of-accounts",
           },
           { name: "Res Partners", source: "/settings/res-partner" },
-          { name: "Department", source: "/settings/department" },
+          { name: "Unit", source: "/settings/department" },
         ],
       },
       {

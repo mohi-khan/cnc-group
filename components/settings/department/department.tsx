@@ -303,9 +303,9 @@ export default function DepartmentManagement() {
   return (
     <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Departments</h1>
+        <h1 className="text-2xl font-bold">Units</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" /> Add Department
+          <PlusIcon className="mr-2 h-4 w-4" /> Add Units
         </Button>
       </div>
       {feedback && (
@@ -413,7 +413,7 @@ export default function DepartmentManagement() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[525px] h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Department</DialogTitle>
+            <DialogTitle>Add New Unit</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form
@@ -427,7 +427,7 @@ export default function DepartmentManagement() {
                 name="departmentName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Department Name</FormLabel>
+                    <FormLabel>Unit Name</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -566,7 +566,7 @@ export default function DepartmentManagement() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Saving...' : 'Add Department'}
+                  {isLoading ? 'Saving...' : 'Add Unit'}
                 </Button>
               </div>
             </form>

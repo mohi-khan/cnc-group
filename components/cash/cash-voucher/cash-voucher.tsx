@@ -363,7 +363,7 @@ export default function CashVoucher({
         journalType: VoucherTypes.CashVoucher, // Ensure correct type
         companyId: 0,
         locationId: 0,
-        currencyId: 0,
+        currencyId: 1,
         amountTotal: 0,
         exchangeRate: 1,
         payTo: '',
