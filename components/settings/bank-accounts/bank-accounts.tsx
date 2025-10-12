@@ -164,6 +164,9 @@ export default function BankAccounts() {
     },
   })
 
+  const bankAccounts = glAccounts.filter((acc: any) => acc.isBank == 1)
+  console.log('chart of accounts:', bankAccounts)
+
   // get all currency api
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
@@ -1027,7 +1030,7 @@ export default function BankAccounts() {
                             <FormItem>
                               <FormLabel>GL Account</FormLabel>
                               <CustomCombobox
-                                items={glAccounts
+                                items={bankAccounts
                                   ?.filter((glaccount) => !glaccount.isGroup)
                                   .map((glaccount) => ({
                                     id: glaccount.accountId.toString(),
@@ -1314,3 +1317,9 @@ export default function BankAccounts() {
     </div>
   )
 }
+
+
+
+
+
+
