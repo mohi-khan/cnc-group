@@ -190,8 +190,8 @@ export const bankAccountSchema = z.object({
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
-  limit: z.number().nonnegative("Limit must be a positive number"),
-  rate: z.number().nonnegative("Rate must be a positive number"),
+  limit: z.number().nonnegative("Limit must be a positive number").optional(),
+  rate: z.number().nonnegative("Rate must be a positive number").optional(),
   loanType: z.enum([
     "EDF",
     "TR",
@@ -200,19 +200,26 @@ export const bankAccountSchema = z.object({
     "Term",
     "Stimulas",
     "UPAS",
-  ]),
+  ]).optional(),
   installmentStartDate: z
     .string()
     .optional()
     .transform((str) => (str ? new Date(str) : undefined)),
-  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+  installmentAmount: z.number().optional(),
   installmentFreq: z.enum([
     "Monthly",
     "Quarterly",
     "Half Yearly",
     "Yearly",
     "One Time",
-  ])
+  ]).optional(),
+  noOfInstallments: z.number().int().nonnegative().optional(),
+   // ✅ New optional foreign key field
+  LcNumber: z
+    .string()
+    .max(12, "LcNumber must not exceed 12 characters")
+    .optional()
+    .nullable(),
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
@@ -291,8 +298,8 @@ export const createBankAccountSchema = z.object({
   updatedBy: z.number().optional(),
 
   // ✅ New fields
-  limit: z.number().nonnegative("Limit must be a positive number"),
-  rate: z.number().nonnegative("Rate must be a positive number"),
+  limit: z.number().nonnegative("Limit must be a positive number").optional(),
+  rate: z.number().nonnegative("Rate must be a positive number").optional(),
   loanType: z.enum([
     "EDF",
     "TR",
@@ -301,7 +308,7 @@ export const createBankAccountSchema = z.object({
     "Term",
     "Stimulas",
     "UPAS",
-  ]),
+  ]).optional(),
   installmentStartDate: z
     .string()
     .optional()
@@ -313,7 +320,7 @@ export const createBankAccountSchema = z.object({
     "Half Yearly",
     "Yearly",
     "One Time",
-  ]),
+  ]).optional(),
   noOfInstallments: z.number().int().nonnegative().optional(),
 
   // ✅ New optional foreign key field
