@@ -8,7 +8,7 @@ import { CalendarIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
+// import { Calendar } from '@/components/ui/calendar'  // ❌ removed
 import {
   Form,
   FormControl,
@@ -40,7 +40,6 @@ const FinancialYear = () => {
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
-  
 
   // State variables
   const [userId, setUserId] = useState(0)
@@ -50,10 +49,8 @@ const FinancialYear = () => {
 
   useEffect(() => {
     if (userData) {
-      
       setUserId(userData.userId)
     } else {
-      
       setError('User not authenticated. Please log in.')
     }
   }, [userId, userData])
@@ -75,7 +72,6 @@ const FinancialYear = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
@@ -88,46 +84,63 @@ const FinancialYear = () => {
         ...form.getValues(),
         createdby: userId,
       })
-      
     }
   }, [userId, form, router])
 
   async function onSubmit(values: financialYear) {
     try {
-      // Ensure createdby is set to userId
       const dataToSubmit = {
         ...values,
         createdby: userId,
       }
-      
+
       const response = await createFinancialYear(dataToSubmit, token)
 
-      if (response.error || !response.data) {
-        console.error('Error creating Financial year:', response.error)
+      // ✅ Handle backend errors properly
+      if (response?.error || !response?.data) {
+        let errorMessage = 'Failed to create financial year. Please try again.'
+
+        // Check if backend returned specific overlap error
+        if (typeof response?.error === 'string') {
+          errorMessage = response.error
+        } else if (response?.error?.message) {
+          errorMessage = response.error.message
+        }
+
+        // ✅ Show clear toast error
         toast({
           title: 'Error',
-          description: 'Failed to create financial year. Please try again.',
+          description: errorMessage, // e.g. "The specified date range overlaps with an existing financial year"
           variant: 'destructive',
         })
-      } else {
-        
-        toast({
-          title: 'Success',
-          description: 'Financial year created successfully',
-        })
-        form.reset({
-          isactive: true,
-          createdby: userId,
-          yearname: '',
-          startdate: undefined,
-          enddate: undefined,
-        }) // Reset the form after successful submission
+        return
       }
-    } catch (error) {
+
+      // ✅ Success
+      toast({
+        title: 'Success',
+        description: 'Financial year created successfully',
+      })
+
+      form.reset({
+        isactive: true,
+        createdby: userId,
+        yearname: '',
+        startdate: undefined,
+        enddate: undefined,
+      })
+    } catch (error: any) {
       console.error('Unexpected error:', error)
+
+      // ✅ Catch backend-thrown message (if using axios/fetch)
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'An unexpected error occurred. Please try again.'
+
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
+        description: backendMessage, // will show overlap message if thrown by backend
         variant: 'destructive',
       })
     }
@@ -160,36 +173,16 @@ const FinancialYear = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Start Date</FormLabel>
-                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'PPP')
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={(date) => {
-                          field.onChange(date)
-                          setStartDateOpen(false)
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      value={
+                        field.value ? format(field.value, 'yyyy-MM-dd') : ''
+                      }
+                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                      className="w-[240px]"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -200,36 +193,16 @@ const FinancialYear = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>End Date</FormLabel>
-                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'PPP')
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={(date) => {
-                          field.onChange(date)
-                          setEndDateOpen(false)
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      value={
+                        field.value ? format(field.value, 'yyyy-MM-dd') : ''
+                      }
+                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                      className="w-[240px]"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
