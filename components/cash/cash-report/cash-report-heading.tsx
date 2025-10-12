@@ -39,6 +39,11 @@ const CashReportHeading: React.FC<CashReportHeadingProps> = ({
   generatePdf,
   generateExcel,
 }) => {
+
+
+ 
+
+
   return (
     <div className="grid grid-cols-6 gap-8 mb-4 px-4 mx-20">
       <div className="flex items-center gap-2">
@@ -142,7 +147,7 @@ const CashReportHeading: React.FC<CashReportHeadingProps> = ({
           placeholder="Select Company"
         />
       </div>
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label className="text-sm font-medium">Location</Label>
         <CustomCombobox
           value={
@@ -161,6 +166,29 @@ const CashReportHeading: React.FC<CashReportHeadingProps> = ({
                 : 0,
             name: location.location?.address,
           }))}
+          placeholder="Select Location"
+        />
+      </div> */}
+
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Location</Label>
+        <CustomCombobox
+          value={
+            locations
+              .filter((loc) => loc.location?.companyId === companyId) // filter by selected company
+              .map((location) => ({
+                id: location.location?.locationId ?? 0,
+                name: location.location?.address,
+              }))
+              .find((item) => item.id === location) || null
+          }
+          onChange={(item) => setLocation(item ? Number(item.id) : 0)}
+          items={locations
+            .filter((loc) => loc.location?.companyId === companyId) // filter by selected company
+            .map((location) => ({
+              id: location.location?.locationId ?? 0,
+              name: location.location?.address,
+            }))}
           placeholder="Select Location"
         />
       </div>
