@@ -172,7 +172,7 @@ export const bankAccountSchema = z.object({
     .nullable(),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
-  glAccountId: z.number(),
+  glAccountId: z.number().optional(),
   bankCode: z
     .string()
     .max(50, 'Bank code must not exceed 50 characters')
@@ -270,7 +270,7 @@ export const createBankAccountSchema = z.object({
   validityDate: z
     .string()
     .optional()
-    .transform((str) => (str ? new Date(str) : undefined)),
+    .transform((str) => (str ? new Date(str) : undefined)).optional(),
   assetDetails: z
     .string()
     .max(255, 'Asset details must not exceed 255 characters')
@@ -278,7 +278,7 @@ export const createBankAccountSchema = z.object({
     .nullable(),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
-  glAccountId: z.number(),
+  glAccountId: z.number().optional(),
   bankCode: z
     .string()
     .max(50, 'Bank code must not exceed 50 characters')
