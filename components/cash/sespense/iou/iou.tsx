@@ -21,34 +21,66 @@ const Iou = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [loanData, setLoanData] = useState<IouRecordGetType[]>([])
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
-    const [getCompany, setGetCompany] = useState<CompanyType[]>([])
-     const [getLoaction, setGetLocation] = useState<LocationData[]>([]) 
-    
+  const [getCompany, setGetCompany] = useState<CompanyType[]>([])
+  const [getLoaction, setGetLocation] = useState<LocationData[]>([])
 
+  // Fetch all Loan Data
+  // const fetchLoanData = useCallback(async () => {
+  //   if (!token) return
+  //   try {
+  //     setIsLoading(true)
+  //     const loansdata = await getLoanData(token)
+  //     if (loansdata?.error?.status === 401) {
+  //       router.push('/unauthorized-access')
+
+  //       return
+  //     } else if (loansdata.error || !loansdata.data) {
+  //       console.error('Error fetching loans:', loansdata.error)
+  //       setLoanData([])
+  //     } else {
+  //       setLoanData(loansdata.data)
+  //       console.log("iou data:",loansdata.data)
+  //     }
+  //   } catch (err) {
+  //     console.error('Error:', err instanceof Error ? err.message : 'An error occurred')
+  //     setLoanData([])
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }, [token, router])
   // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
     if (!token) return
     try {
       setIsLoading(true)
       const loansdata = await getLoanData(token)
+
       if (loansdata?.error?.status === 401) {
         router.push('/unauthorized-access')
-        
         return
       } else if (loansdata.error || !loansdata.data) {
         console.error('Error fetching loans:', loansdata.error)
         setLoanData([])
       } else {
-        setLoanData(loansdata.data)
-        console.log(loansdata.data)
+        // ✅ Filter: show only data where amount ≠ adjustedAmount
+        const filteredData = loansdata.data.filter(
+          (loan: any) => loan.amount !== loan.adjustedAmount
+        )
+
+        setLoanData(filteredData)
+        console.log('iou filtered data:', filteredData)
       }
     } catch (err) {
-      console.error('Error:', err instanceof Error ? err.message : 'An error occurred')
+      console.error(
+        'Error:',
+        err instanceof Error ? err.message : 'An error occurred'
+      )
       setLoanData([])
     } finally {
       setIsLoading(false)
     }
   }, [token, router])
+
   // Fetch all Employee Data
   const fetchEmployeeData = useCallback(async () => {
     if (!token) return
@@ -58,18 +90,17 @@ const Iou = () => {
     } else {
       setEmployeeData([])
     }
-    
   }, [token])
 
   // Fetch all Company Data
-   const fetchCompnay = useCallback(async () => {
-      if (!token) return
-      const response = await getAllCompanies(token)
-      setGetCompany(response.data || [])
-    }, [token])  
+  const fetchCompnay = useCallback(async () => {
+    if (!token) return
+    const response = await getAllCompanies(token)
+    setGetCompany(response.data || [])
+  }, [token])
 
-    // Fetch all Location Data
-     const fetchLocation = useCallback(async () => {
+  // Fetch all Location Data
+  const fetchLocation = useCallback(async () => {
     if (!token) return
     const response = await getAllLocations(token)
     setGetLocation(response.data ?? [])
@@ -81,20 +112,25 @@ const Iou = () => {
       const storedToken = localStorage.getItem('authToken')
 
       if (!storedUserData || !storedToken) {
-        
         router.push('/')
         return
       }
-      
     }
 
-checkUserData()
-    
+    checkUserData()
+
     fetchLoanData()
     fetchEmployeeData()
     fetchCompnay()
     fetchLocation()
-  }, [fetchLoanData, fetchEmployeeData, fetchCompnay,fetchLocation, token, router])
+  }, [
+    fetchLoanData,
+    fetchEmployeeData,
+    fetchCompnay,
+    fetchLocation,
+    token,
+    router,
+  ])
 
   const handleAddCategory = () => {
     setIsPopupOpen(true)
