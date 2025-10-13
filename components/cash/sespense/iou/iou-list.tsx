@@ -1,6 +1,3 @@
-
-
-
 'use client'
 
 import type React from 'react'
@@ -120,6 +117,16 @@ const IouList: React.FC<LoanListProps> = ({
     }))
   }
 
+  // ✅ Calculate Grand Totals
+  const grandTotalAmount = loanAllData.reduce(
+    (total, loan) => total + (loan.amount || 0),
+    0
+  )
+  const grandTotalAdjusted = loanAllData.reduce(
+    (total, loan) => total + (loan.adjustedAmount || 0),
+    0
+  )
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
@@ -230,7 +237,6 @@ const IouList: React.FC<LoanListProps> = ({
               {paginatedLoanData.map((loan) => (
                 <TableRow key={loan.iouId}>
                   <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
-
                   <TableCell>{getCompanyName(loan.companyId)}</TableCell>
                   <TableCell>{getLocationName(loan.locationId)}</TableCell>
 
@@ -257,9 +263,7 @@ const IouList: React.FC<LoanListProps> = ({
                       ? 'Invalid Date'
                       : new Date(loan.dueDate).toLocaleDateString()}
                   </TableCell>
-
                   <TableCell>{loan.notes}</TableCell>
-
                   <TableCell>
                     <Button
                       variant="outline"
@@ -270,6 +274,16 @@ const IouList: React.FC<LoanListProps> = ({
                   </TableCell>
                 </TableRow>
               ))}
+
+              {/* ✅ Grand Total Row */}
+              <TableRow className="bg-slate-100 font-bold">
+                <TableCell colSpan={3} className="text-right">
+                  Grand Total:
+                </TableCell>
+                <TableCell>{grandTotalAmount}</TableCell>
+                <TableCell>{grandTotalAdjusted}</TableCell>
+                <TableCell colSpan={4}></TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         )}

@@ -21,12 +21,13 @@ export async function getSingleVoucher(voucherid: string,token: string) {
 export async function reverseJournalVoucher(
   voucherNo: number,
   createdId: number,
-  token: string
+  token: string,
+  notes?: string // ✅ optional custom note
 ) {
   return fetchApi<VoucherById[]>({
     url: `api/journal/reverseEntry`,
     method: 'POST',
-    body: { voucherNo, createdId },
+    body: { voucherNo, createdId, notes }, // ✅ include notes in request body
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
