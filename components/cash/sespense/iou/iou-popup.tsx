@@ -74,15 +74,12 @@ export default function IouPopUp({
 
   // State variables
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // const [employeeData, setEmployeeData] = useState<Employee[]>([])
   const [userId, setUserId] = useState<number | null>(null) // set to null initially
 
   React.useEffect(() => {
     if (userData) {
       setUserId(userData.userId)
-      
     } else {
-      
     }
   }, [userData])
 
@@ -96,12 +93,31 @@ export default function IouPopUp({
       locationId:
         getLoaction.length > 0 ? getLoaction[0].locationId : undefined,
       dateIssued: new Date(),
-      dueDate: new Date(),
+      // dueDate: new Date(),
+      dueDate: (() => {
+        const issued = new Date()
+        const due = new Date(issued)
+        due.setDate(issued.getDate() + 7)
+        return due
+      })(),
       status: 'active',
       notes: '',
       createdBy: userData?.userId, // set to undefined initially or when userId is not available
     },
   })
+
+  const { watch, setValue } = form
+  const dateIssued = watch('dateIssued')
+
+  // whenever dateIssued changes, update dueDate
+  useEffect(() => {
+    if (dateIssued) {
+      const issued = new Date(dateIssued)
+      const due = new Date(issued)
+      due.setDate(issued.getDate() + 7)
+      setValue('dueDate', due)
+    }
+  }, [dateIssued, setValue])
 
   useEffect(() => {
     if (userId !== null) {
@@ -143,7 +159,15 @@ export default function IouPopUp({
       setIsSubmitting(false)
     }
   }
-  
+
+  const selectedCompanyId = form.watch('companyId')
+
+  // Filter locations based on selected company
+  const filteredLocations = selectedCompanyId
+    ? getLoaction.filter(
+        (location) => Number(location.companyId) === Number(selectedCompanyId)
+      )
+    : getLoaction
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -208,6 +232,7 @@ export default function IouPopUp({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="companyId"
@@ -231,16 +256,19 @@ export default function IouPopUp({
                           }
                         : null
                     }
-                    onChange={(value: { id: string; name: string } | null) =>
+                    onChange={(value: { id: string; name: string } | null) => {
                       field.onChange(value ? Number(value.id) : null)
-                    }
+                      // reset location when company changes
+                      form.setValue('locationId', 0)
+                    }}
                     placeholder="Select a company"
-                  />{' '}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Location Dropdown (filtered company-wise) */}
             <FormField
               control={form.control}
               name="locationId"
@@ -248,7 +276,7 @@ export default function IouPopUp({
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <CustomCombobox
-                    items={getLoaction.map((location) => ({
+                    items={filteredLocations.map((location) => ({
                       id: location.locationId.toString(),
                       name: location.branchName,
                     }))}
@@ -257,7 +285,7 @@ export default function IouPopUp({
                         ? {
                             id: field.value.toString(),
                             name:
-                              getLoaction.find(
+                              filteredLocations.find(
                                 (location) =>
                                   Number(location.locationId) === field.value
                               )?.branchName || 'Select location',
@@ -267,7 +295,11 @@ export default function IouPopUp({
                     onChange={(value: { id: string; name: string } | null) =>
                       field.onChange(value ? Number(value.id) : null)
                     }
-                    placeholder="Select a location"
+                    placeholder={
+                      filteredLocations.length > 0
+                        ? 'Select a location'
+                        : 'No locations found for this company'
+                    }
                   />
                   <FormMessage />
                 </FormItem>

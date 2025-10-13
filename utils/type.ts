@@ -1,6 +1,6 @@
 import { isLastDayOfMonth } from 'date-fns'
 import { locationSchema } from '@/api/company-api'
-import { z } from 'zod'
+import { string, z } from 'zod'
 import exp from 'constants'
 import { de } from 'date-fns/locale'
 import { create } from 'domain'
@@ -766,6 +766,7 @@ const VoucherSchemaById = z.object({
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
+  // MasterNotes:string().nullable()
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>

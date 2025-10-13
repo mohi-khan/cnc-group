@@ -5,7 +5,11 @@ import IouList from './iou-list'
 import IouPopUp from './iou-popup'
 import { getLoanData } from '@/api/iou-api'
 import { Employee, IouRecordGetType, LocationData } from '@/utils/type'
-import { getAllCompanies, getAllLocations, getEmployee } from '@/api/common-shared-api'
+import {
+  getAllCompanies,
+  getAllLocations,
+  getEmployee,
+} from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -24,31 +28,6 @@ const Iou = () => {
   const [getCompany, setGetCompany] = useState<CompanyType[]>([])
   const [getLoaction, setGetLocation] = useState<LocationData[]>([])
 
-  // Fetch all Loan Data
-  // const fetchLoanData = useCallback(async () => {
-  //   if (!token) return
-  //   try {
-  //     setIsLoading(true)
-  //     const loansdata = await getLoanData(token)
-  //     if (loansdata?.error?.status === 401) {
-  //       router.push('/unauthorized-access')
-
-  //       return
-  //     } else if (loansdata.error || !loansdata.data) {
-  //       console.error('Error fetching loans:', loansdata.error)
-  //       setLoanData([])
-  //     } else {
-  //       setLoanData(loansdata.data)
-  //       console.log("iou data:",loansdata.data)
-  //     }
-  //   } catch (err) {
-  //     console.error('Error:', err instanceof Error ? err.message : 'An error occurred')
-  //     setLoanData([])
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }, [token, router])
-  // Fetch all Loan Data
   const fetchLoanData = useCallback(async () => {
     if (!token) return
     try {

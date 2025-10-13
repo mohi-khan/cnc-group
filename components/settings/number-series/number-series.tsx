@@ -386,7 +386,7 @@ export function NumberSeries() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 mb-20">
       <h1 className="text-3xl font-bold mb-6">Number Series</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -456,7 +456,7 @@ export function NumberSeries() {
                         <FormItem>
                           <CustomCombobox
                             items={companies.map((company) => ({
-                              id: company.companyId ?? '', // Ensure id is never undefined
+                              id: company.companyId ?? '',
                               name: company.companyName,
                               value: company.companyId,
                               label: company.companyName,
@@ -468,14 +468,16 @@ export function NumberSeries() {
                                   (company) => company.companyId === field.value
                                 )
                                 .map((company) => ({
-                                  id: company.companyId ?? '', // Ensure id is never undefined
+                                  id: company.companyId ?? '',
                                   name: company.companyName,
                                   ...company,
                                 }))[0] ?? null
                             }
-                            onChange={(item) =>
-                              field.onChange(item?.companyId ?? undefined)
-                            }
+                            onChange={(item) => {
+                              field.onChange(item?.companyId ?? 0)
+                              // Reset locationId when company changes
+                              form.setValue('locationId', 0)
+                            }}
                             placeholder="Select Company"
                           />
                           <FormMessage />
@@ -483,42 +485,59 @@ export function NumberSeries() {
                       )}
                     />
                   </TableCell>
+
                   <TableCell>
                     <FormField
                       control={form.control}
                       name="locationId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <CustomCombobox
-                            items={locations.map((location) => ({
-                              id: location.locationId ?? '',
-                              name: location.address,
-                              value: location.locationId,
-                              label: location.address,
-                              ...location,
-                            }))}
-                            value={
-                              locations
-                                .filter(
-                                  (location) =>
-                                    location.locationId === field.value
-                                )
-                                .map((location) => ({
-                                  id: location.locationId ?? '',
-                                  name: location.address,
-                                  ...location,
-                                }))[0] ?? null
-                            }
-                            onChange={(item) =>
-                              field.onChange(item?.locationId ?? undefined)
-                            }
-                            placeholder="Select Location"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        // Get selected companyId from form
+                        const selectedCompanyId = form.watch('companyId')
+
+                        // Filter locations based on company
+                        const filteredLocations = locations.filter(
+                          (location) => location.companyId === selectedCompanyId
+                        )
+
+                        return (
+                          <FormItem>
+                            <CustomCombobox
+                              items={filteredLocations.map((location) => ({
+                                id: location.locationId ?? '',
+                                name: location.address,
+                                value: location.locationId,
+                                label: location.address,
+                                ...location,
+                              }))}
+                              value={
+                                filteredLocations
+                                  .filter(
+                                    (location) =>
+                                      location.locationId === field.value
+                                  )
+                                  .map((location) => ({
+                                    id: location.locationId ?? '',
+                                    name: location.address,
+                                    ...location,
+                                  }))[0] ?? null
+                              }
+                              onChange={(item) =>
+                                field.onChange(item?.locationId ?? undefined)
+                              }
+                              placeholder={
+                                selectedCompanyId
+                                  ? 'Select Location'
+                                  : 'Select a company first'
+                              }
+                              disabled={!selectedCompanyId} // disable until company selected
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )
+                      }}
                     />
                   </TableCell>
+
                   <TableCell>
                     <FormField
                       control={form.control}
