@@ -149,8 +149,9 @@ export default function PartnerLedger() {
     exportToExcel(transactions, 'partner_ledger')
   }
 
-  const handleSearch = useCallback(
-    async (partnercode: number, fromdate: string, todate: string) => {
+ const handleSearch = useCallback(
+  async (partnercode: number, fromdate: string, todate: string) => {
+    try {
       const response = await getPartnerLedgerByDate({
         partnercode,
         fromdate,
@@ -159,13 +160,19 @@ export default function PartnerLedger() {
       })
 
       if (response.error) {
-        console.error('Error fetching transactions:', response.error)
+        // console.error('Error fetching transactions:', response.error)
+        setTransactions([]) // clear old data on error
       } else {
-        setTransactions(response.data || [])
+        setTransactions(response.data && response.data.length > 0 ? response.data : [])
       }
-    },
-    [token]
-  )
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+      setTransactions([]) // clear old data on exception
+    }
+  },
+  [token]
+)
+
 
   return (
     <div className="space-y-4 max-w-[98%] mx-auto mt-20">

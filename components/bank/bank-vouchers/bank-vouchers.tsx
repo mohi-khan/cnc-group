@@ -403,6 +403,7 @@ export default function BankVoucher({
             voucherId: (values.journalEntry as any).voucherid,
           }),
         bankaccountid: formState.selectedBankAccount?.id || null,
+       
       })),
     }
 

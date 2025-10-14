@@ -771,13 +771,26 @@ const VoucherSchemaById = z.object({
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
 
-const bankAccountDateRangeSchema = z.object({
+export const bankAccountDateRangeSchema = z.object({
   bankaccount: z.number(),
   fromdate: z.string(),
   todate: z.string(),
 })
 
 export type BankAccountDateRange = z.infer<typeof bankAccountDateRangeSchema>
+
+export interface GetBankLedger {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: string | null
+  notes: string | null
+  partner: string | null
+}
+
+
 
 //edit journal notes
 export const DetailNoteSchema = z.object({

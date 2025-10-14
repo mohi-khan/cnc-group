@@ -1,9 +1,19 @@
 import { fetchApi } from '@/utils/http'
-import { BankAccountDateRange } from '@/utils/type'
+import { BankAccountDateRange, bankAccountDateRangeSchema, GetBankLedger } from '@/utils/type'
+import { z } from 'zod'
 
-export async function getBankAccountsByDate(params: BankAccountDateRange, token: string) {
-  return fetchApi<BankAccountDateRange[]>({
-    url: `api/ledgerreport/bank-ledger?bankaccount=${params.bankaccount}&fromdate=${params.fromdate}&todate=${params.todate}`,
+
+
+// --- API function ---
+export async function getBankAccountsByDate(
+  params: BankAccountDateRange,
+  token: string
+) {
+  // Validate input
+  const validatedParams = bankAccountDateRangeSchema.parse(params)
+
+  return fetchApi<GetBankLedger[]>({
+    url: `api/ledgerreport/bank-ledger?bankaccount=${validatedParams.bankaccount}&fromdate=${validatedParams.fromdate}&todate=${validatedParams.todate}`,
     method: 'GET',
     headers: {
       Authorization: `${token}`,

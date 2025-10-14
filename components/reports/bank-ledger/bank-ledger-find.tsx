@@ -3,23 +3,21 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import type { BankAccount } from '@/utils/type'
-import { getAllBankAccounts } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { FileText, Download, File } from 'lucide-react'
+import { FileText, File } from 'lucide-react'
+import type { BankAccount } from '@/utils/type'
+import { getAllBankAccounts } from '@/api/common-shared-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface BankLedgerFindProps {
-  onSearch: (bankaccount: number, fromdate: string, todate: string) => void
+  onSearch: (
+    bankaccount: number,
+    fromdate: string,
+    todate: string,
+    companyName?: string
+  ) => void
   onGeneratePdf: () => void
   onExportExcel: () => void
   isGeneratingPdf: boolean
@@ -31,11 +29,9 @@ export default function BankLedgerFind({
   onExportExcel,
   isGeneratingPdf,
 }: BankLedgerFindProps) {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
 
   const [fromDate, setFromDate] = useState<string>('')
@@ -62,7 +58,6 @@ export default function BankLedgerFind({
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
         router.push('/')
         return
@@ -101,19 +96,34 @@ export default function BankLedgerFind({
       return
     }
 
-    onSearch(Number.parseInt(selectedAccountId, 10), fromDate, toDate)
+    const selectedAccount = accounts.find(
+      (acc) => acc.id === Number(selectedAccountId)
+    )
+    const companyName = selectedAccount
+      ? `${selectedAccount.accountName} (${selectedAccount.bankName})`
+      : 'Unknown Company'
+
+    onSearch(
+      Number.parseInt(selectedAccountId, 10),
+      fromDate,
+      toDate,
+      companyName
+    )
   }
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between p-4 rounded-lg">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-semibold">Bank Ledger Report</h2>
         </div>
       </div>
 
+      {/* Filter Section */}
       <div className="flex justify-between items-center p-4 border rounded-lg bg-card">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* From Date */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">From Date:</span>
             <input
@@ -123,6 +133,8 @@ export default function BankLedgerFind({
               className="px-3 py-2 border rounded-md"
             />
           </div>
+
+          {/* To Date */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">To Date:</span>
             <input
@@ -132,7 +144,8 @@ export default function BankLedgerFind({
               className="px-3 py-2 border rounded-md"
             />
           </div>
-        
+
+          {/* Bank Account Combobox */}
           <CustomCombobox
             items={accounts
               .filter((account) => account.isActive)
@@ -147,7 +160,27 @@ export default function BankLedgerFind({
                     name: accounts.find(
                       (account) => account.id === Number(selectedAccountId)
                     )
-                      ? `${accounts.find((account) => account.id === Number(selectedAccountId))?.accountName}-${accounts.find((account) => account.id === Number(selectedAccountId))?.accountNumber}- ${accounts.find((account) => account.id === Number(selectedAccountId))?.bankName}-${accounts.find((account) => account.id === Number(selectedAccountId))?.branchName}`
+                      ? `${
+                          accounts.find(
+                            (account) =>
+                              account.id === Number(selectedAccountId)
+                          )?.accountName
+                        }-${
+                          accounts.find(
+                            (account) =>
+                              account.id === Number(selectedAccountId)
+                          )?.accountNumber
+                        }-${
+                          accounts.find(
+                            (account) =>
+                              account.id === Number(selectedAccountId)
+                          )?.bankName
+                        }-${
+                          accounts.find(
+                            (account) =>
+                              account.id === Number(selectedAccountId)
+                          )?.branchName
+                        }`
                       : '',
                   }
                 : null
@@ -160,8 +193,16 @@ export default function BankLedgerFind({
             disabled={accounts.length === 0}
           />
 
-          <Button onClick={handleSearch}>Show</Button>
+          {/* Search Button */}
+          <Button
+            onClick={handleSearch}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Show
+          </Button>
         </div>
+
+        {/* Export Buttons */}
         <div className="flex items-center gap-2">
           <Button
             onClick={onGeneratePdf}
@@ -173,6 +214,7 @@ export default function BankLedgerFind({
             <FileText className="w-4 h-4 mr-2" />
             {isGeneratingPdf ? 'Generating...' : 'PDF'}
           </Button>
+
           <Button
             onClick={onExportExcel}
             variant="outline"

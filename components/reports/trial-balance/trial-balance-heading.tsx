@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -15,12 +14,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-
 import { CalendarIcon, FileText, Loader2 } from 'lucide-react'
 import type { CompanyFromLocalstorage, User } from '@/utils/type'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { format, subMonths } from 'date-fns'
+import { format, parseISO, subMonths } from 'date-fns'
 
 interface TrialBalanceHeadingProps {
   generatePdf: () => void
@@ -40,26 +38,20 @@ export default function TrialBalanceHeading({
   onFilterChange,
   isGeneratingPdf = false,
 }: TrialBalanceHeadingProps) {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
 
-  const [startDate, setStartDate] = useState<Date>(
-    subMonths(new Date(), 1) // Previous month's today
-  )
-  const [endDate, setEndDate] = useState<Date>(new Date()) // Today's date
-  const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
+  const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 1))
+  const [endDate, setEndDate] = useState<Date>(new Date())
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
 
-  // getting userData from local storage
   useEffect(() => {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
-    } else {
     }
   }, [userData])
 
@@ -71,8 +63,23 @@ export default function TrialBalanceHeading({
     onFilterChange(startDate, endDate, selectedCompanyId, companyName)
   }, [startDate, endDate, selectedCompanyId, onFilterChange, companies])
 
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = e.target.value ? parseISO(e.target.value) : undefined
+    if (date) setStartDate(date)
+  }
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = e.target.value ? parseISO(e.target.value) : undefined
+    if (date) {
+      setEndDate(date)
+      // Close the main date popover after selecting or typing end date
+      setIsDropdownOpen(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
+      {/* === PDF & Excel Buttons === */}
       <div className="flex items-center gap-2">
         <Button
           onClick={generatePdf}
@@ -90,6 +97,7 @@ export default function TrialBalanceHeading({
             {isGeneratingPdf ? 'Generating...' : 'PDF'}
           </span>
         </Button>
+
         <Button
           onClick={generateExcel}
           variant="ghost"
@@ -142,6 +150,7 @@ export default function TrialBalanceHeading({
         </Button>
       </div>
 
+      {/* === Date Range & Company Selector === */}
       <div className="flex items-center gap-4 flex-1 justify-center">
         <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <PopoverTrigger asChild>
@@ -159,71 +168,24 @@ export default function TrialBalanceHeading({
 
           <PopoverContent className="w-auto p-4" align="start">
             <div className="flex flex-col gap-4">
-              {/* Start Date Picker */}
               <div className="flex items-center gap-2">
                 <span className="font-medium">Start Date:</span>
-                <Popover
-                  open={isStartPopoverOpen}
-                  onOpenChange={setIsStartPopoverOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-[180px] h-10 justify-start text-left truncate ${
-                        !startDate ? 'text-muted-foreground' : ''
-                      }`}
-                    >
-                      <CalendarIcon className="mr-2 h-5 w-5" />
-                      {startDate
-                        ? format(startDate, 'dd/MM/yyyy')
-                        : 'Select Start Date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        if (date) setStartDate(date)
-                        setIsStartPopoverOpen(false)
-                      }}
-                      className="rounded-md border"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <input
+                  type="date"
+                  value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                  onChange={handleStartDateChange}
+                  className="border rounded-md px-2 py-1 w-[180px] h-10"
+                />
               </div>
 
-              {/* End Date Picker */}
               <div className="flex items-center gap-2">
                 <span className="font-medium">End Date:</span>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-[180px] h-10 justify-start text-left truncate ${
-                        !endDate ? 'text-muted-foreground' : ''
-                      }`}
-                    >
-                      <CalendarIcon className="mr-2 h-5 w-5" />
-                      {endDate
-                        ? format(endDate, 'dd/MM/yyyy')
-                        : 'Select End Date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        if (date) setEndDate(date)
-                        if (startDate && date) {
-                          setIsDropdownOpen(false)
-                        }
-                      }}
-                      className="rounded-md border"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <input
+                  type="date"
+                  value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                  onChange={handleEndDateChange}
+                  className="border rounded-md px-2 py-1 w-[180px] h-10"
+                />
               </div>
             </div>
           </PopoverContent>
@@ -253,3 +215,9 @@ export default function TrialBalanceHeading({
     </div>
   )
 }
+
+
+
+
+
+
