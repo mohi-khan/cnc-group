@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import type { ResPartner } from '@/utils/type'
 import { FileText } from 'lucide-react'
-import { getResPartnersBySearch } from '@/api/common-shared-api'
+import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -33,27 +33,14 @@ export default function PartneredgerFind({
   const router = useRouter()
   const [fromDate, setFromDate] = useState<string>('')
   const [toDate, setToDate] = useState<string>('')
-  const [selectedAccountCode, setSelectedAccountCode] = useState<string>('')
+  const [selectedAccountCode, setSelectedAccountCode] = useState<
+    string | number
+  >('')
   const [partners, setPartners] = useState<ResPartner[]>([])
   const [isLoadingPartners, setIsLoadingPartners] = useState(true)
-
-  // const fetchAllResPartners = useCallback(async () => {
-  //   if (!token) return
-  //   const fetchedPartners = await getAllResPartners(token)
-  //   if (fetchedPartners.error || !fetchedPartners.data) {
-  //     console.error('Error getting chart of accounts:', fetchedPartners.error)
-  //     toast({
-  //       title: 'Error',
-  //       description:
-  //         fetchedPartners.error?.message || 'Failed to get chart of accounts',
-  //     })
-  //   } else {
-  //     setPartners(fetchedPartners.data)
-  //   }
-  // }, [token])
-  // useEffect(() => {
-  //   fetchAllResPartners()
-  // }, [fetchAllResPartners])
+  const [selectedPartner, setSelectedPartner] = useState<ComboboxItem | null>(
+    null
+  )
 
   const fetchgetResPartner = useCallback(async () => {
     const search = ''
@@ -173,47 +160,41 @@ export default function PartneredgerFind({
             className="px-3 py-2 border rounded-md"
           />
         </div>
-        {/* <Select
-          value={selectedAccountCode}
-          onValueChange={setSelectedAccountCode}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select partner" />
-          </SelectTrigger>
-          <SelectContent>
-            {partners.length > 0 ? (
-              partners.map((partner) => (
-                <SelectItem key={partner.id} value={partner.id?.toString()}>
-                  {partner.name}
-                </SelectItem>
-              ))
-            ) : (
-              <SelectItem value="default" disabled>
-                No partners available
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select> */}
+
         <CustomComboboxWithApi
           items={partners.map((partner) => ({
             id: partner.id.toString(),
-            name: partner.name || 'Unnamed Partner',
+            name: partner.name || '',
           }))}
-          value={
-            selectedAccountCode
-              ? {
-                  id: selectedAccountCode,
-                  name:
-                    partners.find(
-                      (p) => p.id.toString() === selectedAccountCode
-                    )?.name || '',
-                }
-              : null
-          }
-          onChange={(value) =>
-            setSelectedAccountCode(value ? value.id.toString() : '')
-          }
+          value={selectedPartner}
+          onChange={(item) => {
+            if (item) {
+              setSelectedPartner(item) // update partner object for combobox display
+              setSelectedAccountCode(item.id) // update ID for report
+            } else {
+              setSelectedPartner(null)
+              setSelectedAccountCode('')
+            }
+          }}
+          placeholder="Select partner"
           searchFunction={searchPartners}
+          fetchByIdFunction={async (id) => {
+            const numericId: number =
+              typeof id === 'string' && /^\d+$/.test(id)
+                ? parseInt(id, 10)
+                : (id as number)
+            const partner = await getPartnerById(numericId, token)
+            if (partner?.data) {
+              const selected = {
+                id: partner.data.id.toString(),
+                name: partner.data.name ?? '',
+              }
+              setSelectedPartner(selected)
+              setSelectedAccountCode(selected.id)
+              return selected
+            }
+            return null
+          }}
         />
 
         <Button onClick={handleSearch}>Show</Button>

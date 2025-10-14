@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import BankLedgerFind from './bank-ledger-find'
 import BankLedgerList from './bank-ledger-list'
-import type { BankAccountDateRange } from '@/utils/type'
+import type { GetBankLedger } from '@/utils/type'
 import { getBankAccountsByDate } from '@/api/bank-ledger-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -13,37 +13,52 @@ import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 
 export default function BankLedger() {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
-
   const router = useRouter()
 
-  const [transactions, setTransactions] = useState<BankAccountDateRange[]>([])
+  const [transactions, setTransactions] = useState<GetBankLedger[]>([])
+  const [previousData, setPreviousData] = useState<GetBankLedger[]>([]) // store last good data
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>('')
+  const [fromDate, setFromDate] = useState<string>('')
+  const [toDate, setToDate] = useState<string>('')
+
   const printRef = useRef<HTMLDivElement>(null)
 
   const handleSearch = useCallback(
-    async (bankaccount: number, fromdate: string, todate: string) => {
+    async (
+      bankaccount: number,
+      fromdate: string,
+      todate: string,
+      companyName?: string
+    ) => {
       if (!token) return
-      const response = await getBankAccountsByDate(
-        {
-          bankaccount,
-          fromdate,
-          todate,
-        },
-        token
-      )
-      console.log(`🚀 ~ BankLedger ~ params`, 
-        response.data || []
-     )
 
-      if (response.error) {
-        console.log('Error fetching transactions:', response.error)
-        // You might want to show an error message to the user here
-      } else {
+      try {
+        const response = await getBankAccountsByDate(
+          { bankaccount, fromdate, todate },
+          token
+        )
+
+        console.log('🔍 API Response:', response.data || [])
+
+        // store search info for PDF header
+        setSelectedCompanyName(companyName || '')
+        setFromDate(fromdate)
+        setToDate(todate)
+
+        // Always update transactions — even if empty
         setTransactions(response.data || [])
+        // Optional: update previousData only if there’s actual data
+        if (response.data && response.data.length > 0) {
+          setPreviousData(response.data)
+        }
+      } catch (err) {
+        console.error('❌ Fetch failed:', err)
+        // optionally clear table on error
+        setTransactions([])
       }
     },
     [token]
@@ -51,11 +66,12 @@ export default function BankLedger() {
 
   const generatePdf = async () => {
     if (!printRef.current) return
-
     setIsGeneratingPdf(true)
 
     try {
-      const companyName = 'Bank Ledger Report'
+      const companyName = selectedCompanyName || 'Bank Ledger Report'
+      const dateRange =
+        fromDate && toDate ? `${fromDate} to ${toDate}` : 'All Dates'
 
       const canvas = await html2canvas(printRef.current, {
         scale: 2,
@@ -72,47 +88,39 @@ export default function BankLedger() {
       const imgWidth = canvas.width
       const imgHeight = canvas.height
 
-      // Calculate scaling to fit width while maintaining aspect ratio
       const scale = pdfWidth / imgWidth
       const scaledHeight = imgHeight * scale
 
-      const headerHeight = 20
+      const headerHeight = 25
       const pageContentHeight = pdfHeight - headerHeight - 10
-
       let currentY = 0
       let pageNumber = 1
 
       while (currentY < scaledHeight) {
-        if (pageNumber > 1) {
-          pdf.addPage()
-        }
+        if (pageNumber > 1) pdf.addPage()
 
-        // Add header
+        // Header section
         pdf.setFontSize(16)
         pdf.setFont('helvetica', 'bold')
-        pdf.text(companyName, pdfWidth / 2, 15, { align: 'center' })
+        pdf.text(companyName, pdfWidth / 2, 12, { align: 'center' })
+        pdf.setFontSize(11)
+        pdf.setFont('helvetica', 'normal')
+        pdf.text(`Date Range: ${dateRange}`, pdfWidth / 2, 20, {
+          align: 'center',
+        })
 
-        // Calculate the portion of image to include on this page
+        // Table image
         const remainingHeight = scaledHeight - currentY
         const pageHeight = Math.min(pageContentHeight, remainingHeight)
-
-        // Add the image portion to PDF
-        pdf.addImage(
-          imgData,
-          'JPEG',
-          0,
-          headerHeight,
-          pdfWidth,
-          pageHeight
-        )
+        pdf.addImage(imgData, 'JPEG', 0, headerHeight, pdfWidth, pageHeight)
 
         currentY += pageContentHeight
         pageNumber++
       }
 
-      pdf.save('bank-ledger-report.pdf')
+      pdf.save(`${companyName}-ledger-report.pdf`)
     } catch (error) {
-      console.error('Error generating PDF:', error)
+      console.error('PDF generation error:', error)
     } finally {
       setIsGeneratingPdf(false)
     }
@@ -124,15 +132,21 @@ export default function BankLedger() {
     const worksheet = XLSX.utils.json_to_sheet(
       transactions.map((transaction, index) => ({
         'S.No': index + 1,
-        'Bank Account': transaction.bankaccount,
-        'From Date': transaction.fromdate,
-        'To Date': transaction.todate,
+        'Voucher No': transaction.voucherno,
+        'Account Name': transaction.accountname,
+        Debit: transaction.debit,
+        Credit: transaction.credit,
+        Notes: transaction.notes ?? '',
+        Partner: transaction.partner ?? '',
       }))
     )
 
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Bank Ledger')
-    XLSX.writeFile(workbook, 'bank-ledger-report.xlsx')
+    XLSX.writeFile(
+      workbook,
+      `${selectedCompanyName || 'Bank'}-ledger-report.xlsx`
+    )
   }
 
   return (
