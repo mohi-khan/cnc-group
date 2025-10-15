@@ -119,7 +119,239 @@ export const updatePostingPeriodsSchema = z.object({
   isOpen: z.boolean(),
 })
 
-//bank account type
+// //bank account type
+// export const bankAccountSchema = z.object({
+//   id: z.number(),
+//   accountName: z
+//     .string()
+//     .min(2, 'Account name must be at least 2 characters.')
+//     .max(100, 'Account name must not exceed 100 characters.'),
+//   accountNumber: z
+//     .string()
+//     .min(5, 'Account number must be at least 5 characters.')
+//     .max(50, 'Account number must not exceed 50 characters.'),
+//   bankName: z
+//     .string()
+//     .min(2, 'Bank name must be at least 2 characters.')
+//     .max(100, 'Bank name must not exceed 100 characters.'),
+//   branchName: z
+//     .string()
+//     .max(100, 'Branch name must not exceed 100 characters.')
+//     .optional(),
+//   ifscCode: z
+//     .string()
+//     .max(20, 'IFSC code must not exceed 20 characters.')
+//     .optional()
+//     .nullable(),
+//   swiftCode: z
+//     .string()
+//     .max(20, 'SWIFT code must not exceed 20 characters.')
+//     .optional()
+//     .nullable(),
+//   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+//   accountType: z.enum([
+//     "DEPOSIT AWAITING FOR DISPOSAL",
+//     "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
+//     "Fund Buildup Account",
+//     "MARGIN AGAINST ACCEPTANCE",
+//     "USD RETENTION QUOTA",
+//     "Current",
+//     "OD Against Non-Cash Security",
+//     "Fixed",
+//     "Loan Account",
+//   ]),
+//   openingBalance: z.number(),
+//   validityDate: z
+//     .string()
+//     .optional()
+//     .transform((str) => (str ? new Date(str) : undefined)),
+//   assetDetails: z
+//     .string()
+//     .max(255, 'Asset details must not exceed 255 characters')
+//     .optional()
+//     .nullable(),
+//   isActive: z.boolean(),
+//   isReconcilable: z.boolean(),
+//   glAccountId: z.number().optional(),
+//   bankCode: z
+//     .string()
+//     .max(50, 'Bank code must not exceed 50 characters')
+//     .optional()
+//     .nullable(),
+//   integrationId: z
+//     .string()
+//     .max(36, 'Integration ID must not exceed 36 characters')
+//     .optional()
+//     .nullable(),
+//   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+//   companyId: z
+//     .number()
+//     .int('Company ID must be an integer')
+//     .min(1, 'Company ID is required'),
+//   createdBy: z.number(),
+//   updatedBy: z.number().optional(),
+//   limit: z.number().nonnegative("Limit must be a positive number").optional(),
+//   rate: z.number().nonnegative("Rate must be a positive number").optional(),
+//   loanType: z.enum([
+//     "EDF",
+//     "TR",
+//     "IBP",
+//     "OD",
+//     "Term",
+//     "Stimulas",
+//     "UPAS",
+//   ]).optional(),
+//   installmentStartDate: z
+//     .string()
+//     .optional()
+//     .transform((str) => (str ? new Date(str) : undefined)),
+//   installmentAmount: z.number().optional(),
+//   installmentFreq: z.enum([
+//     "Monthly",
+//     "Quarterly",
+//     "Half Yearly",
+//     "Yearly",
+//     "One Time",
+//   ]).optional(),
+//   noOfInstallments: z.number().int().nonnegative().optional(),
+//    // ✅ New optional foreign key field
+//   LcNumber: z
+//     .string()
+//     .max(12, "LcNumber must not exceed 12 characters")
+//     .optional()
+//     .nullable(),
+// })
+
+// export type BankAccount = z.infer<typeof bankAccountSchema> & {
+//   createdAt?: string
+//   updatedAt?: string
+// }
+// export const createBankAccountSchema = z.object({
+//   accountName: z
+//     .string()
+//     .min(2, 'Account name must be at least 2 characters.')
+//     .max(100, 'Account name must not exceed 100 characters.'),
+//   accountNumber: z
+//     .string()
+//     .min(5, 'Account number must be at least 5 characters.')
+//     .max(50, 'Account number must not exceed 50 characters.'),
+//   bankName: z
+//     .string()
+//     .min(2, 'Bank name must be at least 2 characters.')
+//     .max(100, 'Bank name must not exceed 100 characters.'),
+//   branchName: z
+//     .string()
+//     .max(100, 'Branch name must not exceed 100 characters.')
+//     .optional(),
+//   ifscCode: z
+//     .string()
+//     .max(20, 'IFSC code must not exceed 20 characters.')
+//     .optional()
+//     .nullable(),
+//   swiftCode: z
+//     .string()
+//     .max(20, 'SWIFT code must not exceed 20 characters.')
+//     .optional()
+//     .nullable(),
+//   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
+//   accountType: z.enum([
+//     "DEPOSIT AWAITING FOR DISPOSAL",
+//     "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
+//     "Fund Buildup Account",
+//     "MARGIN AGAINST ACCEPTANCE",
+//     "USD RETENTION QUOTA",
+//     "Current",
+//     "OD Against Non-Cash Security",
+//     "Fixed",
+//     "Loan Account",
+//   ]),
+//   openingBalance: z.string(),
+
+//   validityDate: z
+//     .string()
+//     .optional()
+//     .transform((str) => (str ? new Date(str) : undefined)).optional(),
+//   assetDetails: z
+//     .string()
+//     .max(255, 'Asset details must not exceed 255 characters')
+//     .optional()
+//     .nullable(),
+//   isActive: z.boolean(),
+//   isReconcilable: z.boolean(),
+//   glAccountId: z.number().optional(),
+//   bankCode: z
+//     .string()
+//     .max(50, 'Bank code must not exceed 50 characters')
+//     .optional()
+//     .nullable(),
+//   integrationId: z
+//     .string()
+//     .max(36, 'Integration ID must not exceed 36 characters')
+//     .optional()
+//     .nullable(),
+//   notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+//   companyId: z
+//     .number()
+//     .int('Company ID must be an integer')
+//     .min(1, 'Company ID is required'),
+//   createdBy: z.number(),
+//   updatedBy: z.number().optional(),
+
+//   // ✅ New fields
+//   limit: z.number().nonnegative("Limit must be a positive number").optional(),
+//   rate: z.number().nonnegative("Rate must be a positive number").optional(),
+//   loanType: z.enum([
+//     "EDF",
+//     "TR",
+//     "IBP",
+//     "OD",
+//     "Term",
+//     "Stimulas",
+//     "UPAS",
+//   ]).optional(),
+//   installmentStartDate: z
+//     .string()
+//     .optional()
+//     .transform((str) => (str ? new Date(str) : undefined)),
+//   installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
+//   installmentFreq: z.enum([
+//     "Monthly",
+//     "Quarterly",
+//     "Half Yearly",
+//     "Yearly",
+//     "One Time",
+//   ]).optional(),
+//   noOfInstallments: z.number().int().nonnegative().optional(),
+
+//   // ✅ New optional foreign key field
+//   LcNumber: z
+//     .string()
+//     .max(12, "LcNumber must not exceed 12 characters")
+//     .optional()
+//     .nullable(),
+// })
+
+// export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
+//   createdAt?: string
+//   updatedAt?: string
+// }
+
+
+// export type BankAccountCreate = Omit<
+//   BankAccount,
+//   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+// >
+// export type BankAccountUpdate = Omit<
+//   BankAccount,
+//   'id' | 'createdBy' | 'createdAt' | 'updatedAt'
+// >
+
+
+
+
+
+
+// Base schema for bank account
 export const bankAccountSchema = z.object({
   id: z.number(),
   accountName: z
@@ -137,17 +369,21 @@ export const bankAccountSchema = z.object({
   branchName: z
     .string()
     .max(100, 'Branch name must not exceed 100 characters.')
-    .optional(),
+    .nullable()
+    .optional()
+    .transform((val) => val || null),
   ifscCode: z
     .string()
     .max(20, 'IFSC code must not exceed 20 characters.')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   swiftCode: z
     .string()
     .max(20, 'SWIFT code must not exceed 20 characters.')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum([
     "DEPOSIT AWAITING FOR DISPOSAL",
@@ -163,69 +399,104 @@ export const bankAccountSchema = z.object({
   openingBalance: z.number(),
   validityDate: z
     .string()
+    .nullable()
     .optional()
-    .transform((str) => (str ? new Date(str) : undefined)),
+    .transform((str) => (str ? new Date(str) : null)),
   assetDetails: z
     .string()
     .max(255, 'Asset details must not exceed 255 characters')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
-  glAccountId: z.number().optional(),
+  glAccountId: z.number().nullable().optional(),
   bankCode: z
     .string()
     .max(50, 'Bank code must not exceed 50 characters')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   integrationId: z
     .string()
     .max(36, 'Integration ID must not exceed 36 characters')
+    .nullable()
     .optional()
-    .nullable(),
-  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+    .transform((val) => val || null),
+  notes: z
+    .string()
+    .max(500, 'Notes must not exceed 500 characters')
+    .nullable()
+    .optional()
+    .transform((val) => val || null),
   companyId: z
     .number()
     .int('Company ID must be an integer')
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
-  limit: z.number().nonnegative("Limit must be a positive number").optional(),
-  rate: z.number().nonnegative("Rate must be a positive number").optional(),
-  loanType: z.enum([
-    "EDF",
-    "TR",
-    "IBP",
-    "OD",
-    "Term",
-    "Stimulas",
-    "UPAS",
-  ]).optional(),
+  limit: z
+    .number()
+    .nonnegative("Limit must be a positive number")
+    .nullable()
+    .optional(),
+  rate: z
+    .number()
+    .nonnegative("Rate must be a positive number")
+    .nullable()
+    .optional(),
+  loanType: z
+    .enum([
+      "EDF",
+      "TR",
+      "IBP",
+      "OD",
+      "Term",
+      "Stimulas",
+      "UPAS",
+    ])
+    .nullable()
+    .optional(),
   installmentStartDate: z
     .string()
+    .nullable()
     .optional()
-    .transform((str) => (str ? new Date(str) : undefined)),
-  installmentAmount: z.number().optional(),
-  installmentFreq: z.enum([
-    "Monthly",
-    "Quarterly",
-    "Half Yearly",
-    "Yearly",
-    "One Time",
-  ]).optional(),
-  noOfInstallments: z.number().int().nonnegative().optional(),
-   // ✅ New optional foreign key field
+    .transform((str) => (str ? new Date(str) : null)),
+  installmentAmount: z
+    .number()
+    .nonnegative("Installment amount must be a positive number")
+    .nullable()
+    .optional(),
+  installmentFreq: z
+    .enum([
+      "Monthly",
+      "Quarterly",
+      "Half Yearly",
+      "Yearly",
+      "One Time",
+    ])
+    .nullable()
+    .optional(),
+  noOfInstallments: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .optional(),
   LcNumber: z
     .string()
     .max(12, "LcNumber must not exceed 12 characters")
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
 })
 
 export type BankAccount = z.infer<typeof bankAccountSchema> & {
   createdAt?: string
   updatedAt?: string
 }
+
+// Schema for creating bank account
 export const createBankAccountSchema = z.object({
   accountName: z
     .string()
@@ -242,17 +513,21 @@ export const createBankAccountSchema = z.object({
   branchName: z
     .string()
     .max(100, 'Branch name must not exceed 100 characters.')
-    .optional(),
+    .nullable()
+    .optional()
+    .transform((val) => val || null),
   ifscCode: z
     .string()
     .max(20, 'IFSC code must not exceed 20 characters.')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   swiftCode: z
     .string()
     .max(20, 'SWIFT code must not exceed 20 characters.')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum([
     "DEPOSIT AWAITING FOR DISPOSAL",
@@ -266,69 +541,98 @@ export const createBankAccountSchema = z.object({
     "Loan Account",
   ]),
   openingBalance: z.string(),
-
   validityDate: z
     .string()
+    .nullable()
     .optional()
-    .transform((str) => (str ? new Date(str) : undefined)).optional(),
+    .transform((str) => (str ? new Date(str) : undefined)),
   assetDetails: z
     .string()
     .max(255, 'Asset details must not exceed 255 characters')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   isActive: z.boolean(),
   isReconcilable: z.boolean(),
-  glAccountId: z.number().optional(),
+  glAccountId: z.number().nullable().optional(),
   bankCode: z
     .string()
     .max(50, 'Bank code must not exceed 50 characters')
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
   integrationId: z
     .string()
     .max(36, 'Integration ID must not exceed 36 characters')
+    .nullable()
     .optional()
-    .nullable(),
-  notes: z.string().max(500, 'Notes must not exceed 500 characters').optional(),
+    .transform((val) => val || null),
+  notes: z
+    .string()
+    .max(500, 'Notes must not exceed 500 characters')
+    .nullable()
+    .optional()
+    .transform((val) => val || null),
   companyId: z
     .number()
     .int('Company ID must be an integer')
     .min(1, 'Company ID is required'),
   createdBy: z.number(),
   updatedBy: z.number().optional(),
-
-  // ✅ New fields
-  limit: z.number().nonnegative("Limit must be a positive number").optional(),
-  rate: z.number().nonnegative("Rate must be a positive number").optional(),
-  loanType: z.enum([
-    "EDF",
-    "TR",
-    "IBP",
-    "OD",
-    "Term",
-    "Stimulas",
-    "UPAS",
-  ]).optional(),
+  limit: z
+    .number()
+    .nonnegative("Limit must be a positive number")
+    .nullable()
+    .optional(),
+  rate: z
+    .number()
+    .nonnegative("Rate must be a positive number")
+    .nullable()
+    .optional(),
+  loanType: z
+    .enum([
+      "EDF",
+      "TR",
+      "IBP",
+      "OD",
+      "Term",
+      "Stimulas",
+      "UPAS",
+    ])
+    .nullable()
+    .optional(),
   installmentStartDate: z
     .string()
+    .nullable()
     .optional()
     .transform((str) => (str ? new Date(str) : undefined)),
-  installmentAmount: z.number().nonnegative("Installment amount must be a positive number").optional(),
-  installmentFreq: z.enum([
-    "Monthly",
-    "Quarterly",
-    "Half Yearly",
-    "Yearly",
-    "One Time",
-  ]).optional(),
-  noOfInstallments: z.number().int().nonnegative().optional(),
-
-  // ✅ New optional foreign key field
+  installmentAmount: z
+    .number()
+    .nonnegative("Installment amount must be a positive number")
+    .nullable()
+    .optional(),
+  installmentFreq: z
+    .enum([
+      "Monthly",
+      "Quarterly",
+      "Half Yearly",
+      "Yearly",
+      "One Time",
+    ])
+    .nullable()
+    .optional(),
+  noOfInstallments: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .optional(),
   LcNumber: z
     .string()
     .max(12, "LcNumber must not exceed 12 characters")
+    .nullable()
     .optional()
-    .nullable(),
+    .transform((val) => val || null),
 })
 
 export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
@@ -336,16 +640,43 @@ export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
   updatedAt?: string
 }
 
+// Helper function to remove null/undefined values
+export function cleanBankAccountData<T extends Record<string, any>>(data: T): Partial<T> {
+  const cleaned: any = {}
+
+  for (const [key, value] of Object.entries(data)) {
+    // Keep the value if it's not null, not undefined, and not an empty string
+    if (value !== null && value !== undefined && value !== '') {
+      cleaned[key] = value
+    }
+    // Special case: keep boolean false values
+    else if (typeof value === 'boolean') {
+      cleaned[key] = value
+    }
+    // Special case: keep 0 values for numbers
+    else if (value === 0) {
+      cleaned[key] = value
+    }
+  }
+
+  return cleaned
+}
 
 export type BankAccountCreate = Omit<
   BankAccount,
   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
->
-export type BankAccountUpdate = Omit<
+> & {
+  validityDate?: Date | string | null
+  installmentStartDate?: Date | string | null
+}
+
+export type BankAccountUpdate = Partial<Omit<
   BankAccount,
   'id' | 'createdBy' | 'createdAt' | 'updatedAt'
->
-
+>> & {
+  validityDate?: Date | string | null
+  installmentStartDate?: Date | string | null
+}
 //financial year zod Validation
 
 export const createFinancialYearSchema = z
@@ -760,7 +1091,7 @@ const VoucherSchemaById = z.object({
   credit: z.number(),
   partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
   bankaccount: z.any().nullable(),
-  bankaccountName:z.string().nullable(),
+  bankaccountName: z.string().nullable(),
   accountNumber: z.string().nullable(),
   bankAccountId: z.number(),
   // If you know the type, replace `z.any()` with the correct type
