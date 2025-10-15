@@ -1,4 +1,3 @@
-
 'use client'
 import * as React from 'react'
 import { useState } from 'react'
@@ -38,6 +37,14 @@ import {
   getAllDepartments,
   getResPartnersBySearch,
 } from '@/api/common-shared-api'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+} from '@/components/ui/dialog'
+import { AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { DialogTitle } from '@radix-ui/react-dialog'
 
 // Add props interface for duplication
 interface BankVoucherProps {
@@ -259,10 +266,9 @@ export default function BankVoucher({
             }
           }
         }
-        
       }
     }
-  }, [initialData, formState.bankAccounts,form])
+  }, [initialData, formState.bankAccounts, form])
 
   // Initialze all the Combo Box in the system
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
@@ -403,7 +409,6 @@ export default function BankVoucher({
             voucherId: (values.journalEntry as any).voucherid,
           }),
         bankaccountid: formState.selectedBankAccount?.id || null,
-       
       })),
     }
 
@@ -448,7 +453,7 @@ export default function BankVoucher({
           token
         )
         console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
-        
+
         // Check for errors in the response. if no error, show success message
         if (response.error || !response.data) {
           toast({
@@ -461,17 +466,17 @@ export default function BankVoucher({
           const mycompanies = getCompanyIds(formState.companies)
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
-          
+
           toast({
             title: 'Success',
             description: 'Voucher is edited successfully',
           })
-          
+
           // Close the modal FIRST before resetting form
           if (onClose) {
             onClose()
           }
-          
+
           // Reset the form after closing
           setTimeout(() => {
             form.reset({
@@ -525,20 +530,20 @@ export default function BankVoucher({
           const mycompanies = getCompanyIds(formState.companies)
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
-          
+
           toast({
             title: 'Success',
             description: 'Voucher is created successfully',
           })
-          
+
           // Close the modal FIRST before resetting form
           if (onClose) {
             onClose()
           }
-          
+
           // Also close the internal dialog state
           setIsDialogOpen(false)
-          
+
           // Reset the form after closing with a small delay
           setTimeout(() => {
             form.reset({
@@ -642,44 +647,87 @@ export default function BankVoucher({
           </form>
         </Form> // Otherwise, use existing popup logic
       ) : (
-        <Popup
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          title="Bank Vouchers"
-          size="max-w-6xl"
-        >
-          <p className="text-sm text-muted-foreground mb-4">
-            Enter the details for the bank voucher here. Click save when
-            you&apos;re done.
-          </p>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((values) =>
-                onSubmit(values, formState.status)
-              )}
-              className="space-y-8"
-            >
-              {validationError && (
-                <div className="text-red-500 text-sm mb-4">
-                  {validationError}
-                </div>
-              )}
-              <BankVoucherMaster
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                setFormState={setFormState}
-              />
-              <BankVoucherDetails
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                partners={formState.partners}
-              />
-              <BankVoucherSubmit form={form} onSubmit={onSubmit} />
-            </form>
-          </Form>
-        </Popup>
+        // <Popup
+        //   isOpen={isDialogOpen}
+        //   onClose={() => setIsDialogOpen(false)}
+        //   title="Bank Vouchers"
+        //   size="max-w-6xl"
+        // >
+        //   <p className="text-sm text-muted-foreground mb-4">
+        //     Enter the details for the bank voucher here. Click save when
+        //     you&apos;re done.
+        //   </p>
+        //   <Form {...form}>
+        //     <form
+        //       onSubmit={form.handleSubmit((values) =>
+        //         onSubmit(values, formState.status)
+        //       )}
+        //       className="space-y-8"
+        //     >
+        //       {validationError && (
+        //         <div className="text-red-500 text-sm mb-4">
+        //           {validationError}
+        //         </div>
+        //       )}
+        //       <BankVoucherMaster
+        //         form={form}
+        //         formState={formState}
+        //         requisition={undefined}
+        //         setFormState={setFormState}
+        //       />
+        //       <BankVoucherDetails
+        //         form={form}
+        //         formState={formState}
+        //         requisition={undefined}
+        //         partners={formState.partners}
+        //       />
+        //       <BankVoucherSubmit form={form} onSubmit={onSubmit} />
+        //     </form>
+        //   </Form>
+        // </Popup>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
+          <DialogContent
+            onInteractOutside={(e) => e.preventDefault()} // Prevent close on outside click
+            className="max-w-6xl  h-[95vh] overflow-y-auto"
+          >
+            <DialogHeader>
+              <DialogTitle>Bank Vouchers</DialogTitle>
+              <DialogDescription>
+                Enter the details for the bank voucher here. Click save when
+                you&apos;re done.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  onSubmit(values, formState.status)
+                )}
+                className="space-y-8"
+              >
+                {validationError && (
+                  <div className="text-red-500 text-sm mb-4">
+                    {validationError}
+                  </div>
+                )}
+
+                <BankVoucherMaster
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
+                  setFormState={setFormState}
+                />
+                <BankVoucherDetails
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
+                  partners={formState.partners}
+                />
+                <BankVoucherSubmit form={form} onSubmit={onSubmit} />
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       )}
 
       {!initialData && ( // Only show VoucherList if not in duplication mode
@@ -701,8 +749,6 @@ export default function BankVoucher({
     </div>
   )
 }
-
-
 
 // 'use client'
 // import * as React from 'react'
@@ -964,7 +1010,7 @@ export default function BankVoucher({
 //             }
 //           }
 //         }
-        
+
 //       }
 //     }
 //   }, [initialData, formState.bankAccounts,form])
@@ -1375,4 +1421,3 @@ export default function BankVoucher({
 //     </div>
 //   )
 // }
-
