@@ -14,7 +14,15 @@ import {
   FormMessage,
   FormField,
 } from '@/components/ui/form'
-import { Plus } from 'lucide-react'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Plus, X } from 'lucide-react'
 import {
   exchangeSchema,
   JournalEditWithDetails,
@@ -41,6 +49,7 @@ interface ContraVoucherPopupProps {
   initialData?: JournalEntryWithDetails // Optional initial data for duplication
   isEdit?: boolean // Optional flag to indicate edit mode
   onClose?: () => void // Optional callback when popup closes
+  closeOnOutsideClick: boolean
 }
 
 export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
@@ -49,7 +58,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
   onOpenChange,
   initialData,
   isEdit,
-  onClose
+  onClose,
 }) => {
   // Initialize user data
   useInitializeUser()
@@ -64,8 +73,11 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
 
   // Determine if we're in duplication mode or normal mode
   const isDuplicationMode = initialData !== undefined
-  console.log("🚀 ~ ContraVoucherPopup ~ initialData -> bankaccountid:", initialData?.journalDetails.map(ba => ba.bankaccountid))
-  console.log("🚀 ~ ContraVoucherPopup ~ initialData:", initialData)
+  console.log(
+    '🚀 ~ ContraVoucherPopup ~ initialData -> bankaccountid:',
+    initialData?.journalDetails.map((ba) => ba.bankaccountid)
+  )
+  console.log('🚀 ~ ContraVoucherPopup ~ initialData:', initialData)
   const isOpen = isDuplicationMode ? (externalIsOpen ?? false) : internalIsOpen
   const setIsOpen = isDuplicationMode
     ? (open: boolean) => onOpenChange?.(open)
@@ -240,7 +252,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
         </Button>
       )}
 
-      <Popup
+      {/* <Popup
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Contra Voucher"
@@ -263,7 +275,38 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
             />
           </form>
         </Form>
-      </Popup>
+      </Popup> */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()} // ✅ prevent outside click
+          className="max-w-6xl h-[95vh] overflow-auto"
+        >
+          <DialogHeader>
+            <DialogTitle>Contra Voucher</DialogTitle>
+            <DialogDescription>
+              Enter your voucher details here.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
+              <ContraVoucherMasterSection form={form} />
+              <ContraVoucherDetailsSection
+                form={form}
+                onRemoveEntry={removeEntry}
+              />
+              <ContraVoucherSubmit
+                form={form}
+                onSubmit={form.handleSubmit(handleSubmit)}
+                isSubmitting={isSubmitting}
+              />
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
