@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -62,6 +63,9 @@ import {
   type BankAccount,
   type CreateBankAccount,
   type LcInfoByCostIsActive,
+  BankAccountUpdate,
+  BankAccountCreate,
+  cleanBankAccountData,
 } from '@/utils/type'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -277,13 +281,53 @@ export default function BankAccounts() {
     fetchLcInfoByCostIsActive,
   ])
 
+  // React.useEffect(() => {
+  //   if (editingAccount) {
+  //     form.reset({
+  //       ...editingAccount,
+  //       openingBalance: Number(editingAccount.openingBalance).toString(),
+  //       updatedBy: userId,
+  //       glAccountId: Number(editingAccount.glAccountId) || 0,
+  //     })
+  //   } else {
+  //     form.reset({
+  //       accountName: '',
+  //       accountNumber: '',
+  //       bankName: '',
+  //       currencyId: '',
+  //       accountType: 'DEPOSIT AWAITING FOR DISPOSAL',
+  //       openingBalance: '',
+  //       isActive: true,
+  //       isReconcilable: true,
+  //       createdBy: userId,
+  //       glAccountId: 0,
+  //       noOfInstallments: 0,
+  //     })
+  //   }
+  // }, [editingAccount, form, userId])
   React.useEffect(() => {
     if (editingAccount) {
       form.reset({
         ...editingAccount,
         openingBalance: Number(editingAccount.openingBalance).toString(),
         updatedBy: userId,
-        glAccountId: Number(editingAccount.glAccountId) || 0,
+        glAccountId: Number(editingAccount.glAccountId) || undefined,
+        branchName: editingAccount.branchName || '',
+        ifscCode: editingAccount.ifscCode || '',
+        swiftCode: editingAccount.swiftCode || '',
+        assetDetails: editingAccount.assetDetails || '',
+        bankCode: editingAccount.bankCode || '',
+        integrationId: editingAccount.integrationId || '',
+        notes: editingAccount.notes || '',
+        limit: editingAccount.limit || undefined,
+        rate: editingAccount.rate || undefined,
+        loanType: editingAccount.loanType || undefined,
+        installmentStartDate: editingAccount.installmentStartDate || undefined,
+        installmentAmount: editingAccount.installmentAmount || undefined,
+        installmentFreq: editingAccount.installmentFreq || undefined,
+        noOfInstallments: editingAccount.noOfInstallments || undefined,
+        LcNumber: editingAccount.LcNumber || '',
+        validityDate: editingAccount.validityDate || undefined,
       })
     } else {
       form.reset({
@@ -296,62 +340,149 @@ export default function BankAccounts() {
         isActive: true,
         isReconcilable: true,
         createdBy: userId,
-        glAccountId: 0,
-        noOfInstallments: 0,
+        glAccountId: undefined,
+        noOfInstallments: undefined,
       })
     }
   }, [editingAccount, form, userId])
 
-  async function onSubmit(values: CreateBankAccount) {
-    if (editingAccount) {
-      const response = await editBankAccount(
-        editingAccount.id!,
-        {
-          ...values,
-          updatedBy: userId,
-          openingBalance: Number(values.openingBalance),
-        },
-        token
-      )
-      if (response.error || !response.data) {
-        console.error('Error editing bank account:', response.error)
-        toast({
-          title: 'Error',
-          description: response.error?.message || 'Failed to edit bank account',
-        })
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Bank account updated successfully',
-        })
-        form.reset()
-        fetchBankAccounts()
-        setCurrentPage(1) // Reset to first page after edit
-      }
-    } else {
-      const response = await createBankAccount(
-        { ...values, openingBalance: Number(values.openingBalance) },
-        token
-      )
-      console.log(`🚀 ~ onSubmit ~ bank create`, {
-        ...values,
-        openingBalance: Number(values.openingBalance),
-      })
-      if (response.error || !response.data) {
-        console.error('Error creating bank account:', response.error)
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Bank account created successfully',
-        })
-        form.reset()
-        fetchBankAccounts()
-        setCurrentPage(1) // Reset to first page after create
-      }
-    }
-    setIsDialogOpen(false)
-    setEditingAccount(null)
-  }
+  // async function onSubmit(values: CreateBankAccount) {
+  //   if (editingAccount) {
+  //     const response = await editBankAccount(
+  //       editingAccount.id!,
+  //       {
+  //         ...values,
+  //         updatedBy: userId,
+  //         openingBalance: Number(values.openingBalance),
+  //       },
+  //       token
+  //     )
+  //     if (response.error || !response.data) {
+  //       console.error('Error editing bank account:', response.error)
+  //       toast({
+  //         title: 'Error',
+  //         description: response.error?.message || 'Failed to edit bank account',
+  //       })
+  //     } else {
+  //       toast({
+  //         title: 'Success',
+  //         description: 'Bank account updated successfully',
+  //       })
+  //       form.reset()
+  //       fetchBankAccounts()
+  //       setCurrentPage(1) // Reset to first page after edit
+  //     }
+  //   } else {
+  //     const response = await createBankAccount(
+  //       { ...values, openingBalance: Number(values.openingBalance) },
+  //       token
+  //     )
+  //     console.log(`🚀 ~ onSubmit ~ bank create`, {
+  //       ...values,
+  //       openingBalance: Number(values.openingBalance),
+  //     })
+  //     if (response.error || !response.data) {
+  //       console.error('Error creating bank account:', response.error)
+  //     } else {
+  //       toast({
+  //         title: 'Success',
+  //         description: 'Bank account created successfully',
+  //       })
+  //       form.reset()
+  //       fetchBankAccounts()
+  //       setCurrentPage(1) // Reset to first page after create
+  //     }
+  //   }
+  //   setIsDialogOpen(false)
+  //   setEditingAccount(null)
+  // }
+ async function onSubmit(values: CreateBankAccount) {
+   if (editingAccount) {
+     // Transform form values to match API expectations
+     const updateData = {
+       ...values,
+       updatedBy: userId,
+       openingBalance: Number(values.openingBalance),
+       validityDate: values.validityDate || undefined,
+       installmentStartDate: values.installmentStartDate || undefined,
+       limit: values.limit ?? undefined,
+       rate: values.rate ?? undefined,
+       loanType: values.loanType || undefined,
+       installmentAmount: values.installmentAmount ?? undefined,
+       installmentFreq: values.installmentFreq || undefined,
+       noOfInstallments: values.noOfInstallments ?? undefined,
+       LcNumber: values.LcNumber || undefined,
+       branchName: values.branchName || undefined,
+       ifscCode: values.ifscCode || undefined,
+       swiftCode: values.swiftCode || undefined,
+       assetDetails: values.assetDetails || undefined,
+       bankCode: values.bankCode || undefined,
+       integrationId: values.integrationId || undefined,
+       notes: values.notes || undefined,
+       glAccountId: values.glAccountId ?? undefined,
+     }
+
+     // Remove undefined/null values before sending
+     const cleanedData = cleanBankAccountData(updateData)
+
+     const response = await editBankAccount(
+       editingAccount.id!,
+       cleanedData as BankAccountUpdate,
+       token
+     )
+
+     if (response.error || !response.data) {
+       console.error('Error editing bank account:', response.error)
+       toast({
+         title: 'Error',
+         description: response.error?.message || 'Failed to edit bank account',
+       })
+     } else {
+       toast({
+         title: 'Success',
+         description: 'Bank account updated successfully',
+       })
+       form.reset()
+       fetchBankAccounts()
+       setCurrentPage(1)
+     }
+   } else {
+     // Transform form values for creation
+     const createData = {
+       ...values,
+       openingBalance: Number(values.openingBalance),
+     }
+
+     // Remove undefined/null values before sending
+     const cleanedData = cleanBankAccountData(createData)
+
+     const response = await createBankAccount(
+       cleanedData as BankAccountCreate,
+       token
+     )
+
+     console.log(`🚀 ~ onSubmit ~ bank create`, cleanedData)
+
+     if (response.error || !response.data) {
+       console.error('Error creating bank account:', response.error)
+       toast({
+         title: 'Error',
+         description:
+           response.error?.message || 'Failed to create bank account',
+       })
+     } else {
+       toast({
+         title: 'Success',
+         description: 'Bank account created successfully',
+       })
+       form.reset()
+       fetchBankAccounts()
+       setCurrentPage(1)
+     }
+   }
+   setIsDialogOpen(false)
+   setEditingAccount(null)
+ }
 
   function handleEdit(account: BankAccount) {
     setEditingAccount(account)
@@ -422,6 +553,7 @@ export default function BankAccounts() {
   const watchedLoanType = form.watch('loanType')
 
   return (
+ 
     <div className="mx-auto py-10 ">
       <div className="flex justify-between items-center m-4 mb-6">
         <div className="flex items-center gap-4">
@@ -451,58 +583,74 @@ export default function BankAccounts() {
             <Input
               placeholder="Search accounts..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearchTerm(e.target.value)
+              }
               className="pl-10 w-64"
             />
           </div>
+
+          {/* ---------- DIALOG ---------- */}
           <Dialog
             open={isDialogOpen}
             onOpenChange={(open) => {
+              // allow DialogClose to close (when open === false);
+              // prevent close on outside click / Esc via DialogContent handlers below
               setIsDialogOpen(open)
-              if (!open) setEditingAccount(null)
             }}
           >
             <DialogTrigger asChild>
               <Button
                 variant="default"
                 className="bg-black hover:bg-black/90"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset()
+                  setIsDialogOpen(true)
+                }}
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Bank Account
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+
+            <DialogContent
+              className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+              onInteractOutside={(e) => e.preventDefault()} // Prevent close on outside click
+              onEscapeKeyDown={(e) => e.preventDefault()} // Prevent close on Escape
+            >
               <DialogHeader>
-                <DialogTitle>
-                  {editingAccount
-                    ? 'Edit Bank Account'
-                    : 'Add New Bank Account'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingAccount
-                    ? 'Edit the details for the bank account here.'
-                    : 'Enter the details for the new bank account here.'}
-                </DialogDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle>
+                      {editingAccount ? 'Edit Bank Account' : 'Add New Bank Account'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingAccount
+                        ? 'Edit the details for the bank account here.'
+                        : 'Enter the details for the new bank account here.'}
+                    </DialogDescription>
+                  </div>
+
+                  {/* Use Shadcn's DialogClose as the SINGLE cross button */}
+                  <DialogClose asChild>
+                   
+                  </DialogClose>
+                </div>
               </DialogHeader>
+
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-8"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <div className="pr-6">
+                    {/* --- Your form fields remain unchanged --- */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {!editingAccount && (
                         <FormField
                           control={form.control}
                           name="accountName"
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <FormItem>
                               <FormLabel>Account Name</FormLabel>
                               <FormControl>
-                                <Input
-                                  placeholder="Enter account name"
-                                  {...field}
-                                />
+                                <Input placeholder="Enter account name" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -512,14 +660,11 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="accountNumber"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Account Number</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="Enter account number"
-                                {...field}
-                              />
+                              <Input placeholder="Enter account number" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -528,7 +673,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="bankName"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Bank Name</FormLabel>
                             <CustomCombobox
@@ -547,9 +692,9 @@ export default function BankAccounts() {
                                     }
                                   : null
                               }
-                              onChange={(
-                                value: { id: string; name: string } | null
-                              ) => field.onChange(value ? value.name : null)}
+                              onChange={(value: { id: string; name: string } | null) =>
+                                field.onChange(value ? value.name : null)
+                              }
                               placeholder="Select bank"
                             />
                             <FormMessage />
@@ -559,15 +704,11 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="branchName"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Branch Name</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="Enter branch name"
-                                value={field.value || ''}
-                                onChange={field.onChange}
-                              />
+                              <Input placeholder="Enter branch name" value={field.value || ''} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -576,7 +717,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="currencyId"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Currency</FormLabel>
                             <CustomCombobox
@@ -591,15 +732,12 @@ export default function BankAccounts() {
                                       name:
                                         currency.find(
                                           (curr: CurrencyType) =>
-                                            curr.currencyId ===
-                                            Number(field.value)
+                                            curr.currencyId === Number(field.value)
                                         )?.currencyCode || 'Unnamed Currency',
                                     }
                                   : null
                               }
-                              onChange={(
-                                value: { id: string; name: string } | null
-                              ) => field.onChange(value ? value.id : '')}
+                              onChange={(value: { id: string; name: string } | null) => field.onChange(value ? value.id : '')}
                               placeholder="Select currency"
                             />
                             <FormMessage />
@@ -609,7 +747,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="accountType"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Account Type</FormLabel>
                             <CustomCombobox
@@ -617,26 +755,19 @@ export default function BankAccounts() {
                                 id: type,
                                 name: type,
                               }))}
-                              value={
-                                field.value
-                                  ? { id: field.value, name: field.value }
-                                  : null
-                              }
-                              onChange={(
-                                value: { id: string; name: string } | null
-                              ) => field.onChange(value ? value.id : null)}
+                              value={field.value ? { id: field.value, name: field.value } : null}
+                              onChange={(value: { id: string; name: string } | null) => field.onChange(value ? value.id : null)}
                               placeholder="Select account type"
                             />
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      {/* Conditionally render Number of Installments */}
                       {watchedAccountType === 'Loan Account' && (
                         <FormField
                           control={form.control}
                           name="noOfInstallments"
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <FormItem>
                               <FormLabel>Number of Installments</FormLabel>
                               <FormControl>
@@ -645,12 +776,8 @@ export default function BankAccounts() {
                                   min="0"
                                   placeholder="Enter number of installments"
                                   {...field}
-                                  onChange={(e) => {
-                                    field.onChange(
-                                      e.target.value === ''
-                                        ? undefined
-                                        : Number(e.target.value)
-                                    )
+                                  onChange={(e: any) => {
+                                    field.onChange(e.target.value === '' ? undefined : Number(e.target.value))
                                   }}
                                   value={field.value ?? ''}
                                 />
@@ -664,35 +791,23 @@ export default function BankAccounts() {
                         <FormField
                           control={form.control}
                           name="LcNumber"
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <FormItem>
                               <FormLabel>LC Number</FormLabel>
                               <CustomCombobox
-                                items={
-                                  lcInfo?.map((lc) => ({
-                                    id: lc.LCREQNO.toString(),
-                                    name: lc.LCREQNO.toString(),
-                                  })) ?? []
-                                }
+                                items={lcInfo?.map((lc) => ({ id: lc.LCREQNO.toString(), name: lc.LCREQNO.toString() })) ?? []}
                                 value={
                                   field.value != null
                                     ? {
                                         id: field.value.toString(),
                                         name:
                                           lcInfo
-                                            ?.find(
-                                              (lc) =>
-                                                lc.LCREQNO?.toString() ===
-                                                field.value?.toString()
-                                            )
-                                            ?.LCREQNO?.toString() ||
-                                          'Unnamed LC',
+                                            ?.find((lc) => lc.LCREQNO?.toString() === field.value?.toString())
+                                            ?.LCREQNO?.toString() || 'Unnamed LC',
                                       }
                                     : null
                                 }
-                                onChange={(
-                                  value: { id: string; name: string } | null
-                                ) => field.onChange(value ? value.id : null)}
+                                onChange={(value: { id: string; name: string } | null) => field.onChange(value ? value.id : null)}
                                 placeholder="Select LC Number"
                               />
                               <FormMessage />
@@ -703,7 +818,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="openingBalance"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Loan Amount</FormLabel>
                             <Input
@@ -711,15 +826,9 @@ export default function BankAccounts() {
                               step="0.01"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => {
+                              onChange={(e: any) => {
                                 const value = e.target.value
-                                if (
-                                  value === '' ||
-                                  value === '-' ||
-                                  value === '.' ||
-                                  value === '-.' ||
-                                  value.startsWith('-')
-                                ) {
+                                if (value === '' || value === '-' || value === '.' || value === '-.' || value.startsWith('-')) {
                                   field.onChange(value)
                                 } else {
                                   const parsed = Number.parseFloat(value)
@@ -736,19 +845,15 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="validityDate"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Date</FormLabel>
                             <FormControl>
                               <Input
                                 type="date"
                                 {...field}
-                                value={
-                                  field.value
-                                    ? format(field.value, 'yyyy-MM-dd')
-                                    : ''
-                                }
-                                onChange={(e) => field.onChange(e.target.value)}
+                                value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                                onChange={(e: any) => field.onChange(e.target.value)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -758,7 +863,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="limit"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Limit</FormLabel>
                             <FormControl>
@@ -767,7 +872,7 @@ export default function BankAccounts() {
                                 step="0.01"
                                 placeholder="0.00"
                                 {...field}
-                                onChange={(e) => {
+                                onChange={(e: any) => {
                                   const value = e.target.value
                                   if (value === '' || value === '.') {
                                     field.onChange(value)
@@ -788,7 +893,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="rate"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Rate</FormLabel>
                             <FormControl>
@@ -797,7 +902,7 @@ export default function BankAccounts() {
                                 step="0.01"
                                 placeholder="0.00"
                                 {...field}
-                                onChange={(e) => {
+                                onChange={(e: any) => {
                                   const value = e.target.value
                                   if (value === '' || value === '.') {
                                     field.onChange(value)
@@ -819,7 +924,7 @@ export default function BankAccounts() {
                         <FormField
                           control={form.control}
                           name="loanType"
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <FormItem>
                               <FormLabel>Loan Type</FormLabel>
                               <CustomCombobox
@@ -832,14 +937,8 @@ export default function BankAccounts() {
                                   { id: 'Stimulas', name: 'Stimulas' },
                                   { id: 'UPAS', name: 'UPAS' },
                                 ]}
-                                value={
-                                  field.value
-                                    ? { id: field.value, name: field.value }
-                                    : null
-                                }
-                                onChange={(
-                                  value: { id: string; name: string } | null
-                                ) => field.onChange(value ? value.id : null)}
+                                value={field.value ? { id: field.value, name: field.value } : null}
+                                onChange={(value: { id: string; name: string } | null) => field.onChange(value ? value.id : null)}
                                 placeholder="Select loan type"
                               />
                               <FormMessage />
@@ -850,46 +949,31 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="installmentStartDate"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel> Installment Start Date</FormLabel>
                             <FormControl>
-                              {watchedLoanType === 'EDF' ||
-                              watchedLoanType === 'UPAS' ? (
+                              {watchedLoanType === 'EDF' || watchedLoanType === 'UPAS' ? (
                                 <Input
                                   type="number"
                                   placeholder="Enter days from today"
                                   value={
-                                    field.value &&
-                                    typeof field.value === 'string'
+                                    field.value && typeof field.value === 'string'
                                       ? (() => {
-                                          const fieldDate = new Date(
-                                            field.value
-                                          )
+                                          const fieldDate = new Date(field.value)
                                           const today = new Date()
-                                          const diffTime =
-                                            fieldDate.getTime() -
-                                            today.getTime()
-                                          const diffDays = Math.ceil(
-                                            diffTime / (1000 * 60 * 60 * 24)
-                                          )
-                                          return diffDays > 0
-                                            ? String(diffDays)
-                                            : ''
+                                          const diffTime = fieldDate.getTime() - today.getTime()
+                                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                                          return diffDays > 0 ? String(diffDays) : ''
                                         })()
                                       : ''
                                   }
-                                  onChange={(e) => {
+                                  onChange={(e: any) => {
                                     const days = Number.parseInt(e.target.value)
                                     if (!isNaN(days) && days > 0) {
                                       const today = new Date()
-                                      const futureDate = new Date(
-                                        today.getTime() +
-                                          days * 24 * 60 * 60 * 1000
-                                      )
-                                      field.onChange(
-                                        format(futureDate, 'yyyy-MM-dd')
-                                      )
+                                      const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000)
+                                      field.onChange(format(futureDate, 'yyyy-MM-dd'))
                                     } else {
                                       field.onChange('')
                                     }
@@ -900,15 +984,9 @@ export default function BankAccounts() {
                                   type="date"
                                   {...field}
                                   value={
-                                    field.value
-                                      ? typeof field.value === 'string'
-                                        ? field.value
-                                        : format(field.value, 'yyyy-MM-dd')
-                                      : ''
+                                    field.value ? (typeof field.value === 'string' ? field.value : format(field.value, 'yyyy-MM-dd')) : ''
                                   }
-                                  onChange={(e) =>
-                                    field.onChange(e.target.value)
-                                  }
+                                  onChange={(e: any) => field.onChange(e.target.value)}
                                 />
                               )}
                             </FormControl>
@@ -919,7 +997,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="installmentAmount"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Installment Amount</FormLabel>
                             <FormControl>
@@ -928,7 +1006,7 @@ export default function BankAccounts() {
                                 step="0.01"
                                 placeholder="0.00"
                                 {...field}
-                                onChange={(e) => {
+                                onChange={(e: any) => {
                                   const value = e.target.value
                                   if (value === '' || value === '.') {
                                     field.onChange(value)
@@ -949,7 +1027,7 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="installmentFreq"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Installment Frequency</FormLabel>
                             <CustomCombobox
@@ -960,14 +1038,8 @@ export default function BankAccounts() {
                                 { id: 'Yearly', name: 'Yearly' },
                                 { id: 'One Time', name: 'One Time' },
                               ]}
-                              value={
-                                field.value
-                                  ? { id: field.value, name: field.value }
-                                  : null
-                              }
-                              onChange={(
-                                value: { id: string; name: string } | null
-                              ) => field.onChange(value ? value.id : null)}
+                              value={field.value ? { id: field.value, name: field.value } : null}
+                              onChange={(value: { id: string; name: string } | null) => field.onChange(value ? value.id : null)}
                               placeholder="Select installment frequency"
                             />
                             <FormMessage />
@@ -975,25 +1047,19 @@ export default function BankAccounts() {
                         )}
                       />
                     </div>
+
                     <div className="flex space-x-4 py-5">
                       <FormField
                         control={form.control}
                         name="isActive"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base">
-                                Active
-                              </FormLabel>
-                              <FormDescription>
-                                Is this bank account active?
-                              </FormDescription>
+                              <FormLabel className="text-base">Active</FormLabel>
+                              <div className="text-sm text-muted-foreground">Is this bank account active?</div>
                             </div>
                             <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onChange={field.onChange}
-                              />
+                              <Switch checked={field.value} onChange={field.onChange} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -1001,67 +1067,51 @@ export default function BankAccounts() {
                       <FormField
                         control={form.control}
                         name="isReconcilable"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 w-full focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base">
-                                Reconcilable
-                              </FormLabel>
-                              <FormDescription>
-                                Can this account be reconciled?
-                              </FormDescription>
+                              <FormLabel className="text-base">Reconcilable</FormLabel>
+                              <div className="text-sm text-muted-foreground">Can this account be reconciled?</div>
                             </div>
                             <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onChange={field.onChange}
-                              />
+                              <Switch checked={field.value} onChange={field.onChange} />
                             </FormControl>
                           </FormItem>
                         )}
                       />
                     </div>
+
                     {!editingAccount && (
                       <div className="grid grid-cols-1 gap-4 pb-5">
                         <FormField
                           control={form.control}
                           name="glAccountId"
-                          render={({ field }) => (
+                          render={({ field }: any) => (
                             <FormItem>
                               <FormLabel>GL Account</FormLabel>
                               <CustomCombobox
-                                items={bankAccounts
-                                  ?.filter((glaccount) => !glaccount.isGroup)
-                                  .map((glaccount) => ({
-                                    id: glaccount.accountId.toString(),
-                                    name: `${glaccount.name} (${glaccount.code})`,
-                                  }))}
+                                items={
+                                  bankAccounts
+                                    ?.filter((glaccount) => !glaccount.isGroup)
+                                    .map((glaccount) => ({
+                                      id: glaccount.accountId.toString(),
+                                      name: `${glaccount.name} (${glaccount.code})`,
+                                    })) ?? []
+                                }
                                 value={
                                   field.value
                                     ? {
                                         id: field.value.toString(),
                                         name:
-                                          glAccounts?.find(
-                                            (glaccount) =>
-                                              glaccount.accountId ===
-                                              field.value
-                                          )?.name +
+                                          glAccounts?.find((glaccount) => glaccount.accountId === field.value)?.name +
                                             ' (' +
-                                            glAccounts?.find(
-                                              (glaccount) =>
-                                                glaccount.accountId ===
-                                                field.value
-                                            )?.code +
+                                            glAccounts?.find((glaccount) => glaccount.accountId === field.value)?.code +
                                             ')' || 'Unnamed Account',
                                       }
                                     : null
                                 }
-                                onChange={(
-                                  value: { id: string; name: string } | null
-                                ) =>
-                                  field.onChange(
-                                    value ? Number.parseInt(value.id, 10) : null
-                                  )
+                                onChange={(value: { id: string; name: string } | null) =>
+                                  field.onChange(value ? Number.parseInt(value.id, 10) : null)
                                 }
                                 placeholder="Select GL Account"
                               />
@@ -1071,37 +1121,26 @@ export default function BankAccounts() {
                         />
                       </div>
                     )}
+
                     {!editingAccount && (
                       <FormField
                         control={form.control}
                         name="companyId"
-                        render={({ field }) => (
+                        render={({ field }: any) => (
                           <FormItem>
                             <FormLabel>Company</FormLabel>
                             <CustomCombobox
-                              items={companies?.map((company) => ({
-                                id: company.companyId.toString(),
-                                name: company.companyName,
-                              }))}
+                              items={companies?.map((company) => ({ id: company.companyId.toString(), name: company.companyName })) ?? []}
                               value={
                                 field.value
                                   ? {
                                       id: field.value.toString(),
                                       name:
-                                        companies?.find(
-                                          (company) =>
-                                            company.companyId === field.value
-                                        )?.companyName || 'Unnamed Company',
+                                        companies?.find((company) => company.companyId === field.value)?.companyName || 'Unnamed Company',
                                     }
                                   : null
                               }
-                              onChange={(
-                                value: { id: string; name: string } | null
-                              ) =>
-                                field.onChange(
-                                  value ? Number.parseInt(value.id, 10) : null
-                                )
-                              }
+                              onChange={(value: { id: string; name: string } | null) => field.onChange(value ? Number.parseInt(value.id, 10) : null)}
                               placeholder="Select Company"
                             />
                             <FormMessage />
@@ -1109,25 +1148,22 @@ export default function BankAccounts() {
                         )}
                       />
                     )}
+
                     <FormField
                       control={form.control}
                       name="notes"
-                      render={({ field }) => (
+                      render={({ field }: any) => (
                         <FormItem>
                           <FormLabel>Notes</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder="Enter any additional notes"
-                              className="resize-none"
-                              {...field}
-                              value={field.value || ''}
-                            />
+                            <Textarea placeholder="Enter any additional notes" className="resize-none" {...field} value={field.value || ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+
                   <div className="bg-background pt-2 pb-4">
                     <Button type="submit" className="w-full">
                       {editingAccount ? 'Update' : 'Submit'}
@@ -1137,79 +1173,57 @@ export default function BankAccounts() {
               </Form>
             </DialogContent>
           </Dialog>
+          {/* ---------- END DIALOG ---------- */}
         </div>
       </div>
+
       <div className="flex flex-col m-4">
         <Table className="border shadow-md">
           <TableHeader className="shadow-md bg-slate-200">
             <TableRow>
-              <TableHead
-                onClick={() => handleSort('accountName')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('accountName')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Account Name</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('accountNumber')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('accountNumber')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Account Number</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('bankName')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('bankName')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Bank Name</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('currencyId')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('currencyId')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Currency</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('accountType')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('accountType')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Account Type</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('openingBalance')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('openingBalance')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Opening Balance</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('companyId')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('companyId')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Company Name</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </TableHead>
-              <TableHead
-                onClick={() => handleSort('isActive')}
-                className="cursor-pointer"
-              >
+              <TableHead onClick={() => handleSort('isActive')} className="cursor-pointer">
                 <div className="flex items-center gap-1">
                   <span>Status</span>
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
@@ -1219,34 +1233,18 @@ export default function BankAccounts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedAccounts.map((account) => (
+            {paginatedAccounts.map((account: any) => (
               <TableRow key={account.id}>
                 <TableCell>{account.accountName}</TableCell>
                 <TableCell>{account.accountNumber}</TableCell>
                 <TableCell>{account.bankName}</TableCell>
-                <TableCell>
-                  {currency.find(
-                    (curr) => curr.currencyId === Number(account.currencyId)
-                  )?.currencyCode || 'Unknown'}
-                </TableCell>
+                <TableCell>{currency.find((curr) => curr.currencyId === Number(account.currencyId))?.currencyCode || 'Unknown'}</TableCell>
                 <TableCell>{account.accountType}</TableCell>
                 <TableCell>{account.openingBalance}</TableCell>
+                <TableCell>{companies.find((company) => company.companyId === account.companyId)?.companyName}</TableCell>
+                <TableCell>{account.isActive ? 'Active' : 'Inactive'}</TableCell>
                 <TableCell>
-                  {
-                    companies.find(
-                      (company) => company.companyId === account.companyId
-                    )?.companyName
-                  }
-                </TableCell>
-                <TableCell>
-                  {account.isActive ? 'Active' : 'Inactive'}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(account)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(account)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
@@ -1255,40 +1253,27 @@ export default function BankAccounts() {
             ))}
           </TableBody>
         </Table>
+
         <div className="mt-4">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={
-                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
 
               {[...Array(totalPages)].map((_, index) => {
-                if (
-                  index === 0 ||
-                  index === totalPages - 1 ||
-                  (index >= currentPage - 2 && index <= currentPage + 2)
-                ) {
+                if (index === 0 || index === totalPages - 1 || (index >= currentPage - 2 && index <= currentPage + 2)) {
                   return (
                     <PaginationItem key={`page-${index}`}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(index + 1)}
-                        isActive={currentPage === index + 1}
-                      >
+                      <PaginationLink onClick={() => setCurrentPage(index + 1)} isActive={currentPage === index + 1}>
                         {index + 1}
                       </PaginationLink>
                     </PaginationItem>
                   )
-                } else if (
-                  index === currentPage - 3 ||
-                  index === currentPage + 3
-                ) {
+                } else if (index === currentPage - 3 || index === currentPage + 3) {
                   return (
                     <PaginationItem key={`ellipsis-${index}`}>
                       <PaginationLink>...</PaginationLink>
@@ -1300,14 +1285,8 @@ export default function BankAccounts() {
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className={
-                    currentPage === totalPages
-                      ? 'pointer-events-none opacity-50'
-                      : ''
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -1317,9 +1296,5 @@ export default function BankAccounts() {
     </div>
   )
 }
-
-
-
-
-
+  
 
