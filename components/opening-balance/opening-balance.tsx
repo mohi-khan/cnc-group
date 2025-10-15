@@ -39,6 +39,13 @@ import {
 import OpeningBalanceSubmit from './opening-balance-submit'
 import OpeningBalanceMaster from './opening-balance-master'
 import OpeningBalanceDetails from './opening-balance-details'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface OpeningBalanceProps {
   // fetchAllVoucher: (company: number[], location: number[]) => void
@@ -74,7 +81,6 @@ export default function OpeningBalance({
     if (!token) return
     const data = await getSettings(token, 'Difference of Opening')
     if (data.error || !data.data) {
-      
       toast({
         title: 'Error',
         description: data.error?.message || 'Failed to get Settings',
@@ -439,44 +445,50 @@ export default function OpeningBalance({
           </form>
         </Form>
       ) : (
-        <Popup
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          title="Opening Balance"
-          size="max-w-6xl"
-        >
-          <p className="text-sm text-muted-foreground mb-4">
-            Enter the details for the bank voucher here. Click save when
-            you&apos;re done.
-          </p>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((values) =>
-                onSubmit(values, formState.status)
-              )}
-              className="space-y-8"
-            >
-              {validationError && (
-                <div className="text-red-500 text-sm mb-4">
-                  {validationError}
-                </div>
-              )}
-              <OpeningBalanceMaster
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                setFormState={setFormState}
-              />
-              <OpeningBalanceDetails
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                partners={formState.partners}
-              />
-              <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
-            </form>
-          </Form>
-        </Popup>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
+          <DialogContent
+            onInteractOutside={(e) => e.preventDefault()} // Prevent outside click from closing
+            className="max-w-6xl h-[95vh] overflow-auto"
+          >
+            {/* Header */}
+            <DialogHeader>
+              <DialogTitle>Opening Balance</DialogTitle>
+              <DialogDescription>
+                Enter the details for the bank voucher here. Click save when
+                you're done.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Form */}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  onSubmit(values, formState.status)
+                )}
+                className="space-y-8"
+              >
+                {validationError && (
+                  <div className="text-red-500 text-sm mb-4">
+                    {validationError}
+                  </div>
+                )}
+                <OpeningBalanceMaster
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
+                  setFormState={setFormState}
+                />
+                <OpeningBalanceDetails
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
+                  partners={formState.partners}
+                />
+                <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       )}
 
       {!initialData && (

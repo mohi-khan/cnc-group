@@ -1,5 +1,5 @@
 'use client'
-import { X } from "lucide-react"; // <-- add this at the top
+import { X } from 'lucide-react' // <-- add this at the top
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -28,7 +28,14 @@ import { editJournalEntryWithDetails } from '@/api/vouchers-api'
 import { useAtom } from 'jotai'
 import { tokenAtom } from '@/utils/user'
 import { toast } from '@/hooks/use-toast'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 // Updated interface to include initialData prop
 interface JournalVoucherPopupProps {
@@ -226,7 +233,7 @@ export function JournalVoucherPopup({
           className="max-w-6xl h-[95vh] overflow-hidden"
         >
           {/* Sticky header */}
-          <DialogHeader className="sticky top-0 z-20 bg-white p-4 border-b flex justify-between items-start">
+          <DialogHeader>
             <div>
               <DialogTitle>Journal Voucher</DialogTitle>
               <DialogDescription>
@@ -234,11 +241,6 @@ export function JournalVoucherPopup({
                 you&apos;re done.
               </DialogDescription>
             </div>
-
-            {/* Close button in top-right */}
-            <DialogClose className="ml-4 p-2 rounded-full hover:bg-gray-200">
-              <X className="w-5 h-5" />
-            </DialogClose>
           </DialogHeader>
 
           {/* Scrollable form content */}
