@@ -228,7 +228,6 @@
 //   )
 // }
 
-
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
@@ -249,6 +248,7 @@ import {
   CustomComboboxWithApi,
 } from '@/utils/custom-combobox-with-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { CompanyType } from '@/api/company-api'
 
 interface PartnerLedgerFindProps {
   onSearch: (
@@ -280,7 +280,7 @@ export default function PartneredgerFind({
     null
   )
   const [partners, setPartners] = useState<ResPartner[]>([])
-  const [companies, setCompanies] = useState<Company[]>([])
+  const [companies, setCompanies] = useState<CompanyType[]>([])
   const [isLoadingPartners, setIsLoadingPartners] = useState(true)
   const [selectedPartner, setSelectedPartner] = useState<ComboboxItem | null>(
     null
@@ -419,7 +419,7 @@ export default function PartneredgerFind({
         {/* Company Combobox */}
         <CustomCombobox
           items={companies.map((c) => ({
-            id: (c.companyId ?? c.id).toString(), // safe fallback
+            id: (c.companyId ?? 0).toString(), // safe fallback
             name: c.companyName || 'Unnamed Company',
           }))}
           value={selectedCompany}
