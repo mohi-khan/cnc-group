@@ -150,28 +150,31 @@ export default function PartnerLedger() {
   }
 
  const handleSearch = useCallback(
-  async (partnercode: number, fromdate: string, todate: string) => {
-    try {
-      const response = await getPartnerLedgerByDate({
-        partnercode,
-        fromdate,
-        todate,
-        token,
-      })
+   async (partnercode: number, fromdate: string, todate: string, companyId:number) => {
+     try {
+       const response = await getPartnerLedgerByDate({
+         partnercode,
+         fromdate,
+         todate,
+         companyId,
+         token,
+       })
 
-      if (response.error) {
-        // console.error('Error fetching transactions:', response.error)
-        setTransactions([]) // clear old data on error
-      } else {
-        setTransactions(response.data && response.data.length > 0 ? response.data : [])
-      }
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
-      setTransactions([]) // clear old data on exception
-    }
-  },
-  [token]
-)
+       if (response.error) {
+         // console.error('Error fetching transactions:', response.error)
+         setTransactions([]) // clear old data on error
+       } else {
+         setTransactions(
+           response.data && response.data.length > 0 ? response.data : []
+         )
+       }
+     } catch (error) {
+       console.error('Error fetching transactions:', error)
+       setTransactions([]) // clear old data on exception
+     }
+   },
+   [token]
+ )
 
 
   return (
