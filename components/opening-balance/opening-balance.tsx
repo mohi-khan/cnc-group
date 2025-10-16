@@ -455,7 +455,7 @@ export default function OpeningBalance({
               <DialogTitle>Opening Balance</DialogTitle>
               <DialogDescription>
                 Enter the details for the bank voucher here. Click save when
-                you're done.
+                you are done.
               </DialogDescription>
             </DialogHeader>
 
