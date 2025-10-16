@@ -49,7 +49,7 @@ interface ContraVoucherPopupProps {
   initialData?: JournalEntryWithDetails // Optional initial data for duplication
   isEdit?: boolean // Optional flag to indicate edit mode
   onClose?: () => void // Optional callback when popup closes
-  closeOnOutsideClick: boolean
+  // closeOnOutsideClick: boolean
 }
 
 export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({

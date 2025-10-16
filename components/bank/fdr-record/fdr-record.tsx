@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button"
 import { CreditCard, Plus } from "lucide-react"
 import { tokenAtom, useInitializeUser, userDataAtom } from "@/utils/user"
 import { useAtom } from "jotai"
-import { FdrGetType } from "@/utils/type"
+import { BankAccount, FdrGetType } from "@/utils/type"
 import { getFdrData } from "@/api/fdr-record-api"
 import { CompanyType } from "@/api/company-api"
-import { getAllCompanies } from "@/api/common-shared-api"
+import { getAllBankAccounts, getAllCompanies } from "@/api/common-shared-api"
+import { toast } from "@/hooks/use-toast"
 
 const FdrRecord = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
@@ -25,6 +26,7 @@ const FdrRecord = () => {
     const [fdrdata, setFdrdata] = useState<FdrGetType[]>([])
      const [loading, setLoading] = useState(true)
   const [companyData, setCompanyData] = useState<CompanyType[]>([])
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
 
   const fetchFdrData = useCallback(async () => {
     if (!token) return
@@ -56,10 +58,29 @@ const FdrRecord = () => {
     }
   }, [token])
 
+   const fetchBankAccounts = useCallback(async () => {
+      if (!token) return
+      const fetchedAccounts = await getAllBankAccounts(token)
+      if (fetchedAccounts.error || !fetchedAccounts.data) {
+        console.error('Error getting bank account:', fetchedAccounts.error)
+        toast({
+          title: 'Error',
+          description:
+            fetchedAccounts.error?.message || 'Failed to get bank accounts',
+        })
+      } else {
+        setBankAccounts(fetchedAccounts.data)
+        console.log('this is all bank accounts: ', fetchedAccounts.data
+
+        )
+      }
+    }, [token])
+
   useEffect(() => {
     fetchFdrData()
     fetchCompanyData()
-  }, [fetchFdrData, fetchCompanyData])
+    fetchBankAccounts()
+  }, [fetchFdrData, fetchCompanyData, fetchBankAccounts])
 
   const handleAddRecord = () => {
     setIsPopupOpen(true)
@@ -81,7 +102,9 @@ const FdrRecord = () => {
                 <CreditCard className="h-5 w-5" />
                 FDR Records
               </CardTitle>
-              <CardDescription>Manage and view all Fixed Deposit Receipt records</CardDescription>
+              <CardDescription>
+                Manage and view all Fixed Deposit Receipt records
+              </CardDescription>
             </div>
             <Button
               onClick={handleAddRecord}
@@ -95,11 +118,10 @@ const FdrRecord = () => {
         </CardHeader>
       </Card>
 
-      <FdrRecordList 
+      <FdrRecordList
         fdrdata={fdrdata} // Pass the fetched FDR data
         loading={loading} // Pass loading state to the list
         companyData={companyData} // Pass the fetched company data
-        
       />
 
       <FdrRecordPopUp
@@ -108,9 +130,8 @@ const FdrRecord = () => {
         onRecordAdded={handleRecordAdded}
         refreshFdrData={fetchFdrData} // ✅ Pass fetch function here
         companyData={companyData} // Pass the fetched company data
+        bankAccounts={bankAccounts}
         fdrdata={fdrdata} // Pass the fetched FDR data
-       
-       
       />
     </div>
   )
