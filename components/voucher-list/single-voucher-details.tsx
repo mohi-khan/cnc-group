@@ -1073,7 +1073,7 @@ export default function SingleVoucherDetails() {
               </Table>
               <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Reference:</span>
-                <span>{data?.[0]?.detail_notes || 'Not available'}</span>
+                <span>{data?.[0]?.MasterNotes || 'Not available'}</span>
               </div>
               {/* Total Amount */}
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
