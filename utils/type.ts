@@ -1097,7 +1097,7 @@ const VoucherSchemaById = z.object({
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
-  // MasterNotes:string().nullable()
+  MasterNotes:string().nullable()
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
