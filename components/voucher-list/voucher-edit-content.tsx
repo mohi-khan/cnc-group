@@ -1,7 +1,7 @@
 'use client'
 import { VoucherById, JournalEditWithDetails, VoucherTypes } from '@/utils/type'
 import { toast } from '@/hooks/use-toast'
-import { editJournalEntryWithDetails } from '@/api/vouchers-api' // Assuming this API is used for all voucher types
+import { editJournalEntryWithDetails } from '@/api/vouchers-api'
 import { useAtom } from 'jotai'
 import { useCallback } from 'react'
 import CashVoucher from '@/components/cash/cash-voucher/cash-voucher'
@@ -14,8 +14,8 @@ import OpeningBalance from '../opening-balance/opening-balance'
 interface VoucherDuplicationContentProps {
   voucherData: VoucherById[]
   userId: number
-  onClose: () => void // Callback to close the parent modal
-  isOpen: boolean // New prop to control visibility of internal dialogs
+  onClose: () => void
+  isOpen: boolean
 }
 
 // Helper function to transform VoucherById[] to JournalEditWithDetails
@@ -32,18 +32,18 @@ const transformVoucherData = (
   return {
     journalEntry: {
       id: firstEntry.voucherid,
-      date: new Date().toISOString().split('T')[0], // New date for duplication
+      date: new Date().toISOString().split('T')[0],
       journalType: firstEntry.journaltype,
-      companyId: firstEntry.companyId || 0, // Added fallback for safety
-      locationId: firstEntry.locationId || 0, // Added fallback for safety
-      currencyId: firstEntry.currencyId || 1, // Added fallback, assuming 1 is default currency ID
+      companyId: firstEntry.companyId || 0,
+      locationId: firstEntry.locationId || 0,
+      currencyId: firstEntry.currencyId || 1,
       amountTotal: firstEntry.totalamount,
-      exchangeRate: 1, // Added fallback for safety
+      exchangeRate: 1,
       payTo: firstEntry.payTo || '',
       notes: (firstEntry as any).MasterNotes || '',
       periodid: (firstEntry as any).periodid,
       createdBy: userId,
-      state: 0, // Always start as Draft for edit vouchers
+      state: 0,
     },
     journalDetails: voucherData.map((detail) => ({
       id: detail.id,
@@ -57,9 +57,7 @@ const transformVoucherData = (
       taxId: null,
       resPartnerId: detail.partnar || null,
       notes: detail.detail_notes || '',
-      // type: 'Receipt',
       type: detail.debit ? 'Payment' : detail.credit ? 'Receipt' : 'Unknown',
-
       bankaccountid: (detail as any).bankaccountid || null,
       createdBy: userId,
     })),
@@ -70,26 +68,20 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
   voucherData,
   userId,
   onClose,
-  isOpen, // Accept the new prop
+  isOpen,
 }) => {
   console.log('🚀 ~ VoucherEditContent ~ voucherData:', voucherData)
-  // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL
   const [token] = useAtom(tokenAtom)
 
-  // Dummy fetchAllVoucher for ContraVoucherPopup (if it's not globally available)
-  // In a real application, this should trigger a refresh of the main voucher list.
   const dummyFetchAllVoucher = useCallback(
     (company: number[], location: number[]) => {
       console.log(
         'Dummy fetchAllVoucher called for ContraVoucherPopup during duplication.'
       )
-      // You might want to call a prop function here to refresh the main list
-      // For example: onVoucherListRefresh(company, location);
     },
     []
   )
 
-  // Generic handleSubmit for Journal Vouchers (as JournalVoucherPopup expects it)
   const handleJournalSubmit = useCallback(
     async (data: JournalEditWithDetails, resetForm: () => void) => {
       try {
@@ -102,8 +94,8 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
           title: 'Success',
           description: 'Voucher created successfully',
         })
-        resetForm() // Reset the form in the popup
-        onClose() // Close the duplication modal
+        resetForm()
+        onClose()
       } catch (error) {
         console.error('Error creating voucher:', error)
         toast({
@@ -117,31 +109,37 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     [token, onClose]
   )
 
-  // Now, the conditional return comes AFTER all hook calls
   const initialFormData = transformVoucherData(voucherData, userId)
-  // console.log("🚀 ~ VoucherEditContent ~ initialFormData:", initialFormData)
+
   if (!initialFormData) {
     return <p>Error: Could not prepare data for duplication.</p>
   }
 
   const voucherType = initialFormData.journalEntry.journalType
 
+  // Wrapper with consistent responsive height handling
+  const wrapperClassName = 'w-full h-[80vh] overflow-y-auto'
+
   switch (voucherType) {
     case VoucherTypes.CashVoucher:
       return (
-        <CashVoucher
-          initialData={initialFormData}
-          onClose={onClose}
-          isEdit={true}
-        />
+        <div className={wrapperClassName}>
+          <CashVoucher
+            initialData={initialFormData}
+            onClose={onClose}
+            isEdit={true}
+          />
+        </div>
       )
     case VoucherTypes.BankVoucher:
       return (
-        <BankVoucher
-          initialData={initialFormData}
-          onClose={onClose}
-          isEdit={true}
-        />
+        <div className={wrapperClassName}>
+          <BankVoucher
+            initialData={initialFormData}
+            onClose={onClose}
+            isEdit={true}
+          />
+        </div>
       )
     case VoucherTypes.JournalVoucher:
       return (
@@ -158,24 +156,23 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.ContraVoucher:
       return (
         <ContraVoucherPopup
-          isOpen={isOpen} // Pass the isOpen prop from parent
-          onOpenChange={onClose} // When this popup wants to close, close the parent modal
+          isOpen={isOpen}
+          onOpenChange={onClose}
           initialData={initialFormData}
-          fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          fetchAllVoucher={dummyFetchAllVoucher}
           isEdit={true}
-          onClose={onClose} // Ensure the parent modal can be closed
+          onClose={onClose}
         />
       )
     case VoucherTypes.OpeningBalance:
       return (
-        <OpeningBalance
-          // isOpen={isOpen} // Pass the isOpen prop from parent
-          // onOpenChange={onClose} // When this popup wants to close, close the parent modal
-          initialData={initialFormData}
-          // fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
-          isEdit={true}
-          onClose={onClose} // Ensure the parent modal can be closed
-        />
+        <div className={wrapperClassName}>
+          <OpeningBalance
+            initialData={initialFormData}
+            isEdit={true}
+            onClose={onClose}
+          />
+        </div>
       )
     default:
       return <p>Unknown Voucher Type: {voucherType}</p>
