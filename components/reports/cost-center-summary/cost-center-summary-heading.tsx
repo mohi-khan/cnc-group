@@ -107,18 +107,24 @@ const CostCenterSummaryHeading = ({
 
 
    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const date = e.target.value ? parseISO(e.target.value) : undefined
-        if (date) setStartDate(date)
-    }
-    
-     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const date = e.target.value ? parseISO(e.target.value) : undefined
-        if (date) {
-          setEndDate(date)
-          // Close the main date popover after selecting or typing end date
-          setIsDropdownOpen(false)
-        }
-      }
+     const dateString = e.target.value
+     if (dateString && dateString.length === 10) {
+       const date = parseISO(dateString)
+       if (!isNaN(date.getTime())) {
+         setStartDate(date)
+       }
+     }
+   }
+
+   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const dateString = e.target.value
+     if (dateString && dateString.length === 10) {
+       const date = parseISO(dateString)
+       if (!isNaN(date.getTime())) {
+         setEndDate(date)
+       }
+     }
+   }
 
   return (
     <div>
@@ -186,7 +192,7 @@ const CostCenterSummaryHeading = ({
         </div>
 
         <div className="flex items-center gap-4 flex-1 justify-center">
-          <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+          {/* <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -221,6 +227,69 @@ const CostCenterSummaryHeading = ({
                     className="border rounded-md px-2 py-1 w-[180px] h-10"
                   />
                 </div>
+              </div>
+            </PopoverContent>
+          </Popover> */}
+          <Popover
+            open={isDropdownOpen}
+            onOpenChange={setIsDropdownOpen}
+            modal={false}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-[230px] h-10 justify-start text-left truncate bg-transparent"
+                onClick={() => setIsDropdownOpen(true)}
+              >
+                <CalendarIcon className="mr-2 h-5 w-5" />
+                {startDate && endDate
+                  ? `${format(startDate, 'MM/dd/yyyy')} - ${format(endDate, 'MM/dd/yyyy')}`
+                  : 'Select Date Range'}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent
+              className="w-auto p-4"
+              align="start"
+              onInteractOutside={(e) => {
+                e.preventDefault()
+              }}
+              onPointerDownOutside={(e) => {
+                e.preventDefault()
+              }}
+            >
+              <div
+                className="flex flex-col gap-4"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Start Date:</span>
+                  <input
+                    type="date"
+                    value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                    onChange={handleStartDateChange}
+                    className="border rounded-md px-2 py-1 w-[180px] h-10"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">End Date:</span>
+                  <input
+                    type="date"
+                    value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                    onChange={handleEndDateChange}
+                    className="border rounded-md px-2 py-1 w-[180px] h-10"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <Button
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="mt-2 w-full"
+                >
+                  Apply
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
