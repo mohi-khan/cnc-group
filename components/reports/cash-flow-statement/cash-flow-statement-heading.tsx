@@ -15,8 +15,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
- import { format, parseISO, subMonths } from 'date-fns'
-import { CalendarIcon, File, FileText } from 'lucide-react'
+import { format, parseISO, subMonths } from 'date-fns'
+import { Calendar as CalendarIcon, File, FileText } from 'lucide-react'
 import type { CompanyFromLocalstorage, User } from '@/utils/type'
 import { useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -31,7 +31,7 @@ interface CashFlowStatementHeadingProps {
   ) => void
 }
 
-export default function TrialBalanceHeading({
+export default function CashFlowStatementHeading({
   generatePdf,
   generateExcel,
   onFilterChange,
@@ -49,8 +49,6 @@ export default function TrialBalanceHeading({
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [isStartPopoverOpen, setIsStartPopoverOpen] = useState(false)
- 
 
   // getting userData from local storage
   useEffect(() => {
@@ -66,18 +64,24 @@ export default function TrialBalanceHeading({
   }, [startDate, endDate, selectedCompanyId, onFilterChange])
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const date = e.target.value ? parseISO(e.target.value) : undefined
-      if (date) setStartDate(date)
-  }
-  
-   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const date = e.target.value ? parseISO(e.target.value) : undefined
-      if (date) {
-        setEndDate(date)
-        // Close the main date popover after selecting or typing end date
-        setIsDropdownOpen(false)
+    const dateString = e.target.value
+    if (dateString && dateString.length === 10) {
+      const date = parseISO(dateString)
+      if (!isNaN(date.getTime())) {
+        setStartDate(date)
       }
     }
+  }
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateString = e.target.value
+    if (dateString && dateString.length === 10) {
+      const date = parseISO(dateString)
+      if (!isNaN(date.getTime())) {
+        setEndDate(date)
+      }
+    }
+  }
 
   return (
     <div className="flex items-center justify-between gap-4 p-4 border-b w-full">
@@ -103,7 +107,11 @@ export default function TrialBalanceHeading({
       </div>
 
       <div className="flex items-center gap-4 flex-1 justify-center">
-        <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <Popover
+          open={isDropdownOpen}
+          onOpenChange={setIsDropdownOpen}
+          modal={false}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -112,13 +120,25 @@ export default function TrialBalanceHeading({
             >
               <CalendarIcon className="mr-2 h-5 w-5" />
               {startDate && endDate
-                ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                ? `${format(startDate, 'MM/dd/yyyy')} - ${format(endDate, 'MM/dd/yyyy')}`
                 : 'Select Date Range'}
             </Button>
           </PopoverTrigger>
 
-          <PopoverContent className="w-auto p-4" align="start">
-            <div className="flex flex-col gap-4">
+          <PopoverContent
+            className="w-auto p-4"
+            align="start"
+            onInteractOutside={(e) => {
+              e.preventDefault()
+            }}
+            onPointerDownOutside={(e) => {
+              e.preventDefault()
+            }}
+          >
+            <div
+              className="flex flex-col gap-4"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-2">
                 <span className="font-medium">Start Date:</span>
                 <input
@@ -126,6 +146,7 @@ export default function TrialBalanceHeading({
                   value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
                   onChange={handleStartDateChange}
                   className="border rounded-md px-2 py-1 w-[180px] h-10"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
 
@@ -136,8 +157,16 @@ export default function TrialBalanceHeading({
                   value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
                   onChange={handleEndDateChange}
                   className="border rounded-md px-2 py-1 w-[180px] h-10"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
+
+              <Button
+                onClick={() => setIsDropdownOpen(false)}
+                className="mt-2 w-full"
+              >
+                Apply
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
