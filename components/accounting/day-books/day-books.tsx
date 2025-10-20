@@ -419,7 +419,15 @@ const DayBooks = () => {
     if (companies.length > 0 && locations.length > 0) {
       fetchVoucherData(false)
     }
-  }, [companies, locations, startDate, endDate, getallVoucher, toast])
+  }, [
+    companies,
+    locations,
+    startDate,
+    endDate,
+    getallVoucher,
+    toast,
+    fetchVoucherData,
+  ])
 
   // Listen for custom event to refresh the list
   useEffect(() => {

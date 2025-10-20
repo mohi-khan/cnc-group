@@ -1,9 +1,10 @@
-import CashVoucher from '@/components/cash/cash-voucher/cash-voucher'
+import CashVoucher from "@/components/cash/cash-voucher/cash-voucher"
+
 
 const CashVoucherPage = () => {
   return (
     <div>
-      <CashVoucher />
+      <CashVoucher onSuccess={undefined} />
     </div>
   )
 }
