@@ -45,12 +45,15 @@ interface CashVoucherProps {
   initialData?: JournalEntryWithDetails
   onClose?: () => void // Callback to close the modal/popup
   isEdit?: boolean
+  onSuccess:any
 }
 
 export default function CashVoucher({
   initialData,
   onClose,
   isEdit,
+  onSuccess
+  
 }: CashVoucherProps) {
   //getting userData from jotai atom component
   const router = useRouter()
@@ -395,8 +398,7 @@ export default function CashVoucher({
     }
   }, [initialData, form])
 
-  //Function to handle form submission. It takes the form data and a reset function as arguments
- const onSubmit = async (
+const onSubmit = async (
   values: JournalEntryWithDetails,
   status: 'Draft' | 'Posted'
 ) => {
@@ -410,16 +412,24 @@ export default function CashVoucher({
     0
   )
 
-  // --- Validate debit and credit equality ---
-  const totalDebit = values.journalDetails.reduce((sum, detail) => sum + (detail.debit || 0), 0)
-  const totalCredit = values.journalDetails.reduce((sum, detail) => sum + (detail.credit || 0), 0)
+  // --- Validate debit and credit equality ONLY for edit ---
+  if (isEdit) {
+    const totalDebit = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.debit || 0),
+      0
+    )
+    const totalCredit = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.credit || 0),
+      0
+    )
 
-  if (totalDebit !== totalCredit) {
-    toast({
-      title: 'Validation Error',
-      description: 'Total debit and credit must be equal before saving.',
-    })
-    return // Stop execution if validation fails
+    if (totalDebit !== totalCredit) {
+      toast({
+        title: 'Validation Error',
+        description: 'Total debit and credit must be equal before saving.',
+      })
+      return // Stop execution if validation fails
+    }
   }
 
   // Update the total Amount - fix circular reference by creating object step by step
@@ -441,7 +451,9 @@ export default function CashVoucher({
       createdBy: user?.userId || 0,
       ...(isEdit && { updatedBy: user?.userId || 0 }),
       ...(isEdit &&
-        (values.journalEntry as any).voucherid && { voucherId: (values.journalEntry as any).voucherid }),
+        (values.journalEntry as any).voucherid && {
+          voucherId: (values.journalEntry as any).voucherid,
+        }),
     })),
   }
 
@@ -449,7 +461,7 @@ export default function CashVoucher({
 
   if (isEdit === true) {
     finalValues = updatedValues
-    console.log("amount:", updatedValues)
+    console.log('amount:', updatedValues)
   } else {
     finalValues = {
       ...updatedValues,
@@ -485,20 +497,28 @@ export default function CashVoucher({
       token
     )
     console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
+
     if (response.error || !response.data) {
       toast({
         title: 'Error',
         description: response.error?.message || 'Error editing Journal',
       })
     } else {
-       const mycompanies = getCompanyIds(companies)
-        const mylocations = getLocationIds(locations)
-        getallVoucher(mycompanies, mylocations)
       toast({
         title: 'Success',
         description: 'Voucher is edited successfully',
       })
+
+      // ✅ Trigger auto-refresh event for DayBooks
+      window.dispatchEvent(new Event('voucherUpdated'))
+
+      // ✅ Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess()
+      }
+
       onClose?.()
+
       form.reset({
         journalEntry: {
           date: new Date().toISOString().split('T')[0],
@@ -544,20 +564,28 @@ export default function CashVoucher({
     }
   } else {
     const response = await createJournalEntryWithDetails(finalValues, token)
+
     if (response.error || !response.data) {
       toast({
         title: 'Error',
         description: response.error?.message || 'Error creating Journal',
       })
     } else {
-       const mycompanies = getCompanyIds(companies)
-        const mylocations = getLocationIds(locations)
-        getallVoucher(mycompanies, mylocations)
       toast({
         title: 'Success',
         description: 'Voucher is created successfully',
       })
+
+      // ✅ Trigger auto-refresh event for DayBooks
+      window.dispatchEvent(new Event('voucherUpdated'))
+
+      // ✅ Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess()
+      }
+
       onClose?.()
+
       form.reset({
         journalEntry: {
           date: new Date().toISOString().split('T')[0],
