@@ -408,7 +408,7 @@ export default function BankVoucher({
           (values.journalEntry as any).voucherid && {
             voucherId: (values.journalEntry as any).voucherid,
           }),
-        bankaccountid: formState.selectedBankAccount?.id || null,
+        bankaccountid: null,
       })),
     }
 
@@ -439,7 +439,7 @@ export default function BankVoucher({
             taxId: null,
             resPartnerId: null,
             bankaccountid: formState.selectedBankAccount?.id,
-            notes: updatedValues.journalEntry.notes || '',
+            // notes: updatedValues.journalEntry.notes || '',
             createdBy: user?.userId ?? 0,
           },
         ],
