@@ -1278,7 +1278,7 @@ export default function BankVoucher({
   initialData,
   onClose,
   isEdit,
-  onSuccess,
+  onSuccess
 }: BankVoucherProps) {
   useInitializeUser()
   const router = useRouter()

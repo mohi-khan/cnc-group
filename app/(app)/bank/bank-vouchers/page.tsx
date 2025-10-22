@@ -4,7 +4,7 @@ import React from 'react'
 const BankVoucherPage = () => {
   return (
     <div>
-      <BankVoucher />
+      <BankVoucher onSuccess={undefined}/>
     </div>
   )
 }
