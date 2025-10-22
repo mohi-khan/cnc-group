@@ -136,7 +136,7 @@ const VoucherDuplicationContent: React.FC<VoucherDuplicationContentProps> = ({
     case VoucherTypes.CashVoucher:
       return <CashVoucher initialData={initialFormData} onClose={onClose} isEdit={false} onSuccess={undefined}/>
     case VoucherTypes.BankVoucher:
-      return <BankVoucher initialData={initialFormData} onClose={onClose} />
+      return <BankVoucher initialData={initialFormData} onClose={onClose}  onSuccess={undefined}/>
     case VoucherTypes.JournalVoucher:
       return (
         <JournalVoucherPopup
