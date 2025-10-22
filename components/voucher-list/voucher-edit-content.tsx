@@ -361,6 +361,7 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
             initialData={initialFormData}
             onClose={onClose}
             isEdit={true}
+            onSuccess={handleCashVoucherSuccess}
             
           />
         </div>

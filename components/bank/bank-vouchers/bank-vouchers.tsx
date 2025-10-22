@@ -712,7 +712,6 @@
 //   )
 // }
 
-
 // 'use client'
 // import * as React from 'react'
 // import { useState, useEffect, useCallback } from 'react'
@@ -1154,7 +1153,6 @@
 //       toast({ title: 'Error', description: 'An unexpected error occurred' })
 //     }
 //   }
-  
 
 //   const columns = [
 //     { key: 'voucherno' as const, label: 'Voucher No.' },
@@ -1222,8 +1220,6 @@
 //   )
 // }
 
-
-
 'use client'
 import * as React from 'react'
 import { useState, useEffect, useCallback } from 'react'
@@ -1275,12 +1271,14 @@ interface BankVoucherProps {
   initialData?: JournalEntryWithDetails
   onClose?: () => void
   isEdit?: boolean
+  onSuccess: any
 }
 
 export default function BankVoucher({
   initialData,
   onClose,
   isEdit,
+  onSuccess,
 }: BankVoucherProps) {
   useInitializeUser()
   const router = useRouter()
@@ -1422,7 +1420,9 @@ export default function BankVoucher({
       form.reset(cleanedData)
 
       if (filteredDetails.length > 0) {
-        const bankDetail = initialData.journalDetails.find((d) => d.bankaccountid)
+        const bankDetail = initialData.journalDetails.find(
+          (d) => d.bankaccountid
+        )
         if (bankDetail && bankDetail.bankaccountid) {
           const selectedBank = formState.bankAccounts.find(
             (acc) => acc.id === bankDetail.bankaccountid
@@ -1480,7 +1480,11 @@ export default function BankVoucher({
 
   useEffect(() => {
     const fetchVoucherData = async () => {
-      if (formState.companies.length > 0 && formState.locations.length > 0 && !dataLoaded) {
+      if (
+        formState.companies.length > 0 &&
+        formState.locations.length > 0 &&
+        !dataLoaded
+      ) {
         setIsLoading(true)
         try {
           const mycompanies = getCompanyIds(formState.companies)
@@ -1499,9 +1503,22 @@ export default function BankVoucher({
       }
     }
     fetchVoucherData()
-  }, [formState.companies, formState.locations, getCompanyIds, getLocationIds, getallVoucher, dataLoaded])
+  }, [
+    formState.companies,
+    formState.locations,
+    getCompanyIds,
+    getLocationIds,
+    getallVoucher,
+    dataLoaded,
+  ])
 
   const onSubmit = async (values: any, status: 'Draft' | 'Posted') => {
+    // 🏦 Get hidden bank account row from initial data (only when editing)
+    const bankDetail =
+      isEdit && initialData
+        ? initialData.journalDetails.find((d: any) => d.accountId === 108)
+        : null
+
     const journalDetailsFiltered = isEdit
       ? values.journalDetails.filter((d: any) => d.accountId !== 108)
       : values.journalDetails
@@ -1531,10 +1548,32 @@ export default function BankVoucher({
       })),
     }
 
+    // ✅ If editing, reattach the hidden bank account detail
+    if (isEdit && bankDetail) {
+      updatedValues.journalDetails.push({
+        ...bankDetail,
+        debit:
+          formState.formType === 'Debit'
+            ? updatedValues.journalEntry.amountTotal
+            : 0,
+        credit:
+          formState.formType === 'Credit'
+            ? updatedValues.journalEntry.amountTotal
+            : 0,
+        updatedBy: user?.userId || 0,
+      })
+    }
+
     let finalValues: any
 
     if (isEdit) {
       finalValues = updatedValues
+
+      // 🧾 Log Edit Mode Data
+      console.log(
+        '🟡 [EDIT MODE] Final Values Sent to API:',
+        JSON.stringify(finalValues, null, 2)
+      )
     } else {
       finalValues = {
         ...updatedValues,
@@ -1560,11 +1599,21 @@ export default function BankVoucher({
           },
         ],
       }
+
+      // 🆕 Log Create Mode Data
+      console.log(
+        '🟢 [CREATE MODE] Final Values Sent to API:',
+        JSON.stringify(finalValues, null, 2)
+      )
     }
 
     try {
       if (isEdit) {
-        const response = await editJournalEntryWithDetails(finalValues as JournalEditWithDetails, token)
+        const response = await editJournalEntryWithDetails(
+          finalValues as JournalEditWithDetails,
+          token
+        )
+
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -1576,40 +1625,51 @@ export default function BankVoucher({
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
 
-          toast({ title: 'Success', description: 'Voucher is edited successfully' })
+          toast({
+            title: 'Success',
+            description: 'Voucher is edited successfully',
+          })
+          if (onSuccess) onSuccess()
           if (onClose) onClose()
-          setTimeout(() => form.reset({
-            journalEntry: {
-              date: new Date().toISOString().split('T')[0],
-              journalType: VoucherTypes.BankVoucher,
-              companyId: 0,
-              locationId: 0,
-              currencyId: 1,
-              exchangeRate: 1,
-              amountTotal: 0,
-              payTo: '',
-              notes: '',
-              createdBy: 0,
-            },
-            journalDetails: [
-              {
-                accountId: 0,
-                costCenterId: null,
-                departmentId: null,
-                debit: 0,
-                credit: 0,
-                analyticTags: null,
-                taxId: null,
-                resPartnerId: null,
-                bankaccountid: null,
-                notes: '',
-                createdBy: 0,
-              },
-            ],
-          }), 100)
+
+          // 🧹 Reset form after edit
+          setTimeout(
+            () =>
+              form.reset({
+                journalEntry: {
+                  date: new Date().toISOString().split('T')[0],
+                  journalType: VoucherTypes.BankVoucher,
+                  companyId: 0,
+                  locationId: 0,
+                  currencyId: 1,
+                  exchangeRate: 1,
+                  amountTotal: 0,
+                  payTo: '',
+                  notes: '',
+                  createdBy: 0,
+                },
+                journalDetails: [
+                  {
+                    accountId: 0,
+                    costCenterId: null,
+                    departmentId: null,
+                    debit: 0,
+                    credit: 0,
+                    analyticTags: null,
+                    taxId: null,
+                    resPartnerId: null,
+                    bankaccountid: null,
+                    notes: '',
+                    createdBy: 0,
+                  },
+                ],
+              }),
+            100
+          )
         }
       } else {
         const response = await createJournalEntryWithDetails(finalValues, token)
+
         if (response.error || !response.data) {
           toast({
             title: 'Error',
@@ -1621,43 +1681,56 @@ export default function BankVoucher({
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
 
-          toast({ title: 'Success', description: 'Voucher is created successfully' })
+          toast({
+            title: 'Success',
+            description: 'Voucher is created successfully',
+          })
+
           if (onClose) onClose()
           setIsDialogOpen(false)
-          setTimeout(() => form.reset({
-            journalEntry: {
-              date: new Date().toISOString().split('T')[0],
-              journalType: VoucherTypes.BankVoucher,
-              companyId: 0,
-              locationId: 0,
-              currencyId: 1,
-              exchangeRate: 1,
-              amountTotal: 0,
-              payTo: '',
-              notes: '',
-              createdBy: 0,
-            },
-            journalDetails: [
-              {
-                accountId: 0,
-                costCenterId: null,
-                departmentId: null,
-                debit: 0,
-                credit: 0,
-                analyticTags: null,
-                taxId: null,
-                resPartnerId: null,
-                bankaccountid: null,
-                notes: '',
-                createdBy: 0,
-              },
-            ],
-          }), 100)
+
+          // 🧹 Reset form after create
+          setTimeout(
+            () =>
+              form.reset({
+                journalEntry: {
+                  date: new Date().toISOString().split('T')[0],
+                  journalType: VoucherTypes.BankVoucher,
+                  companyId: 0,
+                  locationId: 0,
+                  currencyId: 1,
+                  exchangeRate: 1,
+                  amountTotal: 0,
+                  payTo: '',
+                  notes: '',
+                  createdBy: 0,
+                },
+                journalDetails: [
+                  {
+                    accountId: 0,
+                    costCenterId: null,
+                    departmentId: null,
+                    debit: 0,
+                    credit: 0,
+                    analyticTags: null,
+                    taxId: null,
+                    resPartnerId: null,
+                    bankaccountid: null,
+                    notes: '',
+                    createdBy: 0,
+                  },
+                ],
+              }),
+            100
+          )
         }
       }
     } catch (error) {
-      console.error('Error in onSubmit:', error)
-      toast({ title: 'Error', description: 'An unexpected error occurred' })
+      console.error('❌ Error in onSubmit:', error)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+      })
     }
   }
 
@@ -1679,7 +1752,12 @@ export default function BankVoucher({
       {!initialData && (
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Bank Vouchers</h1>
-          <Button onClick={() => { form.reset(); setIsDialogOpen(true) }}>
+          <Button
+            onClick={() => {
+              form.reset()
+              setIsDialogOpen(true)
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" /> ADD
           </Button>
         </div>
@@ -1687,19 +1765,26 @@ export default function BankVoucher({
 
       {initialData ? (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((values) => onSubmit(values, formState.status))} className="space-y-8">
-            {validationError && <div className="text-red-500 text-sm mb-4">{validationError}</div>}
-            <BankVoucherMaster 
-              form={form} 
-              formState={formState} 
-              requisition={undefined} 
+          <form
+            onSubmit={form.handleSubmit((values) =>
+              onSubmit(values, formState.status)
+            )}
+            className="space-y-8"
+          >
+            {validationError && (
+              <div className="text-red-500 text-sm mb-4">{validationError}</div>
+            )}
+            <BankVoucherMaster
+              form={form}
+              formState={formState}
+              requisition={undefined}
               setFormState={setFormState}
               isEdit={isEdit}
             />
-            <BankVoucherDetails 
-              form={form} 
-              formState={formState} 
-              requisition={undefined} 
+            <BankVoucherDetails
+              form={form}
+              formState={formState}
+              requisition={undefined}
               partners={formState.partners}
               isEdit={isEdit}
             />
@@ -1708,23 +1793,43 @@ export default function BankVoucher({
         </Form>
       ) : (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
-          <DialogContent onInteractOutside={(e) => e.preventDefault()} className="max-w-6xl  h-[95vh] overflow-y-auto">
+          <DialogContent
+            onInteractOutside={(e) => e.preventDefault()}
+            className="max-w-6xl  h-[95vh] overflow-y-auto"
+          >
             <DialogHeader>
               <DialogTitle>Bank Vouchers</DialogTitle>
-              <DialogDescription>Enter the details for the bank voucher here. Click save when you are done.</DialogDescription>
+              <DialogDescription>
+                Enter the details for the bank voucher here. Click save when you
+                are done.
+              </DialogDescription>
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((values) => onSubmit(values, formState.status))} className="space-y-8">
-                {validationError && <div className="text-red-500 text-sm mb-4">{validationError}</div>}
-                <BankVoucherMaster 
-                  form={form} 
-                  formState={formState} 
-                  requisition={undefined} 
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  onSubmit(values, formState.status)
+                )}
+                className="space-y-8"
+              >
+                {validationError && (
+                  <div className="text-red-500 text-sm mb-4">
+                    {validationError}
+                  </div>
+                )}
+                <BankVoucherMaster
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
                   setFormState={setFormState}
                   isEdit={false}
                 />
-                <BankVoucherDetails form={form} formState={formState} requisition={undefined} partners={formState.partners} />
+                <BankVoucherDetails
+                  form={form}
+                  formState={formState}
+                  requisition={undefined}
+                  partners={formState.partners}
+                />
                 <BankVoucherSubmit form={form} onSubmit={onSubmit} />
               </form>
             </Form>
@@ -1734,7 +1839,14 @@ export default function BankVoucher({
 
       {!initialData && (
         <VoucherList
-          vouchers={voucherGrid.map((v) => ({ ...v, notes: v.notes || '', companyname: v.companyname || '', location: v.location || '', currency: v.currency || '', detail_notes: v.detail_notes || '' }))}
+          vouchers={voucherGrid.map((v) => ({
+            ...v,
+            notes: v.notes || '',
+            companyname: v.companyname || '',
+            location: v.location || '',
+            currency: v.currency || '',
+            detail_notes: v.detail_notes || '',
+          }))}
           columns={columns}
           isLoading={isLoading}
           linkGenerator={linkGenerator}
