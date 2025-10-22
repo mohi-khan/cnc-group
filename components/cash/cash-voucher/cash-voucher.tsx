@@ -627,6 +627,7 @@ export default function CashVoucher({
               form={form}
               companies={companies}
               locations={locations}
+              
             />
             <CashVoucherDetails
               form={form}
