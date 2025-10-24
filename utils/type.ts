@@ -1090,6 +1090,7 @@ const VoucherSchemaById = z.object({
   debit: z.number(),
   credit: z.number(),
   partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
+  partnarId:z.number().nullable(),
   bankaccount: z.any().nullable(),
   bankaccountName: z.string().nullable(),
   accountNumber: z.string().nullable(),
@@ -1097,7 +1098,7 @@ const VoucherSchemaById = z.object({
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
-  MasterNotes:string().nullable()
+  MasterNotes:string().nullable(),
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
@@ -2378,3 +2379,8 @@ export interface DeferredPayment {
 export type DeferredPaymentsReport = DeferredPayment[];
 
 
+// utils/type.ts
+export interface CreateReconciliationOpeningType {
+  bankId: number
+  openingBalance: number
+}
