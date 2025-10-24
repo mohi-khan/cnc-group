@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { BankAccount, BankReconciliationReportType } from '@/utils/type'
+import { BankAccount, BankReconciliationReportType, CreateReconciliationOpeningType } from '@/utils/type'
 
 export async function getBankReconciliationReports(
   bankId: number,
@@ -21,6 +21,26 @@ export async function getBankReconciliationReports(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${token}`,
+    },
+  })
+}
+
+
+
+
+
+
+export async function createReconciliationOpening(
+  data: { bankId: number; openingBalance: number },
+  token: string
+) {
+  return fetchApi({
+    url: 'api/bank-reconciliation/reconciliation-opening',
+    method: 'POST',
+    body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
     },
   })
 }
