@@ -30,6 +30,7 @@ export default function OpeningBalanceDetails({
   partners,
   isFromInvoice = false,
   invoicePartnerName = '',
+  isEdit = false,
 }: {
   form: UseFormReturn<any>
   formState: FormStateType
@@ -37,6 +38,7 @@ export default function OpeningBalanceDetails({
   partners: ResPartner[]
   isFromInvoice?: boolean
   invoicePartnerName?: string
+  isEdit?: boolean
 }) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -91,6 +93,77 @@ export default function OpeningBalanceDetails({
   // REMOVED: The effect that auto-populated first row amount from master amount
   // Now the flow is reversed - detail amounts drive master amount calculation
 
+  // Auto-update account 217 amount based on other accounts when editing
+  // Account 217 is the balancing entry - opposite of other accounts
+  useEffect(() => {
+    if (!isEdit) return
+
+    const subscription = watch((value, { name }) => {
+      // Only trigger when detail amounts change
+      if (
+        name?.includes('journalDetails') &&
+        (name.includes('debit') || name.includes('credit'))
+      ) {
+        const details = value.journalDetails || []
+
+        // Find the index of account 217
+        const account217Index = details.findIndex(
+          (detail: any) => detail.accountId === 217
+        )
+        if (account217Index === -1) return
+
+        // Don't trigger if the change was on account 217 itself (prevent infinite loop)
+        if (name.includes(`journalDetails.${account217Index}`)) return
+
+        // Calculate sum of all OTHER accounts (excluding account 217)
+        let totalDebit = 0
+        let totalCredit = 0
+
+        details.forEach((detail: any, index: number) => {
+          // Skip account 217 - only sum the visible accounts
+          if (index !== account217Index && detail.accountId !== 217) {
+            totalDebit += Number(detail.debit || 0)
+            totalCredit += Number(detail.credit || 0)
+          }
+        })
+
+        // Set account 217 to OPPOSITE of other accounts (balancing entry)
+        // If others have credit, 217 gets debit (and vice versa)
+        const currentAccount217Debit = Number(
+          details[account217Index]?.debit || 0
+        )
+        const currentAccount217Credit = Number(
+          details[account217Index]?.credit || 0
+        )
+
+        if (currentAccount217Debit !== totalCredit) {
+          form.setValue(
+            `journalDetails.${account217Index}.debit`,
+            totalCredit,
+            { shouldValidate: false }
+          )
+        }
+        if (currentAccount217Credit !== totalDebit) {
+          form.setValue(
+            `journalDetails.${account217Index}.credit`,
+            totalDebit,
+            { shouldValidate: false }
+          )
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [isEdit, watch, form])
+
+  // Filter out the "Difference between Opening Balance" row (accountId: 217) when editing
+  const visibleFields = isEdit
+    ? fields.filter((field: any, index: number) => {
+        const accountId = form.watch(`journalDetails.${index}.accountId`)
+        return accountId !== 217
+      })
+    : fields
+
   return (
     <div>
       <Table className="border shadow-md">
@@ -106,7 +179,10 @@ export default function OpeningBalanceDetails({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {fields.map((field, index) => {
+          {visibleFields.map((field, visibleIndex) => {
+            // Find the actual index in the original fields array
+            const index = fields.findIndex((f: any) => f.id === field.id)
+
             const selectedBankAccountId = form.watch(
               `journalDetails.${index}.bankaccountid`
             )

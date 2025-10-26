@@ -419,31 +419,37 @@ export default function OpeningBalance({
       )}
 
       {initialData ? (
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((values) =>
-              onSubmit(values, formState.status)
-            )}
-            className="space-y-8"
-          >
-            {validationError && (
-              <div className="text-red-500 text-sm mb-4">{validationError}</div>
-            )}
-            <OpeningBalanceMaster
-              form={form}
-              formState={formState}
-              requisition={undefined}
-              setFormState={setFormState}
-            />
-            <OpeningBalanceDetails
-              form={form}
-              formState={formState}
-              requisition={undefined}
-              partners={formState.partners}
-            />
-            <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
-          </form>
-        </Form>
+        <div>
+          <h1 className="text-2xl font-bold mb-6">Edit Opening Balance</h1>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit((values) =>
+                onSubmit(values, formState.status)
+              )}
+              className="space-y-8"
+            >
+              {validationError && (
+                <div className="text-red-500 text-sm mb-4">
+                  {validationError}
+                </div>
+              )}
+              <OpeningBalanceMaster
+                form={form}
+                formState={formState}
+                requisition={undefined}
+                setFormState={setFormState}
+              />
+              <OpeningBalanceDetails
+                form={form}
+                formState={formState}
+                requisition={undefined}
+                partners={formState.partners}
+                isEdit={isEdit}
+              />
+              <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
+            </form>
+          </Form>
+        </div>
       ) : (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
           <DialogContent
@@ -454,8 +460,8 @@ export default function OpeningBalance({
             <DialogHeader>
               <DialogTitle>Opening Balance</DialogTitle>
               <DialogDescription>
-                Enter the details for the bank voucher here. Click save when
-                you are done.
+                Enter the details for the bank voucher here. Click save when you
+                are done.
               </DialogDescription>
             </DialogHeader>
 
