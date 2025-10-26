@@ -16,6 +16,13 @@
 //   FormLabel,
 //   FormMessage,
 // } from '@/components/ui/form'
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogFooter,
+// } from '@/components/ui/dialog'
 // import { Input } from '@/components/ui/input'
 // import { Button } from '@/components/ui/button'
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,7 +31,10 @@
 // import { useForm } from 'react-hook-form'
 // import { format } from 'date-fns'
 // import type { BankAccount, BankReconciliationReportType } from '@/utils/type'
-// import { getBankReconciliationReports } from '@/api/bank-reconciliation-report-api'
+// import {
+//   createReconciliationOpening,
+//   getBankReconciliationReports,
+// } from '@/api/bank-reconciliation-report-api'
 // import { getAllBankAccounts } from '@/api/common-shared-api'
 // import { tokenAtom, useInitializeUser } from '@/utils/user'
 // import { useAtom } from 'jotai'
@@ -48,6 +58,14 @@
 //     BankReconciliationReportType[]
 //   >([])
 //   const [loading, setLoading] = useState(false)
+//   const [showOpeningBalanceDialog, setShowOpeningBalanceDialog] =
+//     useState(false)
+//   const [openingBalanceValue, setOpeningBalanceValue] = useState('')
+//   const [pendingFormData, setPendingFormData] = useState<{
+//     bankAccount: string
+//     fromDate: string
+//     toDate: string
+//   } | null>(null)
 //   const { toast } = useToast()
 
 //   const form = useForm({
@@ -64,7 +82,6 @@
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-        
 //         router.push('/')
 //         return
 //       }
@@ -79,7 +96,6 @@
 //         const accounts = await getAllBankAccounts(token)
 //         if (accounts?.error?.status === 401) {
 //           router.push('/unauthorized-access')
-          
 //           return
 //         } else if (accounts.data) {
 //           setBankAccounts(accounts.data)
@@ -97,6 +113,72 @@
 //     fetchBankAccounts()
 //   }, [router, toast, token])
 
+//   const handleOpeningBalanceSubmit = async () => {
+//     if (!openingBalanceValue || !pendingFormData || !selectedBankAccount) {
+//       toast({
+//         title: 'Error',
+//         description: 'Please enter opening balance',
+//         variant: 'destructive',
+//       })
+//       return
+//     }
+
+//     const balanceNumber = Number.parseFloat(openingBalanceValue)
+//     if (isNaN(balanceNumber)) {
+//       toast({
+//         title: 'Error',
+//         description: 'Please enter a valid number',
+//         variant: 'destructive',
+//       })
+//       return
+//     }
+
+//     try {
+//       setLoading(true)
+
+//       console.log('Creating opening balance with:', {
+//         bankId: selectedBankAccount.id,
+//         openingBalance: balanceNumber,
+//       })
+
+//       const result = await createReconciliationOpening(
+//         {
+//           bankId: selectedBankAccount.id,
+//           openingBalance: balanceNumber,
+//         },
+//         token
+//       )
+
+//       console.log('Opening balance created successfully:', result)
+
+//       toast({
+//         title: 'Success',
+//         description: 'Opening balance created successfully',
+//       })
+
+//       setShowOpeningBalanceDialog(false)
+//       setOpeningBalanceValue('')
+
+//       await fetchReconciliationsReport({
+//         ...pendingFormData,
+//         token,
+//       })
+//     } catch (error) {
+//       console.error('Error creating opening balance:', error)
+//       const errorMessage =
+//         error instanceof Error
+//           ? error.message
+//           : 'Failed to create opening balance'
+//       toast({
+//         title: 'Error',
+//         description: errorMessage,
+//         variant: 'destructive',
+//       })
+//     } finally {
+//       setLoading(false)
+//     }
+//   }
+
 //   const fetchReconciliationsReport = async (data: {
 //     bankAccount: string
 //     fromDate: string
@@ -106,23 +188,25 @@
 //     if (data.bankAccount && data.fromDate && data.toDate) {
 //       try {
 //         setLoading(true)
-        
+
 //         const response = await getBankReconciliationReports(
 //           Number.parseInt(data.bankAccount),
 //           data.fromDate,
 //           data.toDate,
 //           data.token
 //         )
-        
+
 //         setReconciliations(response.data || [])
 //         console.log('report data: ', response.data || [])
 //         console.log('bank account id: ', data.bankAccount)
 
 //         // Set the report state with the first item from the response
 //         if (response.data) {
+//           let reportData: BankReconciliationReportType | null = null
+
 //           if (Array.isArray(response.data)) {
 //             if (response.data.length > 0) {
-//               setReport(response.data[0])
+//               reportData = response.data[0]
 //             } else {
 //               setReport(null)
 //               toast({
@@ -130,10 +214,30 @@
 //                 description:
 //                   'No reconciliation data found for the selected criteria',
 //               })
+//               return
 //             }
 //           } else {
 //             // If it's a single object, use it directly
-//             setReport(response.data)
+//             reportData = response.data
+//           }
+
+//           // Check if opening balance is zero
+//           if (
+//             reportData &&
+//             (!reportData.openingBalance?.book ||
+//               reportData.openingBalance.book === 0)
+//           ) {
+//             // Show dialog to input opening balance
+//             setPendingFormData({
+//               bankAccount: data.bankAccount,
+//               fromDate: data.fromDate,
+//               toDate: data.toDate,
+//             })
+//             setShowOpeningBalanceDialog(true)
+//             setReport(null)
+//           } else {
+//             // Opening balance exists, show report
+//             setReport(reportData)
 //           }
 //         } else {
 //           setReport(null)
@@ -144,7 +248,7 @@
 //           })
 //         }
 //       } catch (error) {
-//         console.error('Error fetching reconciliations:', error) // Debug log
+//         console.error('Error fetching reconciliations:', error)
 //         toast({
 //           title: 'Error',
 //           description: 'Failed to fetch reconciliations',
@@ -155,7 +259,6 @@
 //         setLoading(false)
 //       }
 //     } else {
-      
 //       setReconciliations([])
 //       setReport(null)
 //     }
@@ -188,6 +291,46 @@
 
 //   return (
 //     <div className="w-[98%] mx-auto p-4">
+//       {/* Opening Balance Dialog */}
+//       <Dialog
+//         open={showOpeningBalanceDialog}
+//         onOpenChange={setShowOpeningBalanceDialog}
+//       >
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>Enter Opening Balance</DialogTitle>
+//           </DialogHeader>
+//           <div className="py-4">
+//             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+//               Opening Balance
+//             </label>
+//             <Input
+//               type="number"
+//               step="0.01"
+//               placeholder="Enter opening balance"
+//               value={openingBalanceValue}
+//               onChange={(e) => setOpeningBalanceValue(e.target.value)}
+//               className="mt-2"
+//             />
+//           </div>
+//           <DialogFooter>
+//             <Button
+//               variant="outline"
+//               onClick={() => {
+//                 setShowOpeningBalanceDialog(false)
+//                 setOpeningBalanceValue('')
+//                 setPendingFormData(null)
+//               }}
+//             >
+//               Cancel
+//             </Button>
+//             <Button onClick={handleOpeningBalanceSubmit} disabled={loading}>
+//               {loading ? 'Submitting...' : 'Submit'}
+//             </Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
+
 //       <Form {...form}>
 //         <form
 //           onSubmit={form.handleSubmit((data) =>
@@ -273,13 +416,24 @@
 //                 Bank reconciliation of {selectedBankAccount.bankName} -{' '}
 //                 {selectedBankAccount.accountNumber}
 //               </div>
-//               <div className="flex gap-4">
-//                 <div className="text-right">
-//                   Balance as per Software on Dt:{' '}
-//                   {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+//               <div className="flex flex-col gap-2">
+//                 <div className="flex gap-4">
+//                   <div className="text-right">
+//                     Balance as per Software book on Dt:{' '}
+//                     {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+//                   </div>
+//                   <div className="text-right font-semibold w-32">
+//                     {formatCurrency(report.openingBalance.book)}
+//                   </div>
 //                 </div>
-//                 <div className="text-right font-semibold w-32">
-//                   {formatCurrency(report.openingBalance.book)}
+//                 <div className="flex gap-4">
+//                   <div className="text-right">
+//                     Balance as per Software bank on Dt:{' '}
+//                     {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+//                   </div>
+//                   <div className="text-right font-semibold w-32">
+//                     {formatCurrency(report.openingBalance.bank)}
+//                   </div>
 //                 </div>
 //               </div>
 //             </div>
@@ -304,9 +458,8 @@
 //                   </TableRow>
 //                 </TableHeader>
 //                 <TableBody>
-          
-//                   {report.unreconciledAmount.breakdown.onlyInBooks
-//                     .map((item) => (
+//                   {report.unreconciledAmount.breakdown.onlyInBooks.map(
+//                     (item) => (
 //                       <TableRow key={item.id}>
 //                         <TableCell>{formatDate(item.date)}</TableCell>
 //                         <TableCell>{item.description}</TableCell>
@@ -316,8 +469,10 @@
 //                           {formatCurrency(item.amount)}
 //                         </TableCell>
 //                       </TableRow>
-//                     ))}
-//                   {report.unreconciledAmount.breakdown.onlyInBooks.length === 0 && (
+//                     )
+//                   )}
+//                   {report.unreconciledAmount.breakdown.onlyInBooks.length ===
+//                     0 && (
 //                     <TableRow>
 //                       <TableCell colSpan={5} className="text-center">
 //                         No records found
@@ -360,8 +515,8 @@
 //                 </TableHeader>
 //                 <TableBody>
 //                   {report.unreconciledAmount.breakdown.onlyInBank.length > 0 ? (
-//                     report.unreconciledAmount.breakdown.onlyInBank
-//                       .map((item) => (
+//                     report.unreconciledAmount.breakdown.onlyInBank.map(
+//                       (item) => (
 //                         <TableRow key={item.id}>
 //                           <TableCell>{formatDate(item.date)}</TableCell>
 //                           <TableCell>{item.description}</TableCell>
@@ -371,7 +526,8 @@
 //                             {formatCurrency(item.amount)}
 //                           </TableCell>
 //                         </TableRow>
-//                       ))
+//                       )
+//                     )
 //                   ) : (
 //                     <TableRow>
 //                       <TableCell colSpan={5} className="text-center">
@@ -413,8 +569,8 @@
 //                 <div>Difference</div>
 //                 <div className="w-32 text-right font-semibold">
 //                   {formatCurrency(
-//                     Number.parseFloat(report.closingBalance.book) -
-//                       Number.parseFloat(report.closingBalance.bank)
+//                     Number.parseFloat(report.closingBalance.book.toString()) -
+//                       Number.parseFloat(report.closingBalance.bank.toString())
 //                   )}
 //                 </div>
 //               </div>
@@ -425,7 +581,6 @@
 //     </div>
 //   )
 // }
-
 
 
 'use client'
@@ -461,13 +616,14 @@ import { CustomCombobox } from '@/utils/custom-combobox'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
 import type { BankAccount, BankReconciliationReportType } from '@/utils/type'
-import { createReconciliationOpening, getBankReconciliationReports } from '@/api/bank-reconciliation-report-api'
+import {
+  createReconciliationOpening,
+  getBankReconciliationReports,
+} from '@/api/bank-reconciliation-report-api'
 import { getAllBankAccounts } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-
-
 
 export default function BankReconciliationReport() {
   //getting userData from jotai atom component
@@ -487,7 +643,8 @@ export default function BankReconciliationReport() {
     BankReconciliationReportType[]
   >([])
   const [loading, setLoading] = useState(false)
-  const [showOpeningBalanceDialog, setShowOpeningBalanceDialog] = useState(false)
+  const [showOpeningBalanceDialog, setShowOpeningBalanceDialog] =
+    useState(false)
   const [openingBalanceValue, setOpeningBalanceValue] = useState('')
   const [pendingFormData, setPendingFormData] = useState<{
     bankAccount: string
@@ -541,68 +698,71 @@ export default function BankReconciliationReport() {
     fetchBankAccounts()
   }, [router, toast, token])
 
-const handleOpeningBalanceSubmit = async () => {
-  if (!openingBalanceValue || !pendingFormData || !selectedBankAccount) {
-    toast({
-      title: 'Error',
-      description: 'Please enter opening balance',
-      variant: 'destructive',
-    })
-    return
-  }
+  const handleOpeningBalanceSubmit = async () => {
+    if (!openingBalanceValue || !pendingFormData || !selectedBankAccount) {
+      toast({
+        title: 'Error',
+        description: 'Please enter opening balance',
+        variant: 'destructive',
+      })
+      return
+    }
 
-  const balanceNumber = Number.parseFloat(openingBalanceValue)
-  if (isNaN(balanceNumber)) {
-    toast({
-      title: 'Error',
-      description: 'Please enter a valid number',
-      variant: 'destructive',
-    })
-    return
-  }
+    const balanceNumber = Number.parseFloat(openingBalanceValue)
+    if (isNaN(balanceNumber)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid number',
+        variant: 'destructive',
+      })
+      return
+    }
 
-  try {
-    setLoading(true)
-    
-    console.log('Creating opening balance with:', {
-      bankId: selectedBankAccount.id,
-      openingBalance: balanceNumber,
-    })
-    
-    const result = await createReconciliationOpening(
-      {
+    try {
+      setLoading(true)
+
+      console.log('Creating opening balance with:', {
         bankId: selectedBankAccount.id,
         openingBalance: balanceNumber,
-      },
-      token
-    )
+      })
 
-    console.log('Opening balance created successfully:', result)
+      const result = await createReconciliationOpening(
+        {
+          bankId: selectedBankAccount.id,
+          openingBalance: balanceNumber,
+        },
+        token
+      )
 
-    toast({
-      title: 'Success',
-      description: 'Opening balance created successfully',
-    })
+      console.log('Opening balance created successfully:', result)
 
-    setShowOpeningBalanceDialog(false)
-    setOpeningBalanceValue('')
+      toast({
+        title: 'Success',
+        description: 'Opening balance created successfully',
+      })
 
-    await fetchReconciliationsReport({
-      ...pendingFormData,
-      token,
-    })
-  } catch (error) {
-    console.error('Error creating opening balance:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create opening balance'
-    toast({
-      title: 'Error',
-      description: errorMessage,
-      variant: 'destructive',
-    })
-  } finally {
-    setLoading(false)
+      setShowOpeningBalanceDialog(false)
+      setOpeningBalanceValue('')
+
+      await fetchReconciliationsReport({
+        ...pendingFormData,
+        token,
+      })
+    } catch (error) {
+      console.error('Error creating opening balance:', error)
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create opening balance'
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   const fetchReconciliationsReport = async (data: {
     bankAccount: string
@@ -646,12 +806,15 @@ const handleOpeningBalanceSubmit = async () => {
             reportData = response.data
           }
 
-          // Check if opening balance is zero
+          // Check if BOTH opening balances are zero
           if (
             reportData &&
-            (!reportData.openingBalance?.book || reportData.openingBalance.book === 0)
+            (!reportData.openingBalance?.book ||
+              reportData.openingBalance.book === 0) &&
+            (!reportData.openingBalance?.bank ||
+              reportData.openingBalance.bank === 0)
           ) {
-            // Show dialog to input opening balance
+            // Show dialog to input opening balance only if both are zero
             setPendingFormData({
               bankAccount: data.bankAccount,
               fromDate: data.fromDate,
@@ -660,7 +823,7 @@ const handleOpeningBalanceSubmit = async () => {
             setShowOpeningBalanceDialog(true)
             setReport(null)
           } else {
-            // Opening balance exists, show report
+            // Opening balance exists (at least bank has data), show report
             setReport(reportData)
           }
         } else {
@@ -716,7 +879,10 @@ const handleOpeningBalanceSubmit = async () => {
   return (
     <div className="w-[98%] mx-auto p-4">
       {/* Opening Balance Dialog */}
-      <Dialog open={showOpeningBalanceDialog} onOpenChange={setShowOpeningBalanceDialog}>
+      <Dialog
+        open={showOpeningBalanceDialog}
+        onOpenChange={setShowOpeningBalanceDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Enter Opening Balance</DialogTitle>
@@ -837,13 +1003,24 @@ const handleOpeningBalanceSubmit = async () => {
                 Bank reconciliation of {selectedBankAccount.bankName} -{' '}
                 {selectedBankAccount.accountNumber}
               </div>
-              <div className="flex gap-4">
-                <div className="text-right">
-                  Balance as per Software on Dt:{' '}
-                  {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-4">
+                  <div className="text-right">
+                    Balance as per Software Book on Dt:{' '}
+                    {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+                  </div>
+                  <div className="text-right font-semibold w-32">
+                    {formatCurrency(report.openingBalance.book)}
+                  </div>
                 </div>
-                <div className="text-right font-semibold w-32">
-                  {formatCurrency(report.openingBalance.book)}
+                <div className="flex gap-4">
+                  <div className="text-right">
+                    Balance as per Software Bank on Dt:{' '}
+                    {format(new Date(report.dateRange.to), 'dd/MM/yyyy')}
+                  </div>
+                  <div className="text-right font-semibold w-32">
+                    {formatCurrency(report.openingBalance.bank)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -868,8 +1045,8 @@ const handleOpeningBalanceSubmit = async () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {report.unreconciledAmount.breakdown.onlyInBooks
-                    .map((item) => (
+                  {report.unreconciledAmount.breakdown.onlyInBooks.map(
+                    (item) => (
                       <TableRow key={item.id}>
                         <TableCell>{formatDate(item.date)}</TableCell>
                         <TableCell>{item.description}</TableCell>
@@ -879,8 +1056,10 @@ const handleOpeningBalanceSubmit = async () => {
                           {formatCurrency(item.amount)}
                         </TableCell>
                       </TableRow>
-                    ))}
-                  {report.unreconciledAmount.breakdown.onlyInBooks.length === 0 && (
+                    )
+                  )}
+                  {report.unreconciledAmount.breakdown.onlyInBooks.length ===
+                    0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center">
                         No records found
@@ -923,8 +1102,8 @@ const handleOpeningBalanceSubmit = async () => {
                 </TableHeader>
                 <TableBody>
                   {report.unreconciledAmount.breakdown.onlyInBank.length > 0 ? (
-                    report.unreconciledAmount.breakdown.onlyInBank
-                      .map((item) => (
+                    report.unreconciledAmount.breakdown.onlyInBank.map(
+                      (item) => (
                         <TableRow key={item.id}>
                           <TableCell>{formatDate(item.date)}</TableCell>
                           <TableCell>{item.description}</TableCell>
@@ -934,7 +1113,8 @@ const handleOpeningBalanceSubmit = async () => {
                             {formatCurrency(item.amount)}
                           </TableCell>
                         </TableRow>
-                      ))
+                      )
+                    )
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center">

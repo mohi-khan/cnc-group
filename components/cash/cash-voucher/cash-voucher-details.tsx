@@ -461,43 +461,48 @@ export default function CashVoucherDetails({
       </Table>
 
       <div className="text-right">
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onSubmit(form.getValues(), 'Draft')}
-          >
-            Save as Draft
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onSubmit(form.getValues(), 'Posted')}
-          >
-            Save as Post
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              const lastType =
-                fields.length > 0
-                  ? form.getValues(`journalDetails.${fields.length - 1}.type`)
-                  : 'Receipt'
+        <div className="flex justify-between">
+          <div className='mt-4'>
+            <Button
+              type="button"
+               variant="outline"
+              onClick={() => {
+                const lastType =
+                  fields.length > 0
+                    ? form.getValues(`journalDetails.${fields.length - 1}.type`)
+                    : 'Receipt'
 
-              append({
-                type: lastType, // automatically match last row type
-                accountId: null,
-                costCenterId: null,
-                departmentId: null,
-                resPartnerId: null,
-                notes: '',
-                debit: lastType === 'Payment' ? 0 : 0,
-                credit: lastType === 'Receipt' ? 0 : 0,
-              })
-            }}
-          >
-            Add Another
-          </Button>
+                append({
+                  type: lastType, // automatically match last row type
+                  accountId: null,
+                  costCenterId: null,
+                  departmentId: null,
+                  resPartnerId: null,
+                  notes: '',
+                  debit: lastType === 'Payment' ? 0 : 0,
+                  credit: lastType === 'Receipt' ? 0 : 0,
+                })
+              }}
+            >
+              Add Another
+            </Button>
+          </div>
+          <div className='flex justify-end space-x-2 mt-4'>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSubmit(form.getValues(), 'Draft')}
+            >
+              Save as Draft
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSubmit(form.getValues(), 'Posted')}
+            >
+              Save as Post
+            </Button>
+          </div>
         </div>
       </div>
     </div>

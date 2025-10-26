@@ -68,7 +68,9 @@ export const resPartnerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   companyName: z.string().optional().nullable(),
   type: z.string().optional(),
-  email: z.string().email().optional(),
+  // email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+
   phone: z.string().optional(),
   mobile: z.string().optional(),
   website: z.union([z.string().url(), z.string().length(0)]).optional(),
