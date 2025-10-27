@@ -497,7 +497,7 @@ export function JournalVoucherDetailsSection({
                       <div
                         className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
-                        {/* <CustomComboboxWithApi
+                        <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
                             name: partner.name || '',
@@ -539,8 +539,8 @@ export function JournalVoucherDetailsSection({
                               : null
                           }}
                           // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
-                        /> */}
-                        <CustomComboboxWithApi
+                        />
+                        {/* <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
                             name: partner.name?.toString() ?? '',
@@ -585,7 +585,7 @@ export function JournalVoucherDetailsSection({
                                 }
                               : null
                           }}
-                        />
+                        /> */}
                       </div>
                     </FormControl>
                     <FormMessage />
