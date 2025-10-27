@@ -397,53 +397,71 @@ export default function CashVoucher({
     }
   }, [initialData, form])
 
-  const onSubmit = async (
-    values: JournalEntryWithDetails,
-    status: 'Draft' | 'Posted'
-  ) => {
-    if (userData) setUser(userData)
+const onSubmit = async (
+  values: JournalEntryWithDetails,
+  status: 'Draft' | 'Posted'
+) => {
+  if (userData) setUser(userData)
 
-    // --- Validate debit and credit equality ONLY for edit ---
-    if (isEdit) {
-      const totalDebit = values.journalDetails.reduce(
-        (sum, detail) => sum + (detail.debit || 0),
-        0
-      )
-      const totalCredit = values.journalDetails.reduce(
-        (sum, detail) => sum + (detail.credit || 0),
-        0
-      )
+  // 🔍 Log input when editing and clicking "Draft"
+  if (isEdit && status === 'Draft') {
+    console.log('🟡 Edit Mode - Draft clicked')
+    console.log('👉 Input Values (before validation):', values)
+  }
 
-      if (totalDebit !== totalCredit) {
-        toast({
-          title: 'Validation Error',
-          description: 'Total debit and credit must be equal before saving.',
-        })
-        return
-      }
+  // --- Validate debit and credit equality ONLY for edit ---
+  if (isEdit) {
+    const totalDebit = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.debit || 0),
+      0
+    )
+    const totalCredit = values.journalDetails.reduce(
+      (sum, detail) => sum + (detail.credit || 0),
+      0
+    )
+
+    if (totalDebit !== totalCredit) {
+      toast({
+        title: 'Validation Error',
+        description: 'Total debit and credit must be equal before saving.',
+      })
+      return
     }
+  }
 
-    // --- Prepare updatedValues ---
-    const updatedValues: JournalEntryWithDetails = {
-      ...values,
-      journalEntry: {
-        ...values.journalEntry,
-        state: status === 'Draft' ? 0 : 1,
-        notes: values.journalEntry.notes || '',
-        journalType: VoucherTypes.CashVoucher,
-        exchangeRate: values.journalEntry.exchangeRate || 1,
-        createdBy: user?.userId || 0,
-        amountTotal: isEdit
-          ? values.journalDetails.reduce(
-              (sum, detail) => (detail.debit || 0) + (detail.credit || 0),
-              0
-            )
-          : values.journalDetails.reduce(
-              (sum, detail) => sum + (detail.debit || 0) + (detail.credit || 0),
-              0
-            ),
-      },
-      journalDetails: values.journalDetails.map((detail) => ({
+  // --- Prepare updatedValues with normalized resPartnerId ---
+  const updatedValues: JournalEntryWithDetails = {
+    ...values,
+    journalEntry: {
+      ...values.journalEntry,
+      state: status === 'Draft' ? 0 : 1,
+      notes: values.journalEntry.notes || '',
+      journalType: VoucherTypes.CashVoucher,
+      exchangeRate: values.journalEntry.exchangeRate || 1,
+      createdBy: user?.userId || 0,
+      amountTotal: isEdit
+        ? values.journalDetails.reduce(
+            (sum, detail) => (detail.debit || 0) + (detail.credit || 0),
+            0
+          )
+        : values.journalDetails.reduce(
+            (sum, detail) =>
+              sum + (detail.debit || 0) + (detail.credit || 0),
+            0
+          ),
+    },
+    journalDetails: values.journalDetails.map((detail) => {
+      // 🔥 Normalize resPartnerId: convert string to number, keep number as is
+      let normalizedResPartnerId = detail.resPartnerId
+      
+      if (detail.resPartnerId) {
+        if (typeof detail.resPartnerId === 'string') {
+          const parsed = Number(detail.resPartnerId)
+          normalizedResPartnerId = isNaN(parsed) ? detail.resPartnerId : parsed
+        }
+      }
+
+      return {
         ...detail,
         notes: detail.notes || '',
         createdBy: user?.userId || 0,
@@ -452,130 +470,136 @@ export default function CashVoucher({
           (values.journalEntry as any).voucherid && {
             voucherId: (values.journalEntry as any).voucherid,
           }),
-      })),
-    }
-
-    let finalValues: JournalEntryWithDetails
-
-    if (isEdit) {
-      // ✅ Edit: do NOT add cash account line
-      finalValues = updatedValues
-      console.log('🚀 Editing - finalValues:', finalValues)
-    } else {
-      // ✅ Create: add extra cash account line
-      finalValues = {
-        ...updatedValues,
-        journalDetails: [
-          ...updatedValues.journalDetails,
-          {
-            accountId: cashCoa[0]?.accountId,
-            departmentId: null,
-            debit: updatedValues.journalDetails.reduce(
-              (sum, detail) =>
-                sum + (detail.type === 'Receipt' ? detail.credit || 0 : 0),
-              0
-            ),
-            credit: updatedValues.journalDetails.reduce(
-              (sum, detail) =>
-                sum + (detail.type === 'Payment' ? detail.debit || 0 : 0),
-              0
-            ),
-            analyticTags: null,
-            taxId: null,
-            resPartnerId: null,
-            bankaccountid: null,
-            notes: updatedValues.journalEntry.notes || '',
-            createdBy: user?.userId || 0,
-          },
-        ],
+        resPartnerId: normalizedResPartnerId,
       }
-      console.log('🚀 Creating - finalValues:', finalValues)
+    }),
+  }
+
+  let finalValues: JournalEntryWithDetails
+
+  if (isEdit) {
+    // ✅ Edit: do NOT add cash account line
+    finalValues = updatedValues
+
+    // 🟢 Log final processed values when clicking Draft in Edit mode
+    if (status === 'Draft') {
+      console.log('🟢 Edit Mode - Draft Submitted')
+      console.log('🚀 Final Values (ready to send):', finalValues)
     }
-
-    try {
-      const response = isEdit
-        ? await editJournalEntryWithDetails(
-            finalValues as JournalEditWithDetails,
-            token
-          )
-        : await createJournalEntryWithDetails(finalValues, token)
-
-      if (response.error || !response.data) {
-        toast({
-          title: 'Error',
-          description:
-            response.error?.message ||
-            `Error ${isEdit ? 'editing' : 'creating'} Journal`,
-        })
-        return
-      }
-
-      toast({
-        title: 'Success',
-        description: `Voucher ${isEdit ? 'edited' : 'created'} successfully`,
-      })
-
-      // ✅ Trigger auto-refresh event for DayBooks
-      window.dispatchEvent(new Event('voucherUpdated'))
-
-      // ✅ Call onSuccess callback if provided
-      if (onSuccess) onSuccess()
-
-      onClose?.()
-
-      // --- Reset form ---
-      form.reset({
-        journalEntry: {
-          date: new Date().toISOString().split('T')[0],
-          journalType: '',
-          companyId: 0,
-          locationId: 0,
-          currencyId: 0,
-          amountTotal: 0,
-          notes: '',
-          createdBy: 0,
+  } else {
+    // ✅ Create: add extra cash account line
+    finalValues = {
+      ...updatedValues,
+      journalDetails: [
+        ...updatedValues.journalDetails,
+        {
+          accountId: cashCoa[0]?.accountId,
+          departmentId: null,
+          debit: updatedValues.journalDetails.reduce(
+            (sum, detail) =>
+              sum + (detail.type === 'Receipt' ? detail.credit || 0 : 0),
+            0
+          ),
+          credit: updatedValues.journalDetails.reduce(
+            (sum, detail) =>
+              sum + (detail.type === 'Payment' ? detail.debit || 0 : 0),
+            0
+          ),
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          bankaccountid: null,
+          notes: updatedValues.journalEntry.notes || '',
+          createdBy: user?.userId || 0,
         },
-        journalDetails: [
-          {
-            accountId: filteredChartOfAccounts[0]?.accountId,
-            costCenterId: null,
-            departmentId: null,
-            debit: 0,
-            credit: 0,
-            analyticTags: null,
-            taxId: null,
-            resPartnerId: null,
-            notes: '',
-            type: 'Receipt',
-            createdBy: 0,
-          },
-        ],
-      })
+      ],
+    }
+    console.log('🚀 Creating - finalValues:', finalValues)
+  }
 
-      remove()
-      append({
-        accountId: filteredChartOfAccounts[0]?.accountId,
-        costCenterId: null,
-        departmentId: null,
-        debit: 0,
-        credit: 0,
-        analyticTags: null,
-        taxId: null,
-        resPartnerId: null,
-        notes: '',
-        type: 'Receipt',
-        createdBy: 0,
-      })
+  try {
+    const response = isEdit
+      ? await editJournalEntryWithDetails(
+          finalValues as JournalEditWithDetails,
+          token
+        )
+      : await createJournalEntryWithDetails(finalValues, token)
 
-      setCurrentVoucherType('')
-    } catch (err) {
-      console.error(err)
+    if (response.error || !response.data) {
       toast({
         title: 'Error',
-        description: `Something went wrong ${isEdit ? 'editing' : 'creating'} Journal`,
+        description:
+          response.error?.message ||
+          `Error ${isEdit ? 'editing' : 'creating'} Journal`,
       })
+      return
     }
+
+    toast({
+      title: 'Success',
+      description: `Voucher ${isEdit ? 'edited' : 'created'} successfully`,
+    })
+
+    window.dispatchEvent(new Event('voucherUpdated'))
+    if (onSuccess) onSuccess()
+    onClose?.()
+
+    // --- Reset form ---
+    form.reset({
+      journalEntry: {
+        date: new Date().toISOString().split('T')[0],
+        journalType: '',
+        companyId: 0,
+        locationId: 0,
+        currencyId: 0,
+        amountTotal: 0,
+        notes: '',
+        createdBy: 0,
+      },
+      journalDetails: [
+        {
+          accountId: filteredChartOfAccounts[0]?.accountId,
+          costCenterId: null,
+          departmentId: null,
+          debit: 0,
+          credit: 0,
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: '',
+          type: 'Receipt',
+          createdBy: 0,
+        },
+      ],
+    })
+
+    remove()
+    append({
+      accountId: filteredChartOfAccounts[0]?.accountId,
+      costCenterId: null,
+      departmentId: null,
+      debit: 0,
+      credit: 0,
+      analyticTags: null,
+      taxId: null,
+      resPartnerId: null,
+      notes: '',
+      type: 'Receipt',
+      createdBy: 0,
+    })
+
+    setCurrentVoucherType('')
+  } catch (err) {
+    console.error(err)
+    toast({
+      title: 'Error',
+      description: `Something went wrong ${
+        isEdit ? 'editing' : 'creating'
+      } Journal`,
+    })
   }
+}
+
 
   //useFieldArray is used to manage the dynamic fields in the form. it allows adding and removing fields in the journalDetails array.
   const { fields, append, remove } = useFieldArray<

@@ -497,7 +497,7 @@ export function JournalVoucherDetailsSection({
                       <div
                         className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
-                        <CustomComboboxWithApi
+                        {/* <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
                             name: partner.name || '',
@@ -539,6 +539,52 @@ export function JournalVoucherDetailsSection({
                               : null
                           }}
                           // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
+                        /> */}
+                        <CustomComboboxWithApi
+                          items={partners.map((partner) => ({
+                            id: partner.id.toString(),
+                            name: partner.name?.toString() ?? '',
+                          }))}
+                          value={
+                            field.value
+                              ? (partners.find((p) => p.id === field.value)
+                                  ? {
+                                      id: partners
+                                        .find((p) => p.id === field.value)!
+                                        .id.toString(),
+                                      name:
+                                        partners.find(
+                                          (p) => p.id === field.value
+                                        )!.name ?? '',
+                                    }
+                                  : {
+                                      id: String(field.value),
+                                      name: String(field.value),
+                                    })
+                              : null
+                          }
+                          onChange={(item) => {
+                            field.onChange(item ? Number(item.id) : null)
+                          }}
+                          placeholder="Select partner"
+                          searchFunction={searchPartners}
+                          fetchByIdFunction={async (id) => {
+                            const numericId: number =
+                              typeof id === 'string' && /^\d+$/.test(id)
+                                ? parseInt(id, 10)
+                                : (id as number)
+                            const partner = await getPartnerById(
+                              numericId,
+                              token
+                            )
+                            console.log('fahad:', partner.data)
+                            return partner?.data
+                              ? {
+                                  id: partner.data.id.toString(),
+                                  name: partner.data.name?.toString() ?? '',
+                                }
+                              : null
+                          }}
                         />
                       </div>
                     </FormControl>

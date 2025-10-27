@@ -70,18 +70,52 @@ export default function CashVoucherDetails({
       if (response.error || !response.data) {
         console.error('Error fetching partners:', response.error)
         return []
+
       }
+      console.log("hey:",response.data);
       return response.data.map((partner) => ({
         id: partner.id.toString(),
-        name: partner.name || 'Unnamed Partner',
+        name: partner.id.toString(),
+
       }))
+
     } catch (error) {
       console.error('Error fetching partners:', error)
       return []
     }
+
   }
 
-  const watchedPartnerId = watch('journalDetails.0.resPartnerId')
+  // const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
+  //   try {
+  //     const response = await getResPartnersBySearch(query, token)
+  //     if (response.error || !response.data) {
+  //       console.error('Error fetching partners:', response.error)
+  //       return []
+  //     }
+  //     console.log('hey:', response.data)
+  //     return response.data.map((partner) => ({
+  //       id: partner.id.toString(),
+  //       name: partner.name || partner.id.toString(), // 👈 Use partner.name
+  //     }))
+  //   } catch (error) {
+  //     console.error('Error fetching partners:', error)
+  //     return []
+  //   }
+  // }
+
+  const watchedPartnerIdStr = watch('journalDetails')
+  console.log('riad - full details:', watchedPartnerIdStr)
+  console.log(
+    'riad - first partner ID:',
+    watchedPartnerIdStr?.[0]?.resPartnerId
+  )
+
+  // const watchedPartnerIdStr = watch('journalDetails')
+  // console.log('riad', watchedPartnerIdStr)
+
+  // Convert to number (or undefined if empty)
+  const watchedPartnerId = watchedPartnerIdStr ? watchedPartnerIdStr : undefined
 
   useEffect(() => {
     const loadPartner = async () => {
@@ -91,16 +125,21 @@ export default function CashVoucherDetails({
       }
 
       // Check local list first
-      const local = partners.find((p) => p.id === Number(watchedPartnerId))
+      const local = partners.find((p) => p.id === watchedPartnerId)
       if (local) {
         setPartnerValue(local)
+        console.log('local partner id:', local.id)
         return
       }
 
       // Fetch from API if not found locally
-      const partner = await getPartnerById(Number(watchedPartnerId), token)
+      const partner = await getPartnerById(watchedPartnerId, token)
       if (partner?.data) {
-        setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
+        setPartnerValue({
+          id: partner.data.id, // number
+          name: partner.data.id.toString(), // string
+        })
+        console.log('fetched partner id:', setPartnerValue)
       }
     }
 
@@ -351,7 +390,7 @@ export default function CashVoucherDetails({
                                 : ''
                             }`}
                           >
-                            <CustomComboboxWithApi
+                            {/* <CustomComboboxWithApi
                               items={partners.map((partner) => ({
                                 id: partner.id.toString(),
                                 name: partner.name || '',
@@ -386,6 +425,44 @@ export default function CashVoucherDetails({
                                   ? {
                                       id: partner.data.id.toString(),
                                       name: partner.data.name ?? '',
+                                    }
+                                  : null
+                              }}
+                            /> */}
+                            <CustomComboboxWithApi
+                              items={partners.map((partner) => ({
+                                id: partner.id.toString(),
+                                name: partner.name.toString(), // 👈 show ID instead of name
+                              }))}
+                              value={
+                                field.value
+                                  ? (partners.find(
+                                      (p) => p.id === field.value
+                                    ) ?? {
+                                      id: field.value,
+                                      name: field.value, // 👈 show ID instead of name
+                                    })
+                                  : null
+                              }
+                              onChange={(item) => {
+                                field.onChange(item ? Number(item.id) : null)
+                              }}
+                              placeholder="Select partner"
+                              searchFunction={searchPartners}
+                              fetchByIdFunction={async (id) => {
+                                const numericId: number =
+                                  typeof id === 'string' && /^\d+$/.test(id)
+                                    ? parseInt(id, 10)
+                                    : (id as number)
+                                const partner = await getPartnerById(
+                                  numericId,
+                                  token
+                                )
+                                console.log('fahad:', partner.data)
+                                return partner?.data
+                                  ? {
+                                      id: partner.data.id.toString(),
+                                      name: partner.data.name.toString(), // 👈 show ID instead of name
                                     }
                                   : null
                               }}
@@ -462,10 +539,10 @@ export default function CashVoucherDetails({
 
       <div className="text-right">
         <div className="flex justify-between">
-          <div className='mt-4'>
+          <div className="mt-4">
             <Button
               type="button"
-               variant="outline"
+              variant="outline"
               onClick={() => {
                 const lastType =
                   fields.length > 0
@@ -487,7 +564,7 @@ export default function CashVoucherDetails({
               Add Another
             </Button>
           </div>
-          <div className='flex justify-end space-x-2 mt-4'>
+          <div className="flex justify-end space-x-2 mt-4">
             <Button
               type="button"
               variant="outline"
