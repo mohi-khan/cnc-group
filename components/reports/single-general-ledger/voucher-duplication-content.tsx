@@ -154,6 +154,7 @@ const VoucherDuplicationContent: React.FC<VoucherDuplicationContentProps> = ({
           onOpenChange={onClose} // When this popup wants to close, close the parent modal
           initialData={initialFormData}
           fetchAllVoucher={dummyFetchAllVoucher} // Pass a dummy or actual fetch function
+          onSuccess={undefined}
         />
       )
     default:
