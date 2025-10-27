@@ -67,55 +67,17 @@ export default function CashVoucherDetails({
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {
       const response = await getResPartnersBySearch(query, token)
-      if (response.error || !response.data) {
-        console.error('Error fetching partners:', response.error)
-        return []
-
-      }
-      console.log("hey:",response.data);
+      if (response.error || !response.data) return []
       return response.data.map((partner) => ({
         id: partner.id.toString(),
-        name: partner.id.toString(),
-
+        name: partner.name || 'Unnamed Partner',
       }))
-
-    } catch (error) {
-      console.error('Error fetching partners:', error)
+    } catch {
       return []
     }
-
   }
 
-  // const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
-  //   try {
-  //     const response = await getResPartnersBySearch(query, token)
-  //     if (response.error || !response.data) {
-  //       console.error('Error fetching partners:', response.error)
-  //       return []
-  //     }
-  //     console.log('hey:', response.data)
-  //     return response.data.map((partner) => ({
-  //       id: partner.id.toString(),
-  //       name: partner.name || partner.id.toString(), // 👈 Use partner.name
-  //     }))
-  //   } catch (error) {
-  //     console.error('Error fetching partners:', error)
-  //     return []
-  //   }
-  // }
-
-  const watchedPartnerIdStr = watch('journalDetails')
-  console.log('riad - full details:', watchedPartnerIdStr)
-  console.log(
-    'riad - first partner ID:',
-    watchedPartnerIdStr?.[0]?.resPartnerId
-  )
-
-  // const watchedPartnerIdStr = watch('journalDetails')
-  // console.log('riad', watchedPartnerIdStr)
-
-  // Convert to number (or undefined if empty)
-  const watchedPartnerId = watchedPartnerIdStr ? watchedPartnerIdStr : undefined
+  const watchedPartnerId = watch('journalDetails.0.resPartnerId')
 
   useEffect(() => {
     const loadPartner = async () => {
@@ -124,27 +86,21 @@ export default function CashVoucherDetails({
         return
       }
 
-      // Check local list first
-      const local = partners.find((p) => p.id === watchedPartnerId)
+      const local = partners.find((p) => p.id === Number(watchedPartnerId))
       if (local) {
         setPartnerValue(local)
-        console.log('local partner id:', local.id)
         return
       }
 
-      // Fetch from API if not found locally
-      const partner = await getPartnerById(watchedPartnerId, token)
+      const partner = await getPartnerById(Number(watchedPartnerId), token)
       if (partner?.data) {
-        setPartnerValue({
-          id: partner.data.id, // number
-          name: partner.data.id.toString(), // string
-        })
-        console.log('fetched partner id:', setPartnerValue)
+        setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
       }
     }
 
     loadPartner()
   }, [watchedPartnerId, partners, token])
+
 
   const determineVoucherType = useCallback((): string => {
     const currentDetails = form.getValues('journalDetails') || []
@@ -390,7 +346,7 @@ export default function CashVoucherDetails({
                                 : ''
                             }`}
                           >
-                            {/* <CustomComboboxWithApi
+                            <CustomComboboxWithApi
                               items={partners.map((partner) => ({
                                 id: partner.id.toString(),
                                 name: partner.name || '',
@@ -428,8 +384,8 @@ export default function CashVoucherDetails({
                                     }
                                   : null
                               }}
-                            /> */}
-                            <CustomComboboxWithApi
+                            />
+                            {/* <CustomComboboxWithApi
                               items={partners.map((partner) => ({
                                 id: partner.id.toString(),
                                 name: partner.name.toString(), // 👈 show ID instead of name
@@ -466,7 +422,7 @@ export default function CashVoucherDetails({
                                     }
                                   : null
                               }}
-                            />
+                            /> */}
                           </div>
                         </FormControl>
                       </FormItem>
