@@ -661,6 +661,7 @@ const onSubmit = async (
               partners={partners}
               onSubmit={onSubmit}
               onVoucherTypeChange={handleVoucherTypeChange}
+              isEdit={isEdit}
             />
             {!initialData && ( // Only show VoucherList if not in duplication mode
               <div className="mb-6">

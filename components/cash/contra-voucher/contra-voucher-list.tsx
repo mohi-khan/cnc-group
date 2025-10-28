@@ -113,7 +113,14 @@ export default function ContraVoucherTable() {
     <div className="w-[97%] mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Contra Vouchers</h1>
-        <ContraVoucherPopup fetchAllVoucher={fetchAllVoucher} />
+        <ContraVoucherPopup 
+          fetchAllVoucher={fetchAllVoucher}
+          onSuccess={() => {
+            const companyIds = getCompanyIds(companies);
+            const locationIds = getLocationIds(locations);
+            fetchAllVoucher(companyIds, locationIds);
+          }}
+        />
       </div>
 
       <VoucherList

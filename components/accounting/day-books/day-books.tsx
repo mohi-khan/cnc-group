@@ -296,6 +296,9 @@ const DayBooks = () => {
         case 'Bank Voucher':
           type = VoucherTypes.BankVoucher
           break
+        case 'Opening Balance':
+          type = VoucherTypes.OpeningBalance
+          break
       }
     }
 

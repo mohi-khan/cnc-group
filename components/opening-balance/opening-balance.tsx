@@ -489,6 +489,7 @@ export default function OpeningBalance({
                   formState={formState}
                   requisition={undefined}
                   partners={formState.partners}
+                  isEdit={isEdit}
                 />
                 <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
               </form>

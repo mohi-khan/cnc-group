@@ -38,6 +38,7 @@ interface CashVoucherDetailsProps {
   partners: ResPartner[]
   onSubmit: (values: any, status: 'Draft' | 'Posted') => void
   onVoucherTypeChange?: (voucherType: string) => void
+  isEdit?: boolean
 }
 
 export default function CashVoucherDetails({
@@ -48,6 +49,7 @@ export default function CashVoucherDetails({
   partners,
   onSubmit,
   onVoucherTypeChange,
+  isEdit = false, 
 }: CashVoucherDetailsProps) {
   const [token] = useAtom(tokenAtom)
 
@@ -100,7 +102,6 @@ export default function CashVoucherDetails({
 
     loadPartner()
   }, [watchedPartnerId, partners, token])
-
 
   const determineVoucherType = useCallback((): string => {
     const currentDetails = form.getValues('journalDetails') || []
@@ -385,44 +386,6 @@ export default function CashVoucherDetails({
                                   : null
                               }}
                             />
-                            {/* <CustomComboboxWithApi
-                              items={partners.map((partner) => ({
-                                id: partner.id.toString(),
-                                name: partner.name.toString(), // 👈 show ID instead of name
-                              }))}
-                              value={
-                                field.value
-                                  ? (partners.find(
-                                      (p) => p.id === field.value
-                                    ) ?? {
-                                      id: field.value,
-                                      name: field.value, // 👈 show ID instead of name
-                                    })
-                                  : null
-                              }
-                              onChange={(item) => {
-                                field.onChange(item ? Number(item.id) : null)
-                              }}
-                              placeholder="Select partner"
-                              searchFunction={searchPartners}
-                              fetchByIdFunction={async (id) => {
-                                const numericId: number =
-                                  typeof id === 'string' && /^\d+$/.test(id)
-                                    ? parseInt(id, 10)
-                                    : (id as number)
-                                const partner = await getPartnerById(
-                                  numericId,
-                                  token
-                                )
-                                console.log('fahad:', partner.data)
-                                return partner?.data
-                                  ? {
-                                      id: partner.data.id.toString(),
-                                      name: partner.data.name.toString(), // 👈 show ID instead of name
-                                    }
-                                  : null
-                              }}
-                            /> */}
                           </div>
                         </FormControl>
                       </FormItem>
@@ -496,29 +459,31 @@ export default function CashVoucherDetails({
       <div className="text-right">
         <div className="flex justify-between">
           <div className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                const lastType =
-                  fields.length > 0
-                    ? form.getValues(`journalDetails.${fields.length - 1}.type`)
-                    : 'Receipt'
+            {!isEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const lastType =
+                    fields.length > 0
+                      ? form.getValues(`journalDetails.${fields.length - 1}.type`)
+                      : 'Receipt'
 
-                append({
-                  type: lastType, // automatically match last row type
-                  accountId: null,
-                  costCenterId: null,
-                  departmentId: null,
-                  resPartnerId: null,
-                  notes: '',
-                  debit: lastType === 'Payment' ? 0 : 0,
-                  credit: lastType === 'Receipt' ? 0 : 0,
-                })
-              }}
-            >
-              Add Another
-            </Button>
+                  append({
+                    type: lastType, // automatically match last row type
+                    accountId: null,
+                    costCenterId: null,
+                    departmentId: null,
+                    resPartnerId: null,
+                    notes: '',
+                    debit: lastType === 'Payment' ? 0 : 0,
+                    credit: lastType === 'Receipt' ? 0 : 0,
+                  })
+                }}
+              >
+                Add Another
+              </Button>
+            )}
           </div>
           <div className="flex justify-end space-x-2 mt-4">
             <Button
