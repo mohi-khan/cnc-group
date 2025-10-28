@@ -529,33 +529,34 @@ export default function OpeningBalanceDetails({
           })}
         </TableBody>
       </Table>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="mt-5 bg-transparent"
-        onClick={() => {
-          // When adding a new row, don't auto-populate with remaining amount
-          // Let user enter the amount manually, which will then update master total
-          append({
-            voucherId: 0,
-            accountId: 0,
-            costCenterId: null,
-            departmentId: null,
-            debit: formState.formType === 'Debit' ? 0 : 0,
-            credit: formState.formType === 'Credit' ? 0 : 0,
-            analyticTags: null,
-            taxId: null,
-            resPartnerId: null,
-            bankaccountid: null,
-            notes: '',
-            createdBy: 0,
-          })
-        }}
-      >
-        Add Another
-      </Button>
+      {!isEdit && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-5 bg-transparent"
+          onClick={() => {
+            // When adding a new row, don't auto-populate with remaining amount
+            // Let user enter the amount manually, which will then update master total
+            append({
+              voucherId: 0,
+              accountId: 0,
+              costCenterId: null,
+              departmentId: null,
+              debit: formState.formType === 'Debit' ? 0 : 0,
+              credit: formState.formType === 'Credit' ? 0 : 0,
+              analyticTags: null,
+              taxId: null,
+              resPartnerId: null,
+              bankaccountid: null,
+              notes: '',
+              createdBy: 0,
+            })
+          }}
+        >
+          Add Another
+        </Button>
+      )}
     </div>
   )
 }

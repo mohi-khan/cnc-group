@@ -40,11 +40,13 @@ interface JournalVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onAddEntry: () => void
   onRemoveEntry: (index: number) => void
+  isEdit?: boolean
 }
 
 export function JournalVoucherDetailsSection({
   form,
   onRemoveEntry,
+  isEdit = false,
 }: JournalVoucherDetailsSectionProps) {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -540,52 +542,6 @@ export function JournalVoucherDetailsSection({
                           }}
                           // disabled={!isPartnerFieldEnabled} // Removed as 'isPartnerFieldEnabled' is not defined
                         />
-                        {/* <CustomComboboxWithApi
-                          items={partners.map((partner) => ({
-                            id: partner.id.toString(),
-                            name: partner.name?.toString() ?? '',
-                          }))}
-                          value={
-                            field.value
-                              ? (partners.find((p) => p.id === field.value)
-                                  ? {
-                                      id: partners
-                                        .find((p) => p.id === field.value)!
-                                        .id.toString(),
-                                      name:
-                                        partners.find(
-                                          (p) => p.id === field.value
-                                        )!.name ?? '',
-                                    }
-                                  : {
-                                      id: String(field.value),
-                                      name: String(field.value),
-                                    })
-                              : null
-                          }
-                          onChange={(item) => {
-                            field.onChange(item ? Number(item.id) : null)
-                          }}
-                          placeholder="Select partner"
-                          searchFunction={searchPartners}
-                          fetchByIdFunction={async (id) => {
-                            const numericId: number =
-                              typeof id === 'string' && /^\d+$/.test(id)
-                                ? parseInt(id, 10)
-                                : (id as number)
-                            const partner = await getPartnerById(
-                              numericId,
-                              token
-                            )
-                            console.log('fahad:', partner.data)
-                            return partner?.data
-                              ? {
-                                  id: partner.data.id.toString(),
-                                  name: partner.data.name?.toString() ?? '',
-                                }
-                              : null
-                          }}
-                        /> */}
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -655,9 +611,11 @@ export function JournalVoucherDetailsSection({
           )
         })}
       </div>
-      <Button type="button" variant="outline" onClick={addEntry}>
-        Add Another Line
-      </Button>
+      {!isEdit && (
+        <Button type="button" variant="outline" onClick={addEntry}>
+          Add Another
+        </Button>
+      )}
       <div className="flex justify-between items-center pt-4">
         <div>
           <p>Total Debit: {totals.debit}</p>

@@ -24,15 +24,18 @@ import {
   getAllBankAccounts,
   getAllChartOfAccounts,
 } from '@/api/common-shared-api'
+import { is } from 'date-fns/locale'
 
 interface ContraVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
   onRemoveEntry: (index: number) => void
+  isEdit?: boolean
 }
 
 export function ContraVoucherDetailsSection({
   form,
   onRemoveEntry,
+  isEdit = false,
 }: ContraVoucherDetailsSectionProps) {
   //getting userData from jotai atom component
   useInitializeUser()
@@ -496,9 +499,11 @@ export function ContraVoucherDetailsSection({
           </Button>
         </div>
       ))}
+      {!isEdit && (
       <Button type="button" className='mx-4' variant="outline" onClick={addEntry}>
-        Add Another Entry
+        Add Another 
       </Button>
+      )}
       <div className="mt-4 flex justify-between gap-2 items-center px-4">
         <div>
           <p>Total Debit: {totals.debit.toFixed(2)}</p>
