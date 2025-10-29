@@ -52,7 +52,6 @@ export interface SubItem {
   subItemGroups?: SubItem[]
 }
 
-
 export type LocationData = z.infer<typeof locationSchema>
 
 export interface LocationFromLocalstorage {
@@ -338,7 +337,6 @@ export const updatePostingPeriodsSchema = z.object({
 //   updatedAt?: string
 // }
 
-
 // export type BankAccountCreate = Omit<
 //   BankAccount,
 //   'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
@@ -347,11 +345,6 @@ export const updatePostingPeriodsSchema = z.object({
 //   BankAccount,
 //   'id' | 'createdBy' | 'createdAt' | 'updatedAt'
 // >
-
-
-
-
-
 
 // Base schema for bank account
 export const bankAccountSchema = z.object({
@@ -388,15 +381,15 @@ export const bankAccountSchema = z.object({
     .transform((val) => val || null),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum([
-    "DEPOSIT AWAITING FOR DISPOSAL",
-    "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
-    "Fund Buildup Account",
-    "MARGIN AGAINST ACCEPTANCE",
-    "USD RETENTION QUOTA",
-    "Current",
-    "OD Against Non-Cash Security",
-    "Fixed",
-    "Loan Account",
+    'DEPOSIT AWAITING FOR DISPOSAL',
+    'SPECIAL NOTICE DEPOSIT ( 7 DAYS)',
+    'Fund Buildup Account',
+    'MARGIN AGAINST ACCEPTANCE',
+    'USD RETENTION QUOTA',
+    'Current',
+    'OD Against Non-Cash Security',
+    'Fixed',
+    'Loan Account',
   ]),
   openingBalance: z.number(),
   validityDate: z
@@ -439,24 +432,16 @@ export const bankAccountSchema = z.object({
   updatedBy: z.number().optional(),
   limit: z
     .number()
-    .nonnegative("Limit must be a positive number")
+    .nonnegative('Limit must be a positive number')
     .nullable()
     .optional(),
   rate: z
     .number()
-    .nonnegative("Rate must be a positive number")
+    .nonnegative('Rate must be a positive number')
     .nullable()
     .optional(),
   loanType: z
-    .enum([
-      "EDF",
-      "TR",
-      "IBP",
-      "OD",
-      "Term",
-      "Stimulas",
-      "UPAS",
-    ])
+    .enum(['EDF', 'TR', 'IBP', 'OD', 'Term', 'Stimulas', 'UPAS'])
     .nullable()
     .optional(),
   installmentStartDate: z
@@ -466,28 +451,17 @@ export const bankAccountSchema = z.object({
     .transform((str) => (str ? new Date(str) : null)),
   installmentAmount: z
     .number()
-    .nonnegative("Installment amount must be a positive number")
+    .nonnegative('Installment amount must be a positive number')
     .nullable()
     .optional(),
   installmentFreq: z
-    .enum([
-      "Monthly",
-      "Quarterly",
-      "Half Yearly",
-      "Yearly",
-      "One Time",
-    ])
+    .enum(['Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'])
     .nullable()
     .optional(),
-  noOfInstallments: z
-    .number()
-    .int()
-    .nonnegative()
-    .nullable()
-    .optional(),
+  noOfInstallments: z.number().int().nonnegative().nullable().optional(),
   LcNumber: z
     .string()
-    .max(12, "LcNumber must not exceed 12 characters")
+    .max(12, 'LcNumber must not exceed 12 characters')
     .nullable()
     .optional()
     .transform((val) => val || null),
@@ -532,15 +506,15 @@ export const createBankAccountSchema = z.object({
     .transform((val) => val || null),
   currencyId: z.string().max(36, 'Currency ID must not exceed 36 characters'),
   accountType: z.enum([
-    "DEPOSIT AWAITING FOR DISPOSAL",
-    "SPECIAL NOTICE DEPOSIT ( 7 DAYS)",
-    "Fund Buildup Account",
-    "MARGIN AGAINST ACCEPTANCE",
-    "USD RETENTION QUOTA",
-    "Current",
-    "OD Against Non-Cash Security",
-    "Fixed",
-    "Loan Account",
+    'DEPOSIT AWAITING FOR DISPOSAL',
+    'SPECIAL NOTICE DEPOSIT ( 7 DAYS)',
+    'Fund Buildup Account',
+    'MARGIN AGAINST ACCEPTANCE',
+    'USD RETENTION QUOTA',
+    'Current',
+    'OD Against Non-Cash Security',
+    'Fixed',
+    'Loan Account',
   ]),
   openingBalance: z.string(),
   validityDate: z
@@ -583,24 +557,16 @@ export const createBankAccountSchema = z.object({
   updatedBy: z.number().optional(),
   limit: z
     .number()
-    .nonnegative("Limit must be a positive number")
+    .nonnegative('Limit must be a positive number')
     .nullable()
     .optional(),
   rate: z
     .number()
-    .nonnegative("Rate must be a positive number")
+    .nonnegative('Rate must be a positive number')
     .nullable()
     .optional(),
   loanType: z
-    .enum([
-      "EDF",
-      "TR",
-      "IBP",
-      "OD",
-      "Term",
-      "Stimulas",
-      "UPAS",
-    ])
+    .enum(['EDF', 'TR', 'IBP', 'OD', 'Term', 'Stimulas', 'UPAS'])
     .nullable()
     .optional(),
   installmentStartDate: z
@@ -610,28 +576,17 @@ export const createBankAccountSchema = z.object({
     .transform((str) => (str ? new Date(str) : undefined)),
   installmentAmount: z
     .number()
-    .nonnegative("Installment amount must be a positive number")
+    .nonnegative('Installment amount must be a positive number')
     .nullable()
     .optional(),
   installmentFreq: z
-    .enum([
-      "Monthly",
-      "Quarterly",
-      "Half Yearly",
-      "Yearly",
-      "One Time",
-    ])
+    .enum(['Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'])
     .nullable()
     .optional(),
-  noOfInstallments: z
-    .number()
-    .int()
-    .nonnegative()
-    .nullable()
-    .optional(),
+  noOfInstallments: z.number().int().nonnegative().nullable().optional(),
   LcNumber: z
     .string()
-    .max(12, "LcNumber must not exceed 12 characters")
+    .max(12, 'LcNumber must not exceed 12 characters')
     .nullable()
     .optional()
     .transform((val) => val || null),
@@ -643,7 +598,9 @@ export type CreateBankAccount = z.infer<typeof createBankAccountSchema> & {
 }
 
 // Helper function to remove null/undefined values
-export function cleanBankAccountData<T extends Record<string, any>>(data: T): Partial<T> {
+export function cleanBankAccountData<T extends Record<string, any>>(
+  data: T
+): Partial<T> {
   const cleaned: any = {}
 
   for (const [key, value] of Object.entries(data)) {
@@ -672,10 +629,9 @@ export type BankAccountCreate = Omit<
   installmentStartDate?: Date | string | null
 }
 
-export type BankAccountUpdate = Partial<Omit<
-  BankAccount,
-  'id' | 'createdBy' | 'createdAt' | 'updatedAt'
->> & {
+export type BankAccountUpdate = Partial<
+  Omit<BankAccount, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>
+> & {
   validityDate?: Date | string | null
   installmentStartDate?: Date | string | null
 }
@@ -783,6 +739,8 @@ export const chartOfAccountSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
+  isPartner: z.boolean().default(false),
+  isCostCenter: z.boolean().default(false),
   cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
   notes: z.string().nullable(),
@@ -813,6 +771,8 @@ export const AccountsHeadSchema = z.object({
   isGroup: z.boolean().default(false),
   isCash: z.boolean().default(true),
   isBank: z.boolean().default(false),
+  isPartner: z.boolean().default(false),
+  isCostCenter: z.boolean().default(false),
   cashTag: z.string(),
   createdBy: z.number().int().positive(),
   notes: z.string(),
@@ -946,7 +906,7 @@ export type JournalEditWithDetails = z.infer<
 
 export const editJournalNotesSchema = z.object({
   id: z.number(),
-  notes: z.string()
+  notes: z.string(),
 })
 
 export type EditJournalEditNotesType = z.infer<typeof editJournalNotesSchema>
@@ -1092,7 +1052,7 @@ const VoucherSchemaById = z.object({
   debit: z.number(),
   credit: z.number(),
   partnar: z.any().nullable(), // If you know the type, replace `z.any()` with the correct type
-  partnarId:z.number().nullable(),
+  partnarId: z.number().nullable(),
   bankaccount: z.any().nullable(),
   bankaccountName: z.string().nullable(),
   accountNumber: z.string().nullable(),
@@ -1100,7 +1060,7 @@ const VoucherSchemaById = z.object({
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
-  MasterNotes:string().nullable(),
+  MasterNotes: string().nullable(),
 })
 
 export type VoucherById = z.infer<typeof VoucherSchemaById>
@@ -1123,8 +1083,6 @@ export interface GetBankLedger {
   notes: string | null
   partner: string | null
 }
-
-
 
 //edit journal notes
 export const DetailNoteSchema = z.object({
@@ -1398,12 +1356,12 @@ export type ProfitAndLossType = z.infer<typeof ProfitAndLossSchema>
 //level
 export interface LevelType {
   title: string
-  type: "Calculated Field" | "COA Group" | undefined
+  type: 'Calculated Field' | 'COA Group' | undefined
   COA_ID: number | null
   position: number
   formula: string
   negative: boolean
-  document: "Income Statement" | "Balance Sheet" | undefined // Added document field
+  document: 'Income Statement' | 'Balance Sheet' | undefined // Added document field
 }
 
 export interface CoaPlMappingReport {
@@ -1415,7 +1373,6 @@ export interface CoaPlMappingReport {
   document: string
   balance: number
 }
-
 
 // IouRecord loan schema zod
 export const IouRecordGetSchema = z.object({
@@ -1517,7 +1474,6 @@ export interface LoanReport {
   creditSum: number
   closingBalance: number
 }
-
 
 export const exchangeSchema = z.object({
   exchangeDate: z.coerce.date(),
@@ -1787,8 +1743,6 @@ export interface GetVehicleConsumptionType {
 //   createdBy: z.number().int(),
 // })
 
-
-
 export const createVehicleFuelConsumptionSchema = z.object({
   vehicleId: z
     .number({ invalid_type_error: 'Vehicle is required' })
@@ -1805,10 +1759,7 @@ export const createVehicleFuelConsumptionSchema = z.object({
   transDate: z.coerce.date(),
   createdBy: z.number(),
   totalConsumption: z.number().optional(),
-});
-
-
-
+})
 
 export type createVehicleFuelConsumptionType = z.infer<
   typeof createVehicleFuelConsumptionSchema
@@ -1865,7 +1816,7 @@ const BankBalanceSchema = z.array(z.array(BalanceEntrySchema))
 export const FundPositionSchema = z.object({
   cashBalance: CashBalanceSchema,
   BankBalance: BankBalanceSchema,
-  loanBalance: BankBalanceSchema
+  loanBalance: BankBalanceSchema,
 })
 
 // Infer the TypeScript type from the schema
@@ -1907,7 +1858,7 @@ export const CreateElectricityMeterSchema = z.object({
   meterDescription: z.string().max(80),
   provAccountId: z.number().nonnegative(),
   expenseaccountId: z.number().nonnegative(),
-  location: z.string()
+  location: z.string(),
 })
 
 export type CreateElectricityMeterType = z.infer<
@@ -1916,19 +1867,19 @@ export type CreateElectricityMeterType = z.infer<
 
 //Get Electricity Meter
 export interface GetElectricityMeterType {
-  meterid: number;
-  meterName: string;
-  companyId: number;
-  companyName: string;
-  utilityType: string | null;
-  metertpe: number;
-  description: string;
-  costCenterid: number;
-  costCenterName: string;
-  provaccountId: number;
-  provaccountName: string;
-  accountid: number;
-  accountHead: string;
+  meterid: number
+  meterName: string
+  companyId: number
+  companyName: string
+  utilityType: string | null
+  metertpe: number
+  description: string
+  costCenterid: number
+  costCenterName: string
+  provaccountId: number
+  provaccountName: string
+  accountid: number
+  accountHead: string
 }
 
 //Get Bills get type
@@ -1987,7 +1938,7 @@ export interface GetCostBreakdownType {
 }
 
 export interface settings {
-  value: string;
+  value: string
 }
 
 //Get cost breakdown Details data type
@@ -2110,13 +2061,12 @@ export type GetCashReport = {
   }[]
 }
 
-
 export type VehicleCostByYearGetData = {
-  year: number;
-  month: number;
-  costName: string;
-  amount: string; // or number, depending on actual use
-};
+  year: number
+  month: number
+  costName: string
+  amount: string // or number, depending on actual use
+}
 
 export type CostBreakdown = {
   [key: string]: string
@@ -2147,39 +2097,38 @@ export interface UtilityReportParams {
 }
 
 export type GetDeliveryChallan = {
-  id: number;
-  challanId: string;
-  date: string; // ISO date string, e.g., "2025-07-23T00:00:00.000Z"
-  orderId: string; // Also an ISO date string in your data, though this name might suggest a number or string ID
-  orderDate: string; // ISO date string
-  division: string;
-  divisionId: number;
-  amount: number;
-  res_partnerId: number;
-  res_partnerName: string;
-  companyId: number;
-  companyName: string;
-  currencyName: string;
-  currencyId: number;
-};
-
+  id: number
+  challanId: string
+  date: string // ISO date string, e.g., "2025-07-23T00:00:00.000Z"
+  orderId: string // Also an ISO date string in your data, though this name might suggest a number or string ID
+  orderDate: string // ISO date string
+  division: string
+  divisionId: number
+  amount: number
+  res_partnerId: number
+  res_partnerName: string
+  companyId: number
+  companyName: string
+  currencyName: string
+  currencyId: number
+}
 
 //journal edit type
 // Type for a single journal detail entry
 export interface JournalDetail {
-  id: number;
-  voucherId: number;
-  accountId: number;
-  costCenterId: number | null;
-  departmentId: number | null;
-  debit: number;
-  credit: number;
-  balance: number;
-  resPartnerId: number | null;
-  bankaccountid: number | null;
-  notes: string;
-  createdBy: number;
-  updatedBy: number;
+  id: number
+  voucherId: number
+  accountId: number
+  costCenterId: number | null
+  departmentId: number | null
+  debit: number
+  credit: number
+  balance: number
+  resPartnerId: number | null
+  bankaccountid: number | null
+  notes: string
+  createdBy: number
+  updatedBy: number
 }
 
 // Type for the main journal entry
@@ -2202,10 +2151,9 @@ export interface JournalEntry {
 
 // Full combined type
 export interface JournalPayload {
-  journalEntry: JournalEntry;
-  journalDetails: JournalDetail[];
+  journalEntry: JournalEntry
+  journalDetails: JournalDetail[]
 }
-
 
 //billofexchange get type
 export type BoeGet = {
@@ -2247,7 +2195,7 @@ export type FdrCreateType = {
   interestRate: number // e.g., 7.5
   term: number // e.g., 24 (months)
   maturedDate: string // e.g., "2027-07-30"
-  company: number | null  // e.g., "National Accessories Ltd"
+  company: number | null // e.g., "National Accessories Ltd"
   companyOther: string | null
   createdBy: number // e.g., 1 (optional if backend handles it)
 }
@@ -2259,30 +2207,30 @@ export type FdrGetType = FdrCreateType & {
 }
 
 export interface NewFdrValueUpdate {
-  fdrNo: string;
-  newValue: number;
-  updateDate: string;  // input as string (e.g., "2025-08-03")
-  createdBy: number;
+  fdrNo: string
+  newValue: number
+  updateDate: string // input as string (e.g., "2025-08-03")
+  createdBy: number
 }
 
 // get Fdr Report type
 export interface GetFdrReport {
-  fdr_no: string;
-  fdr_date: string; // ISO date format (YYYY-MM-DD)
-  account_no: string;
-  bank: string;
-  branch: string;
-  face_value: number;
-  interest_rate: number;
-  term: number;
-  matured_date: string; // ISO date format
-  company: number | null;
-  company_other: string | null;
-  created_by: number;
-  created_at: string; // DateTime string
-  updated_at: string; // DateTime string
-  last_updated_value: number | null;
-  last_update_date: string | null; // Date only
+  fdr_no: string
+  fdr_date: string // ISO date format (YYYY-MM-DD)
+  account_no: string
+  bank: string
+  branch: string
+  face_value: number
+  interest_rate: number
+  term: number
+  matured_date: string // ISO date format
+  company: number | null
+  company_other: string | null
+  created_by: number
+  created_at: string // DateTime string
+  updated_at: string // DateTime string
+  last_updated_value: number | null
+  last_update_date: string | null // Date only
 }
 //Get Response of BeoApiResponse
 export interface BoeApiResponse {
@@ -2320,7 +2268,6 @@ export interface LoanPosition {
   companyName: string
 }
 
-
 export type QuickAssetType = {
   from: string
   to: string
@@ -2337,49 +2284,46 @@ export interface GetCashFlowDFPType {
   MaturedValue: number
 }
 
-
 export interface LcInfoByCostIsActive {
-  LCREQNO: string;
-  IMPLCDATE: string;      // ISO date string
-  ISSUEPLACE: string;
-  PMTTERM: string;
-  IMPLCNO: string;
-  VENDCODE: number;
-  LCANO: string;
-  APPLCBANK: string;
-  IRCNO: string;
-  BENEFICBANK: string;
-  ADVISEBANK: string;
-  SHIPDATE: string;       // ISO date string
-  LCEXPDATE: string;      // ISO date string
-  PRICEMODE: string;
-  CANDF: string;
-  INSUCOMPANY: number;
-  INSCOVNOTE: string;
-  CRDTTERM: string;
-  TERMCOND: string;
-  costCenterId: number;
-  companyId: number;
-  created_by: number;
-  created_at: string;     // ISO date string
+  LCREQNO: string
+  IMPLCDATE: string // ISO date string
+  ISSUEPLACE: string
+  PMTTERM: string
+  IMPLCNO: string
+  VENDCODE: number
+  LCANO: string
+  APPLCBANK: string
+  IRCNO: string
+  BENEFICBANK: string
+  ADVISEBANK: string
+  SHIPDATE: string // ISO date string
+  LCEXPDATE: string // ISO date string
+  PRICEMODE: string
+  CANDF: string
+  INSUCOMPANY: number
+  INSCOVNOTE: string
+  CRDTTERM: string
+  TERMCOND: string
+  costCenterId: number
+  companyId: number
+  created_by: number
+  created_at: string // ISO date string
 }
-
 
 // Define the type
 export interface DeferredPayment {
-  lcReqNo: string;
-  LC_ISSUE: string; // Could be Date if you convert strings to Date
-  goods_in: string | null; // Could also be Date | null
-  maturity: string;       // Could also be Date
-  loanType: string;
-  opening_balance: number;
-  company_name: string;
-  name: string;
+  lcReqNo: string
+  LC_ISSUE: string // Could be Date if you convert strings to Date
+  goods_in: string | null // Could also be Date | null
+  maturity: string // Could also be Date
+  loanType: string
+  opening_balance: number
+  company_name: string
+  name: string
 }
 
 // Define the report type as an array of deferred payments
-export type DeferredPaymentsReport = DeferredPayment[];
-
+export type DeferredPaymentsReport = DeferredPayment[]
 
 // utils/type.ts
 export interface CreateReconciliationOpeningType {

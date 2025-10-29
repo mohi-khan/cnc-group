@@ -5,42 +5,47 @@ import type { JournalEntryWithDetailsSchema } from "@/utils/type"
 import type { UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
 
-// This component is used to submit the bank voucher form.
-// It takes the form and onSubmit function as props and calls the onSubmit function with the form values and status when the button is clicked.
 interface BankVoucherSubmitProps {
   form: UseFormReturn<any>
   onSubmit: (values: z.infer<typeof JournalEntryWithDetailsSchema>, status: "Draft" | "Posted") => Promise<void>
-  disabled?: boolean // Add disabled prop
+  disabled?: boolean
 }
 
 export default function BankVoucherSubmit({
   form,
   onSubmit,
-  disabled = false, // Default to false
+  disabled = false,
 }: BankVoucherSubmitProps) {
   
-  // 
+  const handleSubmit = async (status: "Draft" | "Posted") => {
+    // Call the validation function attached by BankVoucherDetails
+    const validateBankVoucherDetails = (form as any).validateBankVoucherDetails
+    
+    if (validateBankVoucherDetails && !validateBankVoucherDetails()) {
+      // Validation failed - don't proceed
+      return
+    }
+    
+    // If validation passes, proceed with submission
+    const values = form.getValues()
+    await onSubmit(values, status)
+  }
+  
   return (
     <div className="flex justify-end space-x-2">
       <Button
         type="button"
         variant="outline"
-        disabled={disabled} // Disable when there's an error
-        onClick={() => {
-          const values = form.getValues()
-          onSubmit(values, "Draft")
-        }}
+        disabled={disabled}
+        onClick={() => handleSubmit("Draft")}
       >
         Save as Draft
       </Button>
       <Button
         type="button"
         variant="outline"
-        disabled={disabled} // Disable when there's an error
-        onClick={() => {
-          const values = form.getValues()
-          onSubmit(values, "Posted")
-        }}
+        disabled={disabled}
+        onClick={() => handleSubmit("Posted")}
       >
         Save as Post
       </Button>
