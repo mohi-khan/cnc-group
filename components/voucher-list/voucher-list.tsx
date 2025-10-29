@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import Loader from '@/utils/loader'
 import { useInitializeUser, tokenAtom, userDataAtom } from '@/utils/user'
 import { toast } from '@/hooks/use-toast'
@@ -101,6 +102,11 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [isPosting, setIsPosting] = useState<Record<number, boolean>>({})
 
+  // Multiple selection state
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [selectAll, setSelectAll] = useState(false)
+  const [isBulkPosting, setIsBulkPosting] = useState(false)
+
   // Edit popup state
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editVoucherId, setEditVoucherId] = useState<number | null>(null)
@@ -119,6 +125,9 @@ const VoucherList: React.FC<VoucherListProps> = ({
     if (hasChanged) {
       vouchersRef.current = vouchers
       setLocalVouchers(vouchers)
+      // Reset selections when vouchers change
+      setSelectedIds([])
+      setSelectAll(false)
     }
   }, [vouchers])
 
@@ -147,7 +156,39 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const endIndex = startIndex + itemsPerPage
   const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
 
-  // Posting
+  // Get only draft Cash vouchers for selection
+  const draftCashVouchers = currentVouchers.filter(
+    (v) => v.state === 0 && v.journaltype === 'Cash Voucher'
+  )
+
+  // Handle individual checkbox selection
+  const handleIndividualSelection = (voucherId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, voucherId])
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => id !== voucherId))
+      setSelectAll(false)
+    }
+  }
+
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked)
+    if (checked) {
+      setSelectedIds(draftCashVouchers.map((v) => v.voucherid))
+    } else {
+      setSelectedIds([])
+    }
+  }
+
+  // Update select all state when individual selections change
+  useEffect(() => {
+    if (draftCashVouchers.length > 0) {
+      setSelectAll(selectedIds.length === draftCashVouchers.length)
+    }
+  }, [selectedIds, draftCashVouchers.length])
+
+  // Single posting
   const handlePostJournal = useCallback(
     async (voucherId: number) => {
       if (!userData?.userId || !token) return
@@ -189,6 +230,75 @@ const VoucherList: React.FC<VoucherListProps> = ({
     },
     [userData?.userId, token, onJournalPosted]
   )
+
+  // Bulk posting
+  const handleBulkPosting = async () => {
+    if (selectedIds.length === 0) {
+      toast({
+        title: 'Warning',
+        description: 'Please select at least one voucher to post',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!userData?.userId || !token) return
+
+    try {
+      setIsBulkPosting(true)
+      let successCount = 0
+      let failCount = 0
+
+      for (const voucherId of selectedIds) {
+        try {
+          const response = await makePostJournal(
+            voucherId,
+            userData.userId,
+            token
+          )
+          if (response.error || !response.data) {
+            failCount++
+          } else {
+            successCount++
+            setLocalVouchers((prev) =>
+              prev.map((v) =>
+                v.voucherid === voucherId ? { ...v, state: 1 } : v
+              )
+            )
+            onJournalPosted?.(voucherId)
+          }
+        } catch (error) {
+          failCount++
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: 'Success',
+          description: `${successCount} voucher(s) posted successfully${failCount > 0 ? `, ${failCount} failed` : ''}`,
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to post vouchers',
+          variant: 'destructive',
+        })
+      }
+
+      // Reset selections after posting
+      setSelectedIds([])
+      setSelectAll(false)
+    } catch (error) {
+      console.error('Error in bulk posting:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to post vouchers',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsBulkPosting(false)
+    }
+  }
 
   // Edit click: open dialog and fetch details
   const openEditPopup = useCallback(
@@ -254,6 +364,21 @@ const VoucherList: React.FC<VoucherListProps> = ({
 
   return (
     <>
+      {/* Bulk Action Button - Only show for Cash Vouchers */}
+      {draftCashVouchers.length > 0 && (
+        <div className="mb-4 flex justify-end">
+          <Button
+            type="button"
+            onClick={handleBulkPosting}
+            disabled={selectedIds.length === 0 || isBulkPosting}
+          >
+            {isBulkPosting
+              ? 'Posting...'
+              : `Post Selected (${selectedIds.length})`}
+          </Button>
+        </div>
+      )}
+
       <Table className="border shadow-md">
         <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
           <TableRow>
@@ -271,9 +396,17 @@ const VoucherList: React.FC<VoucherListProps> = ({
             ))}
             {/* ✅ Always show Action column */}
             <TableHead className="text-right">
-              <Button variant="ghost" className="hover:bg-transparent">
-                Action
-              </Button>
+              <div className="flex items-center justify-end gap-2">
+                <span>Action</span>
+                {/* Only show select all checkbox if there are draft cash vouchers */}
+                {draftCashVouchers.length > 0 && (
+                  <Checkbox
+                    checked={selectAll}
+                    onCheckedChange={handleSelectAll}
+                    className="border border-black"
+                  />
+                )}
+              </div>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -301,6 +434,8 @@ const VoucherList: React.FC<VoucherListProps> = ({
             currentVouchers.map((voucher) => {
               const isCurrentlyPosting = isPosting[voucher.voucherid]
               const isButtonDisabled = voucher.state !== 0 || isCurrentlyPosting
+              const isDraftCashVoucher =
+                voucher.state === 0 && voucher.journaltype === 'Cash Voucher'
               return (
                 <TableRow key={voucher.voucherid}>
                   {columns.map(({ key }) => (
@@ -335,24 +470,38 @@ const VoucherList: React.FC<VoucherListProps> = ({
                       )}
                     </TableCell>
                   ))}
-                  {/* ✅ Always show Action buttons */}
-                  <TableCell className="text-right flex gap-2">
-                    <Button
-                      disabled={isButtonDisabled}
-                      variant="outline"
-                      onClick={() => handlePostJournal(voucher.voucherid)}
-                      className="min-w-[80px]"
-                    >
-                      {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
-                    </Button>
-                    <Button
-                      disabled={voucher.state !== 0}
-                      variant="outline"
-                      onClick={() => openEditPopup(voucher)}
-                      className="min-w-[80px]"
-                    >
-                      Edit
-                    </Button>
+                  {/* ✅ Always show Action buttons with checkbox only for draft cash vouchers */}
+                  <TableCell className="text-right">
+                    <div className="flex gap-2 items-center justify-end">
+                      <Button
+                        disabled={isButtonDisabled}
+                        variant="outline"
+                        onClick={() => handlePostJournal(voucher.voucherid)}
+                        className="min-w-[80px]"
+                      >
+                        {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
+                      </Button>
+                      <Button
+                        disabled={voucher.state !== 0}
+                        variant="outline"
+                        onClick={() => openEditPopup(voucher)}
+                        className="min-w-[80px]"
+                      >
+                        Edit
+                      </Button>
+                      {/* Only show checkbox for draft Cash Vouchers */}
+                      {isDraftCashVoucher && (
+                        <Checkbox
+                          checked={selectedIds.includes(voucher.voucherid)}
+                          onCheckedChange={(checked) =>
+                            handleIndividualSelection(
+                              voucher.voucherid,
+                              checked as boolean
+                            )
+                          }
+                        />
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               )
@@ -588,7 +737,6 @@ export default VoucherList
 //   const vouchersRef = useRef<Voucher[]>(vouchers)
 //   const [localVouchers, setLocalVouchers] = useState<Voucher[]>(vouchers)
 
-//   // Only update local vouchers if changed
 //   useEffect(() => {
 //     const hasChanged =
 //       JSON.stringify(vouchersRef.current) !== JSON.stringify(vouchers)
@@ -714,16 +862,8 @@ export default VoucherList
 //     [router, token]
 //   )
 
-//   // After successful edit, optionally refresh or patch list
-//   const handleEdited = useCallback((voucherId: number) => {
-//     // Option 1: optimistic patch (if you can compute new totals/notes locally)
-//     // Option 2: trigger a parent refresh outside this component
-//     // For now, we simply close the dialog (handled in child) and leave list as-is.
-//     // You can add a refetch callback via props if needed.
-//     // no-op
-//   }, [])
+//   const handleEdited = useCallback((voucherId: number) => {}, [])
 
-//   // Pagination handlers
 //   const handlePreviousPage = useCallback(() => {
 //     setCurrentPage((prev) => Math.max(prev - 1, 1))
 //   }, [])
@@ -753,23 +893,20 @@ export default VoucherList
 //                 </Button>
 //               </TableHead>
 //             ))}
-//             {pathname.includes('accounting/day-books') && (
-//               <TableHead className="text-right">
-//                 <Button variant="ghost" className="hover:bg-transparent">
-//                   Action
-//                 </Button>
-//               </TableHead>
-//             )}
+//             {/* ✅ Always show Action column */}
+//             <TableHead className="text-right">
+//               <Button variant="ghost" className="hover:bg-transparent">
+//                 Action
+//               </Button>
+//             </TableHead>
 //           </TableRow>
 //         </TableHeader>
+
 //         <TableBody>
 //           {isLoading ? (
 //             <TableRow>
 //               <TableCell
-//                 colSpan={
-//                   columns.length +
-//                   (pathname.includes('accounting/day-books') ? 1 : 0)
-//                 }
+//                 colSpan={columns.length + 1}
 //                 className="text-center py-4"
 //               >
 //                 <Loader />
@@ -778,10 +915,7 @@ export default VoucherList
 //           ) : currentVouchers.length === 0 ? (
 //             <TableRow>
 //               <TableCell
-//                 colSpan={
-//                   columns.length +
-//                   (pathname.includes('accounting/day-books') ? 1 : 0)
-//                 }
+//                 colSpan={columns.length + 1}
 //                 className="text-center py-4"
 //               >
 //                 No voucher is available.
@@ -797,7 +931,7 @@ export default VoucherList
 //                     <TableCell key={key}>
 //                       {key === 'voucherno' ? (
 //                         <Link
-//                           target='_blank'
+//                           target="_blank"
 //                           href={linkGenerator(voucher.voucherid)}
 //                           className="text-blue-600 hover:underline"
 //                         >
@@ -825,32 +959,32 @@ export default VoucherList
 //                       )}
 //                     </TableCell>
 //                   ))}
-//                   {pathname.includes('accounting/day-books' ) && (
-//                     <TableCell className="text-right flex gap-2">
-//                       <Button
-//                         disabled={isButtonDisabled}
-//                         variant="outline"
-//                         onClick={() => handlePostJournal(voucher.voucherid)}
-//                         className="min-w-[80px]"
-//                       >
-//                         {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
-//                       </Button>
-//                       <Button
-//                         disabled={voucher.state !== 0}
-//                         variant="outline"
-//                         onClick={() => openEditPopup(voucher)}
-//                         className="min-w-[80px]"
-//                       >
-//                         Edit
-//                       </Button>
-//                     </TableCell>
-//                   )}
+//                   {/* ✅ Always show Action buttons */}
+//                   <TableCell className="text-right flex gap-2">
+//                     <Button
+//                       disabled={isButtonDisabled}
+//                       variant="outline"
+//                       onClick={() => handlePostJournal(voucher.voucherid)}
+//                       className="min-w-[80px]"
+//                     >
+//                       {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
+//                     </Button>
+//                     <Button
+//                       disabled={voucher.state !== 0}
+//                       variant="outline"
+//                       onClick={() => openEditPopup(voucher)}
+//                       className="min-w-[80px]"
+//                     >
+//                       Edit
+//                     </Button>
+//                   </TableCell>
 //                 </TableRow>
 //               )
 //             })
 //           )}
 //         </TableBody>
 //       </Table>
+
 //       {totalPages > 1 && (
 //         <Pagination className="mt-4">
 //           <PaginationContent>
@@ -889,17 +1023,18 @@ export default VoucherList
 //         </Pagination>
 //       )}
 
-//       {/* Conditionally render the entire popup structure based on isEditOpen */}
+//       {/* Popup Section */}
 //       {isEditOpen && (
 //         <>
 //           {editVoucherData?.[0]?.journaltype !== 'Journal Voucher' &&
 //           editVoucherData?.[0]?.journaltype !== 'Contra Voucher' ? (
-//             // For Cash/Bank Vouchers, VoucherList provides the Dialog
 //             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
 //               <DialogContent className="max-w-7xl p-0">
-//                 <DialogHeader >
+//                 <DialogHeader>
 //                   <DialogTitle className="px-6 pt-6 text-2xl">
-//                     {editVoucherData?.[0]?.journaltype === 'Bank Voucher' && <span>Bank Voucher</span>}
+//                     {editVoucherData?.[0]?.journaltype === 'Bank Voucher' && (
+//                       <span>Bank Voucher</span>
+//                     )}
 //                   </DialogTitle>
 //                 </DialogHeader>
 //                 <div className="p-6">
@@ -915,7 +1050,7 @@ export default VoucherList
 //                         voucherData={editVoucherData}
 //                         userId={userData.userId}
 //                         onClose={() => setIsEditOpen(false)}
-//                         isOpen={isEditOpen} // Pass isOpen prop
+//                         isOpen={isEditOpen}
 //                       />
 //                     )}
 //                   {!isEditLoading && !editVoucherData && (
@@ -927,8 +1062,6 @@ export default VoucherList
 //               </DialogContent>
 //             </Dialog>
 //           ) : (
-//             // For Journal/Contra Vouchers, VoucherEditContent renders its own Dialog.
-//             // This div provides a title and loading state, and VoucherEditContent will render the actual popup.
 //             <div className="max-w-7xl p-0">
 //               <div className="p-6">
 //                 {isEditLoading && (
@@ -943,7 +1076,7 @@ export default VoucherList
 //                       voucherData={editVoucherData}
 //                       userId={userData.userId}
 //                       onClose={() => setIsEditOpen(false)}
-//                       isOpen={isEditOpen} // Pass isOpen prop
+//                       isOpen={isEditOpen}
 //                     />
 //                   )}
 //                 {!isEditLoading && !editVoucherData && (
@@ -961,5 +1094,6 @@ export default VoucherList
 // }
 
 // export default VoucherList
+
 
 

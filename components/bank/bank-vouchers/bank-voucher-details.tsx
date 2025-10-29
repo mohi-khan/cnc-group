@@ -1,7 +1,12 @@
 'use client'
 import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import { FormControl, FormField, FormItem } from '@/components/ui/form'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -14,7 +19,7 @@ import {
 import { Trash } from 'lucide-react'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type { FormStateType, ResPartner } from '@/utils/type'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   type ComboboxItem,
   CustomComboboxWithApi,
@@ -30,7 +35,7 @@ export default function BankVoucherDetails({
   partners,
   isFromInvoice = false,
   invoicePartnerName = '',
-  isEdit = false, // Add isEdit prop
+  isEdit = false,
 }: {
   form: UseFormReturn<any>
   formState: FormStateType
@@ -38,7 +43,7 @@ export default function BankVoucherDetails({
   partners: ResPartner[]
   isFromInvoice?: boolean
   invoicePartnerName?: string
-  isEdit?: boolean // Add isEdit prop
+  isEdit?: boolean
 }) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -94,7 +99,6 @@ export default function BankVoucherDetails({
     loadPartner()
   }, [watchedPartnerId, partners, token])
 
-  // Update amounts when rows are added or removed (only in create mode)
   useEffect(() => {
     if (!isEdit && fields.length > 0 && fields.length === 1) {
       const totalAmount = form.getValues('journalEntry.amountTotal') || 0
@@ -116,7 +120,6 @@ export default function BankVoucherDetails({
     }
   }, [formState.selectedBankAccount?.id, form])
 
-  // Live calculation function for edit mode
   const calculateTotalAmount = () => {
     if (!isEdit) return
 
@@ -136,6 +139,50 @@ export default function BankVoucherDetails({
       shouldValidate: false,
     })
   }
+
+  // Validation function to check if all required fields are filled
+  const validateRequiredFields = useCallback(() => {
+    const details = form.getValues('journalDetails') || []
+
+    for (let index = 0; index < details.length; index++) {
+      const detail = details[index]
+      const selectedAccount = formState.filteredChartOfAccounts.find(
+        (account) => account.accountId === detail.accountId
+      )
+
+      // Check if partner is required but not filled
+      // Check if partner is required but not filled
+      if (
+        (selectedAccount?.withholdingTax === true ||
+          selectedAccount?.isPartner === true) &&
+        !detail.resPartnerId
+      ) {
+        form.setError(`journalDetails.${index}.resPartnerId`, {
+          type: 'manual',
+          message: 'Partner is required for this account',
+        })
+        return false
+      }
+
+      // Check if cost center is required but not filled
+      if (selectedAccount?.isCostCenter === true && !detail.costCenterId) {
+        form.setError(`journalDetails.${index}.costCenterId`, {
+          type: 'manual',
+          message: 'Cost Center is required for this account',
+        })
+        return false
+      }
+    }
+
+    return true
+  }, [form, formState.filteredChartOfAccounts])
+
+  // Expose validation function to parent
+  useEffect(() => {
+    if (form) {
+      ;(form as any).validateBankVoucherDetails = validateRequiredFields
+    }
+  }, [form, validateRequiredFields])
 
   return (
     <div>
@@ -159,8 +206,10 @@ export default function BankVoucherDetails({
             const selectedAccount = formState.filteredChartOfAccounts.find(
               (account) => account.accountId === selectedAccountId
             )
-            const isPartnerFieldEnabled =
+            const isPartnerFieldRequired =
               selectedAccount?.withholdingTax === true
+            const isCostCenterFieldRequired =
+              selectedAccount?.isCostCenter === true
 
             return (
               <TableRow key={field.id}>
@@ -207,9 +256,19 @@ export default function BankVoucherDetails({
                                       null
                                     )
                                   }
+                                  if (!newAccount?.isCostCenter) {
+                                    form.setValue(
+                                      `journalDetails.${index}.costCenterId`,
+                                      null
+                                    )
+                                  }
                                 } else {
                                   form.setValue(
                                     `journalDetails.${index}.resPartnerId`,
+                                    null
+                                  )
+                                  form.setValue(
+                                    `journalDetails.${index}.costCenterId`,
                                     null
                                   )
                                 }
@@ -226,36 +285,47 @@ export default function BankVoucherDetails({
                   <FormField
                     control={form.control}
                     name={`journalDetails.${index}.costCenterId`}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
-                          <CustomCombobox
-                            items={formState.costCenters
-                              .filter((center) => center.isActive)
-                              .map((center) => ({
-                                id: center.costCenterId.toString(),
-                                name:
-                                  center.costCenterName ||
-                                  'Unnamed Cost Center',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      formState.costCenters.find(
-                                        (c) => c.costCenterId === field.value
-                                      )?.costCenterName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select cost center"
-                          />
+                          <div>
+                            <CustomCombobox
+                              items={formState.costCenters
+                                .filter((center) => center.isActive)
+                                .map((center) => ({
+                                  id: center.costCenterId.toString(),
+                                  name:
+                                    center.costCenterName ||
+                                    'Unnamed Cost Center',
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        formState.costCenters.find(
+                                          (c) => c.costCenterId === field.value
+                                        )?.costCenterName || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) =>
+                                field.onChange(
+                                  value ? Number.parseInt(value.id, 10) : null
+                                )
+                              }
+                              placeholder={
+                                isCostCenterFieldRequired
+                                  ? 'Select cost center *'
+                                  : 'Select cost center'
+                              }
+                            />
+                            {fieldState.error && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {fieldState.error.message}
+                              </p>
+                            )}
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}
@@ -303,7 +373,7 @@ export default function BankVoucherDetails({
                   <FormField
                     control={form.control}
                     name={`journalDetails.${index}.resPartnerId`}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormControl>
                           {isFromInvoice ? (
@@ -314,9 +384,7 @@ export default function BankVoucherDetails({
                               placeholder="Partner name from invoice"
                             />
                           ) : (
-                            <div
-                              className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
-                            >
+                            <div>
                               <CustomComboboxWithApi
                                 items={partners.map((partner) => ({
                                   id: partner.id.toString(),
@@ -337,7 +405,11 @@ export default function BankVoucherDetails({
                                     item ? Number.parseInt(item.id) : null
                                   )
                                 }}
-                                placeholder="Select partner"
+                                placeholder={
+                                  isPartnerFieldRequired
+                                    ? 'Select partner *'
+                                    : 'Select partner'
+                                }
                                 searchFunction={searchPartners}
                                 fetchByIdFunction={async (id) => {
                                   const numericId: number =
@@ -356,6 +428,11 @@ export default function BankVoucherDetails({
                                     : null
                                 }}
                               />
+                              {fieldState.error && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  {fieldState.error.message}
+                                </p>
+                              )}
                             </div>
                           )}
                         </FormControl>
@@ -393,7 +470,6 @@ export default function BankVoucherDetails({
                               field.onChange(
                                 value === '' ? undefined : Number(value)
                               )
-                              // Trigger live calculation in edit mode
                               if (isEdit) {
                                 setTimeout(() => calculateTotalAmount(), 0)
                               }
@@ -411,7 +487,6 @@ export default function BankVoucherDetails({
                     size="sm"
                     onClick={() => {
                       remove(index)
-                      // Trigger live calculation after removal in edit mode
                       if (isEdit) {
                         setTimeout(() => calculateTotalAmount(), 0)
                       }
