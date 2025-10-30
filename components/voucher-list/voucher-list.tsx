@@ -212,26 +212,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const filteredVouchers = useMemo(() => {
     let filtered = [...localVouchers]
 
-    // Check if this is Day Book by pathname
-    const isDayBook =
-      pathname.includes('day-book') || pathname.includes('daybook')
-
-    // If Day Book, exclude Cash Vouchers completely
-    if (isDayBook) {
-      filtered = filtered.filter((v) => v.journaltype !== 'Cash Voucher')
-    } else {
-      // For Cash Voucher list, filter by today's date
-      filtered = filtered.filter((v) => {
-        if (v.journaltype === 'Cash Voucher') {
-          const voucherDate = v.date
-            ? new Date(v.date).toISOString().split('T')[0]
-            : null
-          return voucherDate === todayDate
-        }
-        return true // Keep non-Cash vouchers
-      })
-    }
-
     // Filter by company if selected
     if (selectedCompanyId !== undefined) {
       filtered = filtered.filter((v) => {
