@@ -1,13 +1,13 @@
 'use client'
 
+import React, { useEffect, useState } from 'react'
 import {
   getAllBudgetDetails,
   createBudgetDetails,
   updateBudgetDetails,
 } from '@/api/budget-api'
 import { toast } from '@/hooks/use-toast'
-import { AccountsHead, BudgetItems, ChartOfAccount } from '@/utils/type'
-import React, { useEffect, useState, useMemo } from 'react'
+import { AccountsHead, BudgetItems } from '@/utils/type'
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useParams } from 'next/navigation'
-import { Edit, ArrowUpDown, Plus, Pencil } from 'lucide-react'
+import { Edit, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Loader from '@/utils/loader'
 import {
@@ -32,47 +32,58 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SmallButton } from '@/components/custom-ui/small-button'
+import { CustomCombobox } from '@/utils/custom-combobox'
+import { getAllChartOfAccounts } from '@/api/common-shared-api'
 
 const SingleBudgetItemsDetails = () => {
   const [budgetItems, setBudgetItems] = useState<BudgetItems[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [sortColumn, setSortColumn] = useState<keyof BudgetItems>('name')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const [selectedItem, setSelectedItem] = useState<BudgetItems | null>(null)
-  const [editedName, setEditedName] = useState<string>('')
   const [editedAmount, setEditedAmount] = useState<number>(0)
   const [open, setOpen] = useState(false)
   const [accounts, setAccounts] = useState<AccountsHead[]>([])
+  const [selectedAccount, setSelectedAccount] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   const { id } = useParams()
   const budgetId = Number(id)
-
   const mainToken = localStorage.getItem('authToken')
   const token = `Bearer ${mainToken}`
 
-  // async function fetchAccounts() {
-  //   const response = await getAllCoa()
-  //   if (response.error) {
-  //     console.error('Error fetching accounts:', response.error)
-  //     toast({
-  //       variant: 'destructive',
-  //       title: 'Error',
-  //       description: 'Failed to fetch chart of accounts',
-  //     })
-  //   } else {
-  //     setAccounts(response.data)
-  //   }
-  // }
+  /** 🔹 Fetch chart of accounts */
+  const fetchAccounts = async () => {
+    try {
+      const response = await getAllChartOfAccounts(token)
+      console.log('📋 Accounts Response:', response)
+      if (response.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to fetch chart of accounts',
+        })
+      } else {
+        setAccounts(response.data || [])
+      }
+    } catch (error) {
+      console.error('❌ Error fetching accounts:', error)
+    }
+  }
 
+  /** 🔹 Fetch all budget details */
   const fetchGetAllBudgetItems = React.useCallback(async () => {
+    console.log('🔄 Fetching budget items...')
     setLoading(true)
     try {
       const response = await getAllBudgetDetails(budgetId, token)
+      console.log('📊 Budget Items Response:', response)
       if (!response.data) throw new Error('No data received')
+      console.log('✅ Setting budget items:', response.data)
       setBudgetItems(response.data)
     } catch (error) {
-      console.error('Error getting budget details:', error)
+      console.error('❌ Error fetching budget items:', error)
       toast({
         title: 'Error',
         description: 'Failed to load budget details',
@@ -85,25 +96,38 @@ const SingleBudgetItemsDetails = () => {
 
   useEffect(() => {
     fetchGetAllBudgetItems()
-    // fetchAccounts()
+    fetchAccounts()
   }, [fetchGetAllBudgetItems])
 
+  /** 🔹 Add new budget item */
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedAccount) {
+      toast({
+        title: 'Error',
+        description: 'Please select a Chart of Account name',
+      })
+      return
+    }
+
     const newItem = {
-      budgetId: budgetId,
-      name: editedName,
+      budgetId,
+      name: selectedAccount.name,
       budgetAmount: editedAmount,
-      accountId: 5, // Replace with the actual account ID from your application
+      accountId: Number(selectedAccount.id),
       createdBy: null,
       amount: editedAmount,
       actual: null,
     }
+
+    console.log('➕ Creating new item:', newItem)
+
     try {
       const response = await createBudgetDetails({ token }, [newItem])
+      console.log('✅ Create Response:', response)
       if (response.data) {
-        setBudgetItems((prev) => [...prev, { id: Date.now(), ...newItem }])
-        setEditedName('')
+        await fetchGetAllBudgetItems()
+        setSelectedAccount(null)
         setEditedAmount(0)
         setOpen(false)
         toast({
@@ -114,78 +138,114 @@ const SingleBudgetItemsDetails = () => {
         throw new Error('Failed to create budget item')
       }
     } catch (error) {
+      console.error('❌ Error creating budget item:', error)
       toast({
         title: 'Error',
         description: 'Failed to create budget item',
       })
-      console.error('Error creating budget item:', error)
     }
   }
 
+  /** 🔹 Edit existing item */
   const handleEditClick = (item: BudgetItems) => {
+    console.log('✏️ Editing item:', item)
     setSelectedItem(item)
-    setEditedName(item.name)
+    // Set the account properly with current item's accountId
+    setSelectedAccount({
+      id: item.accountId?.toString() ?? '',
+      name: item.name,
+    })
     setEditedAmount(item.budgetAmount)
     setIsEditModalOpen(true)
   }
 
+  /** 🔹 Submit edit */
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedItem) return
-
-    const updatedBudgetItem = {
-      budgetId: 64,
-
-      budgetAmount: editedAmount,
-      accountId: selectedItem.accountId,
+    if (!selectedItem) {
+      console.log('❌ Missing selectedItem')
+      return
     }
 
-    
+    // Use selectedAccount if it exists and has valid data, otherwise use original item's data
+    const accountId = selectedAccount?.id
+      ? Number(selectedAccount.id)
+      : selectedItem.accountId
+
+    const accountName = selectedAccount?.name
+      ? selectedAccount.name
+      : selectedItem.name
+
+    console.log('🔍 Account ID being used:', accountId)
+    console.log('🔍 Account Name being used:', accountName)
+    console.log('🔍 Selected Account state:', selectedAccount)
+    console.log('🔍 Original Item:', selectedItem)
+
+    const updatedItem = {
+      budgetId,
+      accountId: accountId,
+      budgetAmount: editedAmount,
+      amount: editedAmount,
+      name: accountName,
+    }
+
+    console.log('🔄 Updating item ID:', selectedItem.id)
+    console.log('📝 Update payload:', updatedItem)
+    console.log('💰 New amount:', editedAmount)
 
     try {
-      const response = await updateBudgetDetails(budgetId, token)
-      
+      const response = await updateBudgetDetails(
+        selectedItem.id,
+        updatedItem,
+        token
+      )
+      console.log('✅ Update Response:', response)
+
       if (response.data) {
-        setBudgetItems((prev) =>
-          prev.map((item) =>
+        // Immediate optimistic update
+        setBudgetItems((prevItems) =>
+          prevItems.map((item) =>
             item.id === selectedItem.id
-              ? { ...item, name: editedName, budgetAmount: editedAmount }
+              ? {
+                  ...item,
+                  budgetAmount: editedAmount,
+                  name: accountName,
+                  accountId,
+                }
               : item
           )
         )
+
+        // Fetch fresh data after a short delay
+        setTimeout(() => {
+          fetchGetAllBudgetItems()
+        }, 300)
+
         toast({
           title: 'Success',
           description: 'Budget item updated successfully',
         })
+
+        setIsEditModalOpen(false)
+        setSelectedItem(null)
+        setSelectedAccount(null)
+        setEditedAmount(0)
       } else {
         throw new Error('Failed to update budget item')
       }
     } catch (error) {
-      
+      console.error('❌ Error updating budget item:', error)
       toast({
         title: 'Error',
         description: 'Failed to update budget item',
       })
-      console.error('Error updating budget item:', error)
     }
+  }
 
-    setIsEditModalOpen(false)
-    setSelectedItem(null)
-    setEditedName('')
-    setEditedAmount(0)
-  } // const handleAccountChange = (currentId: number, newAccountId: number) => {
-  //   if (newAccountId) {
-  //     const selectedAccount = accounts.find(
-  //       (account) => account.accountId === newAccountId
-  //     )
-  //     if (selectedAccount) {
-  //       setEditedName(selectedAccount.name)
-  //       setSelectedItem((prev) =>
-  //         prev ? { ...prev, accountId: newAccountId } : null
-  //       )
-  //     }
-  //   }
-  // }
+  // Log current state for debugging
+  useEffect(() => {
+    console.log('📊 Current budgetItems state:', budgetItems)
+  }, [budgetItems])
 
   return (
     <div className="p-4 w-max-5xl mx-auto">
@@ -208,45 +268,23 @@ const SingleBudgetItemsDetails = () => {
             <form onSubmit={handleAddItem}>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Item Name</Label>
-                  <Input
-                    id="name"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    placeholder="Enter item name"
-                    required
-                  />
-                  {/* <CustomCombobox
+                  <Label>Select Chart of Account</Label>
+                  <CustomCombobox
                     items={accounts.map((account) => ({
                       id: account.accountId.toString(),
                       name: account.name,
                     }))}
-                    value={
-                      selectedItem?.id
-                        ? {
-                            id: selectedItem.id.toString(),
-                            name:
-                              accounts.find(
-                                (account) =>
-                                  account.accountId === selectedItem.id
-                              )?.name || 'Unnamed Account Head',
-                          }
-                        : null
-                    }
-                    onChange={(value: { id: string; name: string } | null) =>
-                      handleAccountChange(
-                        selectedItem?.id || 0,
-                        value ? parseInt(value.id) : 0
-                      )
-                    }
+                    value={selectedAccount}
+                    onChange={(value) => setSelectedAccount(value)}
                     placeholder="Select account head"
-                  /> */}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="amount">Amount</Label>
                   <Input
                     id="amount"
                     type="number"
+                    min="0"
                     value={editedAmount}
                     onChange={(e) => setEditedAmount(Number(e.target.value))}
                     placeholder="Enter amount"
@@ -270,50 +308,64 @@ const SingleBudgetItemsDetails = () => {
         <Table className="border shadow-md">
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Chart of Account</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {budgetItems.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.budgetAmount}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditClick(item)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {budgetItems.map((item) => {
+              console.log(
+                '🔍 Rendering item:',
+                item.id,
+                'Amount:',
+                item.budgetAmount
+              )
+              return (
+                <TableRow key={item.id}>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.budgetAmount}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditClick(item)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       )}
 
+      {/* 🔹 Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Budget Item</DialogTitle>
             <DialogDescription>
-              Make changes to your budget item.
+              Modify Chart of Account and budget amount.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-name">Item Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  placeholder="Enter item name"
-                  required
+                <Label>Chart of Account</Label>
+                <CustomCombobox
+                  items={accounts.map((account) => ({
+                    id: account.accountId.toString(),
+                    name: account.name,
+                  }))}
+                  value={selectedAccount}
+                  onChange={(value) => {
+                    console.log('🔄 Account changed:', value)
+                    setSelectedAccount(value)
+                  }}
+                  placeholder="Select account head"
                 />
               </div>
               <div>
@@ -322,8 +374,11 @@ const SingleBudgetItemsDetails = () => {
                   id="edit-amount"
                   type="number"
                   value={editedAmount}
-                  onChange={(e) => setEditedAmount(Number(e.target.value))}
-                  placeholder="Enter amount"
+                  onChange={(e) => {
+                    const newAmount = Number(e.target.value)
+                    console.log('💰 Amount input changed:', newAmount)
+                    setEditedAmount(newAmount)
+                  }}
                   required
                 />
               </div>

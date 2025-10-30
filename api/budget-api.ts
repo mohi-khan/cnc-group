@@ -74,13 +74,26 @@ export async function updateBudgetMaster(budgetId: number, token: string) {
     },
   })
 }
-export async function updateBudgetDetails(id: number, token: string) {
-  return fetchApi<MasterBudgetType[]>({
+// export async function updateBudgetDetails(id: number, token: string) {
+//   return fetchApi<MasterBudgetType[]>({
+//     url: `api/budget/updateBudgetItems/${id}`,
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `${token}`,
+//     },
+//   })
+// }
+
+
+export async function updateBudgetDetails(id: number, data: any, token: string) {
+  return fetchApi({
     url: `api/budget/updateBudgetItems/${id}`,
-    method: 'POST',
+    method: 'POST', // use POST if your backend expects it
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${token}`,
     },
+    body: (data),
   })
 }
