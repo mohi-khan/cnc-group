@@ -237,7 +237,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
     return filtered
   }, [
     localVouchers,
-    todayDate,
+    
     selectedCompanyId,
     selectedLocationId,
     companies,
@@ -540,7 +540,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
             <div className="space-y-2">
               <Label className="text-sm font-medium">Opening Balance</Label>
               <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
-                {openingBalance !== null ? openingBalance.toFixed(2) : '0.00'}
+                {openingBalance !== null ? openingBalance : '0.00'}
               </div>
             </div>
           </div>
@@ -799,6 +799,8 @@ const VoucherList: React.FC<VoucherListProps> = ({
 
 export default VoucherList
 
+
+
 // 'use client'
 
 // import type React from 'react'
@@ -831,11 +833,18 @@ export default VoucherList
 //   DialogTitle,
 // } from '@/components/ui/dialog'
 // import { Checkbox } from '@/components/ui/checkbox'
+// import { Label } from '@/components/ui/label'
 // import Loader from '@/utils/loader'
 // import { useInitializeUser, tokenAtom, userDataAtom } from '@/utils/user'
 // import { toast } from '@/hooks/use-toast'
 // import { makePostJournal } from '@/api/vouchers-api'
-// import type { VoucherById } from '@/utils/type'
+// import { getCashReport } from '@/api/cash-report-api'
+// import type {
+//   VoucherById,
+//   CompanyFromLocalstorage,
+//   LocationFromLocalstorage,
+// } from '@/utils/type'
+// import { CustomCombobox } from '@/utils/custom-combobox'
 // import VoucherEditContent from './voucher-edit-content'
 // import { getSingleVoucher } from '@/api/journal-voucher-api'
 
@@ -903,6 +912,20 @@ export default VoucherList
 //   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 //   const [isPosting, setIsPosting] = useState<Record<number, boolean>>({})
 
+//   // Today's date for filtering
+//   const todayDate = new Date().toISOString().split('T')[0]
+
+//   // Filter states
+//   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
+//   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+//   const [selectedCompanyId, setSelectedCompanyId] = useState<
+//     number | undefined
+//   >()
+//   const [selectedLocationId, setSelectedLocationId] = useState<
+//     number | undefined
+//   >()
+//   const [openingBalance, setOpeningBalance] = useState<number>(0)
+
 //   // Multiple selection state
 //   const [selectedIds, setSelectedIds] = useState<number[]>([])
 //   const [selectAll, setSelectAll] = useState(false)
@@ -919,6 +942,52 @@ export default VoucherList
 //   // Keep a local copy of vouchers
 //   const vouchersRef = useRef<Voucher[]>(vouchers)
 //   const [localVouchers, setLocalVouchers] = useState<Voucher[]>(vouchers)
+
+//   // Initialize companies and locations from userData
+//   useEffect(() => {
+//     if (userData) {
+//       setCompanies(userData.userCompanies || [])
+//       setLocations(userData.userLocations || [])
+//     }
+//   }, [userData])
+
+//   // Fetch opening balance for Cash Vouchers
+//   const fetchOpeningBalance = useCallback(async () => {
+//     if (!token) return
+
+//     const CashReportParams = {
+//       date: todayDate,
+//       companyId: selectedCompanyId !== undefined ? selectedCompanyId : 0,
+//       location: selectedLocationId !== undefined ? selectedLocationId : 0,
+//     }
+
+//     try {
+//       const response = await getCashReport(CashReportParams, token)
+//       const data = Array.isArray(response.data)
+//         ? response.data
+//         : response.data
+//           ? [response.data]
+//           : []
+
+//       if (
+//         data.length > 0 &&
+//         data[0].openingBal &&
+//         data[0].openingBal.length > 0
+//       ) {
+//         // Convert to number to ensure it's always a number type
+//         setOpeningBalance(Number(data[0].openingBal[0].balance) || 0)
+//       } else {
+//         setOpeningBalance(0)
+//       }
+//     } catch (error) {
+//       console.error('Error fetching opening balance:', error)
+//       setOpeningBalance(0)
+//     }
+//   }, [token, todayDate, selectedCompanyId, selectedLocationId])
+
+//   useEffect(() => {
+//     fetchOpeningBalance()
+//   }, [fetchOpeningBalance])
 
 //   useEffect(() => {
 //     const hasChanged =
@@ -943,19 +1012,62 @@ export default VoucherList
 //     })
 //   }, [])
 
+//   // Filter vouchers based on today's date, company, and location
+//   const filteredVouchers = useMemo(() => {
+//     let filtered = [...localVouchers]
+
+//     // Filter by company if selected
+//     if (selectedCompanyId !== undefined) {
+//       filtered = filtered.filter((v) => {
+//         // Get company name from the voucher and match with selected company
+//         const selectedCompany = companies.find(
+//           (c) => c.company?.companyId === selectedCompanyId
+//         )
+//         return v.companyname === selectedCompany?.company?.companyName
+//       })
+//     }
+
+//     // Filter by location if selected
+//     if (selectedLocationId !== undefined) {
+//       filtered = filtered.filter((v) => {
+//         // Get location address from the voucher and match with selected location
+//         const selectedLocation = locations.find(
+//           (l) => l.location?.locationId === selectedLocationId
+//         )
+//         return v.location === selectedLocation?.location?.address
+//       })
+//     }
+
+//     return filtered
+//   }, [
+//     localVouchers,
+//     selectedCompanyId,
+//     selectedLocationId,
+//     companies,
+//     locations,
+//   ])
+
 //   const sortedVouchers = useMemo(() => {
-//     return [...localVouchers].sort((a, b) => {
+//     return [...filteredVouchers].sort((a, b) => {
 //       if (a[sortField] == null || b[sortField] == null) return 0
 //       if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1
 //       if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1
 //       return 0
 //     })
-//   }, [localVouchers, sortField, sortDirection])
+//   }, [filteredVouchers, sortField, sortDirection])
 
 //   const totalPages = Math.ceil(sortedVouchers.length / itemsPerPage)
 //   const startIndex = (currentPage - 1) * itemsPerPage
 //   const endIndex = startIndex + itemsPerPage
 //   const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
+
+//   // Check if we're on Cash Voucher list page (not day book)
+//   const isDayBook =
+//     pathname.includes('day-book') || pathname.includes('daybook')
+//   const isCashVoucherPage = !isDayBook
+
+//   // Show filter section if it's Cash Voucher page, regardless of whether there are vouchers
+//   const showFilterSection = isCashVoucherPage
 
 //   // Get only draft Cash vouchers for selection
 //   const draftCashVouchers = currentVouchers.filter(
@@ -1133,7 +1245,6 @@ export default VoucherList
 //           return
 //         }
 //         setEditVoucherData(response.data as VoucherById[])
-//         console.log('🚀 ~ VoucherList ~ response.data:', response.data)
 //       } catch (error) {
 //         console.error('Error fetching voucher details:', error)
 //         toast({
@@ -1149,8 +1260,6 @@ export default VoucherList
 //     [router, token]
 //   )
 
-//   const handleEdited = useCallback((voucherId: number) => {}, [])
-
 //   const handlePreviousPage = useCallback(() => {
 //     setCurrentPage((prev) => Math.max(prev - 1, 1))
 //   }, [])
@@ -1163,8 +1272,84 @@ export default VoucherList
 //     setCurrentPage(page)
 //   }, [])
 
+//   // Filtered locations based on selected company
+//   const filteredLocations = useMemo(() => {
+//     if (!selectedCompanyId) return locations
+//     return locations.filter(
+//       (loc) => loc.location?.companyId === selectedCompanyId
+//     )
+//   }, [locations, selectedCompanyId])
+
+//   // Reset to page 1 when filters change
+//   useEffect(() => {
+//     setCurrentPage(1)
+//   }, [selectedCompanyId, selectedLocationId])
+
 //   return (
 //     <>
+//       {/* Filter Section - Show on Cash Voucher page, always visible */}
+//       {showFilterSection && (
+//         <div className="mb-6 p-4 border rounded-lg bg-slate-50">
+//           <div className="grid grid-cols-3 gap-4 items-end">
+//             {/* Company Filter */}
+//             <div className="space-y-2">
+//               <Label className="text-sm font-medium">Company</Label>
+//               <CustomCombobox
+//                 value={
+//                   companies
+//                     .map((company) => ({
+//                       id: company.company?.companyId ?? 0,
+//                       name: company.company?.companyName,
+//                     }))
+//                     .find((item) => item.id === Number(selectedCompanyId)) ||
+//                   null
+//                 }
+//                 onChange={(item) => {
+//                   setSelectedCompanyId(item ? Number(item.id) : undefined)
+//                   setSelectedLocationId(undefined) // Reset location when company changes
+//                 }}
+//                 items={companies.map((company) => ({
+//                   id: company.company?.companyId ?? 0,
+//                   name: company.company?.companyName,
+//                 }))}
+//                 placeholder="Select Company"
+//               />
+//             </div>
+
+//             {/* Location Filter */}
+//             <div className="space-y-2">
+//               <Label className="text-sm font-medium">Location</Label>
+//               <CustomCombobox
+//                 value={
+//                   filteredLocations
+//                     .map((location) => ({
+//                       id: location.location?.locationId ?? 0,
+//                       name: location.location?.address,
+//                     }))
+//                     .find((item) => item.id === selectedLocationId) || null
+//                 }
+//                 onChange={(item) =>
+//                   setSelectedLocationId(item ? Number(item.id) : undefined)
+//                 }
+//                 items={filteredLocations.map((location) => ({
+//                   id: location.location?.locationId ?? 0,
+//                   name: location.location?.address,
+//                 }))}
+//                 placeholder="Select Location"
+//               />
+//             </div>
+
+//             {/* Opening Balance Display */}
+//             <div className="space-y-2">
+//               <Label className="text-sm font-medium">Opening Balance</Label>
+//               <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
+//                 {openingBalance.toFixed(2)}
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
 //       {/* Bulk Action Button - Only show for Cash Vouchers */}
 //       {draftCashVouchers.length > 0 && (
 //         <div className="mb-4 flex justify-end">
@@ -1195,11 +1380,9 @@ export default VoucherList
 //                 </Button>
 //               </TableHead>
 //             ))}
-//             {/* ✅ Always show Action column */}
 //             <TableHead className="text-right">
 //               <div className="flex items-center justify-end gap-2">
 //                 <span>Action</span>
-//                 {/* Only show select all checkbox if there are draft cash vouchers */}
 //                 {draftCashVouchers.length > 0 && (
 //                   <Checkbox
 //                     checked={selectAll}
@@ -1271,7 +1454,6 @@ export default VoucherList
 //                       )}
 //                     </TableCell>
 //                   ))}
-//                   {/* ✅ Always show Action buttons with checkbox only for draft cash vouchers */}
 //                   <TableCell className="text-right">
 //                     <div className="flex gap-2 items-center justify-end">
 //                       <Button
@@ -1290,7 +1472,6 @@ export default VoucherList
 //                       >
 //                         Edit
 //                       </Button>
-//                       {/* Only show checkbox for draft Cash Vouchers */}
 //                       {isDraftCashVoucher && (
 //                         <Checkbox
 //                           checked={selectedIds.includes(voucher.voucherid)}
@@ -1420,3 +1601,5 @@ export default VoucherList
 // }
 
 // export default VoucherList
+
+
