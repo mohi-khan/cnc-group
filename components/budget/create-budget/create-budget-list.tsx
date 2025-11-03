@@ -24,7 +24,6 @@ import { ArrowUpDown, Edit, Lock, Unlock } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-// Import dialog components from your UI library
 import {
   Dialog,
   DialogTrigger,
@@ -42,47 +41,48 @@ interface CreateBudgetProps {
   company: CompanyType[]
 }
 
-// Define valid keys of MasterBudgetType for sorting
 type SortColumn = keyof MasterBudgetType
 
-// New component to handle editing and submitting budget changes
-// Function to format ISO date to "yyyy-MM-dd"
-const formatDate = (isoString: string) => {
-  return isoString ? isoString.split('T')[0] : '' // Extracts only 'yyyy-MM-dd'
-}
-
+// Edit Budget Dialog - UPDATED with onSuccess callback
 const EditBudgetDialog: React.FC<{
   item: MasterBudgetType
   token: string | null
-}> = ({ item, token }) => {
+  onSuccess: (updatedItem: MasterBudgetType) => void
+}> = ({ item, token, onSuccess }) => {
   const [name, setName] = useState(item.name || '')
-  const [fromDate, setFromDate] = useState(item.fromDate || '') // Ensure it is never null
-  const [toDate, setToDate] = useState(item.toDate || '') // Ensure it is never null
+  const [isOpen, setIsOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    if (!token) {
+      console.error('No authentication token available')
+      return
+    }
+
+    setIsSubmitting(true)
+
     try {
-      if (!token) return
-      const response = await updateBudgetMaster(item.budgetId, token)
+      const response = await updateBudgetMaster(item.budgetId, name, token)
 
       if (response.data) {
-        console.log('Budget updated successfully:', {
-          id: item.budgetId,
-          name,
-          fromDate,
-          toDate,
-        })
+        console.log('Budget updated successfully:', response.data)
+        // Call onSuccess with updated item
+        onSuccess({ ...item, name })
+        setIsOpen(false) // Close dialog on success
       } else {
         console.error('Failed to update budget')
       }
     } catch (error) {
       console.error('Error updating budget:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
           <Edit className="h-4 w-4 mr-2" />
@@ -92,9 +92,7 @@ const EditBudgetDialog: React.FC<{
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Budget</DialogTitle>
-          <DialogDescription>
-            Modify the details of your budget below.
-          </DialogDescription>
+          <DialogDescription>Modify the budget name below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4">
           <label className="block mb-2">
@@ -103,35 +101,25 @@ const EditBudgetDialog: React.FC<{
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="border rounded p-1 w-full"
+              className="border rounded p-2 w-full mt-1"
               required
+              disabled={isSubmitting}
             />
           </label>
 
-          <label className="block mb-2">
-            From Date:
-            <input
-              type="date"
-              value={fromDate || ''} // Ensure it's never null
-              onChange={(e) => setFromDate(e.target.value)}
-              className="border rounded p-1 w-full"
-              required
-            />
-          </label>
-
-          <label className="block mb-2">
-            End Date:
-            <input
-              type="date"
-              value={toDate || ''} // Ensure it's never null
-              onChange={(e) => setToDate(e.target.value)}
-              className="border rounded p-1 w-full"
-              required
-            />
-          </label>
-          <Button type="submit" variant="default" className="mt-2">
-            Save Changes
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button type="submit" variant="default" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -147,8 +135,14 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage] = useState<number>(5)
+  const [budgets, setBudgets] = useState<MasterBudgetType[]>(masterBudget)
 
-  const totalPages = Math.ceil(masterBudget.length / itemsPerPage)
+  // Update budgets when masterBudget prop changes
+  React.useEffect(() => {
+    setBudgets(masterBudget)
+  }, [masterBudget])
+
+  const totalPages = Math.ceil(budgets.length / itemsPerPage)
 
   // Sorting Function
   const sortData = useCallback(
@@ -200,11 +194,18 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
 
   const currentItems = useMemo(() => {
-    const sortedData = sortData(masterBudget)
+    const sortedData = sortData(budgets)
     return sortedData.slice(indexOfFirstItem, indexOfLastItem)
-  }, [masterBudget, indexOfFirstItem, indexOfLastItem, sortData])
+  }, [budgets, indexOfFirstItem, indexOfLastItem, sortData])
 
-  const [budgets, setBudgets] = useState<MasterBudgetType[]>(masterBudget)
+  // Handle successful edit - updates the list immediately
+  const handleEditSuccess = (updatedItem: MasterBudgetType) => {
+    setBudgets(
+      budgets.map((b) =>
+        b.budgetId === updatedItem.budgetId ? updatedItem : b
+      )
+    )
+  }
 
   const handleLockToggle = async (budgetId: number) => {
     try {
@@ -213,7 +214,7 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
       const budget = budgets.find((b) => b.budgetId === budgetId)
       if (!budget) return
 
-      const response = await updateBudgetMaster(budgetId, token)
+      const response = await updateBudgetMaster(budgetId, budget.name, token)
 
       if (response.data) {
         // Update local state to reflect the change
@@ -245,8 +246,8 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentItems.map((item, budgetId) => (
-            <TableRow key={budgetId}>
+          {currentItems.map((item, index) => (
+            <TableRow key={item.budgetId}>
               <TableCell>
                 {item.locked ? (
                   <span className="text-gray-500">{item.name}</span>
@@ -266,7 +267,6 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
                 {new Date(item.fromDate).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                {' '}
                 {new Date(item.toDate).toLocaleDateString()}
               </TableCell>
               <TableCell className="flex gap-2">
@@ -275,7 +275,11 @@ const CreateBudgetList: React.FC<CreateBudgetProps> = ({
                     item.locked ? 'opacity-50 pointer-events-none' : ''
                   }
                 >
-                  <EditBudgetDialog item={item} token={token} />
+                  <EditBudgetDialog
+                    item={item}
+                    token={token}
+                    onSuccess={handleEditSuccess}
+                  />
                 </div>
                 <Button
                   variant={item.locked ? 'destructive' : 'default'}
