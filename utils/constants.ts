@@ -563,7 +563,10 @@ export const MENU_ITEMS: MenuItem[] = [
     subItemGroups: [
       {
         name: "Budget Management",
-        items: [{ name: "Create Budget", source: "/budget/create-budget" }],
+        items: [
+          { name: "Create Budget", source: "/budget/create-budget" },
+          { name: "Budget Report", source: "/budget/budget-report" }
+        ],
       },
     ],
   },

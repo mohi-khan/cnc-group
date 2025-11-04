@@ -62,7 +62,7 @@ const router = useRouter()
     try {
       const response = await getAllMasterBudget({ token })
       if (!response.data) throw new Error('No data received')
-      setMasterBudget(response.data)
+      setMasterBudget(response.data || [])
       
     } catch (error) {
       console.error('Error getting master budget:', error)

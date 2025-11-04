@@ -2330,3 +2330,18 @@ export interface CreateReconciliationOpeningType {
   bankId: number
   openingBalance: number
 }
+
+
+export type BudgetReportType = {
+  id: number;
+  code: string;
+  name: string;
+  isgroup: boolean;
+  parentCode: string | null;
+  initialDebit: number;
+  initialCredit: number;
+  periodDebit: number;
+  periodCredit: number;
+  closingDebit: number;
+  closingCredit: number;
+};
