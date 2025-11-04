@@ -1,12 +1,11 @@
 import { fetchApi } from '@/utils/http'
 import {
   BudgetItems,
+  BudgetReportType,
   CreateBudgetItemsType,
   CreateBudgetMasterType,
   MasterBudgetType,
 } from '@/utils/type'
-
-
 
 //Create Budget Master API
 export async function createBudgetMaster(
@@ -67,7 +66,7 @@ export async function getAllBudgetDetails(id: number, token: string) {
 
 //update budget master api
 export async function updateBudgetMaster(
-  budgetId: number, 
+  budgetId: number,
   budgetName: string,
   token: string
 ) {
@@ -82,30 +81,11 @@ export async function updateBudgetMaster(
   })
 }
 
-// export async function updateBudgetMaster(budgetId: number, token: string) {
-//   return fetchApi<MasterBudgetType[]>({
-//     url: `api/budget/updateBudget/${budgetId}`,
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `${token}`,
-//     },
-//   })
-// }
-
-// export async function updateBudgetDetails(id: number, token: string) {
-//   return fetchApi<MasterBudgetType[]>({
-//     url: `api/budget/updateBudgetItems/${id}`,
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `${token}`,
-//     },
-//   })
-// }
-
-
-export async function updateBudgetDetails(id: number, data: any, token: string) {
+export async function updateBudgetDetails(
+  id: number,
+  data: any,
+  token: string
+) {
   return fetchApi({
     url: `api/budget/updateBudgetItems/${id}`,
     method: 'POST', // use POST if your backend expects it
@@ -113,6 +93,20 @@ export async function updateBudgetDetails(id: number, data: any, token: string) 
       'Content-Type': 'application/json',
       Authorization: `${token}`,
     },
-    body: (data),
+    body: data,
+  })
+}
+
+//budget report api
+export async function getBudgetReport(data: { token: string; companyId: number; startDate: string; endDate: string }) {
+  const { token, companyId, startDate, endDate } = data;
+
+  return fetchApi<BudgetReportType[]>({
+    url: `api/budget/budgetReport?companyId=${companyId}&startDate=${startDate}&endDate=${endDate}`,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${token}`,
+    },
   })
 }

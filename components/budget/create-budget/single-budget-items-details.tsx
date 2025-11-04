@@ -54,7 +54,7 @@ const SingleBudgetItemsDetails = () => {
   const token = `Bearer ${mainToken}`
 
   /** 🔹 Fetch chart of accounts */
-  const fetchAccounts = async () => {
+  const fetchAccounts = React.useCallback(async () => {
     try {
       const response = await getAllChartOfAccounts(token)
       console.log('📋 Accounts Response:', response)
@@ -70,7 +70,7 @@ const SingleBudgetItemsDetails = () => {
     } catch (error) {
       console.error('❌ Error fetching accounts:', error)
     }
-  }
+  }, [token])
 
   /** 🔹 Fetch all budget details */
   const fetchGetAllBudgetItems = React.useCallback(async () => {
@@ -97,7 +97,7 @@ const SingleBudgetItemsDetails = () => {
   useEffect(() => {
     fetchGetAllBudgetItems()
     fetchAccounts()
-  }, [fetchGetAllBudgetItems])
+  }, [fetchGetAllBudgetItems, fetchAccounts])
 
   /** 🔹 Add new budget item */
   const handleAddItem = async (e: React.FormEvent) => {
