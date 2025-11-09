@@ -452,15 +452,27 @@ export default function CostCenterManagement() {
   const totalPages = Math.ceil(sortedCostCenters.length / itemsPerPage)
 
   // Replace with this implementation
-  React.useEffect(() => {
+  // React.useEffect(() => {
+  //   if (feedback?.type === 'success') {
+  //     const timer = setTimeout(() => {
+  //       fetchCostCenters()
+  //       setCurrentPage(1) // Reset to first page after create/edit
+  //     }, 0)
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [feedback, fetchCostCenters])
+   React.useEffect(() => {
     if (feedback?.type === 'success') {
       const timer = setTimeout(() => {
         fetchCostCenters()
-        setCurrentPage(1) // Reset to first page after create/edit
+        // Only reset to page 1 if it was an ADD operation, not EDIT
+        if (!isEditDialogOpen && feedback.message.includes('created')) {
+          setCurrentPage(1)
+        }
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [feedback, fetchCostCenters])
+  }, [feedback, fetchCostCenters, isEditDialogOpen])
 
   return (
     <div className="container mx-auto py-10">
