@@ -574,7 +574,7 @@ export default function ChartOfAccountsTable() {
             account.code === updatedAccount.code ? updatedAccount : account
           )
         )
-        setCurrentPage(1) // Reset to first page after edit
+        // setCurrentPage(1) // Reset to first page after edit
       }
       setIsEditAccountOpen(false)
       setEditingAccount(null)
