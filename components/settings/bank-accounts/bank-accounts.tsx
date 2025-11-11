@@ -444,7 +444,7 @@ export default function BankAccounts() {
        })
        form.reset()
        fetchBankAccounts()
-       setCurrentPage(1)
+      //  setCurrentPage(1)
      }
    } else {
      // Transform form values for creation
