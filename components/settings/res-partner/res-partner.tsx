@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Plus, Edit, ArrowUpDown, Search } from 'lucide-react'
+import { Plus, Edit, ArrowUpDown, Search, X } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -50,9 +50,8 @@ import { useAtom } from 'jotai'
 import { getAllCompanies, getAllResPartners } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
 import { CustomCombobox } from '@/utils/custom-combobox'
-export default function ResPartners() {
-  //getting userData from jotai atom component
 
+export default function ResPartners() {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
@@ -90,11 +89,14 @@ export default function ResPartners() {
       zip: '',
       active: true,
       creditLimit: 0,
-      // customerRank: 0,
-      // supplierRank: 0,
       comment: '',
     },
   })
+
+  // Reset to page 1 when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   React.useEffect(() => {
     const checkUserData = () => {
@@ -110,7 +112,6 @@ export default function ResPartners() {
     checkUserData()
     if (userData) {
       setUserId(userData?.userId)
-    } else {
     }
   }, [userData, router])
 
@@ -120,7 +121,6 @@ export default function ResPartners() {
 
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-
       return
     }
 
@@ -129,8 +129,6 @@ export default function ResPartners() {
     } else {
       setPartners(data.data)
     }
-    //
-    // setIsLoading(false)
   }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
@@ -139,7 +137,6 @@ export default function ResPartners() {
 
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
-
       return
     } else if (data.error || !data.data) {
       console.error('Error getting companies:', data.error)
@@ -156,8 +153,21 @@ export default function ResPartners() {
   React.useEffect(() => {
     if (editingPartner) {
       form.reset({
-        ...editingPartner,
-        creditLimit: Number(editingPartner.creditLimit),
+        name: editingPartner.name || '',
+        companyName: editingPartner.companyName || '',
+        type: editingPartner.type || '',
+        email: editingPartner.email || '',
+        phone: editingPartner.phone || '',
+        mobile: editingPartner.mobile || '',
+        website: editingPartner.website || '',
+        isCompany: editingPartner.isCompany || false,
+        vat: editingPartner.vat || '',
+        street: editingPartner.street || '',
+        city: editingPartner.city || '',
+        zip: editingPartner.zip || '',
+        active: editingPartner.active ?? true,
+        creditLimit: Number(editingPartner.creditLimit) || 0,
+        comment: editingPartner.comment || '',
         updatedBy: userId,
       })
     } else {
@@ -235,6 +245,7 @@ export default function ResPartners() {
     setEditingPartner(null)
     form.reset()
     fetchResPartners()
+    // setCurrentPage(1)
   }
 
   function handleEdit(partner: ResPartner) {
@@ -251,19 +262,31 @@ export default function ResPartners() {
     }
   }
 
+  // Filter partners based on search term
   const filteredPartners = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return partners
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim()
+    
     return partners.filter((partner) => {
-      const searchLower = searchTerm.toLowerCase()
       return (
-        partner.name?.toLowerCase().includes(searchLower) ||
-        partner.companyName?.toLowerCase().includes(searchLower) ||
-        partner.email?.toLowerCase().includes(searchLower) ||
-        partner.phone?.toLowerCase().includes(searchLower) ||
-        partner.type?.toLowerCase().includes(searchLower)
+        (partner.name?.toLowerCase() || '').includes(searchLower) ||
+        (partner.companyName?.toLowerCase() || '').includes(searchLower) ||
+        (partner.email?.toLowerCase() || '').includes(searchLower) ||
+        (partner.phone?.toLowerCase() || '').includes(searchLower) ||
+        (partner.mobile?.toLowerCase() || '').includes(searchLower) ||
+        (partner.type?.toLowerCase() || '').includes(searchLower) ||
+        (partner.vat?.toLowerCase() || '').includes(searchLower) ||
+        (partner.street?.toLowerCase() || '').includes(searchLower) ||
+        (partner.city?.toLowerCase() || '').includes(searchLower) ||
+        (partner.zip?.toLowerCase() || '').includes(searchLower)
       )
     })
   }, [partners, searchTerm])
 
+  // Sort filtered partners
   const sortedPartners = useMemo(() => {
     return [...filteredPartners].sort((a, b) => {
       if (sortColumn === 'companyName') {
@@ -304,32 +327,47 @@ export default function ResPartners() {
     })
   }, [filteredPartners, companies, sortColumn, sortDirection])
 
+  // Paginate sorted partners
   const paginatedPartners = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return sortedPartners.slice(startIndex, startIndex + itemsPerPage)
   }, [sortedPartners, currentPage, itemsPerPage])
+  
   const totalPages = Math.ceil(sortedPartners.length / itemsPerPage)
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm('')
+  }
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6 mx-4">
         <h1 className="text-3xl font-bold">Res Partners</h1>
         <div className="flex items-center gap-4">
-          <div className="relative">
+          <div className="relative flex items-center">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search partners..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 pr-10 w-80"
             />
+            {searchTerm && (
+              <X
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 cursor-pointer hover:text-gray-600"
+                onClick={clearSearch}
+              />
+            )}
           </div>
           <Dialog
             open={isDialogOpen}
             onOpenChange={(open) => {
               setIsDialogOpen(open)
-
-              if (!open) setEditingPartner(null)
+              if (!open) {
+                setEditingPartner(null)
+                form.reset()
+              }
             }}
           >
             <DialogTrigger asChild>
@@ -342,7 +380,6 @@ export default function ResPartners() {
                 <DialogTitle>
                   {editingPartner ? 'Edit Res Partner' : 'Add New Res Partner'}
                 </DialogTitle>
-
                 <DialogDescription>
                   {editingPartner
                     ? 'Edit the details for the res partner here.'
@@ -362,15 +399,15 @@ export default function ResPartners() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Company</FormLabel>
-
                             <FormControl>
                               <Input
                                 placeholder="Enter company name"
-                                {...field}
-                                value={field.value ?? ''}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
-
                             <FormMessage />
                           </FormItem>
                         )}
@@ -382,11 +419,15 @@ export default function ResPartners() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Contact Person Name</FormLabel>
-
                             <FormControl>
-                              <Input placeholder="Enter name" {...field} />
+                              <Input 
+                                placeholder="Enter name" 
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
                             </FormControl>
-
                             <FormMessage />
                           </FormItem>
                         )}
@@ -404,13 +445,12 @@ export default function ResPartners() {
                                 { id: 'vendor', name: 'Vendor' },
                               ]}
                               value={{
-                                id: field.value ?? '',
-                                name: field.value ?? '',
+                                id: field.value || '',
+                                name: field.value || '',
                               }}
-                              onChange={(value) => field.onChange(value?.id)}
+                              onChange={(value) => field.onChange(value?.id || '')}
                               placeholder="Select type"
                             />
-
                             <FormMessage />
                           </FormItem>
                         )}
@@ -423,7 +463,13 @@ export default function ResPartners() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter email" {...field} />
+                              <Input 
+                                placeholder="Enter email" 
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -439,7 +485,10 @@ export default function ResPartners() {
                             <FormControl>
                               <Input
                                 placeholder="Enter phone number"
-                                {...field}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -456,7 +505,10 @@ export default function ResPartners() {
                             <FormControl>
                               <Input
                                 placeholder="Enter mobile number (optional)"
-                                {...field}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -473,14 +525,10 @@ export default function ResPartners() {
                             <FormControl>
                               <Input
                                 placeholder="Enter website (optional)"
-                                {...field}
-                                onChange={(e) => {
-                                  const value = e.target.value
-
-                                  field.onChange(
-                                    value === '' ? undefined : value
-                                  )
-                                }}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -497,7 +545,10 @@ export default function ResPartners() {
                             <FormControl>
                               <Input
                                 placeholder="Enter VAT number"
-                                {...field}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -514,7 +565,10 @@ export default function ResPartners() {
                             <FormControl>
                               <Input
                                 placeholder="Enter street address"
-                                {...field}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -529,7 +583,13 @@ export default function ResPartners() {
                           <FormItem>
                             <FormLabel>City</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter city" {...field} />
+                              <Input 
+                                placeholder="Enter city" 
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -543,7 +603,13 @@ export default function ResPartners() {
                           <FormItem>
                             <FormLabel>ZIP</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter ZIP code" {...field} />
+                              <Input 
+                                placeholder="Enter ZIP code" 
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -561,12 +627,14 @@ export default function ResPartners() {
                                 type="number"
                                 step="0.01"
                                 placeholder="0.00"
-                                {...field}
+                                value={field.value || 0}
                                 onChange={(e) =>
                                   field.onChange(
-                                    Number.parseFloat(e.target.value)
+                                    Number.parseFloat(e.target.value) || 0
                                   )
                                 }
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -591,8 +659,8 @@ export default function ResPartners() {
                             </div>
                             <FormControl>
                               <Switch
-                                checked={field.value}
-                                onChange={field.onChange}
+                                checked={field.value || false}
+                                onChange={(checked) => field.onChange(checked)}
                               />
                             </FormControl>
                           </FormItem>
@@ -614,8 +682,8 @@ export default function ResPartners() {
                             </div>
                             <FormControl>
                               <Switch
-                                checked={field.value}
-                                onChange={field.onChange}
+                                checked={field.value ?? true}
+                                onChange={(checked) => field.onChange(checked)}
                               />
                             </FormControl>
                           </FormItem>
@@ -634,7 +702,10 @@ export default function ResPartners() {
                               <Textarea
                                 placeholder="Enter any additional comments"
                                 className="resize-none"
-                                {...field}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
                               />
                             </FormControl>
                             <FormMessage />
@@ -644,7 +715,7 @@ export default function ResPartners() {
                     </div>
                   </div>
 
-                  <div className=" bg-background pt-2 pb-4">
+                  <div className="bg-background pt-2 pb-4">
                     <Button type="submit" className="w-full">
                       {editingPartner ? 'Update' : 'Submit'}
                     </Button>
@@ -678,18 +749,19 @@ export default function ResPartners() {
                         : (header.toLowerCase() as keyof ResPartner)
                     )
                   }
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-slate-300 transition-colors"
                 >
-                  {header} <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                  <div className="flex items-center">
+                    {header} <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </div>
                 </TableHead>
               ))}
-
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {Array.isArray(paginatedPartners) &&
+            {Array.isArray(paginatedPartners) && paginatedPartners.length > 0 ? (
               paginatedPartners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell>{partner.name}</TableCell>
@@ -710,69 +782,78 @@ export default function ResPartners() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                  {searchTerm ? 'No partners found matching your search.' : 'No partners available.'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
 
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={
-                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                  }
-                />
-              </PaginationItem>
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                    }
+                  />
+                </PaginationItem>
 
-              {[...Array(totalPages)].map((_, index) => {
-                if (
-                  index === 0 ||
-                  index === totalPages - 1 ||
-                  (index >= currentPage - 2 && index <= currentPage + 2)
-                ) {
-                  return (
-                    <PaginationItem key={`page-${index}`}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(index + 1)}
-                        isActive={currentPage === index + 1}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                } else if (
-                  index === currentPage - 3 ||
-                  index === currentPage + 3
-                ) {
-                  return (
-                    <PaginationItem key={`ellipsis-${index}`}>
-                      <PaginationLink>...</PaginationLink>
-                    </PaginationItem>
-                  )
-                }
-
-                return null
-              })}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                {[...Array(totalPages)].map((_, index) => {
+                  if (
+                    index === 0 ||
+                    index === totalPages - 1 ||
+                    (index >= currentPage - 2 && index <= currentPage + 2)
+                  ) {
+                    return (
+                      <PaginationItem key={`page-${index}`}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(index + 1)}
+                          isActive={currentPage === index + 1}
+                          className="cursor-pointer"
+                        >
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  } else if (
+                    index === currentPage - 3 ||
+                    index === currentPage + 3
+                  ) {
+                    return (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationLink>...</PaginationLink>
+                      </PaginationItem>
+                    )
                   }
-                  className={
-                    currentPage === totalPages
-                      ? 'pointer-events-none opacity-50'
-                      : ''
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+                  return null
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? 'pointer-events-none opacity-50'
+                        : 'cursor-pointer'
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   )

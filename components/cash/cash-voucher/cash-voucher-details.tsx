@@ -426,6 +426,7 @@ export default function CashVoucherDetails({
                               currentType === 'Payment' ? 'payment' : 'receipt'
                             } amount`}
                             {...field}
+                              value={field.value === 0 ? '' : field.value}
                             onChange={(e) =>
                               field.onChange(
                                 Number.parseFloat(e.target.value) || 0

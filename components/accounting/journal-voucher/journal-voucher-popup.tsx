@@ -232,6 +232,25 @@ export function JournalVoucherPopup({
     }
   }
 
+
+  // Calculate if debit and credit are balanced
+// In JournalVoucherPopup component, update the isBalanced calculation:
+
+const entries = form.watch('journalDetails') || []
+const totals = entries.reduce(
+  (acc, entry) => ({
+    debit: acc.debit + (entry?.debit || 0),
+    credit: acc.credit + (entry?.credit || 0),
+  }),
+  { debit: 0, credit: 0 }
+)
+
+// Updated validation: totals must be equal AND greater than 0
+const isBalanced = 
+  totals.debit === totals.credit && 
+  totals.debit > 0 && 
+  totals.credit > 0
+
   return (
     <>
       {!initialData && (
@@ -274,6 +293,7 @@ export function JournalVoucherPopup({
                   form={form}
                   onSubmit={form.handleSubmit(onSubmit)}
                   isSubmitting={isSubmitting}
+                   isBalanced={isBalanced}
                 />
               </form>
             </Form>

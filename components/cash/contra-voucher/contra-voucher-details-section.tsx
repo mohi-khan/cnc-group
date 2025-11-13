@@ -509,13 +509,13 @@ export function ContraVoucherDetailsSection({
           <p>Total Debit: {totals.debit.toFixed(2)}</p>
           <p>Total Credit: {totals.credit.toFixed(2)}</p>
         </div>
-        <div>
+        {/* <div>
           {isBalanced ? (
             <p className="text-green-500">Voucher is Balanced</p>
           ) : (
             <p className="text-red-500">Voucher is Not Balanced</p>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   )
