@@ -265,6 +265,22 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
     }
   }
 
+   // Add this before the return statement
+  const entries = form.watch('journalDetails') || []
+  const totals = entries.reduce(
+    (acc, entry) => ({
+      debit: acc.debit + (entry?.debit || 0),
+      credit: acc.credit + (entry?.credit || 0),
+    }),
+    { debit: 0, credit: 0 }
+  )
+  
+  // Validate: totals must be equal AND both must be greater than 0
+  const isBalanced = 
+    totals.debit === totals.credit && 
+    totals.debit > 0 && 
+    totals.credit > 0
+
   return (
     <>
       {/* Only show ADD button in normal mode (not duplication mode) */}
@@ -301,6 +317,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
                 form={form}
                 onSubmit={form.handleSubmit(handleSubmit)}
                 isSubmitting={isSubmitting}
+                 isBalanced={isBalanced} // Add this prop
               />
             </form>
           </Form>

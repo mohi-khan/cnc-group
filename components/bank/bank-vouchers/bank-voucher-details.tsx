@@ -464,7 +464,7 @@ export default function BankVoucherDetails({
                             type="number"
                             placeholder="Enter amount"
                             {...field}
-                            value={field.value ?? ''}
+                           value={field.value === 0 ? '' : field.value}
                             onChange={(e) => {
                               const value = e.target.value
                               field.onChange(

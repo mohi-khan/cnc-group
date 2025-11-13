@@ -336,7 +336,7 @@ export function JournalVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const isBalanced = totals.debit === totals.credit
+  // const isBalanced = totals.debit === totals.credit
 
   return (
     <div>
@@ -557,6 +557,7 @@ export function JournalVoucherDetailsSection({
                       <Input
                         type="number"
                         {...field}
+                        value={field.value === 0 ? '' : field.value}
                         onChange={(e) =>
                           handleDebitChange(index, e.target.value)
                         }
@@ -575,6 +576,8 @@ export function JournalVoucherDetailsSection({
                       <Input
                         type="number"
                         {...field}
+                        
+                        value={field.value === 0 ? '' : field.value}
                         onChange={(e) =>
                           handleCreditChange(index, e.target.value)
                         }
@@ -621,13 +624,13 @@ export function JournalVoucherDetailsSection({
           <p>Total Debit: {totals.debit}</p>
           <p>Total Credit: {totals.credit}</p>
         </div>
-        <div>
+        {/* <div>
           {!isBalanced && (
             <p className="text-red-500">
               Debit and Credit totals must be equal to post/draft the voucher.
             </p>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   )
