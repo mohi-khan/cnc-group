@@ -588,7 +588,7 @@ export default function ChartOfAccountsTable() {
         <div className="sticky top-28 bg-white flex items-center justify-between gap-4 border-b-2  shadow-md p-2 z-20">
           <h2 className="text-xl font-semibold">Chart of Accounts</h2>
           <div className="flex items-center gap-2 flex-grow justify-center max-w-2xl">
-            <div className="relative flex items-center border rounded-md pr-2 flex-grow">
+            {/* <div className="relative flex items-center border rounded-md pr-2 flex-grow">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
@@ -596,6 +596,36 @@ export default function ChartOfAccountsTable() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+              <div className="mx-2 flex gap-1 ">
+                {selectedTypes.map((type) => (
+                  <Badge
+                    key={type}
+                    variant="secondary"
+                    className="gap-1 px-2 py-1 ring-1 whitespace-nowrap"
+                  >
+                    {type}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeFilter(type)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            </div> */}
+            <div className="relative flex items-center border rounded-md pr-2 flex-grow">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground gap-2" />
+              <Input
+                placeholder="Search..."
+                className="pl-8 pr-8 border-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <X
+                  className="absolute right-0 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+                  onClick={() => setSearchTerm('')}
+                />
+              )}
               <div className="mx-2 flex gap-1 ">
                 {selectedTypes.map((type) => (
                   <Badge
