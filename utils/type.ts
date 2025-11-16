@@ -744,6 +744,8 @@ export const chartOfAccountSchema = z.object({
   cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
   notes: z.string().nullable(),
+  // companyIds: z.array(z.number().int().positive()).nonempty('At least one company is required'),
+companyIds: z.array(z.number().int().positive()).optional(),
 })
 export const extendedChartOfAccountSchema = chartOfAccountSchema.extend({
   accountId: z.number(),
