@@ -4,6 +4,7 @@ import { string, z } from 'zod'
 import exp from 'constants'
 import { de } from 'date-fns/locale'
 import { create } from 'domain'
+import { emit } from 'process'
 
 // export interface User {
 //   userId: number
@@ -744,8 +745,8 @@ export const chartOfAccountSchema = z.object({
   cashTag: z.string().nullable(),
   createdBy: z.number().int().positive(),
   notes: z.string().nullable(),
-  // companyIds: z.array(z.number().int().positive()).nonempty('At least one company is required'),
-companyIds: z.array(z.number().int().positive()).optional(),
+  companyIds: z.array(z.number().int().positive()).nonempty('At least one company is required'),
+// companyIds: z.array(z.number().int().positive()).optional(),
 })
 export const extendedChartOfAccountSchema = chartOfAccountSchema.extend({
   accountId: z.number(),
@@ -781,6 +782,13 @@ export const AccountsHeadSchema = z.object({
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
+
+//Company Chart of Account type
+export type CompanyChartOfAccount = {
+  id: number;
+  companyId: number;
+  chartOfAccountId: number;
+};
 
 //Cash Voucher
 export interface FormData {
@@ -842,6 +850,7 @@ export interface FormStateType {
   filteredChartOfAccounts: any[]
   costCenters: any[]
   partners: any[]
+  // employees: any[]
   departments: any[]
   formType: 'Credit' | 'Debit'
   selectedBankAccount: any | null
@@ -870,6 +879,7 @@ const JournalDetailSchema = z.object({
   accountId: z.number(),
   costCenterId: z.number().nullable().optional(),
   departmentId: z.number().nullable().optional(),
+  employeeId: z.number().nullable().optional(),
   debit: z.number(),
   credit: z.number(),
   analyticTags: z.string().nullable().optional(),
@@ -1050,6 +1060,8 @@ const VoucherSchemaById = z.object({
   createdby: z.number(),
   department: z.any().nullable(),
   departmentID: z.number(),
+  employeeName: z.any().nullable(),
+  employeeId: z.number().nullable(),
   // If you know the type, replace `z.any()` with the correct type
   debit: z.number(),
   credit: z.number(),
@@ -2123,6 +2135,7 @@ export interface JournalDetail {
   accountId: number
   costCenterId: number | null
   departmentId: number | null
+  employeeId: number | null
   debit: number
   credit: number
   balance: number

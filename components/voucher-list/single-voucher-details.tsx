@@ -967,6 +967,7 @@ export default function SingleVoucherDetails() {
                     <TableHead>Bank Account</TableHead>
                     <TableHead>Cost Center</TableHead>
                     <TableHead>Unit</TableHead>
+                    <TableHead>Employee</TableHead>
                     <TableHead>Partner</TableHead>
                     <TableHead>
                       {data[0].journaltype === VoucherTypes.BankVoucher
@@ -991,6 +992,7 @@ export default function SingleVoucherDetails() {
                         </TableCell>
                         <TableCell>{item.costcenter || 'N/A'}</TableCell>
                         <TableCell>{item.department || 'N/A'}</TableCell>
+                        <TableCell>{item.employeeName || 'N/A'}</TableCell>
                         <TableCell>{item.partnar || 'N/A'}</TableCell>
                         <TableCell>
                           {editingReferenceIndex === originalIndex ? (

@@ -52,6 +52,7 @@ interface JournalDetail {
   accountId: number
   costCenterId?: number | null
   departmentId?: number | null
+  employeeId?: number | null
   debit: number
   credit: number
   balance?: string
