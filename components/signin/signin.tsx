@@ -65,6 +65,7 @@ export default function SignIn() {
         // Store user information in localStorage
         const {
           userId,
+          username,
           roleId,
           userCompanies,
           userLocations,
@@ -74,6 +75,7 @@ export default function SignIn() {
 
         const userInfo = {
           userId,
+          username,
           roleId,
           userCompanies,
           userLocations,
