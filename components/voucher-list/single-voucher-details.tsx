@@ -68,6 +68,7 @@ import {
 } from '@/api/common-shared-api'
 import { ToWords } from 'to-words'
 import { Textarea } from '../ui/textarea'
+import { getAllEmployees } from '@/api/payment-requisition-api'
 
 // Add this after your imports
 const printStyles = `
@@ -175,6 +176,7 @@ export default function SingleVoucherDetails() {
     costCenters: [],
     partners: [],
     departments: [],
+    employees: [],
     selectedBankAccount: null,
     formType: 'Debit',
     status: 'Draft',
@@ -468,12 +470,14 @@ export default function SingleVoucherDetails() {
           costCentersResponse,
           partnersResponse,
           departmentsResponse,
+          employeesResponse,
         ] = await Promise.all([
           getAllBankAccounts(token),
           getAllChartOfAccounts(token),
           getAllCostCenters(token),
           getResPartnersBySearch(search, token),
           getAllDepartments(token),
+           getAllEmployees(token),
         ])
 
         if (
@@ -481,7 +485,9 @@ export default function SingleVoucherDetails() {
           chartOfAccountsResponse?.error?.status === 441 ||
           costCentersResponse?.error?.status === 441 ||
           partnersResponse?.error?.status === 441 ||
-          departmentsResponse?.error?.status === 441
+          departmentsResponse?.error?.status === 441 ||
+          employeesResponse?.error?.status === 441
+          
         ) {
           router.push('/unauthorized-access')
           return
@@ -498,6 +504,7 @@ export default function SingleVoucherDetails() {
           costCenters: costCentersResponse.data?.length || 0,
           partners: partnersResponse.data?.length || 0,
           departments: departmentsResponse.data?.length || 0,
+          employees: employeesResponse.data?.length || 0,
         })
 
         setFormState((prevState) => ({
@@ -937,6 +944,7 @@ export default function SingleVoucherDetails() {
                       partners={formState.partners}
                       isFromInvoice={true}
                       invoicePartnerName={data?.[0]?.partnar || ''}
+                       employees={formState.employees}
                     />
                     <BankVoucherSubmit
                       form={form}

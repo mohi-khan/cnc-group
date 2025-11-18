@@ -779,6 +779,7 @@ export const AccountsHeadSchema = z.object({
   cashTag: z.string(),
   createdBy: z.number().int().positive(),
   notes: z.string(),
+  companyIds: z.array(z.number().int().positive()).nonempty('At least one company is required'),
 })
 export type AccountsHead = z.infer<typeof AccountsHeadSchema>
 //Zod schema for Accounts ( Chart of Accounts with Parent Code)
@@ -850,7 +851,7 @@ export interface FormStateType {
   filteredChartOfAccounts: any[]
   costCenters: any[]
   partners: any[]
-  // employees: any[]
+  employees: any[]
   departments: any[]
   formType: 'Credit' | 'Debit'
   selectedBankAccount: any | null
