@@ -51,6 +51,7 @@ const transformVoucherData = (
       accountId: (detail.accountId ?? 0) as number,
       costCenterId: detail.costCenterId ?? null,
       departmentId: detail.departmentID ?? null,
+      employeeId: (detail as any).employeeId ?? null,
       debit: detail.debit || 0,
       credit: detail.credit || 0,
       balance: 0,

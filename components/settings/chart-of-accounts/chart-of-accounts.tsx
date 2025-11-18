@@ -839,7 +839,9 @@ export default function ChartOfAccountsTable() {
                     name="companyIds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Companies (Optional)</FormLabel>
+                        <FormLabel>Companies 
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormDescription>
                           Select one or more companies. Leave empty to create for all companies.
                         </FormDescription>

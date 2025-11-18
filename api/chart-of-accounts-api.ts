@@ -1,5 +1,5 @@
 import { fetchApi } from '@/utils/http'
-import { AccountsHead, ChartOfAccount } from '@/utils/type'
+import { AccountsHead, ChartOfAccount, CompanyChartOfAccount } from '@/utils/type'
 
 export type ChartOfAccounts = Omit<
   ChartOfAccount,
@@ -47,6 +47,18 @@ export async function updateChartOfAccounts(data: UpdateChartOfAccounts, token: 
     url: `api/chart-of-accounts/update-coa/${data.accountId}`,
     method: 'PATCH',
     body: data,
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//get company wise chart of accounts
+export async function getCompanyWiseChartOfAccounts(token: string, ) {
+  return fetchApi<CompanyChartOfAccount[]>({
+    url: `api/chart-of-accounts/get-company-coa`,
+    method: 'GET',  
     headers: {
       Authorization: `${token}`,
       'Content-Type': 'application/json',
