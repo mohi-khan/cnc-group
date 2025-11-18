@@ -96,6 +96,7 @@ const BillOfExchange = () => {
     costCenters: [],
     partners: [],
     departments: [],
+    employees: [],
     selectedBankAccount: null,
     formType: 'Credit',
     status: 'Draft',

@@ -118,6 +118,7 @@ export default function BankVoucher({
     costCenters: [],
     partners: [],
     departments: [],
+    employees: [],
     selectedBankAccount: null,
     formType: 'Credit',
     status: 'Draft',

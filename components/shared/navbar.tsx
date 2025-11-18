@@ -294,7 +294,7 @@ export default function Navbar() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
-  console.log('User Data in Navbar Atom:', userData?.username)
+ 
 
   // State variables
   const [user, setUser] = useState<User | null>(null)
@@ -420,7 +420,7 @@ export default function Navbar() {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
-      console.log('User Data in Navbar:', userData.userId)
+      
     } else {
     }
   }, [userData])

@@ -136,6 +136,7 @@ export default function OpeningBalance({
     costCenters: [],
     partners: [],
     departments: [],
+    employees: [],
     selectedBankAccount: null,
     formType: 'Credit',
     status: 'Draft',
