@@ -256,7 +256,18 @@ import type React from 'react'
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronDown, User2, Search, X, Folder, PackageMinusIcon, PackageX, PackageCheckIcon } from 'lucide-react'
+import {
+  ChevronDown,
+  User2,
+  Search,
+  X,
+  Folder,
+  PackageMinusIcon,
+  PackageX,
+  PackageCheckIcon,
+  User2Icon,
+  
+} from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CompanyFromLocalstorage, User } from '@/utils/type'
@@ -283,6 +294,7 @@ export default function Navbar() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
+  console.log('User Data in Navbar Atom:', userData?.username)
 
   // State variables
   const [user, setUser] = useState<User | null>(null)
@@ -408,6 +420,7 @@ export default function Navbar() {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
+      console.log('User Data in Navbar:', userData.userId)
     } else {
     }
   }, [userData])
@@ -617,6 +630,13 @@ export default function Navbar() {
                     aria-orientation="vertical"
                     aria-labelledby="user-menu"
                   >
+                    <h1 className="px-4 pb-2 text-sm font-medium text-gray-900 border-b flex items-center gap-2">
+                      <User2 className="text-gray-700 w-4 h-4" />
+                      {userData?.username?.replace(/\b\w/g, (c) =>
+                        c.toUpperCase()
+                      )}
+                    </h1>
+
                     <Link
                       href="/change-password"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
