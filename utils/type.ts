@@ -972,6 +972,7 @@ export const JournalResultSchema = z.object({
   partner: z.number().nullable(),
   bankaccount: z.number().nullable(),
   detail_notes: z.string().nullable(),
+  createdBy: z.number(),
 })
 export type JournalResult = z.infer<typeof JournalResultSchema>
 
