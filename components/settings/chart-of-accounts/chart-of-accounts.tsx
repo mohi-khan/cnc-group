@@ -56,7 +56,6 @@ import {
   chartOfAccountSchema,
   type CurrencyType,
   type AccountsHead,
-
 } from '@/utils/type'
 import {
   createChartOfAccounts,
@@ -74,7 +73,11 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { CustomCombobox } from '@/utils/custom-combobox'
-import { getAllChartOfAccounts, getAllCurrency, getAllCompanies } from '@/api/common-shared-api'
+import {
+  getAllChartOfAccounts,
+  getAllCurrency,
+  getAllCompanies,
+} from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -98,20 +101,12 @@ const cashTags = [
   'Cash flows from financing activities',
 ]
 
-// Type definition for Company (fallback if not in @/utils/type)
-type CompanyTypeLocal = {
-  companyId: number
-  companyName: string
-}
-
 export default function ChartOfAccountsTable() {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const router = useRouter()
 
-  // State variables
   const [searchTerm, setSearchTerm] = React.useState('')
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([])
   const [showFilters, setShowFilters] = React.useState(false)
@@ -135,17 +130,13 @@ export default function ChartOfAccountsTable() {
   const [companies, setCompanies] = React.useState<any[]>([])
   const [selectedCompanies, setSelectedCompanies] = React.useState<number[]>([])
 
-  // Reset to page 1 when search term, filters, or selected code changes
   React.useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, selectedTypes, activeAccountOnly, selectedCode])
 
-  // Function to build dynamic code groups from accounts data
   const buildCodeGroups = React.useCallback(
     (accountsData: AccountsHead[]): CodeGroup[] => {
       const codeMap = new Map<string, CodeGroup>()
-
-      // Sort accounts by code to ensure proper hierarchy
       const sortedAccounts = [...accountsData].sort((a, b) =>
         a.code.localeCompare(b.code)
       )
@@ -153,9 +144,7 @@ export default function ChartOfAccountsTable() {
       sortedAccounts.forEach((account) => {
         const code = account.code
 
-        // Determine if this is a parent code (single digit) or child code
         if (code.length === 1) {
-          // This is a main group (parent)
           if (!codeMap.has(code)) {
             codeMap.set(code, {
               id: code,
@@ -165,10 +154,8 @@ export default function ChartOfAccountsTable() {
             })
           }
         } else if (code.length === 2) {
-          // This is a subgroup
           const parentCode = code.charAt(0)
 
-          // Ensure parent exists
           if (!codeMap.has(parentCode)) {
             codeMap.set(parentCode, {
               id: parentCode,
@@ -179,8 +166,6 @@ export default function ChartOfAccountsTable() {
           }
 
           const parentGroup = codeMap.get(parentCode)!
-
-          // Add subgroup if it doesn't exist
           const existingSubgroup = parentGroup.subgroups?.find(
             (sub) => sub.code === code
           )
@@ -191,11 +176,9 @@ export default function ChartOfAccountsTable() {
             })
           }
         } else if (code.length > 2) {
-          // Handle deeper nesting if needed
           const parentCode = code.substring(0, 2)
           const grandParentCode = code.charAt(0)
 
-          // Ensure grandparent exists
           if (!codeMap.has(grandParentCode)) {
             codeMap.set(grandParentCode, {
               id: grandParentCode,
@@ -206,8 +189,6 @@ export default function ChartOfAccountsTable() {
           }
 
           const grandParentGroup = codeMap.get(grandParentCode)!
-
-          // Ensure parent exists in subgroups
           let parentGroup = grandParentGroup.subgroups?.find(
             (sub) => sub.code === parentCode
           )
@@ -221,7 +202,6 @@ export default function ChartOfAccountsTable() {
             grandParentGroup.subgroups?.push(parentGroup)
           }
 
-          // Add the current account as a subgroup
           const existingSubgroup = parentGroup.subgroups?.find(
             (sub) => sub.code === code
           )
@@ -237,7 +217,6 @@ export default function ChartOfAccountsTable() {
         }
       })
 
-      // Convert map to array and sort by code
       return Array.from(codeMap.values()).sort((a, b) =>
         a.code.localeCompare(b.code)
       )
@@ -260,7 +239,6 @@ export default function ChartOfAccountsTable() {
     }
   }, [userData, router])
 
-  // Dynamically update defaultValues based on userId
   const form = useForm<ChartOfAccount>({
     resolver: zodResolver(chartOfAccountSchema),
     defaultValues: {
@@ -285,17 +263,14 @@ export default function ChartOfAccountsTable() {
     },
   })
 
-  // Optionally, useEffect to update form when `userId` changes
   React.useEffect(() => {
     if (userId !== null) {
       form.setValue('createdBy', userId)
     }
   }, [userId, form])
 
-  // code generate
   const generateAccountCode = React.useCallback(
     async (parentAccountId: number): Promise<string> => {
-      // Convert parentAccountId to string for code comparison
       const parentCode = parentAccountId.toString()
       const childCount = filteredAccounts.filter(
         (account) =>
@@ -307,10 +282,8 @@ export default function ChartOfAccountsTable() {
     [filteredAccounts]
   )
 
-  //Add accounts
   const handleAddAccount = async (data: ChartOfAccount) => {
     if (data.parentAccountId) {
-      // Ensure parentAccountId is a number
       const parentAccountId =
         typeof data.parentAccountId === 'string'
           ? Number.parseInt(data.parentAccountId, 10)
@@ -329,7 +302,7 @@ export default function ChartOfAccountsTable() {
       form.reset()
       fetchCoaAccounts()
       setIsAddAccountOpen(false)
-      setCurrentPage(1) // Reset to first page after create
+      setCurrentPage(1)
     }
   }
 
@@ -358,11 +331,9 @@ export default function ChartOfAccountsTable() {
       })
     } else {
       setParentCodes(fetchedParentCodes.data)
-      console.log(fetchedParentCodes.data)
     }
   }, [token])
 
-  // get all currency api
   const fetchCurrency = React.useCallback(async () => {
     if (!token) return
     const fetchedCurrency = await getAllCurrency(token)
@@ -378,7 +349,6 @@ export default function ChartOfAccountsTable() {
     }
   }, [token])
 
-  // get all companies api
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
     const fetchedCompanies = await getAllCompanies(token)
@@ -387,7 +357,8 @@ export default function ChartOfAccountsTable() {
       console.error('Error getting companies:', fetchedCompanies.error)
       toast({
         title: 'Error',
-        description: fetchedCompanies.error?.message || 'Failed to get companies',
+        description:
+          fetchedCompanies.error?.message || 'Failed to get companies',
       })
     } else {
       setCompanies(fetchedCompanies.data)
@@ -411,8 +382,6 @@ export default function ChartOfAccountsTable() {
       })
     } else {
       setAccounts(fetchedAccounts.data)
-      console.log('all chart of account data: ', fetchedAccounts.data)
-      // Build dynamic code groups when accounts are fetched
       const dynamicGroups = buildCodeGroups(fetchedAccounts.data)
       setGroups(dynamicGroups)
     }
@@ -423,9 +392,14 @@ export default function ChartOfAccountsTable() {
     fetchParentCodes()
     fetchCurrency()
     fetchCompanies()
-  }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency, fetchCompanies, router])
+  }, [
+    fetchCoaAccounts,
+    fetchParentCodes,
+    fetchCurrency,
+    fetchCompanies,
+    router,
+  ])
 
-  // Update code groups when accounts change
   React.useEffect(() => {
     if (accounts.length > 0) {
       const dynamicGroups = buildCodeGroups(accounts)
@@ -433,7 +407,6 @@ export default function ChartOfAccountsTable() {
     }
   }, [accounts, buildCodeGroups])
 
-  // Filter accounts based on search term, selected types, and active accounts
   React.useEffect(() => {
     let filtered = accounts.filter(
       (account) =>
@@ -483,7 +456,6 @@ export default function ChartOfAccountsTable() {
     })
   }
 
-  // this is side bar search by code
   const renderCodeGroups = (groups: CodeGroup[]) => {
     return groups.map((group) => (
       <div key={group.id} className="space-y-1">
@@ -505,15 +477,12 @@ export default function ChartOfAccountsTable() {
           {group.subgroups && group.subgroups.length > 0 && (
             <ChevronRight
               className={cn(
-                'h-4 w-4 shrink-0 transition-transform ',
+                'h-4 w-4 shrink-0 transition-transform',
                 group.isExpanded && 'rotate-90'
               )}
             />
           )}
           <span>{group.code}</span>
-          {
-            <span className="text-xs text-muted-foreground truncate ml-1"></span>
-          }
         </Button>
         {group.isExpanded && group.subgroups && group.subgroups.length > 0 && (
           <div className="pl-4 ml-6">{renderCodeGroups(group.subgroups)}</div>
@@ -522,7 +491,6 @@ export default function ChartOfAccountsTable() {
     ))
   }
 
-  // Edit accounts function open dialog box
   const handleEditAccount = (account: AccountsHead) => {
     setEditingAccount({
       ...account,
@@ -533,17 +501,13 @@ export default function ChartOfAccountsTable() {
     setIsEditAccountOpen(true)
   }
 
-  // disable account and enable account function with api
   const handleDisableAccount = async (code: string) => {
-    // Find the account to update
     const accountToUpdate = accounts.find((account) => account.code === code)
     if (accountToUpdate) {
-      // Toggle the isActive status
       const updatedAccount = {
         ...accountToUpdate,
         isActive: !accountToUpdate.isActive,
       }
-      // API request to update the account
       const response = await updateChartOfAccounts(updatedAccount, token)
       if (response.error || !response.data) {
         console.error('Error updating chart of accounts:', response.error)
@@ -558,7 +522,6 @@ export default function ChartOfAccountsTable() {
           title: 'Success',
           description: 'Chart Of account updated successfully',
         })
-        // Update the accounts state
         setAccounts((prevAccounts) =>
           prevAccounts.map((account) =>
             account.code === updatedAccount.code ? updatedAccount : account
@@ -568,7 +531,6 @@ export default function ChartOfAccountsTable() {
     }
   }
 
-  // save edit account function
   const handleSaveEdit = async (data: Partial<ChartOfAccount>) => {
     if (editingAccount) {
       const updatedAccount = {
@@ -605,15 +567,17 @@ export default function ChartOfAccountsTable() {
     }
   }
 
-  // return function for chart of accounts
   return (
-    <div className="flex flex-col ">
-      <div className="p-2">
-        <div className="sticky top-28 bg-white flex items-center justify-between gap-4 border-b-2  shadow-md p-2 z-20">
-          <h2 className="text-xl font-semibold">Chart of Accounts</h2>
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Fixed Header */}
+      <div className="sticky top-0 bg-white border-b-2 shadow-md p-4 z-30">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold whitespace-nowrap">
+            Chart of Accounts
+          </h2>
           <div className="flex items-center gap-2 flex-grow justify-center max-w-2xl">
             <div className="relative flex items-center border rounded-md pr-2 flex-grow">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground gap-2" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
                 className="pl-8 pr-8 border-none"
@@ -626,7 +590,7 @@ export default function ChartOfAccountsTable() {
                   onClick={() => setSearchTerm('')}
                 />
               )}
-              <div className="mx-2 flex gap-1 ">
+              <div className="mx-2 flex gap-1">
                 {selectedTypes.map((type) => (
                   <Badge
                     key={type}
@@ -650,7 +614,6 @@ export default function ChartOfAccountsTable() {
               <Filter className="h-4 w-4" />
             </Button>
           </div>
-          {/* Add account  */}
           <Dialog
             open={isAddAccountOpen}
             onOpenChange={(open) => {
@@ -683,8 +646,9 @@ export default function ChartOfAccountsTable() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Account Name</FormLabel>
-                        <span className="text-red-500">*</span>
+                        <FormLabel>
+                          Account Name <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -701,8 +665,9 @@ export default function ChartOfAccountsTable() {
                     name="accountType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Account Type</FormLabel>
-                        <span className="text-red-500">*</span>
+                        <FormLabel>
+                          Account Type <span className="text-red-500">*</span>
+                        </FormLabel>
                         <CustomCombobox
                           items={accountTypes.map((type) => ({
                             id: type.toLowerCase(),
@@ -720,9 +685,9 @@ export default function ChartOfAccountsTable() {
                                 }
                               : null
                           }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) => field.onChange(value ? value.id : null)}
+                          onChange={(value) =>
+                            field.onChange(value ? value.id : null)
+                          }
                           placeholder="Select account type"
                         />
                         <FormMessage />
@@ -751,11 +716,9 @@ export default function ChartOfAccountsTable() {
                                 }
                               : null
                           }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) => {
+                          onChange={(value) =>
                             field.onChange(value ? value.id : null)
-                          }}
+                          }
                           placeholder="Select Cash Tag"
                         />
                         <FormMessage />
@@ -768,11 +731,11 @@ export default function ChartOfAccountsTable() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Parent Account Name
+                          Parent Account Name{' '}
                           <span className="text-red-500">*</span>
                         </FormLabel>
                         <CustomCombobox
-                          items={parentCodes.map((account: ChartOfAccount) => ({
+                          items={parentCodes.map((account) => ({
                             id: account.code.toString(),
                             name: account.name || 'Unnamed Account',
                           }))}
@@ -805,7 +768,7 @@ export default function ChartOfAccountsTable() {
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <CustomCombobox
-                          items={currency.map((curr: CurrencyType) => ({
+                          items={currency.map((curr) => ({
                             id: curr.currencyId.toString(),
                             name: curr.currencyCode || 'Unnamed Currency',
                           }))}
@@ -815,15 +778,12 @@ export default function ChartOfAccountsTable() {
                                   id: field.value.toString(),
                                   name:
                                     currency.find(
-                                      (curr: CurrencyType) =>
-                                        curr.currencyId === field.value
+                                      (curr) => curr.currencyId === field.value
                                     )?.currencyCode || 'Unnamed Currency',
                                 }
                               : null
                           }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) =>
+                          onChange={(value) =>
                             field.onChange(
                               value ? Number.parseInt(value.id, 10) : null
                             )
@@ -839,33 +799,48 @@ export default function ChartOfAccountsTable() {
                     name="companyIds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Companies 
-                          <span className="text-red-500">*</span>
+                        <FormLabel>
+                          Companies <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormDescription>
-                          Select one or more companies. Leave empty to create for all companies.
+                          Select one or more companies. Leave empty to create
+                          for all companies.
                         </FormDescription>
                         <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
                           {companies.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No companies available</p>
+                            <p className="text-sm text-muted-foreground">
+                              No companies available
+                            </p>
                           ) : (
                             companies.map((company) => (
-                              <div key={company.companyId} className="flex items-center space-x-2">
+                              <div
+                                key={company.companyId}
+                                className="flex items-center space-x-2"
+                              >
                                 <Checkbox
-                                  checked={field.value?.includes(company.companyId) || false}
+                                  checked={
+                                    field.value?.includes(company.companyId) ||
+                                    false
+                                  }
                                   onCheckedChange={(checked) => {
                                     const currentValues = field.value || []
                                     if (checked) {
-                                      field.onChange([...currentValues, company.companyId])
+                                      field.onChange([
+                                        ...currentValues,
+                                        company.companyId,
+                                      ])
                                     } else {
                                       field.onChange(
-                                        currentValues.filter((id) => id !== company.companyId)
+                                        currentValues.filter(
+                                          (id) => id !== company.companyId
+                                        )
                                       )
                                     }
                                   }}
                                 />
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                  {company.companyName || `Company ${company.companyId}`}
+                                  {company.companyName ||
+                                    `Company ${company.companyId}`}
                                 </label>
                               </div>
                             ))
@@ -894,11 +869,9 @@ export default function ChartOfAccountsTable() {
                                 }
                               : null
                           }
-                          onChange={(
-                            value: { id: string; name: string } | null
-                          ) => {
+                          onChange={(value) =>
                             field.onChange(value ? value.id : null)
-                          }}
+                          }
                           placeholder="Select financial tag"
                         />
                         <FormMessage />
@@ -909,19 +882,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isReconcilable"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -937,19 +902,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="withholdingTax"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -966,19 +923,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="budgetTracking"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -995,19 +944,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isActive"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -1019,24 +960,15 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="isGroup"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -1052,19 +984,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isPartner"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -1080,19 +1004,11 @@ export default function ChartOfAccountsTable() {
                     control={form.control}
                     name="isCostCenter"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 focus-within:ring-1 focus-within:ring-black focus-within:ring-offset-2 focus-within:rounded-md">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ' || e.key === 'Enter') {
-                                e.preventDefault()
-                                field.onChange(!field.value)
-                              }
-                            }}
-                            tabIndex={0}
-                            title="Press Space or Enter to toggle"
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -1104,17 +1020,7 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        e.currentTarget.click()
-                      }
-                    }}
-                    tabIndex={0}
-                  >
+                  <Button type="submit" className="w-full">
                     Create Account
                   </Button>
                 </form>
@@ -1122,8 +1028,93 @@ export default function ChartOfAccountsTable() {
             </DialogContent>
           </Dialog>
         </div>
-        <div className="flex mb">
-          <div className="fixed w-64 border-r bg-muted/50 ml-4 space-y-2 overflow-y-scroll h-[calc(100vh-200px)] ">
+      </div>
+
+      {/* Filter Bar (Fixed when open) */}
+      {showFilters && (
+        <div className="sticky top-[72px] grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg bg-white shadow-2xl mx-auto max-w-4xl z-20">
+          <div>
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+            </h3>
+            <div className="space-y-2">
+              {accountTypes.map((type) => (
+                <div key={type} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={selectedTypes.includes(type)}
+                    onCheckedChange={(checked) => {
+                      setSelectedTypes(
+                        checked
+                          ? [...selectedTypes, type]
+                          : selectedTypes.filter((t) => t !== type)
+                      )
+                    }}
+                  />
+                  <label>{type}</label>
+                </div>
+              ))}
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox
+                  checked={activeAccountOnly}
+                  onCheckedChange={(checked) =>
+                    setActiveAccountOnly(checked as boolean)
+                  }
+                />
+                <label>Active Account</label>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              <Group className="h-4 w-4" />
+              Group By
+            </h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-transparent"
+                >
+                  Account Type
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem>Account Type</DropdownMenuItem>
+                <DropdownMenuItem>Add Custom Group</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Favorites
+            </h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-transparent"
+                >
+                  Save current search
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem>Chart of Accounts</DropdownMenuItem>
+                <DropdownMenuItem>Save current search</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area with Fixed Sidebar and Scrollable Table */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed Sidebar */}
+        <div className="w-64 border-r bg-muted/50 overflow-y-auto flex-shrink-0">
+          <div className="p-4 space-y-2">
             <Button
               variant="ghost"
               className={cn(
@@ -1136,220 +1127,139 @@ export default function ChartOfAccountsTable() {
             </Button>
             {renderCodeGroups(groups)}
           </div>
-          <div className="ml-64 flex-1 pl-4 ">
-            {showFilters && (
-              <div className="sticky top-36 grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg bg-white shadow-2xl lg:mx-52 z-20 ">
-                <div>
-                  <h3 className="font-medium mb-2 flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                  </h3>
-                  <div className="space-y-2">
-                    {accountTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={selectedTypes.includes(type)}
-                          onCheckedChange={(checked: boolean) => {
-                            setSelectedTypes(
-                              checked
-                                ? [...selectedTypes, type]
-                                : selectedTypes.filter((t) => t !== type)
-                            )
-                          }}
+        </div>
+
+        {/* Scrollable Table Container */}
+        <div className="flex-1 overflow-auto p-1">
+          <div className="border rounded-md bg-white">
+            <Table>
+              <TableHeader className="sticky top-0 bg-[#e0e0e0] z-10">
+                <TableRow>
+                  <TableHead className="w-[100px]">Code</TableHead>
+                  <TableHead>Account Name</TableHead>
+                  <TableHead>Parent Account Name</TableHead>
+                  <TableHead className="capitalize">Type</TableHead>
+                  <TableHead className="text-center">
+                    Allow Reconciliation
+                  </TableHead>
+                  <TableHead className="w-[200px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAccounts
+                  .slice(
+                    (currentPage - 1) * itemsPerPage,
+                    currentPage * itemsPerPage
+                  )
+                  .map((account) => (
+                    <TableRow key={account.code}>
+                      <TableCell>{account.code}</TableCell>
+                      <TableCell>{account.name}</TableCell>
+                      <TableCell>{account.parentName}</TableCell>
+                      <TableCell>{account.accountType}</TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={account.isReconcilable}
+                          onChange={(checked: any) =>
+                            handleSwitchChange(account.code, checked)
+                          }
+                          id={`switch-${account.code}`}
                         />
-                        <label>{type}</label>
-                      </div>
-                    ))}
-                    <div className="flex items-center space-x-2 mt-4">
-                      <Checkbox
-                        checked={activeAccountOnly}
-                        onCheckedChange={(checked) =>
-                          setActiveAccountOnly(checked as boolean)
-                        }
-                      />
-                      <label>Active Account</label>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2 flex items-center gap-2">
-                    <Group className="h-4 w-4" />
-                    Group By
-                  </h3>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between bg-transparent"
-                      >
-                        Account Type
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem>Account Type</DropdownMenuItem>
-                      <DropdownMenuItem>Add Custom Group</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2 flex items-center gap-2">
-                    <Star className="h-4 w-4" />
-                    Favorites
-                  </h3>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between bg-transparent"
-                      >
-                        Save current search
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem>Chart of Accounts</DropdownMenuItem>
-                      <DropdownMenuItem>Save current search</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            )}
-            {/* Table header and data */}
-            <div className=" border rounded-md overflow-hidden">
-              <div className="overflow-auto max-h-[calc(100vh-200px)]">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-[#e0e0e0] z-10">
-                    <TableRow className="">
-                      <TableHead className="w-[100px]">Code</TableHead>
-                      <TableHead>Account Name</TableHead>
-                      <TableHead>Parent Account Name</TableHead>
-                      <TableHead className="capitalize">Type</TableHead>
-                      <TableHead className="text-center">
-                        Allow Reconciliation
-                      </TableHead>
-                      <TableHead className="w-[200px]">Actions</TableHead>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditAccount(account)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant={
+                              account.isActive ? 'destructive' : 'outline'
+                            }
+                            size="sm"
+                            onClick={() => handleDisableAccount(account.code)}
+                          >
+                            <Power className="h-4 w-4 mr-2" />
+                            {account.isActive ? 'Disable' : 'Enable'}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAccounts
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage
-                      )
-                      .map((account) => (
-                        <TableRow key={account.code}>
-                          <TableCell>{account.code}</TableCell>
-                          <TableCell>{account.name}</TableCell>
-                          <TableCell>{account.parentName}</TableCell>
-                          <TableCell>{account.accountType}</TableCell>
-                          <TableCell className="text-center">
-                            <Switch
-                              checked={account.isReconcilable}
-                              onChange={(checked: any) =>
-                                handleSwitchChange(account.code, checked)
-                              }
-                              id={`switch-${account.code}`}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditAccount(account)}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </Button>
-                              <Button
-                                variant={
-                                  account.isActive ? 'destructive' : 'outline'
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handleDisableAccount(account.code)
-                                }
-                              >
-                                <Power className="h-4 w-4 mr-2" />
-                                {account.isActive ? 'Disable' : 'Enable'}
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-                <div className="flex justify-center mt-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(prev - 1, 1))
-                          }
-                          className={
-                            currentPage === 1
-                              ? 'pointer-events-none opacity-50'
-                              : ''
-                          }
-                        />
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-4 pb-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1
+                        ? 'pointer-events-none opacity-50'
+                        : 'cursor-pointer'
+                    }
+                  />
+                </PaginationItem>
+
+                {[...Array(totalPages)].map((_, index) => {
+                  if (
+                    index === 0 ||
+                    index === totalPages - 1 ||
+                    (index >= currentPage - 2 && index <= currentPage + 2)
+                  ) {
+                    return (
+                      <PaginationItem key={`page-${index}`}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(index + 1)}
+                          isActive={currentPage === index + 1}
+                          className="cursor-pointer"
+                        >
+                          {index + 1}
+                        </PaginationLink>
                       </PaginationItem>
-
-                      {[...Array(totalPages)].map((_, index) => {
-                        if (
-                          index === 0 ||
-                          index === totalPages - 1 ||
-                          (index >= currentPage - 2 && index <= currentPage + 2)
-                        ) {
-                          return (
-                            <PaginationItem key={`page-${index}`}>
-                              <PaginationLink
-                                onClick={() => setCurrentPage(index + 1)}
-                                isActive={currentPage === index + 1}
-                              >
-                                {index + 1}
-                              </PaginationLink>
-                            </PaginationItem>
-                          )
-                        } else if (
-                          index === currentPage - 3 ||
-                          index === currentPage + 3
-                        ) {
-                          return (
-                            <PaginationItem key={`ellipsis-${index}`}>
-                              <PaginationLink>...</PaginationLink>
-                            </PaginationItem>
-                          )
-                        }
-
-                        return null
-                      })}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(prev + 1, totalPages)
-                            )
-                          }
-                          className={
-                            currentPage === totalPages
-                              ? 'pointer-events-none opacity-50'
-                              : ''
-                          }
-                        />
+                    )
+                  } else if (
+                    index === currentPage - 3 ||
+                    index === currentPage + 3
+                  ) {
+                    return (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationLink>...</PaginationLink>
                       </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </div>
-            </div>
-            {/* Edit Form */}
+                    )
+                  }
+                  return null
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? 'pointer-events-none opacity-50'
+                        : 'cursor-pointer'
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </div>
       </div>
-      {/* Edit Chart Of Accounts */}
+
+      {/* Edit Dialog */}
       <Dialog open={isEditAccountOpen} onOpenChange={setIsEditAccountOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1363,7 +1273,7 @@ export default function ChartOfAccountsTable() {
                 handleSaveEdit(editingAccount)
               }}
             >
-              <div className="spacey-2">
+              <div className="space-y-2">
                 <Label htmlFor="edit-notes">Notes</Label>
                 <CustomCombobox
                   items={financialTags.map((tag) => ({
@@ -1378,7 +1288,7 @@ export default function ChartOfAccountsTable() {
                         }
                       : null
                   }
-                  onChange={(value: { id: string; name: string } | null) => {
+                  onChange={(value) => {
                     setEditingAccount({
                       ...editingAccount,
                       notes: value ? value.name : '',
@@ -1425,8 +1335,6 @@ export default function ChartOfAccountsTable() {
     </div>
   )
 }
-
-
 
 // 'use client'
 // import * as React from 'react'
@@ -1486,6 +1394,7 @@ export default function ChartOfAccountsTable() {
 //   chartOfAccountSchema,
 //   type CurrencyType,
 //   type AccountsHead,
+
 // } from '@/utils/type'
 // import {
 //   createChartOfAccounts,
@@ -1503,7 +1412,7 @@ export default function ChartOfAccountsTable() {
 //   PaginationPrevious,
 // } from '@/components/ui/pagination'
 // import { CustomCombobox } from '@/utils/custom-combobox'
-// import { getAllChartOfAccounts, getAllCurrency } from '@/api/common-shared-api'
+// import { getAllChartOfAccounts, getAllCurrency, getAllCompanies } from '@/api/common-shared-api'
 // import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 // import { useAtom } from 'jotai'
 // import { useRouter } from 'next/navigation'
@@ -1515,6 +1424,8 @@ export default function ChartOfAccountsTable() {
 //   'Net Profit',
 //   'Asset',
 //   'Liablities',
+//   'Quick Asset',
+//   'Quick Liabilities',
 // ]
 // const cashTags = [
 //   'Advance Payments received from customers',
@@ -1524,6 +1435,12 @@ export default function ChartOfAccountsTable() {
 //   'Cash flows from investing & extraordinary activities',
 //   'Cash flows from financing activities',
 // ]
+
+// // Type definition for Company (fallback if not in @/utils/type)
+// type CompanyTypeLocal = {
+//   companyId: number
+//   companyName: string
+// }
 
 // export default function ChartOfAccountsTable() {
 //   //getting userData from jotai atom component
@@ -1553,6 +1470,8 @@ export default function ChartOfAccountsTable() {
 //   const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage)
 //   const [userId, setUserId] = React.useState<number | null>(null)
 //   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
+//   const [companies, setCompanies] = React.useState<any[]>([])
+//   const [selectedCompanies, setSelectedCompanies] = React.useState<number[]>([])
 
 //   // Reset to page 1 when search term, filters, or selected code changes
 //   React.useEffect(() => {
@@ -1676,7 +1595,6 @@ export default function ChartOfAccountsTable() {
 //     checkUserData()
 //     if (userData) {
 //       setUserId(userData.userId)
-//     } else {
 //     }
 //   }, [userData, router])
 
@@ -1701,6 +1619,7 @@ export default function ChartOfAccountsTable() {
 //       notes: null,
 //       cashTag: null,
 //       code: '',
+//       companyIds: [],
 //     },
 //   })
 
@@ -1778,8 +1697,6 @@ export default function ChartOfAccountsTable() {
 //     } else {
 //       setParentCodes(fetchedParentCodes.data)
 //       console.log(fetchedParentCodes.data)
-//       if (fetchedParentCodes.data.length > 0) {
-//       }
 //     }
 //   }, [token])
 
@@ -1799,13 +1716,28 @@ export default function ChartOfAccountsTable() {
 //     }
 //   }, [token])
 
+//   // get all companies api
+//   const fetchCompanies = React.useCallback(async () => {
+//     if (!token) return
+//     const fetchedCompanies = await getAllCompanies(token)
+
+//     if (fetchedCompanies.error || !fetchedCompanies.data) {
+//       console.error('Error getting companies:', fetchedCompanies.error)
+//       toast({
+//         title: 'Error',
+//         description: fetchedCompanies.error?.message || 'Failed to get companies',
+//       })
+//     } else {
+//       setCompanies(fetchedCompanies.data)
+//     }
+//   }, [token])
+
 //   const fetchCoaAccounts = React.useCallback(async () => {
 //     if (!token) return
 //     const fetchedAccounts = await getAllChartOfAccounts(token)
 
 //     if (fetchedAccounts?.error?.status === 401) {
 //       router.push('/unauthorized-access')
-
 //       return
 //     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
 //       console.error('Error fetching chart of accounts:', fetchedAccounts.error)
@@ -1828,7 +1760,8 @@ export default function ChartOfAccountsTable() {
 //     fetchCoaAccounts()
 //     fetchParentCodes()
 //     fetchCurrency()
-//   }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency, router])
+//     fetchCompanies()
+//   }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency, fetchCompanies, router])
 
 //   // Update code groups when accounts change
 //   React.useEffect(() => {
@@ -2004,7 +1937,6 @@ export default function ChartOfAccountsTable() {
 //             account.code === updatedAccount.code ? updatedAccount : account
 //           )
 //         )
-//         // setCurrentPage(1) // Reset to first page after edit
 //       }
 //       setIsEditAccountOpen(false)
 //       setEditingAccount(null)
@@ -2018,30 +1950,6 @@ export default function ChartOfAccountsTable() {
 //         <div className="sticky top-28 bg-white flex items-center justify-between gap-4 border-b-2  shadow-md p-2 z-20">
 //           <h2 className="text-xl font-semibold">Chart of Accounts</h2>
 //           <div className="flex items-center gap-2 flex-grow justify-center max-w-2xl">
-//             {/* <div className="relative flex items-center border rounded-md pr-2 flex-grow">
-//               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 placeholder="Search..."
-//                 className="pl-8 border-none"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
-//               <div className="mx-2 flex gap-1 ">
-//                 {selectedTypes.map((type) => (
-//                   <Badge
-//                     key={type}
-//                     variant="secondary"
-//                     className="gap-1 px-2 py-1 ring-1 whitespace-nowrap"
-//                   >
-//                     {type}
-//                     <X
-//                       className="h-3 w-3 cursor-pointer"
-//                       onClick={() => removeFilter(type)}
-//                     />
-//                   </Badge>
-//                 ))}
-//               </div>
-//             </div> */}
 //             <div className="relative flex items-center border rounded-md pr-2 flex-grow">
 //               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground gap-2" />
 //               <Input
@@ -2087,6 +1995,7 @@ export default function ChartOfAccountsTable() {
 //               fetchCoaAccounts()
 //               if (!open) {
 //                 form.reset()
+//                 setSelectedCompanies([])
 //               }
 //               setIsAddAccountOpen(open)
 //               fetchParentCodes()
@@ -2259,6 +2168,47 @@ export default function ChartOfAccountsTable() {
 //                           }
 //                           placeholder="Select currency"
 //                         />
+//                         <FormMessage />
+//                       </FormItem>
+//                     )}
+//                   />
+//                   <FormField
+//                     control={form.control}
+//                     name="companyIds"
+//                     render={({ field }) => (
+//                       <FormItem>
+//                         <FormLabel>Companies
+//                           <span className="text-red-500">*</span>
+//                         </FormLabel>
+//                         <FormDescription>
+//                           Select one or more companies. Leave empty to create for all companies.
+//                         </FormDescription>
+//                         <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+//                           {companies.length === 0 ? (
+//                             <p className="text-sm text-muted-foreground">No companies available</p>
+//                           ) : (
+//                             companies.map((company) => (
+//                               <div key={company.companyId} className="flex items-center space-x-2">
+//                                 <Checkbox
+//                                   checked={field.value?.includes(company.companyId) || false}
+//                                   onCheckedChange={(checked) => {
+//                                     const currentValues = field.value || []
+//                                     if (checked) {
+//                                       field.onChange([...currentValues, company.companyId])
+//                                     } else {
+//                                       field.onChange(
+//                                         currentValues.filter((id) => id !== company.companyId)
+//                                       )
+//                                     }
+//                                   }}
+//                                 />
+//                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+//                                   {company.companyName || `Company ${company.companyId}`}
+//                                 </label>
+//                               </div>
+//                             ))
+//                           )}
+//                         </div>
 //                         <FormMessage />
 //                       </FormItem>
 //                     )}
@@ -2812,4 +2762,4 @@ export default function ChartOfAccountsTable() {
 //       </Dialog>
 //     </div>
 //   )
-// } 
+// }
