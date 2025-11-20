@@ -381,7 +381,7 @@ export default function BankVoucherDetails({
                           <CustomCombobox
                             items={employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name: employee.employeeName || 'Unnamed Employee',
+                               name:`${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
                             }))}
                             value={
                               field.value
