@@ -415,7 +415,7 @@ export default function OpeningBalanceDetails({
                           <CustomCombobox
                             items={formState.employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name: employee.employeeName || 'Unnamed Employee',
+                              name:`${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
                             }))}
                             value={
                               field.value

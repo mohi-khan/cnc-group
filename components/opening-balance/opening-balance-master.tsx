@@ -433,7 +433,7 @@ useEffect(() => {
                   <CustomCombobox
                     items={employeeData.map((employee) => ({
                       id: employee.id.toString(),
-                      name: employee.employeeName,
+                      name:`${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
                     }))}
                     value={
                       field.value && !form.watch('journalEntry.payToText')

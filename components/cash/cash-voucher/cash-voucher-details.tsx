@@ -364,7 +364,7 @@ export default function CashVoucherDetails({
                           <CustomCombobox
                             items={employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name: employee.employeeName || 'Unnamed Employee',
+                              name: `${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
                             }))}
                             value={
                               field.value
@@ -379,7 +379,7 @@ export default function CashVoucherDetails({
                             }
                             onChange={(value) =>
                               field.onChange(
-                                value ? Number.parseInt(value.id , 10) : null
+                                value ? Number.parseInt(value.id, 10) : null
                               )
                             }
                             placeholder="Select an employee"
@@ -561,4 +561,3 @@ export default function CashVoucherDetails({
     </div>
   )
 }
-
