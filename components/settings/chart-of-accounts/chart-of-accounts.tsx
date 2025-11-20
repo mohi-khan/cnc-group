@@ -1130,7 +1130,7 @@ export default function ChartOfAccountsTable() {
         </div>
 
         {/* Scrollable Table Container */}
-        <div className="flex-1 overflow-auto p-1">
+        <div className="flex-1 overflow-auto">
           <div className="border rounded-md bg-white">
             <Table>
               <TableHeader className="sticky top-0 bg-[#e0e0e0] z-10">
