@@ -1,3 +1,5 @@
+
+
 'use client'
 
 import {
@@ -314,7 +316,7 @@ export default function CashVoucherDetails({
                   />
                 </TableCell>
 
-                <TableCell>
+                {/* <TableCell>
                   <FormField
                     control={form.control}
                     name={`journalDetails.${index}.departmentId`}
@@ -346,7 +348,59 @@ export default function CashVoucherDetails({
                                 value ? Number.parseInt(value.id, 10) : null
                               )
                             }
-                            placeholder="Select a department"
+                            placeholder="Select a unit"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </TableCell> */}
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`journalDetails.${index}.departmentId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <CustomCombobox
+                            items={departments
+                              .filter((department) => 
+                                department.isActive && 
+                                department.companyCode === selectedCompanyId
+                              )
+                              .map((department) => ({
+                                id: department.departmentID.toString(),
+                                name:
+                                  department.departmentName ||
+                                  'Unnamed Department',
+                              }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      departments.find(
+                                        (d) => d.departmentID === field.value
+                                      )?.departmentName || '',
+                                  }
+                                : null
+                            }
+                            onChange={(value) =>
+                              field.onChange(
+                                value ? Number.parseInt(value.id, 10) : null
+                              )
+                            }
+                            placeholder={
+                              !isCompanySelected
+                                ? 'Select company first'
+                                : departments.filter(d => d.companyCode === selectedCompanyId).length === 0
+                                  ? 'No departments for this company'
+                                  : 'Select a department'
+                            }
+                            disabled={
+                              !isCompanySelected ||
+                              departments.filter(d => d.companyCode === selectedCompanyId).length === 0
+                            }
                           />
                         </FormControl>
                       </FormItem>
