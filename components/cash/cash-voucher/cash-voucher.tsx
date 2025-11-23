@@ -487,23 +487,7 @@ export default function CashVoucher({
     const subscription = form.watch((value) => {
       const selectedCompanyId = value.journalEntry?.companyId
 
-      console.log('🔍 Company Selection Debug:')
-      console.log('Selected Company ID:', selectedCompanyId)
-      console.log('Company Chart Mappings:', companyChartOfAccount)
-      console.log(
-        'Company Chart Mappings Length:',
-        companyChartOfAccount.length
-      )
-      console.log('All Chart of Accounts:', chartOfAccounts)
-      console.log('All Chart of Accounts Length:', chartOfAccounts.length)
-      console.log(
-        'Filtered Chart of Accounts (non-group):',
-        filteredChartOfAccounts
-      )
-      console.log(
-        'Filtered Chart of Accounts Length:',
-        filteredChartOfAccounts.length
-      )
+     
 
       if (!selectedCompanyId) {
         console.log('⚠️ No company selected - using all filtered accounts')
@@ -550,8 +534,7 @@ export default function CashVoucher({
         return isIncluded && isNotGroup
       })
 
-      console.log('✅ Filtered Accounts for Details:', filtered)
-      console.log('Total accounts found:', filtered.length)
+      
 
       setCompanyFilteredAccounts(filtered)
     })
@@ -560,28 +543,34 @@ export default function CashVoucher({
   }, [form, companyChartOfAccount, chartOfAccounts, filteredChartOfAccounts])
 
   // Trigger initial filter when data loads
-  useEffect(() => {
-    const selectedCompanyId = form.getValues('journalEntry.companyId')
-    if (
-      selectedCompanyId &&
-      companyChartOfAccount.length &&
-      chartOfAccounts.length
-    ) {
-      console.log('🔄 Initial trigger for company:', selectedCompanyId)
-      // Manually trigger the filter by updating the state
-      const companyAccountIds = companyChartOfAccount
-        .filter((mapping) => mapping.companyId === selectedCompanyId)
-        .map((mapping) => mapping.chartOfAccountId)
+ useEffect(() => {
+  const subscription = form.watch((value) => {
+    const selectedCompanyId = value.journalEntry?.companyId
 
-      const filtered = chartOfAccounts.filter(
-        (account) =>
-          companyAccountIds.includes(account.accountId) &&
-          account.isGroup === false
-      )
+    // Wait until all required data is loaded
+    if (!chartOfAccounts.length || !companyChartOfAccount.length) return
 
-      setCompanyFilteredAccounts(filtered)
+    if (!selectedCompanyId) {
+      // Show nothing OR show all filtered — your choice
+      setCompanyFilteredAccounts([])
+      return
     }
-  }, [companyChartOfAccount, chartOfAccounts, form])
+
+    // Get all accountIds for the selected company
+    const companyAccountIds = companyChartOfAccount
+      .filter(m => m.companyId === selectedCompanyId)
+      .map(m => m.chartOfAccountId)
+
+    const filtered = chartOfAccounts.filter(
+      acc => companyAccountIds.includes(acc.accountId) && !acc.isGroup
+    )
+
+    setCompanyFilteredAccounts(filtered)
+  })
+
+  return () => subscription.unsubscribe()
+}, [form, companyChartOfAccount, chartOfAccounts])
+
 
   const onSubmit = async (
     values: JournalEntryWithDetails,
