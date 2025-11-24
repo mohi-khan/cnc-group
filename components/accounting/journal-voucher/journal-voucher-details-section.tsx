@@ -1082,7 +1082,10 @@ export function JournalVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const selectedCompanyId = form.watch('journalEntry.companyId')
+  // const selectedCompanyId = form.watch('journalEntry.companyId')
+
+const selectedCompanyId = form.watch('journalEntry.companyId')
+  const isCompanySelected = !!selectedCompanyId
 
   return (
     <div>
@@ -1216,7 +1219,7 @@ export function JournalVoucherDetailsSection({
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name={`journalDetails.${index}.departmentId`}
                 render={({ field }) => (
@@ -1250,7 +1253,62 @@ export function JournalVoucherDetailsSection({
                     </FormControl>
                   </FormItem>
                 )}
-              />
+              /> */}
+               <FormField
+                    control={form.control}
+                    name={`journalDetails.${index}.departmentId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <CustomCombobox
+                            items={departments
+                              .filter(
+                                (department) =>
+                                  department.isActive &&
+                                  department.companyCode === selectedCompanyId
+                              )
+                              .map((department) => ({
+                                id: department.departmentID.toString(),
+                                name:
+                                  department.departmentName ||
+                                  'Unnamed Department',
+                              }))}
+                            value={
+                              field.value
+                                ? {
+                                    id: field.value.toString(),
+                                    name:
+                                      departments.find(
+                                        (d) => d.departmentID === field.value
+                                      )?.departmentName || '',
+                                  }
+                                : null
+                            }
+                            onChange={(value) =>
+                              field.onChange(
+                                value ? Number.parseInt(value.id, 10) : null
+                              )
+                            }
+                            placeholder={
+                              !isCompanySelected
+                                ? 'Select company first'
+                                : departments.filter(
+                                      (d) => d.companyCode === selectedCompanyId
+                                    ).length === 0
+                                  ? 'No departments for this company'
+                                  : 'Select a department'
+                            }
+                            disabled={
+                              !isCompanySelected ||
+                              departments.filter(
+                                (d) => d.companyCode === selectedCompanyId
+                              ).length === 0
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.resPartnerId`}

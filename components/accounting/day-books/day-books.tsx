@@ -89,9 +89,9 @@ const DayBooks = () => {
       if (userData?.userLocations?.length > 0) {
         setLocations(userData.userLocations)
       }
-      if (!userData.voucherTypes.includes('Cash Voucher')) {
-        router.push('/unauthorized-access')
-      }
+      // if (!userData.voucherTypes.includes('Cash Voucher')) {
+      //   router.push('/unauthorized-access')
+      // }
     } else {
       toast({
         title: 'Error',

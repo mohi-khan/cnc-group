@@ -65,7 +65,10 @@ const IouList: React.FC<LoanListProps> = ({
   // Find employee name by matching employeeId
   const getEmployeeName = (employeeId: number) => {
     const employee = employeeData.find((emp) => emp.id === employeeId)
-    return employee ? employee.employeeName : 'Unknown Employee'
+    return employee 
+  ? `${employee.employeeName} (${employee.employeeId})`
+  : 'Unknown Employee';
+
   }
 
   const getCompanyName = (companyId: number) => {
@@ -128,7 +131,7 @@ const IouList: React.FC<LoanListProps> = ({
   )
 
   return (
-    <div className="p-4">
+    <div className="p-1">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">IOU List</h1>
@@ -159,9 +162,19 @@ const IouList: React.FC<LoanListProps> = ({
         {isLoading ? (
           <Loader />
         ) : (
+          <div className="w-full overflow-auto">
           <Table className=" border shadow-md">
-            <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
+            <TableHeader className="sticky top-auto bg-slate-200 shadow-md">
               <TableRow>
+                <TableHead>
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort('iouId')}
+                  >
+                    Iou Id
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>
                   <Button
                     variant="ghost"
@@ -236,6 +249,7 @@ const IouList: React.FC<LoanListProps> = ({
             <TableBody>
               {paginatedLoanData.map((loan) => (
                 <TableRow key={loan.iouId}>
+                  <TableCell>{loan.iouId}</TableCell>
                   <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
                   <TableCell>{getCompanyName(loan.companyId)}</TableCell>
                   <TableCell>{getLocationName(loan.locationId)}</TableCell>
@@ -282,10 +296,11 @@ const IouList: React.FC<LoanListProps> = ({
                 </TableCell>
                 <TableCell>{grandTotalAmount}</TableCell>
                 <TableCell>{grandTotalAdjusted}</TableCell>
-                <TableCell colSpan={4}></TableCell>
+                <TableCell colSpan={5}></TableCell>
               </TableRow>
             </TableBody>
           </Table>
+          </div>
         )}
         {/* Render the popup only for the selected IOU */}
         {popupIouId && (
