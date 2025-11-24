@@ -884,6 +884,8 @@ interface Voucher {
   totalamount: number
   journaltype: string
   journalDetails?: JournalDetail[]
+  createdBy:number
+  createdByName?:string
 }
 
 export interface Column {

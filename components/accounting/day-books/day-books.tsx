@@ -89,9 +89,9 @@ const DayBooks = () => {
       if (userData?.userLocations?.length > 0) {
         setLocations(userData.userLocations)
       }
-      if (!userData.voucherTypes.includes('Cash Voucher')) {
-        router.push('/unauthorized-access')
-      }
+      // if (!userData.voucherTypes.includes('Cash Voucher')) {
+      //   router.push('/unauthorized-access')
+      // }
     } else {
       toast({
         title: 'Error',
@@ -275,11 +275,12 @@ const getallVoucher = useCallback(
 
   const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No' },
+     { key: 'date', label: 'Date' },
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
-    // { key: 'currency', label: 'Currency' },
     { key: 'location', label: 'Location' },
     { key: 'totalamount', label: 'Total Amount' },
+    {key: 'createdByName', label: 'Created By'},
     { key: 'state', label: 'Status' },
   ]
 
