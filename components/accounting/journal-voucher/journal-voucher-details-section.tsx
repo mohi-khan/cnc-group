@@ -1219,41 +1219,7 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name={`journalDetails.${index}.departmentId`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <CustomCombobox
-                        items={departments
-                          .filter((department) => department.isActive)
-                          .map((department) => ({
-                            id: department.departmentID.toString(),
-                            name: department.departmentName || 'Unnamed Unit',
-                          }))}
-                        value={
-                          field.value
-                            ? {
-                                id: field.value.toString(),
-                                name:
-                                  departments.find(
-                                    (d) => d.departmentID === field.value
-                                  )?.departmentName || '',
-                              }
-                            : null
-                        }
-                        onChange={(value) =>
-                          field.onChange(
-                            value ? Number.parseInt(value.id, 10) : null
-                          )
-                        }
-                        placeholder="Select unit"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              /> */}
+             
                <FormField
                     control={form.control}
                     name={`journalDetails.${index}.departmentId`}

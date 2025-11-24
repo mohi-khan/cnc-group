@@ -275,11 +275,12 @@ const getallVoucher = useCallback(
 
   const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No' },
+     { key: 'date', label: 'Date' },
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
-    // { key: 'currency', label: 'Currency' },
     { key: 'location', label: 'Location' },
     { key: 'totalamount', label: 'Total Amount' },
+    {key: 'createdByName', label: 'Created By'},
     { key: 'state', label: 'Status' },
   ]
 
