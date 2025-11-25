@@ -1,7 +1,10 @@
+
+
 'use client'
 import { Fragment, useState, useRef, useEffect } from 'react'
+
+import { Check, ChevronsUpDown, X } from 'lucide-react'
 import { Combobox, Transition } from '@headlessui/react'
-import { Check, ChevronsUpDown } from 'lucide-react'
 
 export interface ComboboxItem {
   id: string | number
@@ -37,10 +40,19 @@ export function CustomCombobox<T extends ComboboxItem>({
 
   // Auto-select single match AFTER typing
   useEffect(() => {
-  if (filteredItems.length === 1 && value?.id !== filteredItems[0].id) {
-    onChange(filteredItems[0])
+    if (filteredItems.length === 1 && value?.id !== filteredItems[0].id) {
+      onChange(filteredItems[0])
+    }
+  }, [filteredItems, value, onChange])
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setQuery('')
+    onChange(null)
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
   }
-}, [filteredItems, value, onChange])
 
   const handleContainerMouseDown = (
     event: React.MouseEvent<HTMLDivElement>
@@ -70,12 +82,22 @@ export function CustomCombobox<T extends ComboboxItem>({
               onChange={(event) => setQuery(event.target.value)}
               placeholder={placeholder}
             />
-            <Combobox.Button className="absolute inset-y-0 top-2 right-0 flex items-center pr-2">
-              <ChevronsUpDown
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </Combobox.Button>
+            {(query || value) ? (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute inset-y-0 right-0 flex items-center pr-2 hover:bg-gray-100 rounded"
+              >
+                <X className="h-4 w-4 text-gray-400 hover:text-gray-600" aria-hidden="true" />
+              </button>
+            ) : (
+              <Combobox.Button className="absolute inset-y-0 top-2 right-0 flex items-center pr-2">
+                <ChevronsUpDown
+                  className="h-5 w-5 text-gray-400"
+                  aria-hidden="true"
+                />
+              </Combobox.Button>
+            )}
           </div>
           <Transition
             as={Fragment}

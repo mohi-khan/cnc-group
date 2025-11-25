@@ -154,65 +154,99 @@ const VoucherEditContent: React.FC<VoucherDuplicationContentProps> = ({
   }
 
   const voucherType = initialFormData.journalEntry.journalType
+  const voucherNo = voucherData[0]?.voucherno || 'N/A'
+  const voucherDate = voucherData[0]?.date || 'N/A'
 
   // Wrapper with consistent responsive height handling
   const wrapperClassName = 'w-full h-[80vh] overflow-y-auto'
+
+  // Common header component for all voucher types
+   const VoucherHeader = () => (
+    <div className="sticky top-0 z-10 bg-white border-b px-6 py-3 mb-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+            <span className="font-medium">
+              Voucher No: <span className="text-blue-600">{voucherNo}</span>
+            </span>
+            <span className="text-gray-400">|</span>
+            <span>Date: {voucherDate}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   switch (voucherType) {
     case VoucherTypes.CashVoucher:
       return (
         <div className={wrapperClassName}>
-          <CashVoucher
-            initialData={initialFormData}
-            onClose={onClose}
-            isEdit={true}
-            onSuccess={handleCashVoucherSuccess}
-          />
+          <VoucherHeader />
+          <div className="px-6">
+            <CashVoucher
+              initialData={initialFormData}
+              onClose={onClose}
+              isEdit={true}
+              onSuccess={handleCashVoucherSuccess}
+            />
+          </div>
         </div>
       )
     case VoucherTypes.BankVoucher:
       return (
         <div className={wrapperClassName}>
-          <BankVoucher
-            initialData={initialFormData}
-            onClose={onClose}
-            isEdit={true}
-            onSuccess={handleCashVoucherSuccess}
-          />
+          <VoucherHeader />
+          <div className="px-6">
+            <BankVoucher
+              initialData={initialFormData}
+              onClose={onClose}
+              isEdit={true}
+              onSuccess={handleBankVoucherSuccess}
+            />
+          </div>
         </div>
       )
     case VoucherTypes.JournalVoucher:
       return (
-        <JournalVoucherPopup
-          isOpen={isOpen}
-          onOpenChange={onClose}
-          initialData={initialFormData}
-          handleSubmit={handleJournalSubmit as any}
-          isSubmitting={false}
-          isEdit={true}
-          onClose={onClose}
-        />
+        <div>
+         
+          <JournalVoucherPopup
+            isOpen={isOpen}
+            onOpenChange={onClose}
+            initialData={initialFormData}
+            handleSubmit={handleJournalSubmit as any}
+            isSubmitting={false}
+            isEdit={true}
+            onClose={onClose}
+          />
+        </div>
       )
     case VoucherTypes.ContraVoucher:
       return (
-        <ContraVoucherPopup
-          isOpen={isOpen}
-          onOpenChange={onClose}
-          initialData={initialFormData}
-          fetchAllVoucher={dummyFetchAllVoucher}
-          isEdit={true}
-          onClose={onClose}
-          onSuccess={handleCashVoucherSuccess}
-        />
+        <div>
+          <VoucherHeader />
+          <ContraVoucherPopup
+            isOpen={isOpen}
+            onOpenChange={onClose}
+            initialData={initialFormData}
+            fetchAllVoucher={dummyFetchAllVoucher}
+            isEdit={true}
+            onClose={onClose}
+            onSuccess={handleCashVoucherSuccess}
+          />
+        </div>
       )
     case VoucherTypes.OpeningBalance:
       return (
         <div className={wrapperClassName}>
-          <OpeningBalance
-            initialData={initialFormData}
-            isEdit={true}
-            onClose={onClose}
-          />
+          <VoucherHeader />
+          <div className="px-6">
+            <OpeningBalance
+              initialData={initialFormData}
+              isEdit={true}
+              onClose={onClose}
+            />
+          </div>
         </div>
       )
     default:

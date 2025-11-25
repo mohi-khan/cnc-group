@@ -81,6 +81,20 @@ const roleSchema = z.object({
   permission: z.string()
 })
 
+export type UserVoucherPermission = {
+  userId: number;
+  voucherTypes: string[];
+  companyId: number;
+  locationId: number;
+};
+
+export type UserVoucherPermissionResponse = {
+  data: {
+    users: UserVoucherPermission[];
+  };
+};
+
+
 export type LocationData = z.infer<typeof locationSchema>
 export type SignUpData = z.infer<typeof signUpSchema>
 export type CompanyData = z.infer<typeof companySchema>
@@ -208,3 +222,14 @@ export async function getAllRoles(token: string) {
 //       .filter((role: RoleData | null): role is RoleData => role !== null)
 //   })
 // }
+
+export async function getUserAllWithCompanyLocation(token: string) {
+  return fetchApi<UserVoucherPermissionResponse[]>({
+    url: 'api/auth/user-with-comapnyid-locationid',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    }
+  })
+}

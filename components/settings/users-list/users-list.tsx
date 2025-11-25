@@ -38,14 +38,19 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
-import { getAllRoles } from '@/api/common-shared-api'
+import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
-import { RoleData } from '@/api/create-user-api'
+import {
+  getUserAllWithCompanyLocation,
+  RoleData,
+  UserVoucherPermissionResponse,
+} from '@/api/create-user-api'
 import { GetUsersByRoles } from '@/api/user-list-api'
 import { toast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { changeNewPassword } from '@/api/change-password-api'
+import { CompanyType } from '@/api/company-api'
 
 interface User {
   id: number
@@ -84,23 +89,70 @@ export default function UsersList() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [roles, setRoles] = useState<RoleData[]>([])
-  
+
   // Change password states
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-  const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null)
+  const [selectedUserForPassword, setSelectedUserForPassword] =
+    useState<User | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-
+  const [usersWithComAndLoc, setUsersWithComAndLoc] = useState<
+    UserVoucherPermissionResponse[]
+  >([])
+  const [companies, setCompanies] = useState<CompanyType[]>([])
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
+  const fetchUsersWithCompanyWithLocation = React.useCallback(async () => {
+    if (!token) return
+    const data = await getUserAllWithCompanyLocation(token)
+
+    if (data?.error?.status === 401) {
+      router.push('/unauthorized-access')
+      return
+    } else if (data.error || !data.data) {
+      console.error('Error getting users:', data.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: data.error?.message || 'Failed to get users',
+      })
+    } else {
+      // Check if data.data has a users property (array) or is directly an array
+      const responseData: any = data.data
+      const usersData = responseData.users || responseData
+      setUsersWithComAndLoc(Array.isArray(usersData) ? usersData : [])
+      console.log('users with company: ', usersData)
+    }
+  }, [token, router])
+
+  const fetchCompanies = React.useCallback(async () => {
+    if (!token) return
+    const data = await getAllCompanies(token)
+
+    if (data.error || !data.data) {
+      console.error('Error getting companies:', data.error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: data.error?.message || 'Failed to get companies',
+      })
+      setCompanies([])
+    } else {
+      // Ensure data.data is an array
+      const companyData = Array.isArray(data.data) ? data.data : []
+      setCompanies(companyData)
+      console.log('company :', companyData)
+    }
+  }, [token])
+
   const fetchUsers = React.useCallback(async () => {
-    if(!token) return
+    if (!token) return
     const data = await GetUsersByRoles(token)
-    
+
     if (data?.error?.status === 401) {
       router.push('/unauthorized-access')
       return
@@ -152,7 +204,15 @@ export default function UsersList() {
     checkUserData()
     fetchUsers()
     fetchRoles()
-  }, [fetchUsers, fetchRoles, router])
+    fetchUsersWithCompanyWithLocation()
+    fetchCompanies()
+  }, [
+    fetchUsers,
+    fetchRoles,
+    router,
+    fetchUsersWithCompanyWithLocation,
+    fetchCompanies,
+  ])
 
   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -253,17 +313,14 @@ export default function UsersList() {
     )
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/users/${userId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `${token}`,
-          },
-          body: JSON.stringify({ active: newActiveState }),
-        }
-      )
+      const response = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${token}`,
+        },
+        body: JSON.stringify({ active: newActiveState }),
+      })
 
       if (!response.ok) {
         throw new Error('Failed to toggle user active state')
@@ -337,7 +394,6 @@ export default function UsersList() {
       )
 
       if (result.error || !result.data) {
-       
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -358,11 +414,47 @@ export default function UsersList() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to change password',
+        description:
+          error instanceof Error ? error.message : 'Failed to change password',
       })
     } finally {
       setIsChangingPassword(false)
     }
+  }
+
+  // Get user's companies by company ID
+  const getUserCompanies = (userId: number) => {
+    // Ensure usersWithComAndLoc is an array
+    if (!Array.isArray(usersWithComAndLoc) || !Array.isArray(companies)) {
+      console.log('Data not ready:', {
+        usersWithComAndLoc: Array.isArray(usersWithComAndLoc),
+        companies: Array.isArray(companies),
+      })
+      return []
+    }
+
+    const userPermissions = usersWithComAndLoc.filter(
+      (u: any) => u.userId === userId
+    )
+    console.log(`User ${userId} permissions:`, userPermissions)
+
+    // Get unique company IDs
+    const uniqueCompanyIds = Array.from(
+      new Set(userPermissions.map((p: any) => p.companyId))
+    )
+    console.log(`Unique company IDs for user ${userId}:`, uniqueCompanyIds)
+
+    // Map company IDs to company names
+    const companyNames = uniqueCompanyIds
+      .map((companyId) => {
+        const company = companies.find((c: any) => c.companyId === companyId)
+        console.log(`Looking for company ${companyId}:`, company)
+        return company ? company.companyName : null
+      })
+      .filter((name) => name !== null)
+
+    console.log(`Final company names for user ${userId}:`, companyNames)
+    return companyNames as string[]
   }
 
   return (
@@ -393,7 +485,7 @@ export default function UsersList() {
                       View Details
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>
                         <span className="ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize">
@@ -401,19 +493,47 @@ export default function UsersList() {
                         </span>
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="py-4">
-                      <p>
-                        <strong>Voucher Types:</strong>{' '}
-                        {user.voucherTypes && user.voucherTypes.length > 0
-                          ? user.voucherTypes.join(', ')
-                          : 'None'}
-                      </p>
-                      <p>
-                        <strong>Role:</strong> {user.roleName || 'N/A'}
-                      </p>
-                      <p>
-                        <strong>Active:</strong> {user.active ? 'Yes' : 'No'}
-                      </p>
+                    <div className="py-4 space-y-4">
+                      <div>
+                        <p className="font-semibold">Voucher Types:</p>
+                        <p className="ml-4">
+                          {user.voucherTypes && user.voucherTypes.length > 0
+                            ? user.voucherTypes.join(', ')
+                            : 'None'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Role:</p>
+                        <p className="ml-4">{user.roleName || 'N/A'}</p>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Active:</p>
+                        <p className="ml-4">{user.active ? 'Yes' : 'No'}</p>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold mb-2">Companies:</p>
+                        {getUserCompanies(user.id).length > 0 ? (
+                          <div className="ml-4">
+                            {getUserCompanies(user.id).map(
+                              (companyName, idx) => (
+                                <div
+                                  key={idx}
+                                  className="border rounded-lg p-2 bg-slate-50 mb-2"
+                                >
+                                  <p className="text-sm">{companyName}</p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="ml-4 text-gray-500">
+                            No companies assigned
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -539,7 +659,10 @@ export default function UsersList() {
       </Table>
 
       {/* Change Password Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -665,11 +788,9 @@ export default function UsersList() {
   )
 }
 
-
-
 // 'use client'
 
-// import React, { useState, useEffect, useCallback } from 'react'
+// import React, { useState, useEffect } from 'react'
 // import {
 //   Table,
 //   TableBody,
@@ -705,13 +826,17 @@ export default function UsersList() {
 //   SelectTrigger,
 //   SelectValue,
 // } from '@/components/ui/select'
-// import { getAllRoles } from '@/api/common-shared-api'
+// import { Alert, AlertDescription } from '@/components/ui/alert'
+// import { EyeIcon, EyeOffIcon } from 'lucide-react'
+// import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
 // import { tokenAtom, useInitializeUser } from '@/utils/user'
 // import { useAtom } from 'jotai'
-// import { RoleData } from '@/api/create-user-api'
+// import { getUserAllWithCompanyLocation, RoleData, UserVoucherPermissionResponse } from '@/api/create-user-api'
 // import { GetUsersByRoles } from '@/api/user-list-api'
 // import { toast } from '@/hooks/use-toast'
 // import { useRouter } from 'next/navigation'
+// import { changeNewPassword } from '@/api/change-password-api'
+// import { CompanyType } from '@/api/company-api'
 
 // interface User {
 //   id: number
@@ -751,15 +876,65 @@ export default function UsersList() {
 //   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 //   const [roles, setRoles] = useState<RoleData[]>([])
 
+//   // Change password states
+//   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+//   const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null)
+//   const [newPassword, setNewPassword] = useState('')
+//   const [confirmPassword, setConfirmPassword] = useState('')
+//   const [showNewPassword, setShowNewPassword] = useState(false)
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+//   const [passwordError, setPasswordError] = useState('')
+//   const [isChangingPassword, setIsChangingPassword] = useState(false)
+//   const [usersWithComAndLoc,setUsersWithComAndLoc] = useState<UserVoucherPermissionResponse[]>([])
+//   const [companies, setCompanies] = useState<CompanyType[]>([])
 //   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
+//   const fetchUsersWithCompanyWithLocation = React.useCallback(async () => {
+//     if(!token) return
+//     const data = await getUserAllWithCompanyLocation(token)
+
+//     if (data?.error?.status === 401) {
+//       router.push('/unauthorized-access')
+//       return
+//     } else if (data.error || !data.data) {
+//       console.error('Error getting users:', data.error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: data.error?.message || 'Failed to get users',
+//       })
+//     } else {
+//       setUsersWithComAndLoc(data.data)
+//       console.log("users with company: ",data.data)
+//     }
+//   }, [token, router])
+
+//   const fetchCompanies = React.useCallback(async () => {
+//     if (!token) return
+//     const data = await getAllCompanies(token)
+
+//     if (data.error || !data.data) {
+//       console.error('Error getting companies:', data.error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: data.error?.message || 'Failed to get companies',
+//       })
+//       setCompanies([])
+//     } else {
+//       // Ensure data.data is an array
+//       const companyData = Array.isArray(data.data) ? data.data : []
+//       setCompanies(companyData)
+//       console.log("company :", companyData)
+//     }
+//   }, [token])
 
 //   const fetchUsers = React.useCallback(async () => {
 //     if(!token) return
 //     const data = await GetUsersByRoles(token)
-    
+
 //     if (data?.error?.status === 401) {
 //       router.push('/unauthorized-access')
-      
 //       return
 //     } else if (data.error || !data.data) {
 //       console.error('Error getting users:', data.error)
@@ -770,11 +945,9 @@ export default function UsersList() {
 //       })
 //     } else {
 //       setUsers(data.data)
-      
 //     }
 //   }, [token, router])
 
-//   // 
 //   const fetchRoles = React.useCallback(async () => {
 //     if (!token) return
 //     const fetchedRoles = await getAllRoles(token)
@@ -786,14 +959,12 @@ export default function UsersList() {
 //       })
 //     } else {
 //       setRoles(fetchedRoles.data)
-      
 //     }
 //   }, [token])
 
 //   const refreshAttachment = async () => {
 //     try {
 //       await fetchUsers()
-      
 //     } catch (error) {
 //       console.error('Error refreshing attachment:', error)
 //     }
@@ -805,7 +976,6 @@ export default function UsersList() {
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-        
 //         router.push('/')
 //         return
 //       }
@@ -814,7 +984,9 @@ export default function UsersList() {
 //     checkUserData()
 //     fetchUsers()
 //     fetchRoles()
-//   }, [fetchUsers, fetchRoles, router])
+//     fetchUsersWithCompanyWithLocation()
+//     fetchCompanies()
+//   }, [fetchUsers, fetchRoles, router, fetchUsersWithCompanyWithLocation, fetchCompanies])
 
 //   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
 //   const startIndex = (currentPage - 1) * USERS_PER_PAGE
@@ -886,6 +1058,7 @@ export default function UsersList() {
 //       }
 //     }
 //   }
+
 //   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //     const { name, value } = e.target
 //     setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
@@ -915,7 +1088,7 @@ export default function UsersList() {
 
 //     try {
 //       const response = await fetch(
-//         `http://localhost:4000/api/auth/users/${userId}`,
+//         `${API_BASE_URL}/api/auth/users/${userId}`,
 //         {
 //           method: 'PUT',
 //           headers: {
@@ -943,14 +1116,91 @@ export default function UsersList() {
 //       await refreshAttachment()
 //     } catch (error) {
 //       console.error('Error toggling user active state:', error)
-//       alert(
-//         `Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: `Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`,
+//       })
+//     }
+//   }
+
+//   const handleOpenPasswordDialog = (user: User) => {
+//     setSelectedUserForPassword(user)
+//     setNewPassword('')
+//     setConfirmPassword('')
+//     setPasswordError('')
+//     setShowNewPassword(false)
+//     setShowConfirmPassword(false)
+//     setIsPasswordDialogOpen(true)
+//   }
+
+//   const handleChangePassword = async (e: React.FormEvent) => {
+//     e.preventDefault()
+//     setPasswordError('')
+
+//     if (!selectedUserForPassword) return
+
+//     if (newPassword.length < 8) {
+//       setPasswordError('New password must be at least 8 characters')
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: 'New password must be at least 8 characters',
+//       })
+//       return
+//     }
+
+//     if (newPassword !== confirmPassword) {
+//       setPasswordError("New passwords don't match")
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: "New passwords don't match",
+//       })
+//       return
+//     }
+
+//     setIsChangingPassword(true)
+
+//     try {
+//       const result = await changeNewPassword(
+//         selectedUserForPassword.id,
+//         newPassword,
+//         confirmPassword,
+//         token
 //       )
+
+//       if (result.error || !result.data) {
+
+//         toast({
+//           variant: 'destructive',
+//           title: 'Error',
+//           description: result.error?.message || 'Failed to change password',
+//         })
+//       } else {
+//         toast({
+//           title: 'Success',
+//           description: 'Password changed successfully',
+//         })
+//         setIsPasswordDialogOpen(false)
+//         setNewPassword('')
+//         setConfirmPassword('')
+//         setSelectedUserForPassword(null)
+//       }
+//     } catch (error) {
+//       console.error('Error changing password:', error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: error instanceof Error ? error.message : 'Failed to change password',
+//       })
+//     } finally {
+//       setIsChangingPassword(false)
 //     }
 //   }
 
 //   return (
-//     <div className="container mx-auto p-4 ">
+//     <div className="container mx-auto p-4">
 //       <h1 className="text-2xl font-bold mb-4">User List</h1>
 
 //       <Table className="border shadow-md">
@@ -1001,6 +1251,14 @@ export default function UsersList() {
 //                     </div>
 //                   </DialogContent>
 //                 </Dialog>
+
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   onClick={() => handleOpenPasswordDialog(user)}
+//                 >
+//                   Change Password
+//                 </Button>
 
 //                 <Dialog
 //                   open={isEditDialogOpen}
@@ -1100,6 +1358,7 @@ export default function UsersList() {
 //                     </DialogFooter>
 //                   </DialogContent>
 //                 </Dialog>
+
 //                 <Button
 //                   variant={user.active ? 'ghost' : 'destructive'}
 //                   size="sm"
@@ -1112,6 +1371,89 @@ export default function UsersList() {
 //           ))}
 //         </TableBody>
 //       </Table>
+
+//       {/* Change Password Dialog */}
+//       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>
+//               Change Password for {selectedUserForPassword?.username}
+//             </DialogTitle>
+//           </DialogHeader>
+//           <form onSubmit={handleChangePassword} className="space-y-4">
+//             <div className="space-y-2">
+//               <Label htmlFor="newPassword">New Password</Label>
+//               <div className="relative">
+//                 <Input
+//                   id="newPassword"
+//                   type={showNewPassword ? 'text' : 'password'}
+//                   value={newPassword}
+//                   onChange={(e) => setNewPassword(e.target.value)}
+//                   required
+//                   minLength={8}
+//                 />
+//                 <Button
+//                   type="button"
+//                   variant="ghost"
+//                   size="icon"
+//                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+//                   onClick={() => setShowNewPassword(!showNewPassword)}
+//                 >
+//                   {showNewPassword ? (
+//                     <EyeOffIcon className="h-4 w-4" />
+//                   ) : (
+//                     <EyeIcon className="h-4 w-4" />
+//                   )}
+//                 </Button>
+//               </div>
+//             </div>
+//             <div className="space-y-2">
+//               <Label htmlFor="confirmPassword">Confirm New Password</Label>
+//               <div className="relative">
+//                 <Input
+//                   id="confirmPassword"
+//                   type={showConfirmPassword ? 'text' : 'password'}
+//                   value={confirmPassword}
+//                   onChange={(e) => setConfirmPassword(e.target.value)}
+//                   required
+//                   minLength={8}
+//                 />
+//                 <Button
+//                   type="button"
+//                   variant="ghost"
+//                   size="icon"
+//                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+//                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+//                 >
+//                   {showConfirmPassword ? (
+//                     <EyeOffIcon className="h-4 w-4" />
+//                   ) : (
+//                     <EyeIcon className="h-4 w-4" />
+//                   )}
+//                 </Button>
+//               </div>
+//             </div>
+//             {passwordError && (
+//               <Alert variant="destructive">
+//                 <AlertDescription>{passwordError}</AlertDescription>
+//               </Alert>
+//             )}
+//             <DialogFooter>
+//               <Button
+//                 type="button"
+//                 variant="outline"
+//                 onClick={() => setIsPasswordDialogOpen(false)}
+//                 disabled={isChangingPassword}
+//               >
+//                 Cancel
+//               </Button>
+//               <Button type="submit" disabled={isChangingPassword}>
+//                 {isChangingPassword ? 'Changing...' : 'Change Password'}
+//               </Button>
+//             </DialogFooter>
+//           </form>
+//         </DialogContent>
+//       </Dialog>
 
 //       <div className="mt-4">
 //         <Pagination>
