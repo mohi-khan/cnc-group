@@ -242,6 +242,7 @@ const DayBooks = () => {
   const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No' },
     { key: 'date', label: 'Date' },
+    { key: 'createdTime', label: 'created At' },
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },

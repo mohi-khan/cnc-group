@@ -576,7 +576,7 @@
 //                       <Input
 //                         type="number"
 //                         {...field}
-                        
+
 //                         value={field.value === 0 ? '' : field.value}
 //                         onChange={(e) =>
 //                           handleCreditChange(index, e.target.value)
@@ -636,7 +636,6 @@
 //   )
 // }
 
-
 'use client'
 
 import type { UseFormReturn } from 'react-hook-form'
@@ -655,6 +654,7 @@ import type {
   AccountsHead,
   GetDepartment,
   ResPartner,
+  Employee,
 } from '@/utils/type'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
@@ -681,12 +681,14 @@ interface JournalVoucherDetailsSectionProps {
   onAddEntry: () => void
   onRemoveEntry: (index: number) => void
   isEdit?: boolean
+  employees: Employee[]
 }
 
 export function JournalVoucherDetailsSection({
   form,
   onRemoveEntry,
   isEdit = false,
+  employees,
 }: JournalVoucherDetailsSectionProps) {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -708,7 +710,9 @@ export function JournalVoucherDetailsSection({
   const [departments, setDepartments] = React.useState<GetDepartment[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [companyChartOfAccount, setCompanyChartOfAccount] = useState<any[]>([])
-  const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>([])
+  const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>(
+    []
+  )
 
   const newRowRef = useRef<HTMLButtonElement>(null)
   const entries = form.watch('journalDetails')
@@ -842,10 +846,15 @@ export function JournalVoucherDetailsSection({
         router.push('/unauthorized-access')
         return
       } else if (response.error || !response.data) {
-        console.error('Error getting company chart of accounts:', response.error)
+        console.error(
+          'Error getting company chart of accounts:',
+          response.error
+        )
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to load company chart of accounts',
+          description:
+            response.error?.message ||
+            'Failed to load company chart of accounts',
         })
         setCompanyChartOfAccount([])
         return
@@ -907,7 +916,10 @@ export function JournalVoucherDetailsSection({
 
       const companyAccountIds = companyChartOfAccount
         .filter((mapping) => {
-          console.log(`Checking mapping: companyId ${mapping.companyId} === ${selectedCompanyId}?`, mapping.companyId === selectedCompanyId)
+          console.log(
+            `Checking mapping: companyId ${mapping.companyId} === ${selectedCompanyId}?`,
+            mapping.companyId === selectedCompanyId
+          )
           return mapping.companyId === selectedCompanyId
         })
         .map((mapping) => mapping.chartOfAccountId)
@@ -918,7 +930,9 @@ export function JournalVoucherDetailsSection({
         const isIncluded = companyAccountIds.includes(account.accountId)
         const isNotGroup = account.isGroup === false
         if (isIncluded && isNotGroup) {
-          console.log(`✓ Including account: ${account.name} (ID: ${account.accountId})`)
+          console.log(
+            `✓ Including account: ${account.name} (ID: ${account.accountId})`
+          )
         }
         return isIncluded && isNotGroup
       })
@@ -935,7 +949,11 @@ export function JournalVoucherDetailsSection({
   // Trigger initial filter when data loads
   useEffect(() => {
     const selectedCompanyId = form.getValues('journalEntry.companyId')
-    if (selectedCompanyId && companyChartOfAccount.length && chartOfAccounts.length) {
+    if (
+      selectedCompanyId &&
+      companyChartOfAccount.length &&
+      chartOfAccounts.length
+    ) {
       console.log('🔄 Initial trigger for company:', selectedCompanyId)
       const companyAccountIds = companyChartOfAccount
         .filter((mapping) => mapping.companyId === selectedCompanyId)
@@ -943,7 +961,8 @@ export function JournalVoucherDetailsSection({
 
       const filtered = chartOfAccounts.filter(
         (account) =>
-          companyAccountIds.includes(account.accountId) && account.isGroup === false
+          companyAccountIds.includes(account.accountId) &&
+          account.isGroup === false
       )
 
       setCompanyFilteredAccounts(filtered)
@@ -1084,7 +1103,7 @@ export function JournalVoucherDetailsSection({
   const totals = calculateTotals()
   // const selectedCompanyId = form.watch('journalEntry.companyId')
 
-const selectedCompanyId = form.watch('journalEntry.companyId')
+  const selectedCompanyId = form.watch('journalEntry.companyId')
   const isCompanySelected = !!selectedCompanyId
 
   return (
@@ -1095,10 +1114,11 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
         </div>
       )}
       <div className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">
-        <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
+        <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
           <div>Account Name</div>
           <div>Cost Center</div>
           <div>Unit</div>
+          <div>Employee</div>
           <div>Partner Name</div>
           <div>Debit</div>
           <div>Credit</div>
@@ -1118,7 +1138,7 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
           return (
             <div
               key={index}
-              className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center px-4"
+              className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center px-4"
             >
               <FormField
                 control={form.control}
@@ -1219,62 +1239,94 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
                   </FormItem>
                 )}
               />
-             
-               <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.departmentId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={departments
-                              .filter(
-                                (department) =>
-                                  department.isActive &&
-                                  department.companyCode === selectedCompanyId
-                              )
-                              .map((department) => ({
-                                id: department.departmentID.toString(),
+
+              <FormField
+                control={form.control}
+                name={`journalDetails.${index}.departmentId`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <CustomCombobox
+                        items={departments
+                          .filter(
+                            (department) =>
+                              department.isActive &&
+                              department.companyCode === selectedCompanyId
+                          )
+                          .map((department) => ({
+                            id: department.departmentID.toString(),
+                            name:
+                              department.departmentName || 'Unnamed Department',
+                          }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
                                 name:
-                                  department.departmentName ||
-                                  'Unnamed Department',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      departments.find(
-                                        (d) => d.departmentID === field.value
-                                      )?.departmentName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder={
-                              !isCompanySelected
-                                ? 'Select company first'
-                                : departments.filter(
-                                      (d) => d.companyCode === selectedCompanyId
-                                    ).length === 0
-                                  ? 'No departments for this company'
-                                  : 'Select a department'
-                            }
-                            disabled={
-                              !isCompanySelected ||
-                              departments.filter(
-                                (d) => d.companyCode === selectedCompanyId
-                              ).length === 0
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                                  departments.find(
+                                    (d) => d.departmentID === field.value
+                                  )?.departmentName || '',
+                              }
+                            : null
+                        }
+                        onChange={(value) =>
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
+                        }
+                        placeholder={
+                          !isCompanySelected
+                            ? 'Select company first'
+                            : departments.filter(
+                                  (d) => d.companyCode === selectedCompanyId
+                                ).length === 0
+                              ? 'No departments for this company'
+                              : 'Select a department'
+                        }
+                        disabled={
+                          !isCompanySelected ||
+                          departments.filter(
+                            (d) => d.companyCode === selectedCompanyId
+                          ).length === 0
+                        }
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`journalDetails.${index}.employeeId`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <CustomCombobox
+                        items={employees.map((employee) => ({
+                          id: employee.id.toString(),
+                          name: `${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value.toString(),
+                                name:
+                                  employees.find((e) => e.id === field.value)
+                                    ?.employeeName || '',
+                              }
+                            : null
+                        }
+                        onChange={(value) =>
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
+                        }
+                        placeholder="Select an employee"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.resPartnerId`}
@@ -1361,7 +1413,6 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
                       <Input
                         type="number"
                         {...field}
-                        
                         value={field.value === 0 ? '' : field.value}
                         onChange={(e) =>
                           handleCreditChange(index, e.target.value)
