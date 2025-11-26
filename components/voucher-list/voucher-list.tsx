@@ -74,6 +74,7 @@ interface Voucher {
   voucherid: number
   voucherno: string
   date: string
+  createdTime: string
   notes: string | null
   companyname: string | null
   location: string | null
@@ -125,8 +126,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const [tooltipData, setTooltipData] = useState<VoucherById[] | null>(null)
   const [isLoadingTooltip, setIsLoadingTooltip] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-
 
   // Today's date for filtering
   const todayDate = new Date().toISOString().split('T')[0]
@@ -530,17 +529,20 @@ const VoucherList: React.FC<VoucherListProps> = ({
     [router, token]
   )
 
-const handlePreviousPage = useCallback(() => {
-  setCurrentPage(Math.max(currentPage - 1, 1))
-}, [currentPage, setCurrentPage])
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage(Math.max(currentPage - 1, 1))
+  }, [currentPage, setCurrentPage])
 
-const handleNextPage = useCallback(() => {
-  setCurrentPage(Math.min(currentPage + 1, totalPages))
-}, [currentPage, totalPages, setCurrentPage])
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(Math.min(currentPage + 1, totalPages))
+  }, [currentPage, totalPages, setCurrentPage])
 
-const handlePageClick = useCallback((page: number) => {
-  setCurrentPage(page)
-}, [setCurrentPage])
+  const handlePageClick = useCallback(
+    (page: number) => {
+      setCurrentPage(page)
+    },
+    [setCurrentPage]
+  )
 
   // Filtered locations based on selected company
   const filteredLocations = useMemo(() => {
@@ -551,9 +553,9 @@ const handlePageClick = useCallback((page: number) => {
   }, [locations, selectedCompanyId])
 
   // Reset to page 1 when filters change
-useEffect(() => {
-  setCurrentPage(1)
-}, [selectedCompanyId, selectedLocationId, setCurrentPage])
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCompanyId, selectedLocationId, setCurrentPage])
 
   // Render tooltip content
   const renderTooltipContent = () => {
@@ -797,7 +799,52 @@ useEffect(() => {
               return (
                 <TableRow key={voucher.voucherid}>
                   {columns.map(({ key }) => (
-                    <TableCell key={key}>
+                    // <TableCell key={key}>
+                    //   {key === 'voucherno' ? (
+                    //     <Tooltip open={hoveredVoucherId === voucher.voucherid}>
+                    //       <TooltipTrigger asChild>
+                    //         <Link
+                    //           target="_blank"
+                    //           href={linkGenerator(voucher.voucherid)}
+                    //           className="text-blue-600 hover:underline"
+                    //           onMouseEnter={() =>
+                    //             handleVoucherHoverStart(voucher.voucherid)
+                    //           }
+                    //           onMouseLeave={handleVoucherHoverEnd}
+                    //         >
+                    //           {voucher[key]}
+                    //         </Link>
+                    //       </TooltipTrigger>
+                    //       <TooltipContent
+                    //         side="right"
+                    //         align="start"
+                    //         className="p-4"
+                    //       >
+                    //         {renderTooltipContent()}
+                    //       </TooltipContent>
+                    //     </Tooltip>
+                    //   ) : key === 'state' ? (
+                    //     <span
+                    //       className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    //         voucher[key] === 0
+                    //           ? 'bg-yellow-100 text-yellow-800'
+                    //           : 'bg-green-100 text-green-800'
+                    //       }`}
+                    //     >
+                    //       {voucher[key] === 0 ? 'Draft' : 'Posted'}
+                    //     </span>
+                    //   ) : key === 'totalamount' ? (
+                    //     <span className="font-mono text-center block">
+                    //       {voucher.currency && `${voucher.currency} `}
+                    //       {voucher[key].toFixed(2)}
+                    //     </span>
+                    //   ) : Array.isArray(voucher[key]) ? (
+                    //     JSON.stringify(voucher[key])
+                    //   ) : (
+                    //     voucher[key]
+                    //   )}
+                    // </TableCell>
+                    <TableCell key={key} className="text-center">
                       {key === 'voucherno' ? (
                         <Tooltip open={hoveredVoucherId === voucher.voucherid}>
                           <TooltipTrigger asChild>
@@ -832,10 +879,24 @@ useEffect(() => {
                           {voucher[key] === 0 ? 'Draft' : 'Posted'}
                         </span>
                       ) : key === 'totalamount' ? (
-                        <span className="font-mono">
+                        <span className="font-mono text-center block">
                           {voucher.currency && `${voucher.currency} `}
                           {voucher[key].toFixed(2)}
                         </span>
+                      ) : key === 'createdTime' ? (
+                        // <-- FORMAT createdTime here
+                        (() => {
+                          const d = new Date(voucher.createdTime)
+                          const year = d.getFullYear()
+                          const month = String(d.getMonth() + 1).padStart(
+                            2,
+                            '0'
+                          )
+                          const day = String(d.getDate()).padStart(2, '0')
+                          const hour = String(d.getHours()).padStart(2, '0')
+                          const minute = String(d.getMinutes()).padStart(2, '0')
+                          return `${year}-${month}-${day} [${hour}:${minute}]`
+                        })()
                       ) : Array.isArray(voucher[key]) ? (
                         JSON.stringify(voucher[key])
                       ) : (
@@ -843,16 +904,8 @@ useEffect(() => {
                       )}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right">
+                  <TableCell className="text-left">
                     <div className="flex gap-2 items-center justify-end">
-                      <Button
-                        disabled={isButtonDisabled}
-                        variant="outline"
-                        onClick={() => handlePostJournal(voucher.voucherid)}
-                        className="min-w-[80px]"
-                      >
-                        {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
-                      </Button>
                       <Button
                         disabled={voucher.state !== 0}
                         variant="outline"
@@ -860,6 +913,14 @@ useEffect(() => {
                         className="min-w-[80px]"
                       >
                         Edit
+                      </Button>
+                      <Button
+                        disabled={isButtonDisabled}
+                        variant="outline"
+                        onClick={() => handlePostJournal(voucher.voucherid)}
+                        className="min-w-[80px]"
+                      >
+                        {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
                       </Button>
                       {isDraftCashVoucher && (
                         <Checkbox
@@ -882,11 +943,14 @@ useEffect(() => {
       </Table>
 
       {totalPages > 1 && (
-        <Pagination className="mt-4">
+        <Pagination
+          className="mt-4
+         "
+        >
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={handlePreviousPage}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 className={
                   currentPage === 1
                     ? 'pointer-events-none opacity-50'
@@ -894,20 +958,42 @@ useEffect(() => {
                 }
               />
             </PaginationItem>
-            {[...Array(totalPages)].map((_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  onClick={() => handlePageClick(i + 1)}
-                  isActive={currentPage === i + 1}
-                  className="cursor-pointer"
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+
+            {[...Array(totalPages)].map((_, index) => {
+              if (
+                index === 0 ||
+                index === totalPages - 1 ||
+                (index >= currentPage - 2 && index <= currentPage + 2)
+              ) {
+                return (
+                  <PaginationItem key={`page-${index}`}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(index + 1)}
+                      isActive={currentPage === index + 1}
+                      className="cursor-pointer"
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              } else if (
+                index === currentPage - 3 ||
+                index === currentPage + 3
+              ) {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationLink>...</PaginationLink>
+                  </PaginationItem>
+                )
+              }
+              return null
+            })}
+
             <PaginationItem>
               <PaginationNext
-                onClick={handleNextPage}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 className={
                   currentPage === totalPages
                     ? 'pointer-events-none opacity-50'

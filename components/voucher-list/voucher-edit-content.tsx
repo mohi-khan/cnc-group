@@ -33,7 +33,7 @@ const transformVoucherData = (
   return {
     journalEntry: {
       id: firstEntry.voucherid,
-      date: new Date().toISOString().split('T')[0],
+      date: firstEntry.date,
       journalType: firstEntry.journaltype,
       companyId: firstEntry.companyId || 0,
       locationId: firstEntry.locationId || 0,

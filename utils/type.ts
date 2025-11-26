@@ -956,6 +956,7 @@ export const JournalResultSchema = z.object({
   voucherid: z.number(),
   voucherno: z.string(),
   date: z.string(),
+  createdTime:z.string(),
   journaltype: z.string(),
   state: z.number(),
   companyname: z.string().nullable(),

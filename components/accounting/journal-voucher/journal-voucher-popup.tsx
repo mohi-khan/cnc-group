@@ -1,7 +1,7 @@
 'use client'
 
 import { X, Plus } from 'lucide-react'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import { JournalVoucherMasterSection } from './journal-voucher-master-section'
 import { JournalVoucherDetailsSection } from './journal-voucher-details-section'
 import { JournalVoucherSubmit } from './journal-voucher-submit'
 import {
+  Employee,
   JournalEditWithDetails,
   type JournalEntryWithDetails,
   JournalEntryWithDetailsSchema,
@@ -34,6 +35,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { getEmployee } from '@/api/common-shared-api'
+import { useRouter } from 'next/navigation'
 
 interface JournalVoucherPopupProps {
   isOpen: boolean
@@ -58,6 +61,46 @@ export function JournalVoucherPopup({
   onClose,
 }: JournalVoucherPopupProps) {
   const [token] = useAtom(tokenAtom)
+  const router = useRouter()
+  const [employees, setEmployees] = React.useState<Employee[]>([])
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(true)
+
+  const fetchEmployees = useCallback(async () => {
+    setIsLoadingEmployees(true)
+    if (!token) return
+    try {
+      const response = await getEmployee(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (response.error || !response.data) {
+        console.error('Error getting employees:', response.error)
+        toast({
+          title: 'Error',
+          description: response.error?.message || 'Failed to load employees',
+        })
+        setEmployees([])
+
+        return
+      } else {
+        setEmployees(response.data)
+        console.log('Fetched Employees riad:', response.data)
+      }
+    } catch (error) {
+      console.error('Error getting employees:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load employees',
+      })
+      setEmployees([])
+    } finally {
+      setIsLoadingEmployees(false)
+    }
+  }, [token, router])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [fetchEmployees])
 
   const defaultValues = useMemo(
     () =>
@@ -232,24 +275,21 @@ export function JournalVoucherPopup({
     }
   }
 
-
   // Calculate if debit and credit are balanced
-// In JournalVoucherPopup component, update the isBalanced calculation:
+  // In JournalVoucherPopup component, update the isBalanced calculation:
 
-const entries = form.watch('journalDetails') || []
-const totals = entries.reduce(
-  (acc, entry) => ({
-    debit: acc.debit + (entry?.debit || 0),
-    credit: acc.credit + (entry?.credit || 0),
-  }),
-  { debit: 0, credit: 0 }
-)
+  const entries = form.watch('journalDetails') || []
+  const totals = entries.reduce(
+    (acc, entry) => ({
+      debit: acc.debit + (entry?.debit || 0),
+      credit: acc.credit + (entry?.credit || 0),
+    }),
+    { debit: 0, credit: 0 }
+  )
 
-// Updated validation: totals must be equal AND greater than 0
-const isBalanced = 
-  totals.debit === totals.credit && 
-  totals.debit > 0 && 
-  totals.credit > 0
+  // Updated validation: totals must be equal AND greater than 0
+  const isBalanced =
+    totals.debit === totals.credit && totals.debit > 0 && totals.credit > 0
 
   return (
     <>
@@ -287,13 +327,14 @@ const isBalanced =
                   onAddEntry={addEntry}
                   onRemoveEntry={removeEntry}
                   isEdit={isEdit}
+                  employees={employees}
                 />
 
                 <JournalVoucherSubmit
                   form={form}
                   onSubmit={form.handleSubmit(onSubmit)}
                   isSubmitting={isSubmitting}
-                   isBalanced={isBalanced}
+                  isBalanced={isBalanced}
                 />
               </form>
             </Form>
