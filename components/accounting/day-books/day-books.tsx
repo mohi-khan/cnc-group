@@ -17,6 +17,13 @@ import { useAtom } from 'jotai'
 import { Search, Calendar, RefreshCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const DayBooks = () => {
   const router = useRouter()
@@ -32,6 +39,8 @@ const DayBooks = () => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [locations, setLocations] = useState<LocationFromLocalstorage[]>([])
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // New states for date range
   const today = new Date().toISOString().split('T')[0]
@@ -89,9 +98,6 @@ const DayBooks = () => {
       if (userData?.userLocations?.length > 0) {
         setLocations(userData.userLocations)
       }
-      // if (!userData.voucherTypes.includes('Cash Voucher')) {
-      //   router.push('/unauthorized-access')
-      // }
     } else {
       toast({
         title: 'Error',
@@ -107,96 +113,56 @@ const DayBooks = () => {
     return data.map((location) => location.location.locationId)
   }
 
-  // const getallVoucher = useCallback(
-  //   async (
-  //     company: number[],
-  //     location: number[],
-  //     start: string,
-  //     end: string
-  //   ) => {
-  //     try {
-  //       const voucherQuery: JournalQueryDateRange = {
-  //         startDate: start,
-  //         endDate: end,
-  //         companyId: company,
-  //         locationId: location,
-  //       }
-  //       const response = await getAllVoucherByDate(voucherQuery, token)
-  //       if (!response.data) {
-  //         throw new Error('No data received from server')
-  //       }
-  //       setVoucherGrid(
-  //         Array.isArray(response.data)
-  //           ? [...response.data].sort(
-  //               (a, b) =>
-  //                 new Date(b.createdTime).getTime() -
-  //                 new Date(a.createdTime).getTime()
-  //             )
-  //           : []
-  //       )
+  const getallVoucher = useCallback(
+    async (
+      company: number[],
+      location: number[],
+      start: string,
+      end: string
+    ) => {
+      try {
+        const voucherQuery: JournalQueryDateRange = {
+          startDate: start,
+          endDate: end,
+          companyId: company,
+          locationId: location,
+        }
 
-  //       console.log('🚀 ~ DayBooks ~ response.data:', response.data)
-  //     } catch (error) {
-  //       console.error('Error getting Voucher Data:', error)
-  //       setVoucherGrid([])
-  //       throw error
-  //     }
-  //   },
-  //   [token]
-  // )
-const getallVoucher = useCallback(
-  async (
-    company: number[],
-    location: number[],
-    start: string,
-    end: string
-  ) => {
-    try {
-      const voucherQuery: JournalQueryDateRange = {
-        startDate: start,
-        endDate: end,
-        companyId: company,
-        locationId: location,
-      };
+        const response = await getAllVoucherByDate(voucherQuery, token)
 
-      const response = await getAllVoucherByDate(voucherQuery, token);
+        if (!response.data) {
+          throw new Error('No data received from server')
+        }
 
-      if (!response.data) {
-        throw new Error("No data received from server");
+        let filteredData = Array.isArray(response.data) ? response.data : []
+
+        // 🔥 ROLE CHECK
+        // If admin -> show all
+        // If not admin -> show only createdBy = current user
+        if (userData?.roleId !== 1) {
+          filteredData = filteredData.filter(
+            (item) => item.createdBy === userData?.userId
+          )
+        }
+
+        // Sort by newest created time
+        filteredData = filteredData.sort(
+          (a, b) =>
+            new Date(b.createdTime).getTime() -
+            new Date(a.createdTime).getTime()
+        )
+
+        setVoucherGrid(filteredData)
+
+        console.log('🔥 Filtered voucher data:', filteredData)
+      } catch (error) {
+        console.error('Error getting Voucher Data:', error)
+        setVoucherGrid([])
+        throw error
       }
-
-      let filteredData = Array.isArray(response.data) ? response.data : [];
-
-      // 🔥 ROLE CHECK
-      // If admin -> show all
-      // If not admin -> show only createdBy = current user
-      if (userData?.roleId !== 1) {
-        filteredData = filteredData.filter(
-          (item) => item.createdBy === userData?.userId
-        );
-      }
-
-      // Sort by newest created time
-      filteredData = filteredData.sort(
-        (a, b) =>
-          new Date(b.createdTime).getTime() -
-          new Date(a.createdTime).getTime()
-      );
-
-      setVoucherGrid(filteredData);
-
-      console.log("🔥 Filtered voucher data:", filteredData);
-    } catch (error) {
-      console.error("Error getting Voucher Data:", error);
-      setVoucherGrid([]);
-      throw error;
-    }
-  },
-  [token, userData] // add userData dependency
-);
-
-
-
+    },
+    [token, userData]
+  )
 
   const fetchVoucherData = useCallback(
     async (showRefreshingState = false) => {
@@ -275,17 +241,17 @@ const getallVoucher = useCallback(
 
   const columns: Column[] = [
     { key: 'voucherno', label: 'Voucher No' },
-     { key: 'date', label: 'Date' },
+    { key: 'date', label: 'Date' },
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },
     { key: 'totalamount', label: 'Total Amount' },
-    {key: 'createdByName', label: 'Created By'},
+    { key: 'createdByName', label: 'Created By' },
     { key: 'state', label: 'Status' },
   ]
 
   return (
-    <div className="w-[96%] mx-auto">
+    <div className="w-[96%] mx-2">
       <h1 className="text-2xl font-bold my-6">Day Books</h1>
 
       {/* Date Range and Search Row */}
@@ -324,6 +290,26 @@ const getallVoucher = useCallback(
             />
             Refresh
           </button>
+          
+          {/* Items Per Page Selector */}
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value))
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select items per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 per page</SelectItem>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="20">20 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Search Box */}
@@ -343,7 +329,9 @@ const getallVoucher = useCallback(
         columns={columns}
         isLoading={isLoading}
         linkGenerator={linkGenerator}
-        itemsPerPage={10}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
       />
     </div>
   )

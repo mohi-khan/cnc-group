@@ -382,6 +382,7 @@ export default function ChartOfAccountsTable() {
       })
     } else {
       setAccounts(fetchedAccounts.data)
+      console.log('chart of account :', fetchedAccounts.data)
       const dynamicGroups = buildCodeGroups(fetchedAccounts.data)
       setGroups(dynamicGroups)
     }
@@ -1137,6 +1138,8 @@ export default function ChartOfAccountsTable() {
                 <TableRow>
                   <TableHead className="w-[100px]">Code</TableHead>
                   <TableHead>Account Name</TableHead>
+                  <TableHead>Is Group</TableHead>
+
                   <TableHead>Parent Account Name</TableHead>
                   <TableHead className="capitalize">Type</TableHead>
                   <TableHead className="text-center">
@@ -1155,6 +1158,13 @@ export default function ChartOfAccountsTable() {
                     <TableRow key={account.code}>
                       <TableCell>{account.code}</TableCell>
                       <TableCell>{account.name}</TableCell>
+                      <TableCell>
+                        {account.isGroup ? (
+                          <Badge variant="default">True</Badge>
+                        ) : (
+                          <Badge variant="secondary">False</Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{account.parentName}</TableCell>
                       <TableCell>{account.accountType}</TableCell>
                       <TableCell className="text-center">

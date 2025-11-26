@@ -266,7 +266,6 @@ import {
   PackageX,
   PackageCheckIcon,
   User2Icon,
-  
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -294,7 +293,6 @@ export default function Navbar() {
   //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
- 
 
   // State variables
   const [user, setUser] = useState<User | null>(null)
@@ -420,7 +418,6 @@ export default function Navbar() {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
-      
     } else {
     }
   }, [userData])
@@ -611,7 +608,7 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          <div className="flex items-center ml-4">
+          {/* <div className="flex items-center ml-4">
             <div className="relative" ref={profileRef}>
               <button
                 className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
@@ -655,6 +652,55 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+          </div> */}
+          <div className="flex flex-col items-center ml-2">
+            {/* USER ICON BUTTON (keep inside relative only) */}
+            <div className="relative" ref={profileRef}>
+              <button
+                className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
+                id="user-menu"
+                aria-label="User menu"
+                aria-haspopup="true"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              >
+                <User2 className="h-8 w-8 text-gray-600 border border-gray-600 p-1 rounded-full" />
+              </button>
+
+              {/* DROPDOWN MENU */}
+              {isProfileOpen && (
+                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
+                  <div
+                    className="py-1 rounded-md bg-white shadow-xs"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="user-menu"
+                  >
+                    <Link
+                      href="/change-password"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Change Password
+                    </Link>
+
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ✅ USERNAME BELOW ICON & CENTERED */}
+            {userData?.username && (
+              <p className="text-xs text-gray-700 font-bold ring-1 ring-black rounded-lg px-2 py-1  text-center">
+                {userData.username.replace(/\b\w/g, (c) => c.toUpperCase())}
+              </p>
+            )}
           </div>
         </div>
       </div>
