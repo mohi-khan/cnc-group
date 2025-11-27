@@ -117,8 +117,8 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
   const [currentPage, setCurrentPage] = useState(1)
-  const [sortField, setSortField] = useState<keyof Voucher>('voucherno')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortField, setSortField] = useState<keyof Voucher>('createdTime')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [isPosting, setIsPosting] = useState<Record<number, boolean>>({})
 
   // Tooltip state

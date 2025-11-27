@@ -41,11 +41,7 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
-import {
-  getUserAllWithCompanyLocation,
-  RoleData,
-  UserVoucherPermissionResponse,
-} from '@/api/create-user-api'
+import { RoleData } from '@/api/create-user-api'
 import { GetUsersByRoles } from '@/api/user-list-api'
 import { toast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
@@ -59,6 +55,7 @@ interface User {
   roleId: number | null
   active: boolean
   roleName?: string
+  companyId?: number | null
 }
 
 interface UpdateUserData {
@@ -67,6 +64,7 @@ interface UpdateUserData {
   roleName?: string
   roleId?: number | null
   active?: boolean
+  companyIds?: number[]
 }
 
 const USERS_PER_PAGE = 10
@@ -100,34 +98,8 @@ export default function UsersList() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [usersWithComAndLoc, setUsersWithComAndLoc] = useState<
-    UserVoucherPermissionResponse[]
-  >([])
   const [companies, setCompanies] = useState<CompanyType[]>([])
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-  const fetchUsersWithCompanyWithLocation = React.useCallback(async () => {
-    if (!token) return
-    const data = await getUserAllWithCompanyLocation(token)
-
-    if (data?.error?.status === 401) {
-      router.push('/unauthorized-access')
-      return
-    } else if (data.error || !data.data) {
-      console.error('Error getting users:', data.error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: data.error?.message || 'Failed to get users',
-      })
-    } else {
-      // Check if data.data has a users property (array) or is directly an array
-      const responseData: any = data.data
-      const usersData = responseData.users || responseData
-      setUsersWithComAndLoc(Array.isArray(usersData) ? usersData : [])
-      console.log('users with company: ', usersData)
-    }
-  }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -165,6 +137,7 @@ export default function UsersList() {
       })
     } else {
       setUsers(data.data)
+      console.log("show all user with company and location :", data.data)
     }
   }, [token, router])
 
@@ -204,40 +177,56 @@ export default function UsersList() {
     checkUserData()
     fetchUsers()
     fetchRoles()
-    fetchUsersWithCompanyWithLocation()
     fetchCompanies()
-  }, [
-    fetchUsers,
-    fetchRoles,
-    router,
-    fetchUsersWithCompanyWithLocation,
-    fetchCompanies,
-  ])
+  }, [fetchUsers, fetchRoles, router, fetchCompanies])
 
-  const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
+  // Get unique users by grouping by user id (preserve all user data)
+  const uniqueUsers = React.useMemo(() => {
+    const userMap = new Map<number, any>()
+    users.forEach(user => {
+      if (!userMap.has(user.id)) {
+        userMap.set(user.id, user)
+      }
+    })
+    const result = Array.from(userMap.values())
+    console.log('Unique users:', result)
+    return result
+  }, [users])
+
+  const totalPages = Math.ceil(uniqueUsers.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
   const endIndex = startIndex + USERS_PER_PAGE
-  const currentUsers = users.slice(startIndex, endIndex)
+  const currentUsers = uniqueUsers.slice(startIndex, endIndex)
 
   const handleEditUser = (user: User) => {
+    // Get all company IDs for this user
+    const userCompanyIds = users
+      .filter((u: any) => u.id === user.id)
+      .map((u: any) => u.companyId)
+      .filter((id: number | null) => id !== null) as number[]
+
     setEditingUser({
       ...user,
       roleId: user.roleId ?? user.roleId,
       voucherTypes: user.voucherTypes || [],
       username: user.username || '',
-    })
+      companyIds: Array.from(new Set(userCompanyIds)), // Store unique company IDs
+    } as any)
     setIsEditDialogOpen(true)
   }
 
   const handleSaveEdit = async () => {
     if (editingUser) {
       try {
-        const updateData: UpdateUserData = {
+        const updateData: any = {
           username: editingUser.username,
           voucherTypes: editingUser.voucherTypes,
           roleId: editingUser.roleId === 0 ? null : editingUser.roleId,
           active: editingUser.active,
+          companyIds: (editingUser as any).companyIds || [],
         }
+
+        console.log('Updating user with data:', updateData)
 
         const response = await fetch(
           `${API_BASE_URL}/api/auth/users/${editingUser.id}`,
@@ -250,19 +239,19 @@ export default function UsersList() {
             body: JSON.stringify(updateData),
           }
         )
+        
+        console.log('Response status:', response.status)
+        
         if (!response.ok) {
           const errorData = await response.json()
+          console.error('Error response:', errorData)
           throw new Error(errorData.message || 'Failed to update user')
         }
 
         const result = await response.json()
+        console.log('Update result:', result)
 
         if (result.status === 'success') {
-          setUsers(
-            users.map((user) =>
-              user.id === editingUser.id ? { ...editingUser } : user
-            )
-          )
           setEditingUser(null)
           setIsEditDialogOpen(false)
           await refreshAttachment()
@@ -276,6 +265,7 @@ export default function UsersList() {
       } catch (error) {
         console.error('Error updating user:', error)
         toast({
+          variant: 'destructive',
           title: 'Error',
           description: `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
@@ -297,6 +287,16 @@ export default function UsersList() {
         ? [...prev.voucherTypes, voucherType]
         : prev.voucherTypes.filter((type) => type !== voucherType)
       return { ...prev, voucherTypes: updatedVoucherTypes }
+    })
+  }
+
+  const handleCompanyChange = (companyId: number, checked: boolean) => {
+    setEditingUser((prev: any) => {
+      if (!prev) return null
+      const updatedCompanyIds = checked
+        ? [...(prev.companyIds || []), companyId]
+        : (prev.companyIds || []).filter((id: number) => id !== companyId)
+      return { ...prev, companyIds: updatedCompanyIds }
     })
   }
 
@@ -422,38 +422,29 @@ export default function UsersList() {
     }
   }
 
-  // Get user's companies by company ID
+  // Get user's companies from the users array (uses all records including duplicates)
   const getUserCompanies = (userId: number) => {
-    // Ensure usersWithComAndLoc is an array
-    if (!Array.isArray(usersWithComAndLoc) || !Array.isArray(companies)) {
-      console.log('Data not ready:', {
-        usersWithComAndLoc: Array.isArray(usersWithComAndLoc),
-        companies: Array.isArray(companies),
-      })
+    if (!Array.isArray(users) || !Array.isArray(companies)) {
       return []
     }
 
-    const userPermissions = usersWithComAndLoc.filter(
-      (u: any) => u.userId === userId
-    )
-    console.log(`User ${userId} permissions:`, userPermissions)
-
+    // Get all records for this user from the original users array (not uniqueUsers)
+    const userRecords = users.filter((u: any) => u.id === userId)
+    
     // Get unique company IDs
     const uniqueCompanyIds = Array.from(
-      new Set(userPermissions.map((p: any) => p.companyId))
+      new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
     )
-    console.log(`Unique company IDs for user ${userId}:`, uniqueCompanyIds)
 
     // Map company IDs to company names
     const companyNames = uniqueCompanyIds
       .map((companyId) => {
         const company = companies.find((c: any) => c.companyId === companyId)
-        console.log(`Looking for company ${companyId}:`, company)
         return company ? company.companyName : null
       })
       .filter((name) => name !== null)
 
-    console.log(`Final company names for user ${userId}:`, companyNames)
+    console.log(`User ${userId} companies:`, companyNames)
     return companyNames as string[]
   }
 
@@ -472,14 +463,14 @@ export default function UsersList() {
         </TableHeader>
         <TableBody>
           {currentUsers.map((user, index) => (
-            <TableRow key={user.id}>
+            <TableRow key={`user-${user.id}-${index}`}>
               <TableCell className="font-medium">
                 {startIndex + index + 1}
               </TableCell>
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
-                <Dialog key={`view-${user.id}`}>
+                <Dialog key={`view-${user.id}-${index}`}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       View Details
@@ -520,7 +511,7 @@ export default function UsersList() {
                             {getUserCompanies(user.id).map(
                               (companyName, idx) => (
                                 <div
-                                  key={idx}
+                                  key={`company-${user.id}-${idx}`}
                                   className="border rounded-lg p-2 bg-slate-50 mb-2"
                                 >
                                   <p className="text-sm">{companyName}</p>
@@ -638,6 +629,41 @@ export default function UsersList() {
                           </div>
                         ))}
                       </div>
+
+                      <Label htmlFor="companies" className="mt-4 block">
+                        Companies
+                      </Label>
+                      <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                        {companies
+                          .filter((company) => company.companyId !== undefined)
+                          .map((company) => (
+                            <div
+                              key={company.companyId}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`company-${company.companyId}`}
+                                checked={
+                                  (editingUser as any)?.companyIds?.includes(
+                                    company.companyId!
+                                  ) || false
+                                }
+                                onCheckedChange={(checked) =>
+                                  handleCompanyChange(
+                                    company.companyId!,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor={`company-${company.companyId}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {company.companyName}
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button onClick={handleSaveEdit}>Submit</Button>
@@ -669,7 +695,7 @@ export default function UsersList() {
               Change Password for {selectedUserForPassword?.username}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleChangePassword} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <div className="relative">
@@ -678,7 +704,6 @@ export default function UsersList() {
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  required
                   minLength={8}
                 />
                 <Button
@@ -704,7 +729,6 @@ export default function UsersList() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
                   minLength={8}
                 />
                 <Button
@@ -736,11 +760,15 @@ export default function UsersList() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isChangingPassword}>
+              <Button 
+                type="button" 
+                disabled={isChangingPassword}
+                onClick={handleChangePassword}
+              >
                 {isChangingPassword ? 'Changing...' : 'Change Password'}
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -831,7 +859,7 @@ export default function UsersList() {
 // import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
 // import { tokenAtom, useInitializeUser } from '@/utils/user'
 // import { useAtom } from 'jotai'
-// import { getUserAllWithCompanyLocation, RoleData, UserVoucherPermissionResponse } from '@/api/create-user-api'
+// import { RoleData } from '@/api/create-user-api'
 // import { GetUsersByRoles } from '@/api/user-list-api'
 // import { toast } from '@/hooks/use-toast'
 // import { useRouter } from 'next/navigation'
@@ -878,36 +906,16 @@ export default function UsersList() {
 
 //   // Change password states
 //   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-//   const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null)
+//   const [selectedUserForPassword, setSelectedUserForPassword] =
+//     useState<User | null>(null)
 //   const [newPassword, setNewPassword] = useState('')
 //   const [confirmPassword, setConfirmPassword] = useState('')
 //   const [showNewPassword, setShowNewPassword] = useState(false)
 //   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 //   const [passwordError, setPasswordError] = useState('')
 //   const [isChangingPassword, setIsChangingPassword] = useState(false)
-//   const [usersWithComAndLoc,setUsersWithComAndLoc] = useState<UserVoucherPermissionResponse[]>([])
 //   const [companies, setCompanies] = useState<CompanyType[]>([])
 //   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-//   const fetchUsersWithCompanyWithLocation = React.useCallback(async () => {
-//     if(!token) return
-//     const data = await getUserAllWithCompanyLocation(token)
-
-//     if (data?.error?.status === 401) {
-//       router.push('/unauthorized-access')
-//       return
-//     } else if (data.error || !data.data) {
-//       console.error('Error getting users:', data.error)
-//       toast({
-//         variant: 'destructive',
-//         title: 'Error',
-//         description: data.error?.message || 'Failed to get users',
-//       })
-//     } else {
-//       setUsersWithComAndLoc(data.data)
-//       console.log("users with company: ",data.data)
-//     }
-//   }, [token, router])
 
 //   const fetchCompanies = React.useCallback(async () => {
 //     if (!token) return
@@ -925,12 +933,12 @@ export default function UsersList() {
 //       // Ensure data.data is an array
 //       const companyData = Array.isArray(data.data) ? data.data : []
 //       setCompanies(companyData)
-//       console.log("company :", companyData)
+//       console.log('company :', companyData)
 //     }
 //   }, [token])
 
 //   const fetchUsers = React.useCallback(async () => {
-//     if(!token) return
+//     if (!token) return
 //     const data = await GetUsersByRoles(token)
 
 //     if (data?.error?.status === 401) {
@@ -945,6 +953,7 @@ export default function UsersList() {
 //       })
 //     } else {
 //       setUsers(data.data)
+//       console.log("show all user with company and location :", data.data)
 //     }
 //   }, [token, router])
 
@@ -984,14 +993,26 @@ export default function UsersList() {
 //     checkUserData()
 //     fetchUsers()
 //     fetchRoles()
-//     fetchUsersWithCompanyWithLocation()
 //     fetchCompanies()
-//   }, [fetchUsers, fetchRoles, router, fetchUsersWithCompanyWithLocation, fetchCompanies])
+//   }, [fetchUsers, fetchRoles, router, fetchCompanies])
 
-//   const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
+//   // Get unique users by grouping by user id (preserve all user data)
+//   const uniqueUsers = React.useMemo(() => {
+//     const userMap = new Map<number, any>()
+//     users.forEach(user => {
+//       if (!userMap.has(user.id)) {
+//         userMap.set(user.id, user)
+//       }
+//     })
+//     const result = Array.from(userMap.values())
+//     console.log('Unique users:', result)
+//     return result
+//   }, [users])
+
+//   const totalPages = Math.ceil(uniqueUsers.length / USERS_PER_PAGE)
 //   const startIndex = (currentPage - 1) * USERS_PER_PAGE
 //   const endIndex = startIndex + USERS_PER_PAGE
-//   const currentUsers = users.slice(startIndex, endIndex)
+//   const currentUsers = uniqueUsers.slice(startIndex, endIndex)
 
 //   const handleEditUser = (user: User) => {
 //     setEditingUser({
@@ -1087,17 +1108,14 @@ export default function UsersList() {
 //     )
 
 //     try {
-//       const response = await fetch(
-//         `${API_BASE_URL}/api/auth/users/${userId}`,
-//         {
-//           method: 'PUT',
-//           headers: {
-//             'Content-Type': 'application/json',
-//             Authorization: `${token}`,
-//           },
-//           body: JSON.stringify({ active: newActiveState }),
-//         }
-//       )
+//       const response = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
+//         method: 'PUT',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Authorization: `${token}`,
+//         },
+//         body: JSON.stringify({ active: newActiveState }),
+//       })
 
 //       if (!response.ok) {
 //         throw new Error('Failed to toggle user active state')
@@ -1171,7 +1189,6 @@ export default function UsersList() {
 //       )
 
 //       if (result.error || !result.data) {
-
 //         toast({
 //           variant: 'destructive',
 //           title: 'Error',
@@ -1192,11 +1209,38 @@ export default function UsersList() {
 //       toast({
 //         variant: 'destructive',
 //         title: 'Error',
-//         description: error instanceof Error ? error.message : 'Failed to change password',
+//         description:
+//           error instanceof Error ? error.message : 'Failed to change password',
 //       })
 //     } finally {
 //       setIsChangingPassword(false)
 //     }
+//   }
+
+//   // Get user's companies from the users array (uses all records including duplicates)
+//   const getUserCompanies = (userId: number) => {
+//     if (!Array.isArray(users) || !Array.isArray(companies)) {
+//       return []
+//     }
+
+//     // Get all records for this user from the original users array (not uniqueUsers)
+//     const userRecords = users.filter((u: any) => u.id === userId)
+    
+//     // Get unique company IDs
+//     const uniqueCompanyIds = Array.from(
+//       new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
+//     )
+
+//     // Map company IDs to company names
+//     const companyNames = uniqueCompanyIds
+//       .map((companyId) => {
+//         const company = companies.find((c: any) => c.companyId === companyId)
+//         return company ? company.companyName : null
+//       })
+//       .filter((name) => name !== null)
+
+//     console.log(`User ${userId} companies:`, companyNames)
+//     return companyNames as string[]
 //   }
 
 //   return (
@@ -1214,20 +1258,20 @@ export default function UsersList() {
 //         </TableHeader>
 //         <TableBody>
 //           {currentUsers.map((user, index) => (
-//             <TableRow key={user.id}>
+//             <TableRow key={`user-${user.id}-${index}`}>
 //               <TableCell className="font-medium">
 //                 {startIndex + index + 1}
 //               </TableCell>
 //               <TableCell>{user.username}</TableCell>
 //               <TableCell>{user.roleName || 'N/A'}</TableCell>
 //               <TableCell className="text-right space-x-2">
-//                 <Dialog key={`view-${user.id}`}>
+//                 <Dialog key={`view-${user.id}-${index}`}>
 //                   <DialogTrigger asChild>
 //                     <Button variant="outline" size="sm">
 //                       View Details
 //                     </Button>
 //                   </DialogTrigger>
-//                   <DialogContent>
+//                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
 //                     <DialogHeader>
 //                       <DialogTitle>
 //                         <span className="ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize">
@@ -1235,19 +1279,47 @@ export default function UsersList() {
 //                         </span>
 //                       </DialogTitle>
 //                     </DialogHeader>
-//                     <div className="py-4">
-//                       <p>
-//                         <strong>Voucher Types:</strong>{' '}
-//                         {user.voucherTypes && user.voucherTypes.length > 0
-//                           ? user.voucherTypes.join(', ')
-//                           : 'None'}
-//                       </p>
-//                       <p>
-//                         <strong>Role:</strong> {user.roleName || 'N/A'}
-//                       </p>
-//                       <p>
-//                         <strong>Active:</strong> {user.active ? 'Yes' : 'No'}
-//                       </p>
+//                     <div className="py-4 space-y-4">
+//                       <div>
+//                         <p className="font-semibold">Voucher Types:</p>
+//                         <p className="ml-4">
+//                           {user.voucherTypes && user.voucherTypes.length > 0
+//                             ? user.voucherTypes.join(', ')
+//                             : 'None'}
+//                         </p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold">Role:</p>
+//                         <p className="ml-4">{user.roleName || 'N/A'}</p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold">Active:</p>
+//                         <p className="ml-4">{user.active ? 'Yes' : 'No'}</p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold mb-2">Companies:</p>
+//                         {getUserCompanies(user.id).length > 0 ? (
+//                           <div className="ml-4">
+//                             {getUserCompanies(user.id).map(
+//                               (companyName, idx) => (
+//                                 <div
+//                                   key={`company-${user.id}-${idx}`}
+//                                   className="border rounded-lg p-2 bg-slate-50 mb-2"
+//                                 >
+//                                   <p className="text-sm">{companyName}</p>
+//                                 </div>
+//                               )
+//                             )}
+//                           </div>
+//                         ) : (
+//                           <p className="ml-4 text-gray-500">
+//                             No companies assigned
+//                           </p>
+//                         )}
+//                       </div>
 //                     </div>
 //                   </DialogContent>
 //                 </Dialog>
@@ -1373,14 +1445,17 @@ export default function UsersList() {
 //       </Table>
 
 //       {/* Change Password Dialog */}
-//       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+//       <Dialog
+//         open={isPasswordDialogOpen}
+//         onOpenChange={setIsPasswordDialogOpen}
+//       >
 //         <DialogContent>
 //           <DialogHeader>
 //             <DialogTitle>
 //               Change Password for {selectedUserForPassword?.username}
 //             </DialogTitle>
 //           </DialogHeader>
-//           <form onSubmit={handleChangePassword} className="space-y-4">
+//           <div className="space-y-4">
 //             <div className="space-y-2">
 //               <Label htmlFor="newPassword">New Password</Label>
 //               <div className="relative">
@@ -1389,7 +1464,6 @@ export default function UsersList() {
 //                   type={showNewPassword ? 'text' : 'password'}
 //                   value={newPassword}
 //                   onChange={(e) => setNewPassword(e.target.value)}
-//                   required
 //                   minLength={8}
 //                 />
 //                 <Button
@@ -1415,7 +1489,6 @@ export default function UsersList() {
 //                   type={showConfirmPassword ? 'text' : 'password'}
 //                   value={confirmPassword}
 //                   onChange={(e) => setConfirmPassword(e.target.value)}
-//                   required
 //                   minLength={8}
 //                 />
 //                 <Button
@@ -1447,11 +1520,15 @@ export default function UsersList() {
 //               >
 //                 Cancel
 //               </Button>
-//               <Button type="submit" disabled={isChangingPassword}>
+//               <Button 
+//                 type="button" 
+//                 disabled={isChangingPassword}
+//                 onClick={handleChangePassword}
+//               >
 //                 {isChangingPassword ? 'Changing...' : 'Change Password'}
 //               </Button>
 //             </DialogFooter>
-//           </form>
+//           </div>
 //         </DialogContent>
 //       </Dialog>
 
@@ -1498,3 +1575,4 @@ export default function UsersList() {
 //     </div>
 //   )
 // }
+

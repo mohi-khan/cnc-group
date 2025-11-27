@@ -210,7 +210,7 @@ export default function IouPopUp({
                   <CustomCombobox
                     items={employeeData.map((employee) => ({
                       id: employee.id.toString(),
-                      name: employee.employeeName,
+                       name: `${employee.employeeName} (${employee.employeeId})`, // 👈 
                     }))}
                     value={
                       field.value
