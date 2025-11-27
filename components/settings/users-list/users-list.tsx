@@ -41,11 +41,7 @@ import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
-import {
-  getUserAllWithCompanyLocation,
-  RoleData,
-  UserVoucherPermissionResponse,
-} from '@/api/create-user-api'
+import { RoleData } from '@/api/create-user-api'
 import { GetUsersByRoles } from '@/api/user-list-api'
 import { toast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
@@ -59,6 +55,7 @@ interface User {
   roleId: number | null
   active: boolean
   roleName?: string
+  companyId?: number | null
 }
 
 interface UpdateUserData {
@@ -67,6 +64,7 @@ interface UpdateUserData {
   roleName?: string
   roleId?: number | null
   active?: boolean
+  companyIds?: number[]
 }
 
 const USERS_PER_PAGE = 10
@@ -100,34 +98,8 @@ export default function UsersList() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [usersWithComAndLoc, setUsersWithComAndLoc] = useState<
-    UserVoucherPermissionResponse[]
-  >([])
   const [companies, setCompanies] = useState<CompanyType[]>([])
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-  const fetchUsersWithCompanyWithLocation = React.useCallback(async () => {
-    if (!token) return
-    const data = await getUserAllWithCompanyLocation(token)
-
-    if (data?.error?.status === 401) {
-      router.push('/unauthorized-access')
-      return
-    } else if (data.error || !data.data) {
-      console.error('Error getting users:', data.error)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: data.error?.message || 'Failed to get users',
-      })
-    } else {
-      // Check if data.data has a users property (array) or is directly an array
-      const responseData: any = data.data
-      const usersData = responseData.users || responseData
-      setUsersWithComAndLoc(Array.isArray(usersData) ? usersData : [])
-      console.log('users with company: ', usersData)
-    }
-  }, [token, router])
 
   const fetchCompanies = React.useCallback(async () => {
     if (!token) return
@@ -165,6 +137,7 @@ export default function UsersList() {
       })
     } else {
       setUsers(data.data)
+      console.log("show all user with company and location :", data.data)
     }
   }, [token, router])
 
@@ -204,40 +177,56 @@ export default function UsersList() {
     checkUserData()
     fetchUsers()
     fetchRoles()
-    fetchUsersWithCompanyWithLocation()
     fetchCompanies()
-  }, [
-    fetchUsers,
-    fetchRoles,
-    router,
-    fetchUsersWithCompanyWithLocation,
-    fetchCompanies,
-  ])
+  }, [fetchUsers, fetchRoles, router, fetchCompanies])
 
-  const totalPages = Math.ceil(users.length / USERS_PER_PAGE)
+  // Get unique users by grouping by user id (preserve all user data)
+  const uniqueUsers = React.useMemo(() => {
+    const userMap = new Map<number, any>()
+    users.forEach(user => {
+      if (!userMap.has(user.id)) {
+        userMap.set(user.id, user)
+      }
+    })
+    const result = Array.from(userMap.values())
+    console.log('Unique users:', result)
+    return result
+  }, [users])
+
+  const totalPages = Math.ceil(uniqueUsers.length / USERS_PER_PAGE)
   const startIndex = (currentPage - 1) * USERS_PER_PAGE
   const endIndex = startIndex + USERS_PER_PAGE
-  const currentUsers = users.slice(startIndex, endIndex)
+  const currentUsers = uniqueUsers.slice(startIndex, endIndex)
 
   const handleEditUser = (user: User) => {
+    // Get all company IDs for this user
+    const userCompanyIds = users
+      .filter((u: any) => u.id === user.id)
+      .map((u: any) => u.companyId)
+      .filter((id: number | null) => id !== null) as number[]
+
     setEditingUser({
       ...user,
       roleId: user.roleId ?? user.roleId,
       voucherTypes: user.voucherTypes || [],
       username: user.username || '',
-    })
+      companyIds: Array.from(new Set(userCompanyIds)), // Store unique company IDs
+    } as any)
     setIsEditDialogOpen(true)
   }
 
   const handleSaveEdit = async () => {
     if (editingUser) {
       try {
-        const updateData: UpdateUserData = {
+        const updateData: any = {
           username: editingUser.username,
           voucherTypes: editingUser.voucherTypes,
           roleId: editingUser.roleId === 0 ? null : editingUser.roleId,
           active: editingUser.active,
+          companyIds: (editingUser as any).companyIds || [],
         }
+
+        console.log('Updating user with data:', updateData)
 
         const response = await fetch(
           `${API_BASE_URL}/api/auth/users/${editingUser.id}`,
@@ -250,19 +239,19 @@ export default function UsersList() {
             body: JSON.stringify(updateData),
           }
         )
+        
+        console.log('Response status:', response.status)
+        
         if (!response.ok) {
           const errorData = await response.json()
+          console.error('Error response:', errorData)
           throw new Error(errorData.message || 'Failed to update user')
         }
 
         const result = await response.json()
+        console.log('Update result:', result)
 
         if (result.status === 'success') {
-          setUsers(
-            users.map((user) =>
-              user.id === editingUser.id ? { ...editingUser } : user
-            )
-          )
           setEditingUser(null)
           setIsEditDialogOpen(false)
           await refreshAttachment()
@@ -276,6 +265,7 @@ export default function UsersList() {
       } catch (error) {
         console.error('Error updating user:', error)
         toast({
+          variant: 'destructive',
           title: 'Error',
           description: `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
         })
@@ -297,6 +287,16 @@ export default function UsersList() {
         ? [...prev.voucherTypes, voucherType]
         : prev.voucherTypes.filter((type) => type !== voucherType)
       return { ...prev, voucherTypes: updatedVoucherTypes }
+    })
+  }
+
+  const handleCompanyChange = (companyId: number, checked: boolean) => {
+    setEditingUser((prev: any) => {
+      if (!prev) return null
+      const updatedCompanyIds = checked
+        ? [...(prev.companyIds || []), companyId]
+        : (prev.companyIds || []).filter((id: number) => id !== companyId)
+      return { ...prev, companyIds: updatedCompanyIds }
     })
   }
 
@@ -422,38 +422,29 @@ export default function UsersList() {
     }
   }
 
-  // Get user's companies by company ID
+  // Get user's companies from the users array (uses all records including duplicates)
   const getUserCompanies = (userId: number) => {
-    // Ensure usersWithComAndLoc is an array
-    if (!Array.isArray(usersWithComAndLoc) || !Array.isArray(companies)) {
-      console.log('Data not ready:', {
-        usersWithComAndLoc: Array.isArray(usersWithComAndLoc),
-        companies: Array.isArray(companies),
-      })
+    if (!Array.isArray(users) || !Array.isArray(companies)) {
       return []
     }
 
-    const userPermissions = usersWithComAndLoc.filter(
-      (u: any) => u.userId === userId
-    )
-    console.log(`User ${userId} permissions:`, userPermissions)
-
+    // Get all records for this user from the original users array (not uniqueUsers)
+    const userRecords = users.filter((u: any) => u.id === userId)
+    
     // Get unique company IDs
     const uniqueCompanyIds = Array.from(
-      new Set(userPermissions.map((p: any) => p.companyId))
+      new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
     )
-    console.log(`Unique company IDs for user ${userId}:`, uniqueCompanyIds)
 
     // Map company IDs to company names
     const companyNames = uniqueCompanyIds
       .map((companyId) => {
         const company = companies.find((c: any) => c.companyId === companyId)
-        console.log(`Looking for company ${companyId}:`, company)
         return company ? company.companyName : null
       })
       .filter((name) => name !== null)
 
-    console.log(`Final company names for user ${userId}:`, companyNames)
+    console.log(`User ${userId} companies:`, companyNames)
     return companyNames as string[]
   }
 
@@ -472,14 +463,14 @@ export default function UsersList() {
         </TableHeader>
         <TableBody>
           {currentUsers.map((user, index) => (
-            <TableRow key={user.id}>
+            <TableRow key={`user-${user.id}-${index}`}>
               <TableCell className="font-medium">
                 {startIndex + index + 1}
               </TableCell>
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.roleName || 'N/A'}</TableCell>
               <TableCell className="text-right space-x-2">
-                <Dialog key={`view-${user.id}`}>
+                <Dialog key={`view-${user.id}-${index}`}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       View Details
@@ -520,7 +511,7 @@ export default function UsersList() {
                             {getUserCompanies(user.id).map(
                               (companyName, idx) => (
                                 <div
-                                  key={idx}
+                                  key={`company-${user.id}-${idx}`}
                                   className="border rounded-lg p-2 bg-slate-50 mb-2"
                                 >
                                   <p className="text-sm">{companyName}</p>
@@ -638,6 +629,41 @@ export default function UsersList() {
                           </div>
                         ))}
                       </div>
+
+                      <Label htmlFor="companies" className="mt-4 block">
+                        Companies
+                      </Label>
+                      <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                        {companies
+                          .filter((company) => company.companyId !== undefined)
+                          .map((company) => (
+                            <div
+                              key={company.companyId}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`company-${company.companyId}`}
+                                checked={
+                                  (editingUser as any)?.companyIds?.includes(
+                                    company.companyId!
+                                  ) || false
+                                }
+                                onCheckedChange={(checked) =>
+                                  handleCompanyChange(
+                                    company.companyId!,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor={`company-${company.companyId}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {company.companyName}
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button onClick={handleSaveEdit}>Submit</Button>
@@ -669,7 +695,7 @@ export default function UsersList() {
               Change Password for {selectedUserForPassword?.username}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleChangePassword} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <div className="relative">
@@ -678,7 +704,6 @@ export default function UsersList() {
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  required
                   minLength={8}
                 />
                 <Button
@@ -704,7 +729,6 @@ export default function UsersList() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
                   minLength={8}
                 />
                 <Button
@@ -736,11 +760,15 @@ export default function UsersList() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isChangingPassword}>
+              <Button 
+                type="button" 
+                disabled={isChangingPassword}
+                onClick={handleChangePassword}
+              >
                 {isChangingPassword ? 'Changing...' : 'Change Password'}
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -787,3 +815,764 @@ export default function UsersList() {
     </div>
   )
 }
+
+// 'use client'
+
+// import React, { useState, useEffect } from 'react'
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from '@/components/ui/table'
+// import { Button } from '@/components/ui/button'
+// import { Input } from '@/components/ui/input'
+// import { Label } from '@/components/ui/label'
+// import { Checkbox } from '@/components/ui/checkbox'
+// import {
+//   Pagination,
+//   PaginationContent,
+//   PaginationItem,
+//   PaginationLink,
+//   PaginationNext,
+//   PaginationPrevious,
+// } from '@/components/ui/pagination'
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+//   DialogFooter,
+// } from '@/components/ui/dialog'
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select'
+// import { Alert, AlertDescription } from '@/components/ui/alert'
+// import { EyeIcon, EyeOffIcon } from 'lucide-react'
+// import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
+// import { tokenAtom, useInitializeUser } from '@/utils/user'
+// import { useAtom } from 'jotai'
+// import { RoleData } from '@/api/create-user-api'
+// import { GetUsersByRoles } from '@/api/user-list-api'
+// import { toast } from '@/hooks/use-toast'
+// import { useRouter } from 'next/navigation'
+// import { changeNewPassword } from '@/api/change-password-api'
+// import { CompanyType } from '@/api/company-api'
+
+// interface User {
+//   id: number
+//   username: string
+//   voucherTypes: string[]
+//   roleId: number | null
+//   active: boolean
+//   roleName?: string
+// }
+
+// interface UpdateUserData {
+//   username?: string
+//   voucherTypes?: string[]
+//   roleName?: string
+//   roleId?: number | null
+//   active?: boolean
+// }
+
+// const USERS_PER_PAGE = 10
+// const VOUCHER_TYPES = [
+//   'Cash Voucher',
+//   'Bank Voucher',
+//   'Journal Voucher',
+//   'Contra Voucher',
+// ]
+
+// export default function UsersList() {
+//   //token from atom
+//   useInitializeUser()
+//   const [token] = useAtom(tokenAtom)
+//   const router = useRouter()
+
+//   //state variables
+//   const [users, setUsers] = useState<User[]>([])
+//   const [currentPage, setCurrentPage] = useState(1)
+//   const [editingUser, setEditingUser] = useState<User | null>(null)
+//   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+//   const [roles, setRoles] = useState<RoleData[]>([])
+
+//   // Change password states
+//   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+//   const [selectedUserForPassword, setSelectedUserForPassword] =
+//     useState<User | null>(null)
+//   const [newPassword, setNewPassword] = useState('')
+//   const [confirmPassword, setConfirmPassword] = useState('')
+//   const [showNewPassword, setShowNewPassword] = useState(false)
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+//   const [passwordError, setPasswordError] = useState('')
+//   const [isChangingPassword, setIsChangingPassword] = useState(false)
+//   const [companies, setCompanies] = useState<CompanyType[]>([])
+//   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
+//   const fetchCompanies = React.useCallback(async () => {
+//     if (!token) return
+//     const data = await getAllCompanies(token)
+
+//     if (data.error || !data.data) {
+//       console.error('Error getting companies:', data.error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: data.error?.message || 'Failed to get companies',
+//       })
+//       setCompanies([])
+//     } else {
+//       // Ensure data.data is an array
+//       const companyData = Array.isArray(data.data) ? data.data : []
+//       setCompanies(companyData)
+//       console.log('company :', companyData)
+//     }
+//   }, [token])
+
+//   const fetchUsers = React.useCallback(async () => {
+//     if (!token) return
+//     const data = await GetUsersByRoles(token)
+
+//     if (data?.error?.status === 401) {
+//       router.push('/unauthorized-access')
+//       return
+//     } else if (data.error || !data.data) {
+//       console.error('Error getting users:', data.error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: data.error?.message || 'Failed to get users',
+//       })
+//     } else {
+//       setUsers(data.data)
+//       console.log("show all user with company and location :", data.data)
+//     }
+//   }, [token, router])
+
+//   const fetchRoles = React.useCallback(async () => {
+//     if (!token) return
+//     const fetchedRoles = await getAllRoles(token)
+//     if (fetchedRoles.error || !fetchedRoles.data) {
+//       console.error('Error getting roles:', fetchedRoles.error)
+//       toast({
+//         title: 'Error',
+//         description: fetchedRoles.error?.message || 'Failed to get roles',
+//       })
+//     } else {
+//       setRoles(fetchedRoles.data)
+//     }
+//   }, [token])
+
+//   const refreshAttachment = async () => {
+//     try {
+//       await fetchUsers()
+//     } catch (error) {
+//       console.error('Error refreshing attachment:', error)
+//     }
+//   }
+
+//   useEffect(() => {
+//     const checkUserData = () => {
+//       const storedUserData = localStorage.getItem('currentUser')
+//       const storedToken = localStorage.getItem('authToken')
+
+//       if (!storedUserData || !storedToken) {
+//         router.push('/')
+//         return
+//       }
+//     }
+
+//     checkUserData()
+//     fetchUsers()
+//     fetchRoles()
+//     fetchCompanies()
+//   }, [fetchUsers, fetchRoles, router, fetchCompanies])
+
+//   // Get unique users by grouping by user id (preserve all user data)
+//   const uniqueUsers = React.useMemo(() => {
+//     const userMap = new Map<number, any>()
+//     users.forEach(user => {
+//       if (!userMap.has(user.id)) {
+//         userMap.set(user.id, user)
+//       }
+//     })
+//     const result = Array.from(userMap.values())
+//     console.log('Unique users:', result)
+//     return result
+//   }, [users])
+
+//   const totalPages = Math.ceil(uniqueUsers.length / USERS_PER_PAGE)
+//   const startIndex = (currentPage - 1) * USERS_PER_PAGE
+//   const endIndex = startIndex + USERS_PER_PAGE
+//   const currentUsers = uniqueUsers.slice(startIndex, endIndex)
+
+//   const handleEditUser = (user: User) => {
+//     setEditingUser({
+//       ...user,
+//       roleId: user.roleId ?? user.roleId,
+//       voucherTypes: user.voucherTypes || [],
+//       username: user.username || '',
+//     })
+//     setIsEditDialogOpen(true)
+//   }
+
+//   const handleSaveEdit = async () => {
+//     if (editingUser) {
+//       try {
+//         const updateData: UpdateUserData = {
+//           username: editingUser.username,
+//           voucherTypes: editingUser.voucherTypes,
+//           roleId: editingUser.roleId === 0 ? null : editingUser.roleId,
+//           active: editingUser.active,
+//         }
+
+//         const response = await fetch(
+//           `${API_BASE_URL}/api/auth/users/${editingUser.id}`,
+//           {
+//             method: 'PUT',
+//             headers: {
+//               'Content-Type': 'application/json',
+//               Authorization: `${token}`,
+//             },
+//             body: JSON.stringify(updateData),
+//           }
+//         )
+//         if (!response.ok) {
+//           const errorData = await response.json()
+//           throw new Error(errorData.message || 'Failed to update user')
+//         }
+
+//         const result = await response.json()
+
+//         if (result.status === 'success') {
+//           setUsers(
+//             users.map((user) =>
+//               user.id === editingUser.id ? { ...editingUser } : user
+//             )
+//           )
+//           setEditingUser(null)
+//           setIsEditDialogOpen(false)
+//           await refreshAttachment()
+//           toast({
+//             title: 'Success',
+//             description: 'User updated successfully',
+//           })
+//         } else {
+//           throw new Error(result.message || 'Failed to update user')
+//         }
+//       } catch (error) {
+//         console.error('Error updating user:', error)
+//         toast({
+//           title: 'Error',
+//           description: `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+//         })
+//       } finally {
+//         setIsEditDialogOpen(false)
+//       }
+//     }
+//   }
+
+//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const { name, value } = e.target
+//     setEditingUser((prev) => (prev ? { ...prev, [name]: value } : null))
+//   }
+
+//   const handleVoucherTypeChange = (voucherType: string, checked: boolean) => {
+//     setEditingUser((prev) => {
+//       if (!prev) return null
+//       const updatedVoucherTypes = checked
+//         ? [...prev.voucherTypes, voucherType]
+//         : prev.voucherTypes.filter((type) => type !== voucherType)
+//       return { ...prev, voucherTypes: updatedVoucherTypes }
+//     })
+//   }
+
+//   const handleToggleActive = async (
+//     userId: number,
+//     currentActiveState: boolean
+//   ) => {
+//     const newActiveState = !currentActiveState
+
+//     setUsers(
+//       users.map((user) =>
+//         user.id === userId ? { ...user, active: newActiveState } : user
+//       )
+//     )
+
+//     try {
+//       const response = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
+//         method: 'PUT',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Authorization: `${token}`,
+//         },
+//         body: JSON.stringify({ active: newActiveState }),
+//       })
+
+//       if (!response.ok) {
+//         throw new Error('Failed to toggle user active state')
+//       }
+
+//       const result = await response.json()
+
+//       if (result.status !== 'success') {
+//         setUsers(
+//           users.map((user) =>
+//             user.id === userId ? { ...user, active: currentActiveState } : user
+//           )
+//         )
+//         throw new Error(result.message || 'Failed to toggle user active state')
+//       }
+//       await refreshAttachment()
+//     } catch (error) {
+//       console.error('Error toggling user active state:', error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: `Error toggling user active state: ${error instanceof Error ? error.message : 'Unknown error'}`,
+//       })
+//     }
+//   }
+
+//   const handleOpenPasswordDialog = (user: User) => {
+//     setSelectedUserForPassword(user)
+//     setNewPassword('')
+//     setConfirmPassword('')
+//     setPasswordError('')
+//     setShowNewPassword(false)
+//     setShowConfirmPassword(false)
+//     setIsPasswordDialogOpen(true)
+//   }
+
+//   const handleChangePassword = async (e: React.FormEvent) => {
+//     e.preventDefault()
+//     setPasswordError('')
+
+//     if (!selectedUserForPassword) return
+
+//     if (newPassword.length < 8) {
+//       setPasswordError('New password must be at least 8 characters')
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: 'New password must be at least 8 characters',
+//       })
+//       return
+//     }
+
+//     if (newPassword !== confirmPassword) {
+//       setPasswordError("New passwords don't match")
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description: "New passwords don't match",
+//       })
+//       return
+//     }
+
+//     setIsChangingPassword(true)
+
+//     try {
+//       const result = await changeNewPassword(
+//         selectedUserForPassword.id,
+//         newPassword,
+//         confirmPassword,
+//         token
+//       )
+
+//       if (result.error || !result.data) {
+//         toast({
+//           variant: 'destructive',
+//           title: 'Error',
+//           description: result.error?.message || 'Failed to change password',
+//         })
+//       } else {
+//         toast({
+//           title: 'Success',
+//           description: 'Password changed successfully',
+//         })
+//         setIsPasswordDialogOpen(false)
+//         setNewPassword('')
+//         setConfirmPassword('')
+//         setSelectedUserForPassword(null)
+//       }
+//     } catch (error) {
+//       console.error('Error changing password:', error)
+//       toast({
+//         variant: 'destructive',
+//         title: 'Error',
+//         description:
+//           error instanceof Error ? error.message : 'Failed to change password',
+//       })
+//     } finally {
+//       setIsChangingPassword(false)
+//     }
+//   }
+
+//   // Get user's companies from the users array (uses all records including duplicates)
+//   const getUserCompanies = (userId: number) => {
+//     if (!Array.isArray(users) || !Array.isArray(companies)) {
+//       return []
+//     }
+
+//     // Get all records for this user from the original users array (not uniqueUsers)
+//     const userRecords = users.filter((u: any) => u.id === userId)
+    
+//     // Get unique company IDs
+//     const uniqueCompanyIds = Array.from(
+//       new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
+//     )
+
+//     // Map company IDs to company names
+//     const companyNames = uniqueCompanyIds
+//       .map((companyId) => {
+//         const company = companies.find((c: any) => c.companyId === companyId)
+//         return company ? company.companyName : null
+//       })
+//       .filter((name) => name !== null)
+
+//     console.log(`User ${userId} companies:`, companyNames)
+//     return companyNames as string[]
+//   }
+
+//   return (
+//     <div className="container mx-auto p-4">
+//       <h1 className="text-2xl font-bold mb-4">User List</h1>
+
+//       <Table className="border shadow-md">
+//         <TableHeader className="bg-slate-200 shadow-sm sticky top-28 z-10">
+//           <TableRow>
+//             <TableHead className="w-[100px]">Serial Number</TableHead>
+//             <TableHead>Username</TableHead>
+//             <TableHead>Role</TableHead>
+//             <TableHead className="text-right">Action</TableHead>
+//           </TableRow>
+//         </TableHeader>
+//         <TableBody>
+//           {currentUsers.map((user, index) => (
+//             <TableRow key={`user-${user.id}-${index}`}>
+//               <TableCell className="font-medium">
+//                 {startIndex + index + 1}
+//               </TableCell>
+//               <TableCell>{user.username}</TableCell>
+//               <TableCell>{user.roleName || 'N/A'}</TableCell>
+//               <TableCell className="text-right space-x-2">
+//                 <Dialog key={`view-${user.id}-${index}`}>
+//                   <DialogTrigger asChild>
+//                     <Button variant="outline" size="sm">
+//                       View Details
+//                     </Button>
+//                   </DialogTrigger>
+//                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+//                     <DialogHeader>
+//                       <DialogTitle>
+//                         <span className="ring-2 px-3 py-1 rounded-xl hover:bg-slate-200 capitalize">
+//                           {user.username}
+//                         </span>
+//                       </DialogTitle>
+//                     </DialogHeader>
+//                     <div className="py-4 space-y-4">
+//                       <div>
+//                         <p className="font-semibold">Voucher Types:</p>
+//                         <p className="ml-4">
+//                           {user.voucherTypes && user.voucherTypes.length > 0
+//                             ? user.voucherTypes.join(', ')
+//                             : 'None'}
+//                         </p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold">Role:</p>
+//                         <p className="ml-4">{user.roleName || 'N/A'}</p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold">Active:</p>
+//                         <p className="ml-4">{user.active ? 'Yes' : 'No'}</p>
+//                       </div>
+
+//                       <div>
+//                         <p className="font-semibold mb-2">Companies:</p>
+//                         {getUserCompanies(user.id).length > 0 ? (
+//                           <div className="ml-4">
+//                             {getUserCompanies(user.id).map(
+//                               (companyName, idx) => (
+//                                 <div
+//                                   key={`company-${user.id}-${idx}`}
+//                                   className="border rounded-lg p-2 bg-slate-50 mb-2"
+//                                 >
+//                                   <p className="text-sm">{companyName}</p>
+//                                 </div>
+//                               )
+//                             )}
+//                           </div>
+//                         ) : (
+//                           <p className="ml-4 text-gray-500">
+//                             No companies assigned
+//                           </p>
+//                         )}
+//                       </div>
+//                     </div>
+//                   </DialogContent>
+//                 </Dialog>
+
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   onClick={() => handleOpenPasswordDialog(user)}
+//                 >
+//                   Change Password
+//                 </Button>
+
+//                 <Dialog
+//                   open={isEditDialogOpen}
+//                   onOpenChange={setIsEditDialogOpen}
+//                 >
+//                   <DialogTrigger asChild>
+//                     <Button
+//                       variant="outline"
+//                       size="sm"
+//                       onClick={() => handleEditUser(user)}
+//                     >
+//                       Edit
+//                     </Button>
+//                   </DialogTrigger>
+//                   <DialogContent>
+//                     <DialogHeader>
+//                       <DialogTitle>Edit User</DialogTitle>
+//                     </DialogHeader>
+//                     <div className="py-4">
+//                       <Label htmlFor="username">Username</Label>
+//                       <Input
+//                         id="username"
+//                         name="username"
+//                         value={editingUser?.username || ''}
+//                         onChange={handleInputChange}
+//                         className="mb-2"
+//                       />
+//                       <Label htmlFor="roleId">Role</Label>
+//                       <Select
+//                         value={editingUser?.roleId?.toString() || 'no-role'}
+//                         onValueChange={(value) =>
+//                           setEditingUser((prev) =>
+//                             prev
+//                               ? {
+//                                   ...prev,
+//                                   roleId:
+//                                     value !== 'no-role'
+//                                       ? parseInt(value)
+//                                       : null,
+//                                 }
+//                               : null
+//                           )
+//                         }
+//                       >
+//                         <SelectTrigger className="w-full">
+//                           <SelectValue placeholder="Select a role" />
+//                         </SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="no-role">
+//                             {editingUser?.roleName || 'No Role'}
+//                           </SelectItem>
+//                           {roles.map((role) => (
+//                             <SelectItem
+//                               key={role.roleId}
+//                               value={role.roleId.toString()}
+//                             >
+//                               {role.roleName}
+//                             </SelectItem>
+//                           ))}
+//                         </SelectContent>
+//                       </Select>
+//                       <Label htmlFor="voucherTypes" className="mt-4 block">
+//                         Voucher Types
+//                       </Label>
+//                       <div className="space-y-2">
+//                         {VOUCHER_TYPES.map((voucherType) => (
+//                           <div
+//                             key={voucherType}
+//                             className="flex items-center space-x-2"
+//                           >
+//                             <Checkbox
+//                               id={`voucherType-${voucherType}`}
+//                               checked={
+//                                 editingUser?.voucherTypes?.includes(
+//                                   voucherType
+//                                 ) || false
+//                               }
+//                               onCheckedChange={(checked) =>
+//                                 handleVoucherTypeChange(
+//                                   voucherType,
+//                                   checked as boolean
+//                                 )
+//                               }
+//                             />
+//                             <Label
+//                               htmlFor={`voucherType-${voucherType}`}
+//                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+//                             >
+//                               {voucherType}
+//                             </Label>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     </div>
+//                     <DialogFooter>
+//                       <Button onClick={handleSaveEdit}>Submit</Button>
+//                     </DialogFooter>
+//                   </DialogContent>
+//                 </Dialog>
+
+//                 <Button
+//                   variant={user.active ? 'ghost' : 'destructive'}
+//                   size="sm"
+//                   onClick={() => handleToggleActive(user.id, user.active)}
+//                 >
+//                   {user.active ? 'Deactivate' : 'Activate'}
+//                 </Button>
+//               </TableCell>
+//             </TableRow>
+//           ))}
+//         </TableBody>
+//       </Table>
+
+//       {/* Change Password Dialog */}
+//       <Dialog
+//         open={isPasswordDialogOpen}
+//         onOpenChange={setIsPasswordDialogOpen}
+//       >
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>
+//               Change Password for {selectedUserForPassword?.username}
+//             </DialogTitle>
+//           </DialogHeader>
+//           <div className="space-y-4">
+//             <div className="space-y-2">
+//               <Label htmlFor="newPassword">New Password</Label>
+//               <div className="relative">
+//                 <Input
+//                   id="newPassword"
+//                   type={showNewPassword ? 'text' : 'password'}
+//                   value={newPassword}
+//                   onChange={(e) => setNewPassword(e.target.value)}
+//                   minLength={8}
+//                 />
+//                 <Button
+//                   type="button"
+//                   variant="ghost"
+//                   size="icon"
+//                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+//                   onClick={() => setShowNewPassword(!showNewPassword)}
+//                 >
+//                   {showNewPassword ? (
+//                     <EyeOffIcon className="h-4 w-4" />
+//                   ) : (
+//                     <EyeIcon className="h-4 w-4" />
+//                   )}
+//                 </Button>
+//               </div>
+//             </div>
+//             <div className="space-y-2">
+//               <Label htmlFor="confirmPassword">Confirm New Password</Label>
+//               <div className="relative">
+//                 <Input
+//                   id="confirmPassword"
+//                   type={showConfirmPassword ? 'text' : 'password'}
+//                   value={confirmPassword}
+//                   onChange={(e) => setConfirmPassword(e.target.value)}
+//                   minLength={8}
+//                 />
+//                 <Button
+//                   type="button"
+//                   variant="ghost"
+//                   size="icon"
+//                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+//                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+//                 >
+//                   {showConfirmPassword ? (
+//                     <EyeOffIcon className="h-4 w-4" />
+//                   ) : (
+//                     <EyeIcon className="h-4 w-4" />
+//                   )}
+//                 </Button>
+//               </div>
+//             </div>
+//             {passwordError && (
+//               <Alert variant="destructive">
+//                 <AlertDescription>{passwordError}</AlertDescription>
+//               </Alert>
+//             )}
+//             <DialogFooter>
+//               <Button
+//                 type="button"
+//                 variant="outline"
+//                 onClick={() => setIsPasswordDialogOpen(false)}
+//                 disabled={isChangingPassword}
+//               >
+//                 Cancel
+//               </Button>
+//               <Button 
+//                 type="button" 
+//                 disabled={isChangingPassword}
+//                 onClick={handleChangePassword}
+//               >
+//                 {isChangingPassword ? 'Changing...' : 'Change Password'}
+//               </Button>
+//             </DialogFooter>
+//           </div>
+//         </DialogContent>
+//       </Dialog>
+
+//       <div className="mt-4">
+//         <Pagination>
+//           <PaginationContent>
+//             <PaginationItem>
+//               <PaginationPrevious
+//                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+//                 aria-disabled={currentPage === 1}
+//                 tabIndex={currentPage === 1 ? -1 : undefined}
+//                 className={
+//                   currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+//                 }
+//               />
+//             </PaginationItem>
+//             {[...Array(totalPages)].map((_, i) => (
+//               <PaginationItem key={`page-${i}`}>
+//                 <PaginationLink
+//                   onClick={() => setCurrentPage(i + 1)}
+//                   isActive={currentPage === i + 1}
+//                 >
+//                   {i + 1}
+//                 </PaginationLink>
+//               </PaginationItem>
+//             ))}
+//             <PaginationItem>
+//               <PaginationNext
+//                 onClick={() =>
+//                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+//                 }
+//                 aria-disabled={currentPage === totalPages}
+//                 tabIndex={currentPage === totalPages ? -1 : undefined}
+//                 className={
+//                   currentPage === totalPages
+//                     ? 'pointer-events-none opacity-50'
+//                     : ''
+//                 }
+//               />
+//             </PaginationItem>
+//           </PaginationContent>
+//         </Pagination>
+//       </div>
+//     </div>
+//   )
+// }
+
