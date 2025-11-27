@@ -501,6 +501,12 @@ export default function CostCenterManagement() {
             <TableHeader className="shadow-md bg-slate-200">
               <TableRow>
                 <TableHead
+                  onClick={() => handleSort('costCenterId')}
+                  className="cursor-pointer"
+                >
+                  Id <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead
                   onClick={() => handleSort('costCenterName')}
                   className="cursor-pointer"
                 >
@@ -542,6 +548,7 @@ export default function CostCenterManagement() {
             <TableBody>
               {paginatedCostCenters.map((center) => (
                 <TableRow key={center.costCenterId}>
+                  <TableCell>{center.costCenterId}</TableCell>
                   <TableCell>{center.costCenterName}</TableCell>
                   <TableCell>{center.costCenterDescription}</TableCell>
                   <TableCell>{center.currencyCode}</TableCell>
