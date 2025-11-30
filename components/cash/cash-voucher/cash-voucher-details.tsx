@@ -452,7 +452,7 @@ export default function CashVoucherDetails({
                       <FormItem>
                         <FormControl>
                           <div
-                            className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-40' : ''}`}
+                            className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed ' : ''}`}
                           >
                             <CustomComboboxWithApi
                               items={partners.map((partner) => ({

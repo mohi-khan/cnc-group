@@ -201,7 +201,7 @@ export const ContraVoucherPopup: React.FC<ContraVoucherPopupProps> = ({
           [data.journalEntry.companyId],
           [data.journalEntry.locationId]
         )
-        setIsOpen(false)
+        // setIsOpen(false)
       }
     } else {
       setIsSubmitting(true)

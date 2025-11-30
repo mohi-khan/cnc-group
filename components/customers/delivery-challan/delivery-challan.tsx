@@ -69,6 +69,7 @@ const DeliveryChallan = () => {
       })
     } else {
       setDelivery(data.data)
+      console.log("all chalan data: ",data.data);
     }
     setLoading(false)
   }, [router, token])
@@ -296,6 +297,8 @@ const DeliveryChallan = () => {
               <Table className=" border shadow-md">
                 <TableHeader className=" bg-slate-200 shadow-md">
                   <TableRow>
+                      <TableHead>Challan No</TableHead>
+                      <TableHead>Order No</TableHead>
                     <TableHead>
                       <div className="flex items-center gap-1">
                         Company Name
@@ -317,6 +320,12 @@ const DeliveryChallan = () => {
                 <TableBody>
                   {delivery.map((item, index) => (
                     <TableRow key={`delivery-${index}-${item.id}`}>
+                      <TableCell className="font-medium">
+                        {item.challanId}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.orderId}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {item.companyName}
                       </TableCell>

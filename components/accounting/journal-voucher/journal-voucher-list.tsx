@@ -182,7 +182,7 @@ export default function VoucherTable() {
         description: 'Voucher created successfully',
       })
       resetForm()
-      setIsPopupOpen(false)
+      // setIsPopupOpen(false)
     }
 
     setIsSubmitting(false)

@@ -161,7 +161,7 @@ export function CustomComboboxWithApi<T extends ComboboxItem>({
           leaveTo="opacity-0"
           afterLeave={() => setQuery('')}
         >
-          <Combobox.Options className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none">
+          <Combobox.Options className="absolute z-20 mt-1 max-h-60 h-40 min-w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none">
             {isLoading ? (
               <div className="px-4 py-2 text-black">Loading...</div>
             ) : items.length === 0 ? (
