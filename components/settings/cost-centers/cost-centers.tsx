@@ -150,6 +150,7 @@ export default function CostCenterManagement() {
           description:
             response.error?.message ||
             `Failed to ${isActive ? 'deactivate' : 'activate'} cost center`,
+          variant: 'destructive',
         })
       } else {
         toast({
@@ -173,6 +174,7 @@ export default function CostCenterManagement() {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
+        variant: 'destructive',
       })
     }
   }
@@ -243,9 +245,12 @@ export default function CostCenterManagement() {
             token
           )
           if (response.error || !response.data) {
-            throw new Error(
-              response.error?.message || 'Failed to edit cost center'
-            )
+            const errorMessage = response.error?.message || 'Failed to edit cost center'
+            // Check for duplicate entry error
+            if (errorMessage.includes('Duplicate entry') || errorMessage.includes('UNIQUE')) {
+              throw new Error('A cost center with this name already exists. Please use a different name.')
+            }
+            throw new Error(errorMessage)
           }
           toast({
             title: 'Success',
@@ -260,9 +265,12 @@ export default function CostCenterManagement() {
             token
           )
           if (response.error || !response.data) {
-            throw new Error(
-              response.error?.message || 'Failed to create cost center'
-            )
+            const errorMessage = response.error?.message || 'Failed to create cost center'
+            // Check for duplicate entry error
+            if (errorMessage.includes('Duplicate entry') || errorMessage.includes('UNIQUE')) {
+              throw new Error('A cost center with this name already exists. Please use a different name.')
+            }
+            throw new Error(errorMessage)
           }
           toast({
             title: 'Success',
@@ -287,6 +295,7 @@ export default function CostCenterManagement() {
             error instanceof Error
               ? error.message
               : 'An unexpected error occurred',
+          variant: 'destructive',
         })
       } finally {
         setIsLoading(false)
@@ -451,17 +460,7 @@ export default function CostCenterManagement() {
 
   const totalPages = Math.ceil(sortedCostCenters.length / itemsPerPage)
 
-  // Replace with this implementation
-  // React.useEffect(() => {
-  //   if (feedback?.type === 'success') {
-  //     const timer = setTimeout(() => {
-  //       fetchCostCenters()
-  //       setCurrentPage(1) // Reset to first page after create/edit
-  //     }, 0)
-  //     return () => clearTimeout(timer)
-  //   }
-  // }, [feedback, fetchCostCenters])
-   React.useEffect(() => {
+  React.useEffect(() => {
     if (feedback?.type === 'success') {
       const timer = setTimeout(() => {
         fetchCostCenters()

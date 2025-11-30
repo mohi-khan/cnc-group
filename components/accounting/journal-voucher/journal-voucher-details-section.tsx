@@ -1334,7 +1334,7 @@ export function JournalVoucherDetailsSection({
                   <FormItem>
                     <FormControl>
                       <div
-                        className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                        className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed' : ''}`}
                       >
                         <CustomComboboxWithApi
                           items={partners.map((partner) => ({

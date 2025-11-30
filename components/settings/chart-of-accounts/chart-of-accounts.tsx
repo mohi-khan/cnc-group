@@ -129,6 +129,7 @@ export default function ChartOfAccountsTable() {
   const [currency, setCurrency] = React.useState<CurrencyType[]>([])
   const [companies, setCompanies] = React.useState<any[]>([])
   const [selectedCompanies, setSelectedCompanies] = React.useState<number[]>([])
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -282,27 +283,335 @@ export default function ChartOfAccountsTable() {
     [filteredAccounts]
   )
 
-  const handleAddAccount = async (data: ChartOfAccount) => {
-    if (data.parentAccountId) {
-      const parentAccountId =
-        typeof data.parentAccountId === 'string'
-          ? Number.parseInt(data.parentAccountId, 10)
-          : data.parentAccountId
-      data.code = await generateAccountCode(parentAccountId)
-    }
-    const response = await createChartOfAccounts(data, token)
+  // const handleAddAccount = async (data: ChartOfAccount) => {
+  //   if (data.parentAccountId) {
+  //     const parentAccountId =
+  //       typeof data.parentAccountId === 'string'
+  //         ? Number.parseInt(data.parentAccountId, 10)
+  //         : data.parentAccountId
+  //     data.code = await generateAccountCode(parentAccountId)
+  //   }
+  //   const response = await createChartOfAccounts(data, token)
 
-    if (response.error || !response.data) {
-      console.error('Error creating chart of accounts:', response.error)
-    } else {
+  //   if (response.error || !response.data) {
+  //     console.error('Error creating chart of accounts:', response.error)
+  //   } else {
+  //     toast({
+  //       title: 'Success',
+  //       description: 'Chart Of account created successfully',
+  //     })
+  //     form.reset()
+  //     fetchCoaAccounts()
+  //     setIsAddAccountOpen(false)
+  //     setCurrentPage(1)
+  //   }
+  // }
+  // const handleAddAccount = async (data: ChartOfAccount) => {
+  //     try {
+  //       if (data.parentAccountId) {
+  //         const parentAccountId =
+  //           typeof data.parentAccountId === 'string'
+  //             ? Number.parseInt(data.parentAccountId, 10)
+  //             : data.parentAccountId
+  //         data.code = await generateAccountCode(parentAccountId)
+  //       }
+
+  //       const response = await createChartOfAccounts(data, token)
+
+  //       // console.log('API Response:', response) // Debug log
+  //       // console.log('Error details:', response.error?.details) // Debug error details
+
+  //       if (response.error || !response.data) {
+  //         // console.error('Error creating chart of accounts:', response.error)
+
+  //         // Extract error message from various possible structures
+  //         let errorMessage = 'Failed to create chart of account'
+  //         let isDuplicate = false
+
+  //         // Check if response.error is an object with nested properties
+  //         const errorObj = response.error as any
+
+  //         if (errorObj) {
+  //           // Check the details object first (where the actual DB error is)
+  //           if (errorObj.details) {
+  //             const details = errorObj.details
+
+  //             // Check for error message in details.error first
+  //             if (details.error && typeof details.error === 'string') {
+  //               errorMessage = details.error
+  //               isDuplicate = errorMessage.includes('Duplicate entry') ||
+  //                            errorMessage.includes('NAME_UNIQUE') ||
+  //                            errorMessage.includes('CODE')
+  //             }
+  //             // Then check for SQL error details
+  //             else if (details.sqlMessage) {
+  //               errorMessage = details.sqlMessage
+  //               isDuplicate = details.code === 'ER_DUP_ENTRY'
+  //             } else if (details.message) {
+  //               errorMessage = details.message
+  //               isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+  //             }
+  //           }
+  //           // Fallback to top-level error properties
+  //           else if (errorObj.sqlMessage) {
+  //             errorMessage = errorObj.sqlMessage
+  //             isDuplicate = errorObj.code === 'ER_DUP_ENTRY'
+  //           } else if (errorObj.message) {
+  //             errorMessage = errorObj.message
+  //             isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+  //           } else if (typeof errorObj === 'string') {
+  //             errorMessage = errorObj
+  //             isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+  //           }
+  //         }
+
+  //         // Show appropriate error message
+  //         if (isDuplicate) {
+  //           // Extract the field name from the error (NAME_UNIQUE or CODE)
+  //           const isNameDuplicate = errorMessage.includes('NAME_UNIQUE') || errorMessage.includes("for key 'chart_of_accounts.NAME'")
+  //           const isCodeDuplicate = errorMessage.includes('CODE')
+
+  //           if (isNameDuplicate) {
+  //             toast({
+  //               variant: 'destructive',
+  //               title: 'Duplicate Account Name',
+  //               description: `The account name "${data.name}" already exists. Please use a different name.`,
+  //             })
+  //           } else if (isCodeDuplicate) {
+  //             toast({
+  //               variant: 'destructive',
+  //               title: 'Duplicate Account name',
+  //               description: `The account code "${data.name}" already exists. Please try again`,
+  //             })
+  //           } else {
+  //             toast({
+  //               variant: 'destructive',
+  //               title: 'Duplicate Entry',
+  //               description: 'This account already exists. Please use different values.',
+  //             })
+  //           }
+  //         } else {
+  //           toast({
+  //             variant: 'destructive',
+  //             title: 'Error Creating Account',
+  //             description: errorMessage,
+  //           })
+  //         }
+  //         return
+  //       }
+
+  //       // Success case
+  //       toast({
+  //         title: 'Success',
+  //         description: 'Chart of account created successfully',
+  //       })
+  //       form.reset()
+  //       fetchCoaAccounts()
+  //       setIsAddAccountOpen(false)
+  //       setCurrentPage(1)
+
+  //     } catch (error: any) {
+  //       // console.error('Unexpected error:', error)
+
+  //       // Handle various error formats
+  //       let errorMessage = 'An unexpected error occurred'
+
+  //       if (error.response?.data?.message) {
+  //         errorMessage = error.response.data.message
+  //       } else if (error.response?.data?.error) {
+  //         errorMessage = error.response.data.error
+  //       } else if (error.message) {
+  //         errorMessage = error.message
+  //       }
+
+  //       // Check for duplicate error in catch block
+  //       const isDuplicate = errorMessage.toLowerCase().includes('duplicate') ||
+  //                          errorMessage.includes('NAME_UNIQUE')
+
+  //       if (isDuplicate) {
+  //         toast({
+  //           variant: 'destructive',
+  //           title: 'Duplicate Account Name',
+  //           description: `The account name "${data.name}" already exists. Please use a different name.`,
+  //         })
+  //       } else {
+  //         toast({
+  //           variant: 'destructive',
+  //           title: 'Error',
+  //           description: errorMessage,
+  //         })
+  //       }
+  //     }
+  //   }
+
+  const handleAddAccount = async (data: ChartOfAccount) => {
+    if (isSubmitting) return // Prevent multiple submissions
+
+    try {
+      setIsSubmitting(true)
+
+      if (data.parentAccountId) {
+        const parentAccountId =
+          typeof data.parentAccountId === 'string'
+            ? Number.parseInt(data.parentAccountId, 10)
+            : data.parentAccountId
+        data.code = await generateAccountCode(parentAccountId)
+      }
+
+      const response = await createChartOfAccounts(data, token)
+
+      console.log('API Response:', response) // Debug log
+      console.log('Error details:', response.error?.details) // Debug error details
+
+      if (response.error || !response.data) {
+        // console.error('Error creating chart of accounts:', response.error)
+
+        // Extract error message from various possible structures
+        let errorMessage = 'Failed to create chart of account'
+        let isDuplicate = false
+
+        // Check if response.error is an object with nested properties
+        const errorObj = response.error as any
+
+        if (errorObj) {
+          // Check the details object first (where the actual DB error is)
+          if (errorObj.details) {
+            const details = errorObj.details
+
+            // Check for error message in details.error first
+            if (details.error && typeof details.error === 'string') {
+              errorMessage = details.error
+              isDuplicate =
+                errorMessage.includes('Duplicate entry') ||
+                errorMessage.includes('NAME_UNIQUE') ||
+                errorMessage.includes('CODE')
+            }
+            // Then check for SQL error details
+            else if (details.sqlMessage) {
+              errorMessage = details.sqlMessage
+              isDuplicate = details.code === 'ER_DUP_ENTRY'
+            } else if (details.message) {
+              errorMessage = details.message
+              isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+            }
+          }
+          // Fallback to top-level error properties
+          else if (errorObj.sqlMessage) {
+            errorMessage = errorObj.sqlMessage
+            isDuplicate = errorObj.code === 'ER_DUP_ENTRY'
+          } else if (errorObj.message) {
+            errorMessage = errorObj.message
+            isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+          } else if (typeof errorObj === 'string') {
+            errorMessage = errorObj
+            isDuplicate = errorMessage.toLowerCase().includes('duplicate')
+          }
+        }
+
+        // Show appropriate error message
+        if (isDuplicate) {
+          // Extract the field name from the error (NAME_UNIQUE or CODE)
+          const isNameDuplicate =
+            errorMessage.includes('NAME_UNIQUE') ||
+            errorMessage.includes("for key 'chart_of_accounts.NAME'")
+          const isCodeDuplicate =
+            errorMessage.includes("for key 'chart_of_accounts.CODE'") ||
+            (errorMessage.includes('CODE') &&
+              errorMessage.includes('Duplicate entry'))
+
+          if (isNameDuplicate) {
+            toast({
+              variant: 'destructive',
+              title: 'Duplicate Account Name',
+              description: `The account name "${data.name}" already exists. Please use a different name.`,
+            })
+          } else if (isCodeDuplicate) {
+            toast({
+              variant: 'destructive',
+              title: 'Duplicate Account Name',
+              description: `The account name "${data.name}" already exists. Please use a different name.`,
+            })
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'Duplicate Entry',
+              description:
+                'This account already exists. Please use different values.',
+            })
+          }
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error Creating Account',
+            description: errorMessage,
+          })
+        }
+        setIsSubmitting(false)
+        return
+      }
+
+      // Success case
       toast({
         title: 'Success',
-        description: 'Chart Of account created successfully',
+        description: 'Chart of account created successfully',
       })
-      form.reset()
+      form.reset({
+        name: '',
+        accountType: '',
+        parentAccountId: undefined,
+        currencyId: 1,
+        isReconcilable: false,
+        withholdingTax: false,
+        budgetTracking: false,
+        isActive: true,
+        isGroup: false,
+        isCash: false,
+        isBank: false,
+        isPartner: false,
+        isCostCenter: false,
+        createdBy: userData ? userData.userId : 0,
+        notes: null,
+        cashTag: null,
+        code: '',
+        companyIds: [],
+      })
+      setSelectedCompanies([])
       fetchCoaAccounts()
       setIsAddAccountOpen(false)
       setCurrentPage(1)
+      setIsSubmitting(false)
+    } catch (error: any) {
+      console.error('Unexpected error:', error)
+
+      // Handle various error formats
+      let errorMessage = 'An unexpected error occurred'
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      // Check for duplicate error in catch block
+      const isDuplicate =
+        errorMessage.toLowerCase().includes('duplicate') ||
+        errorMessage.includes('NAME_UNIQUE')
+
+      if (isDuplicate) {
+        toast({
+          variant: 'destructive',
+          title: 'Duplicate Account Name',
+          description: `The account name "${data.name}" already exists. Please use a different name.`,
+        })
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: errorMessage,
+        })
+      }
     }
   }
 
@@ -322,7 +631,7 @@ export default function ChartOfAccountsTable() {
     const fetchedParentCodes = await getParentCodes(token)
 
     if (fetchedParentCodes.error || !fetchedParentCodes.data) {
-      console.error('Error fetching parent codes:', fetchedParentCodes.error)
+      // console.error('Error fetching parent codes:', fetchedParentCodes.error)
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -339,7 +648,7 @@ export default function ChartOfAccountsTable() {
     const fetchedCurrency = await getAllCurrency(token)
 
     if (fetchedCurrency.error || !fetchedCurrency.data) {
-      console.error('Error getting currency:', fetchedCurrency.error)
+      // console.error('Error getting currency:', fetchedCurrency.error)
       toast({
         title: 'Error',
         description: fetchedCurrency.error?.message || 'Failed to get currency',
@@ -354,7 +663,7 @@ export default function ChartOfAccountsTable() {
     const fetchedCompanies = await getAllCompanies(token)
 
     if (fetchedCompanies.error || !fetchedCompanies.data) {
-      console.error('Error getting companies:', fetchedCompanies.error)
+      // console.error('Error getting companies:', fetchedCompanies.error)
       toast({
         title: 'Error',
         description:
@@ -373,7 +682,7 @@ export default function ChartOfAccountsTable() {
       router.push('/unauthorized-access')
       return
     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
-      console.error('Error fetching chart of accounts:', fetchedAccounts.error)
+      // console.error('Error fetching chart of accounts:', fetchedAccounts.error)
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -382,7 +691,7 @@ export default function ChartOfAccountsTable() {
       })
     } else {
       setAccounts(fetchedAccounts.data)
-      console.log('chart of account :', fetchedAccounts.data)
+      // console.log('chart of account :', fetchedAccounts.data)
       const dynamicGroups = buildCodeGroups(fetchedAccounts.data)
       setGroups(dynamicGroups)
     }
@@ -511,7 +820,7 @@ export default function ChartOfAccountsTable() {
       }
       const response = await updateChartOfAccounts(updatedAccount, token)
       if (response.error || !response.data) {
-        console.error('Error updating chart of accounts:', response.error)
+        // console.error('Error updating chart of accounts:', response.error)
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -545,7 +854,7 @@ export default function ChartOfAccountsTable() {
       }
       const response = await updateChartOfAccounts(updatedAccount, token)
       if (response.error || !response.data) {
-        console.error('Error updating chart of accounts:', response.error)
+        // console.error('Error updating chart of accounts:', response.error)
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -615,16 +924,29 @@ export default function ChartOfAccountsTable() {
               <Filter className="h-4 w-4" />
             </Button>
           </div>
-          <Dialog
+          {/* <Dialog
             open={isAddAccountOpen}
             onOpenChange={(open) => {
-              fetchCoaAccounts()
               if (!open) {
                 form.reset()
                 setSelectedCompanies([])
               }
               setIsAddAccountOpen(open)
-              fetchParentCodes()
+            }}
+          > */}
+
+          <Dialog
+            open={isAddAccountOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                form.reset()
+                setSelectedCompanies([])
+                window.location.reload()
+              } else {
+                fetchCoaAccounts()
+                fetchParentCodes()
+              }
+              setIsAddAccountOpen(open)
             }}
           >
             <DialogTrigger asChild>

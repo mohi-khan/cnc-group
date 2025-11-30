@@ -598,7 +598,7 @@ export default function BankVoucher({
           })
 
           if (onClose) onClose()
-          setIsDialogOpen(false)
+          // setIsDialogOpen(false)
 
           setTimeout(
             () =>
