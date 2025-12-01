@@ -17,6 +17,7 @@ import { getAllChartOfAccounts } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { CustomCombobox } from '@/utils/custom-combobox'
 
 interface GeneralLedgerFindProps {
   onSearch: (accountcode: number, fromdate: string, todate: string) => void
@@ -123,30 +124,36 @@ export default function GeneralLedgerFind({
             className="px-3 py-2 border rounded-md"
           />
         </div>
-        <Select
-          value={selectedAccountCode}
-          onValueChange={setSelectedAccountCode}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select account" />
-          </SelectTrigger>
-          <SelectContent>
-            {accounts.length > 0 ? (
-              accounts.map((account) => (
-                <SelectItem
-                  key={account.accountId}
-                  value={account.accountId.toString()}
-                >
-                  {account.name}
-                </SelectItem>
-              ))
-            ) : (
-              <SelectItem value="default" disabled>
-                No accounts available
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Account:</span>
+          <CustomCombobox
+            items={accounts
+              .filter((account) => account.isActive)
+              .map((account) => ({
+                id: account.accountId,
+                name: account.name,
+              }))}
+            value={
+              selectedAccountCode
+                ? {
+                    id: Number(selectedAccountCode),
+                    name:
+                      accounts.find(
+                        (account) =>
+                          account.accountId === Number(selectedAccountCode)
+                      )?.name || '',
+                  }
+                : null
+            }
+            onChange={(selectedItem) => {
+              const value = selectedItem?.id ? String(selectedItem.id) : ''
+              setSelectedAccountCode(value)
+            }}
+            placeholder="Select an Account"
+            disabled={accounts.length === 0}
+          />
+        </div>
+
         <Button onClick={handleSearch}>Show</Button>
       </div>
       <div className="flex items-center gap-2">
