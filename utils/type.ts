@@ -1073,7 +1073,7 @@ const VoucherSchemaById = z.object({
   bankaccount: z.any().nullable(),
   bankaccountName: z.string().nullable(),
   accountNumber: z.string().nullable(),
-  bankAccountId: z.number(),
+  bankaccountid: z.number(),
   // If you know the type, replace `z.any()` with the correct type
   detail_notes: z.string(),
   payTo: z.string().nullable(),
