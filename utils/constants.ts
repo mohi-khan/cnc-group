@@ -412,7 +412,10 @@ export const MENU_ITEMS: MenuItem[] = [
       },
       {
         name: "Books",
-        items: [{ name: "Day Books", source: "/accounting/day-books" }],
+        items: [
+          { name: "Day Books", source: "/accounting/day-books" },
+          { name: "Cash Books", source: "/accounting/cash-books" }
+        ],
       },
     ],
   },
