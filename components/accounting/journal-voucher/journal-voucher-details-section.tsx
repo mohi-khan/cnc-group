@@ -1110,7 +1110,7 @@ export function JournalVoucherDetailsSection({
     <div>
       {!selectedCompanyId && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
-          ⚠️ Please select a company first to see available chart of accounts
+          ⚠️ Please select a company first to see available Transaction
         </div>
       )}
       <div className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">

@@ -156,7 +156,6 @@ const DayBooks = () => {
 
         console.log('🔥 Filtered voucher data:', filteredData)
       } catch (error) {
-        console.error('Error getting Voucher Data:', error)
         setVoucherGrid([])
         throw error
       }
@@ -184,12 +183,6 @@ const DayBooks = () => {
           })
         }
       } catch (error) {
-        console.error('Error fetching voucher data:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load voucher data. Please try again.',
-          variant: 'destructive',
-        })
       } finally {
         if (showRefreshingState) {
           setIsRefreshing(false)
@@ -246,7 +239,7 @@ const DayBooks = () => {
     { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },
-    { key: 'totalamount', label: 'Total Amount' },
+    { key: 'totalamount', label: 'Amount' },
     { key: 'createdByName', label: 'Created By' },
     { key: 'state', label: 'Status' },
   ]
@@ -291,7 +284,7 @@ const DayBooks = () => {
             />
             Refresh
           </button>
-          
+
           {/* Items Per Page Selector */}
           <Select
             value={itemsPerPage.toString()}
@@ -339,4 +332,3 @@ const DayBooks = () => {
 }
 
 export default DayBooks
-

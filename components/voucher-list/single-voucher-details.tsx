@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -69,6 +69,7 @@ import {
 import { ToWords } from 'to-words'
 import { Textarea } from '../ui/textarea'
 import { getAllEmployees } from '@/api/payment-requisition-api'
+import { getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
 
 const printStyles = `
   @media print {
@@ -129,6 +130,10 @@ export default function SingleVoucherDetails() {
   const [validationError, setValidationError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [notes, setNotes] = useState<string>('')
+  const [companyChartOfAccount, setCompanyChartOfAccount] = useState<any[]>([])
+  const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>(
+    []
+  )
 
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
@@ -231,10 +236,7 @@ export default function SingleVoucherDetails() {
       )
       form.setValue('journalEntry.amountTotal', voucherData.totalamount || 0)
       form.setValue('journalEntry.payTo', voucherData.payTo || '')
-      form.setValue(
-        'journalEntry.notes',
-        voucherData.MasterNotes || ''
-      )
+      form.setValue('journalEntry.notes', voucherData.MasterNotes || '')
 
       // Set journal details
       form.setValue('journalDetails', mappedJournalDetails)
@@ -261,6 +263,29 @@ export default function SingleVoucherDetails() {
       }
     }
   }, [isBankVoucherDialogOpen, data, userData, form, formState.bankAccounts])
+
+  const fetchCompanyChartOfAccounts = useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await getCompanyWiseChartOfAccounts(token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (response.error || !response.data) {
+        console.error(
+          'Error getting company chart of accounts:',
+          response.error
+        )
+        setCompanyChartOfAccount([])
+        return
+      } else {
+        setCompanyChartOfAccount(response.data)
+      }
+    } catch (error) {
+      console.error('Error getting company chart of accounts:', error)
+      setCompanyChartOfAccount([])
+    }
+  }, [token, router])
 
   // Map account names to IDs after reference data is loaded
   useEffect(() => {
@@ -343,6 +368,36 @@ export default function SingleVoucherDetails() {
     form,
     userData,
   ])
+
+  // Filter accounts based on selected company
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      const selectedCompanyId = value.journalEntry?.companyId
+
+      if (
+        !selectedCompanyId ||
+        !companyChartOfAccount.length ||
+        !formState.chartOfAccounts.length
+      ) {
+        setCompanyFilteredAccounts([])
+        return
+      }
+
+      const companyAccountIds = companyChartOfAccount
+        .filter((mapping) => mapping.companyId === selectedCompanyId)
+        .map((mapping) => mapping.chartOfAccountId)
+
+      const filtered = formState.chartOfAccounts.filter(
+        (account) =>
+          companyAccountIds.includes(account.accountId) &&
+          account.isGroup === false
+      )
+
+      setCompanyFilteredAccounts(filtered)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [form, companyChartOfAccount, formState.chartOfAccounts])
 
   const handleReceiptClick = React.useCallback(() => {
     if (!data || data.length === 0) {
@@ -448,6 +503,7 @@ export default function SingleVoucherDetails() {
     }
 
     fetchInitialData()
+    fetchCompanyChartOfAccounts() // ADD THIS LINE
   }, [token, router])
 
   // Updated onSubmit function
@@ -849,7 +905,10 @@ export default function SingleVoucherDetails() {
                     />
                     <BankVoucherDetails
                       form={form}
-                      formState={formState}
+                      formState={{
+                        ...formState,
+                        filteredChartOfAccounts: companyFilteredAccounts, // CHANGE THIS LINE
+                      }}
                       requisition={undefined}
                       partners={formState.partners}
                       isFromInvoice={false}

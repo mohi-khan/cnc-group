@@ -140,7 +140,7 @@ export default function CashVoucherDetails({
     <div className="mb-6">
       {!isCompanySelected && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
-          ⚠️ Please select a company first to see available chart of accounts
+          ⚠️ Please select a company first to see available Transaction .
         </div>
       )}
 
@@ -364,9 +364,10 @@ export default function CashVoucherDetails({
                         <FormControl>
                           <CustomCombobox
                             items={departments
-                              .filter((department) => 
-                                department.isActive && 
-                                department.companyCode === selectedCompanyId
+                              .filter(
+                                (department) =>
+                                  department.isActive &&
+                                  department.companyCode === selectedCompanyId
                               )
                               .map((department) => ({
                                 id: department.departmentID.toString(),
@@ -393,13 +394,17 @@ export default function CashVoucherDetails({
                             placeholder={
                               !isCompanySelected
                                 ? 'Select company first'
-                                : departments.filter(d => d.companyCode === selectedCompanyId).length === 0
+                                : departments.filter(
+                                      (d) => d.companyCode === selectedCompanyId
+                                    ).length === 0
                                   ? 'No departments for this company'
                                   : 'Select a department'
                             }
                             disabled={
                               !isCompanySelected ||
-                              departments.filter(d => d.companyCode === selectedCompanyId).length === 0
+                              departments.filter(
+                                (d) => d.companyCode === selectedCompanyId
+                              ).length === 0
                             }
                           />
                         </FormControl>

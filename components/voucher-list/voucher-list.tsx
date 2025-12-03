@@ -194,7 +194,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
         setOpeningBalance(null)
       }
     } catch (error) {
-      console.error('Error fetching opening balance:', error)
+      
       setOpeningBalance(null)
     }
   }, [token, todayDate, selectedCompanyId, selectedLocationId])
@@ -581,7 +581,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
           <p className="font-semibold text-base">
             {voucher.journaltype} {voucher.state === 0 ? '(Draft)' : ''}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Date: {voucher.date} | Voucher No: {voucher.voucherno}
           </p>
         </div>
@@ -664,7 +664,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
   return (
     <TooltipProvider delayDuration={0}>
       {/* Filter Section - Show on Cash Voucher page, always visible */}
-      {showFilterSection && (
+      {(
         <div className="mb-6 p-4 border rounded-lg bg-slate-50">
           <div className="grid grid-cols-3 gap-4 items-end">
             {/* Company Filter */}
@@ -742,22 +742,22 @@ const VoucherList: React.FC<VoucherListProps> = ({
       )}
 
       <Table className="border shadow-md">
-        <TableHeader className="sticky top-28 bg-slate-200 shadow-md">
+        <TableHeader className="sticky top-28 bg-slate-200 shadow-md gap-1 ">
           <TableRow>
             {columns.map(({ key, label }) => (
               <TableHead
                 key={key}
-                className="cursor-pointer text-left"
+                className="cursor-pointer text-center "
                 onClick={() => handleSort(key)}
               >
-                <Button variant="ghost" className="hover:bg-transparent">
+                <Button variant="ghost" className="hover:bg-transparent text-xs gap-1 min-h-1">
                   {label}
-                  <ArrowUpDown className="h-4 w-4" />
+                  <ArrowUpDown className="h-1 w-1" />
                 </Button>
               </TableHead>
             ))}
-            <TableHead className="text-right">
-              <div className="flex items-center justify-end gap-2">
+            <TableHead className="text-center">
+              <div className="flex items-center justify-center gap-0">
                 <span>Action</span>
                 {draftCashVouchers.length > 0 && (
                   <Checkbox
@@ -799,52 +799,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
               return (
                 <TableRow key={voucher.voucherid}>
                   {columns.map(({ key }) => (
-                    // <TableCell key={key}>
-                    //   {key === 'voucherno' ? (
-                    //     <Tooltip open={hoveredVoucherId === voucher.voucherid}>
-                    //       <TooltipTrigger asChild>
-                    //         <Link
-                    //           target="_blank"
-                    //           href={linkGenerator(voucher.voucherid)}
-                    //           className="text-blue-600 hover:underline"
-                    //           onMouseEnter={() =>
-                    //             handleVoucherHoverStart(voucher.voucherid)
-                    //           }
-                    //           onMouseLeave={handleVoucherHoverEnd}
-                    //         >
-                    //           {voucher[key]}
-                    //         </Link>
-                    //       </TooltipTrigger>
-                    //       <TooltipContent
-                    //         side="right"
-                    //         align="start"
-                    //         className="p-4"
-                    //       >
-                    //         {renderTooltipContent()}
-                    //       </TooltipContent>
-                    //     </Tooltip>
-                    //   ) : key === 'state' ? (
-                    //     <span
-                    //       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    //         voucher[key] === 0
-                    //           ? 'bg-yellow-100 text-yellow-800'
-                    //           : 'bg-green-100 text-green-800'
-                    //       }`}
-                    //     >
-                    //       {voucher[key] === 0 ? 'Draft' : 'Posted'}
-                    //     </span>
-                    //   ) : key === 'totalamount' ? (
-                    //     <span className="font-mono text-center block">
-                    //       {voucher.currency && `${voucher.currency} `}
-                    //       {voucher[key].toFixed(2)}
-                    //     </span>
-                    //   ) : Array.isArray(voucher[key]) ? (
-                    //     JSON.stringify(voucher[key])
-                    //   ) : (
-                    //     voucher[key]
-                    //   )}
-                    // </TableCell>
-                    <TableCell key={key} className="text-center">
+                    <TableCell key={key} className="text-center text-xs">
                       {key === 'voucherno' ? (
                         <Tooltip open={hoveredVoucherId === voucher.voucherid}>
                           <TooltipTrigger asChild>
@@ -863,7 +818,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
                           <TooltipContent
                             side="right"
                             align="start"
-                            className="p-4"
+                            className="p-2"
                           >
                             {renderTooltipContent()}
                           </TooltipContent>
@@ -905,12 +860,12 @@ const VoucherList: React.FC<VoucherListProps> = ({
                     </TableCell>
                   ))}
                   <TableCell className="text-left">
-                    <div className="flex gap-2 items-center justify-end">
+                    <div className="flex gap-2 items-center justify-center">
                       <Button
                         disabled={voucher.state !== 0}
                         variant="outline"
                         onClick={() => openEditPopup(voucher)}
-                        className="min-w-[80px]"
+                        className="min-w-[30px] text-xs"
                       >
                         Edit
                       </Button>
@@ -918,9 +873,9 @@ const VoucherList: React.FC<VoucherListProps> = ({
                         disabled={isButtonDisabled}
                         variant="outline"
                         onClick={() => handlePostJournal(voucher.voucherid)}
-                        className="min-w-[80px]"
+                        className="min-w-[20px] text-xs"
                       >
-                        {isCurrentlyPosting ? 'Posting...' : 'Make Post'}
+                        {isCurrentlyPosting ? 'Posting...' : 'Post'}
                       </Button>
                       {isDraftCashVoucher && (
                         <Checkbox

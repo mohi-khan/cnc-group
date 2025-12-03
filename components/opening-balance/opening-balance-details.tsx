@@ -153,12 +153,16 @@ export default function OpeningBalanceDetails({
       })
     : fields
 
-const selectedCompanyId = form.watch('journalEntry.companyId')
+  const selectedCompanyId = form.watch('journalEntry.companyId')
   const isCompanySelected = !!selectedCompanyId
-
 
   return (
     <div>
+      {!selectedCompanyId && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+          ⚠️ Please select a company first to see available Transaction
+        </div>
+      )}
       <Table className="border shadow-md">
         <TableHeader className="bg-slate-200 shadow-md">
           <TableRow>
@@ -368,45 +372,6 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
                   />
                 </TableCell>
 
-                {/* Unit */}
-                {/* <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.departmentId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={formState.departments
-                              .filter((department) => department.isActive)
-                              .map((department) => ({
-                                id: department.departmentID.toString(),
-                                name:
-                                  department.departmentName || 'Unnamed Unit',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      formState.departments.find(
-                                        (d) => d.departmentID === field.value
-                                      )?.departmentName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select unit"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell> */}
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -476,7 +441,7 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
                           <CustomCombobox
                             items={formState.employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name:`${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
+                              name: `${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
                             }))}
                             value={
                               field.value
@@ -639,4 +604,3 @@ const selectedCompanyId = form.watch('journalEntry.companyId')
     </div>
   )
 }
-
