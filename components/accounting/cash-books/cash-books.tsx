@@ -159,7 +159,7 @@ const CashBooks = () => {
 
         console.log('🔥 Filtered cash voucher data:', filteredData)
       } catch (error) {
-        console.error('Error getting Cash Voucher Data:', error)
+        
         setVoucherGrid([])
         throw error
       }
@@ -187,12 +187,8 @@ const CashBooks = () => {
           })
         }
       } catch (error) {
-        console.error('Error fetching cash voucher data:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load cash voucher data. Please try again.',
-          variant: 'destructive',
-        })
+        
+       
       } finally {
         if (showRefreshingState) {
           setIsRefreshing(false)

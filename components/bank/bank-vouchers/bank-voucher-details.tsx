@@ -190,6 +190,11 @@ export default function BankVoucherDetails({
 
   return (
     <div>
+      {!selectedCompanyId && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+          ⚠️ Please select a company first to see available Transaction
+        </div>
+      )}
       <Table className="border shadow-md">
         <TableHeader className="bg-slate-200 shadow-md">
           <TableRow>
