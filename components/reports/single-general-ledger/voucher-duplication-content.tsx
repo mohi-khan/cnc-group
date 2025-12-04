@@ -69,7 +69,7 @@ const transformVoucherData = (
       resPartnerId: detail.partnar || null,
       notes: detail.detail_notes || '',
       type: 'Receipt', // Default for Cash Voucher
-      bankAccountId: detail.bankAccountId || 0, // For Bank/Contra Voucher
+      bankAccountId: detail.bankaccountid || 0, // For Bank/Contra Voucher
       createdBy: userId,
     })),
   }

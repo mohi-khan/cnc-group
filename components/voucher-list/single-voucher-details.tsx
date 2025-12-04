@@ -504,7 +504,7 @@ export default function SingleVoucherDetails() {
 
     fetchInitialData()
     fetchCompanyChartOfAccounts() // ADD THIS LINE
-  }, [token, router])
+  }, [token, router, fetchCompanyChartOfAccounts])
 
   // Updated onSubmit function
   const onSubmit = async (
