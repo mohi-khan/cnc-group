@@ -194,7 +194,6 @@ const VoucherList: React.FC<VoucherListProps> = ({
         setOpeningBalance(null)
       }
     } catch (error) {
-      
       setOpeningBalance(null)
     }
   }, [token, todayDate, selectedCompanyId, selectedLocationId])
@@ -333,10 +332,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
   // Check if we're on Cash Voucher list page (not day book)
   const isDayBook =
     pathname.includes('day-book') || pathname.includes('daybook')
-  const isCashVoucherPage = !isDayBook
-
-  // Show filter section if it's Cash Voucher page, regardless of whether there are vouchers
-  const showFilterSection = isCashVoucherPage
+  const NotDaybook = !isDayBook
 
   // Get only draft Cash vouchers for selection
   const draftCashVouchers = currentVouchers.filter(
@@ -664,7 +660,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
   return (
     <TooltipProvider delayDuration={0}>
       {/* Filter Section - Show on Cash Voucher page, always visible */}
-      {(
+      {
         <div className="mb-6 p-4 border rounded-lg bg-slate-50">
           <div className="grid grid-cols-3 gap-4 items-end">
             {/* Company Filter */}
@@ -716,15 +712,23 @@ const VoucherList: React.FC<VoucherListProps> = ({
             </div>
 
             {/* Opening Balance Display */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label className="text-sm font-medium">Opening Balance</Label>
               <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
                 {openingBalance !== null ? openingBalance : '0.00'}
               </div>
-            </div>
+            </div> */}
+            {NotDaybook && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Opening Balance</Label>
+                <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
+                  {openingBalance !== null ? openingBalance.toFixed(2) : '0.00'}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      }
 
       {/* Bulk Action Button - Only show for Cash Vouchers */}
       {draftCashVouchers.length > 0 && (
@@ -750,7 +754,10 @@ const VoucherList: React.FC<VoucherListProps> = ({
                 className="cursor-pointer text-center "
                 onClick={() => handleSort(key)}
               >
-                <Button variant="ghost" className="hover:bg-transparent text-xs gap-1 min-h-1">
+                <Button
+                  variant="ghost"
+                  className="hover:bg-transparent text-xs gap-1 min-h-1"
+                >
                   {label}
                   <ArrowUpDown className="h-1 w-1" />
                 </Button>

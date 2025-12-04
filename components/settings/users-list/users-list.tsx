@@ -38,7 +38,11 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
-import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
+import {
+  getAllCompanies,
+  getAllLocations,
+  getAllRoles,
+} from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { RoleData } from '@/api/create-user-api'
@@ -47,6 +51,7 @@ import { toast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { changeNewPassword } from '@/api/change-password-api'
 import { CompanyType } from '@/api/company-api'
+import { LocationData } from '@/utils/type'
 
 interface User {
   id: number
@@ -99,6 +104,7 @@ export default function UsersList() {
   const [passwordError, setPasswordError] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [companies, setCompanies] = useState<CompanyType[]>([])
+  const [getLoaction, setGetLocation] = useState<LocationData[]>([])
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
   const fetchCompanies = React.useCallback(async () => {
@@ -121,6 +127,12 @@ export default function UsersList() {
     }
   }, [token])
 
+  const fetchLocation = React.useCallback(async () => {
+    if (!token) return
+    const response = await getAllLocations(token)
+    setGetLocation(response.data ?? [])
+  }, [token])
+
   const fetchUsers = React.useCallback(async () => {
     if (!token) return
     const data = await GetUsersByRoles(token)
@@ -137,7 +149,7 @@ export default function UsersList() {
       })
     } else {
       setUsers(data.data)
-      console.log("show all user with company and location :", data.data)
+      console.log('show all user with company and location :', data.data)
     }
   }, [token, router])
 
@@ -178,12 +190,13 @@ export default function UsersList() {
     fetchUsers()
     fetchRoles()
     fetchCompanies()
-  }, [fetchUsers, fetchRoles, router, fetchCompanies])
+    fetchLocation()
+  }, [fetchUsers, fetchRoles, router, fetchCompanies, fetchLocation])
 
   // Get unique users by grouping by user id (preserve all user data)
   const uniqueUsers = React.useMemo(() => {
     const userMap = new Map<number, any>()
-    users.forEach(user => {
+    users.forEach((user) => {
       if (!userMap.has(user.id)) {
         userMap.set(user.id, user)
       }
@@ -239,9 +252,9 @@ export default function UsersList() {
             body: JSON.stringify(updateData),
           }
         )
-        
+
         console.log('Response status:', response.status)
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           console.error('Error response:', errorData)
@@ -430,10 +443,14 @@ export default function UsersList() {
 
     // Get all records for this user from the original users array (not uniqueUsers)
     const userRecords = users.filter((u: any) => u.id === userId)
-    
+
     // Get unique company IDs
     const uniqueCompanyIds = Array.from(
-      new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
+      new Set(
+        userRecords
+          .map((record: any) => record.companyId)
+          .filter((id) => id !== null)
+      )
     )
 
     // Map company IDs to company names
@@ -446,6 +463,38 @@ export default function UsersList() {
 
     console.log(`User ${userId} companies:`, companyNames)
     return companyNames as string[]
+  }
+
+  // Get user's locations from the users array
+  const getUserLocations = (userId: number) => {
+    if (!Array.isArray(users) || !Array.isArray(getLoaction)) {
+      return []
+    }
+
+    // Get all records for this user from the original users array
+    const userRecords = users.filter((u: any) => u.id === userId)
+
+    // Get unique location IDs
+    const uniqueLocationIds = Array.from(
+      new Set(
+        userRecords
+          .map((record: any) => record.locationId)
+          .filter((id) => id !== null)
+      )
+    )
+
+    // Map location IDs to location names
+    const locationNames = uniqueLocationIds
+      .map((locationId) => {
+        const location = getLoaction.find(
+          (l: any) => l.locationId === locationId
+        )
+        return location ? location.address : null
+      })
+      .filter((name) => name !== null)
+
+    console.log(`User ${userId} locations:`, locationNames)
+    return locationNames as string[]
   }
 
   return (
@@ -505,25 +554,109 @@ export default function UsersList() {
                       </div>
 
                       <div>
-                        <p className="font-semibold mb-2">Companies:</p>
-                        {getUserCompanies(user.id).length > 0 ? (
-                          <div className="ml-4">
-                            {getUserCompanies(user.id).map(
-                              (companyName, idx) => (
-                                <div
-                                  key={`company-${user.id}-${idx}`}
-                                  className="border rounded-lg p-2 bg-slate-50 mb-2"
-                                >
-                                  <p className="text-sm">{companyName}</p>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <p className="ml-4 text-gray-500">
-                            No companies assigned
-                          </p>
-                        )}
+                        <p className="font-semibold mb-3">
+                          Company and Location
+                        </p>
+                        {(() => {
+                          // Get all records for this user
+                          const userRecords = users.filter(
+                            (u: any) => u.id === user.id
+                          )
+
+                          // Group by company and collect location IDs
+                          const companyGroups = new Map<number, Set<number>>()
+
+                          userRecords.forEach((record: any) => {
+                            if (record.companyId) {
+                              if (!companyGroups.has(record.companyId)) {
+                                companyGroups.set(record.companyId, new Set())
+                              }
+                              if (record.locationId) {
+                                companyGroups
+                                  .get(record.companyId)!
+                                  .add(record.locationId)
+                              }
+                            }
+                          })
+
+                          if (companyGroups.size === 0) {
+                            return (
+                              <p className="ml-4 text-gray-500">
+                                No companies and locations assigned
+                              </p>
+                            )
+                          }
+
+                          return (
+                            <div className="space-y-3">
+                              {Array.from(companyGroups.entries()).map(
+                                ([companyId, locationIds]) => {
+                                  const company = companies.find(
+                                    (c: any) => c.companyId === companyId
+                                  )
+
+                                  // Filter locations that belong to this specific company
+                                  const companyLocations = Array.from(
+                                    locationIds
+                                  )
+                                    .map((locId) =>
+                                      getLoaction.find(
+                                        (l: any) =>
+                                          l.locationId === locId &&
+                                          l.companyId === companyId
+                                      )
+                                    )
+                                    .filter(Boolean)
+
+                                  return (
+                                    <div
+                                      key={`company-group-${companyId}`}
+                                      className=" rounded-md p-3 bg-white"
+                                    >
+                                      <div className="flex items-start gap-2 mb-2">
+                                        <Checkbox
+                                          checked={true}
+                                          disabled
+                                          className="mt-0.5 rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                                          style={{
+                                            borderRadius: '50%', // make it circle
+                                          }}
+                                        />
+
+                                        <p className="font-semibold text-sm">
+                                          {company?.companyName ||
+                                            'Unknown Company'}
+                                        </p>
+                                      </div>
+                                      {companyLocations.length > 0 ? (
+                                        <div className="ml-6 grid grid-cols-2 gap-x-4 gap-y-1">
+                                          {companyLocations.map(
+                                            (location: any, idx) => (
+                                              <div
+                                                key={`location-${location.locationId}-${idx}`}
+                                                className="flex items-start gap-2"
+                                              >
+                                                <div className="w-2 h-2 bg-black mt-1" />{' '}
+                                                {/* Square */}
+                                                <p className="text-sm text-black">
+                                                  {location.address}
+                                                </p>
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <p className="ml-6 text-sm text-gray-400">
+                                          No specific location
+                                        </p>
+                                      )}
+                                    </div>
+                                  )
+                                }
+                              )}
+                            </div>
+                          )
+                        })()}
                       </div>
                     </div>
                   </DialogContent>
@@ -683,7 +816,6 @@ export default function UsersList() {
           ))}
         </TableBody>
       </Table>
-
       {/* Change Password Dialog */}
       <Dialog
         open={isPasswordDialogOpen}
@@ -760,8 +892,8 @@ export default function UsersList() {
               >
                 Cancel
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 disabled={isChangingPassword}
                 onClick={handleChangePassword}
               >
@@ -856,7 +988,11 @@ export default function UsersList() {
 // } from '@/components/ui/select'
 // import { Alert, AlertDescription } from '@/components/ui/alert'
 // import { EyeIcon, EyeOffIcon } from 'lucide-react'
-// import { getAllCompanies, getAllRoles } from '@/api/common-shared-api'
+// import {
+//   getAllCompanies,
+//   getAllLocations,
+//   getAllRoles,
+// } from '@/api/common-shared-api'
 // import { tokenAtom, useInitializeUser } from '@/utils/user'
 // import { useAtom } from 'jotai'
 // import { RoleData } from '@/api/create-user-api'
@@ -865,6 +1001,7 @@ export default function UsersList() {
 // import { useRouter } from 'next/navigation'
 // import { changeNewPassword } from '@/api/change-password-api'
 // import { CompanyType } from '@/api/company-api'
+// import { LocationData } from '@/utils/type'
 
 // interface User {
 //   id: number
@@ -873,6 +1010,7 @@ export default function UsersList() {
 //   roleId: number | null
 //   active: boolean
 //   roleName?: string
+//   companyId?: number | null
 // }
 
 // interface UpdateUserData {
@@ -881,6 +1019,7 @@ export default function UsersList() {
 //   roleName?: string
 //   roleId?: number | null
 //   active?: boolean
+//   companyIds?: number[]
 // }
 
 // const USERS_PER_PAGE = 10
@@ -915,6 +1054,7 @@ export default function UsersList() {
 //   const [passwordError, setPasswordError] = useState('')
 //   const [isChangingPassword, setIsChangingPassword] = useState(false)
 //   const [companies, setCompanies] = useState<CompanyType[]>([])
+//   const [getLoaction, setGetLocation] = useState<LocationData[]>([])
 //   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 //   const fetchCompanies = React.useCallback(async () => {
@@ -937,6 +1077,12 @@ export default function UsersList() {
 //     }
 //   }, [token])
 
+//   const fetchLocation = React.useCallback(async () => {
+//     if (!token) return
+//     const response = await getAllLocations(token)
+//     setGetLocation(response.data ?? [])
+//   }, [token])
+
 //   const fetchUsers = React.useCallback(async () => {
 //     if (!token) return
 //     const data = await GetUsersByRoles(token)
@@ -953,7 +1099,7 @@ export default function UsersList() {
 //       })
 //     } else {
 //       setUsers(data.data)
-//       console.log("show all user with company and location :", data.data)
+//       console.log('show all user with company and location :', data.data)
 //     }
 //   }, [token, router])
 
@@ -994,12 +1140,13 @@ export default function UsersList() {
 //     fetchUsers()
 //     fetchRoles()
 //     fetchCompanies()
-//   }, [fetchUsers, fetchRoles, router, fetchCompanies])
+//     fetchLocation()
+//   }, [fetchUsers, fetchRoles, router, fetchCompanies, fetchLocation])
 
 //   // Get unique users by grouping by user id (preserve all user data)
 //   const uniqueUsers = React.useMemo(() => {
 //     const userMap = new Map<number, any>()
-//     users.forEach(user => {
+//     users.forEach((user) => {
 //       if (!userMap.has(user.id)) {
 //         userMap.set(user.id, user)
 //       }
@@ -1015,24 +1162,34 @@ export default function UsersList() {
 //   const currentUsers = uniqueUsers.slice(startIndex, endIndex)
 
 //   const handleEditUser = (user: User) => {
+//     // Get all company IDs for this user
+//     const userCompanyIds = users
+//       .filter((u: any) => u.id === user.id)
+//       .map((u: any) => u.companyId)
+//       .filter((id: number | null) => id !== null) as number[]
+
 //     setEditingUser({
 //       ...user,
 //       roleId: user.roleId ?? user.roleId,
 //       voucherTypes: user.voucherTypes || [],
 //       username: user.username || '',
-//     })
+//       companyIds: Array.from(new Set(userCompanyIds)), // Store unique company IDs
+//     } as any)
 //     setIsEditDialogOpen(true)
 //   }
 
 //   const handleSaveEdit = async () => {
 //     if (editingUser) {
 //       try {
-//         const updateData: UpdateUserData = {
+//         const updateData: any = {
 //           username: editingUser.username,
 //           voucherTypes: editingUser.voucherTypes,
 //           roleId: editingUser.roleId === 0 ? null : editingUser.roleId,
 //           active: editingUser.active,
+//           companyIds: (editingUser as any).companyIds || [],
 //         }
+
+//         console.log('Updating user with data:', updateData)
 
 //         const response = await fetch(
 //           `${API_BASE_URL}/api/auth/users/${editingUser.id}`,
@@ -1045,19 +1202,19 @@ export default function UsersList() {
 //             body: JSON.stringify(updateData),
 //           }
 //         )
+
+//         console.log('Response status:', response.status)
+
 //         if (!response.ok) {
 //           const errorData = await response.json()
+//           console.error('Error response:', errorData)
 //           throw new Error(errorData.message || 'Failed to update user')
 //         }
 
 //         const result = await response.json()
+//         console.log('Update result:', result)
 
 //         if (result.status === 'success') {
-//           setUsers(
-//             users.map((user) =>
-//               user.id === editingUser.id ? { ...editingUser } : user
-//             )
-//           )
 //           setEditingUser(null)
 //           setIsEditDialogOpen(false)
 //           await refreshAttachment()
@@ -1071,6 +1228,7 @@ export default function UsersList() {
 //       } catch (error) {
 //         console.error('Error updating user:', error)
 //         toast({
+//           variant: 'destructive',
 //           title: 'Error',
 //           description: `Error updating user: ${error instanceof Error ? error.message : 'Unknown error'}`,
 //         })
@@ -1092,6 +1250,16 @@ export default function UsersList() {
 //         ? [...prev.voucherTypes, voucherType]
 //         : prev.voucherTypes.filter((type) => type !== voucherType)
 //       return { ...prev, voucherTypes: updatedVoucherTypes }
+//     })
+//   }
+
+//   const handleCompanyChange = (companyId: number, checked: boolean) => {
+//     setEditingUser((prev: any) => {
+//       if (!prev) return null
+//       const updatedCompanyIds = checked
+//         ? [...(prev.companyIds || []), companyId]
+//         : (prev.companyIds || []).filter((id: number) => id !== companyId)
+//       return { ...prev, companyIds: updatedCompanyIds }
 //     })
 //   }
 
@@ -1225,10 +1393,14 @@ export default function UsersList() {
 
 //     // Get all records for this user from the original users array (not uniqueUsers)
 //     const userRecords = users.filter((u: any) => u.id === userId)
-    
+
 //     // Get unique company IDs
 //     const uniqueCompanyIds = Array.from(
-//       new Set(userRecords.map((record: any) => record.companyId).filter(id => id !== null))
+//       new Set(
+//         userRecords
+//           .map((record: any) => record.companyId)
+//           .filter((id) => id !== null)
+//       )
 //     )
 
 //     // Map company IDs to company names
@@ -1241,6 +1413,38 @@ export default function UsersList() {
 
 //     console.log(`User ${userId} companies:`, companyNames)
 //     return companyNames as string[]
+//   }
+
+//   // Get user's locations from the users array
+//   const getUserLocations = (userId: number) => {
+//     if (!Array.isArray(users) || !Array.isArray(getLoaction)) {
+//       return []
+//     }
+
+//     // Get all records for this user from the original users array
+//     const userRecords = users.filter((u: any) => u.id === userId)
+
+//     // Get unique location IDs
+//     const uniqueLocationIds = Array.from(
+//       new Set(
+//         userRecords
+//           .map((record: any) => record.locationId)
+//           .filter((id) => id !== null)
+//       )
+//     )
+
+//     // Map location IDs to location names
+//     const locationNames = uniqueLocationIds
+//       .map((locationId) => {
+//         const location = getLoaction.find(
+//           (l: any) => l.locationId === locationId
+//         )
+//         return location ? location.address : null
+//       })
+//       .filter((name) => name !== null)
+
+//     console.log(`User ${userId} locations:`, locationNames)
+//     return locationNames as string[]
 //   }
 
 //   return (
@@ -1320,6 +1524,28 @@ export default function UsersList() {
 //                           </p>
 //                         )}
 //                       </div>
+//                       <div>
+//                         <p className="font-semibold mb-2">Locations:</p>
+//                         {getUserLocations(user.id).length > 0 ? (
+//                           <div className="ml-4">
+//                             {getUserLocations(user.id).map(
+//                               (locationName, idx) => (
+//                                 <div
+//                                   key={`location-${user.id}-${idx}`}
+//                                   className="border rounded-lg p-2 bg-slate-50 mb-2"
+//                                 >
+//                                   <p className="text-sm">{locationName}</p>
+//                                 </div>
+//                               )
+//                             )}
+//                           </div>
+//                         ) : (
+//                           <p className="ml-4 text-gray-500">
+//                             No locations assigned
+//                           </p>
+//                         )}
+//                       </div>
+
 //                     </div>
 //                   </DialogContent>
 //                 </Dialog>
@@ -1424,6 +1650,41 @@ export default function UsersList() {
 //                           </div>
 //                         ))}
 //                       </div>
+
+//                       <Label htmlFor="companies" className="mt-4 block">
+//                         Companies
+//                       </Label>
+//                       <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+//                         {companies
+//                           .filter((company) => company.companyId !== undefined)
+//                           .map((company) => (
+//                             <div
+//                               key={company.companyId}
+//                               className="flex items-center space-x-2"
+//                             >
+//                               <Checkbox
+//                                 id={`company-${company.companyId}`}
+//                                 checked={
+//                                   (editingUser as any)?.companyIds?.includes(
+//                                     company.companyId!
+//                                   ) || false
+//                                 }
+//                                 onCheckedChange={(checked) =>
+//                                   handleCompanyChange(
+//                                     company.companyId!,
+//                                     checked as boolean
+//                                   )
+//                                 }
+//                               />
+//                               <Label
+//                                 htmlFor={`company-${company.companyId}`}
+//                                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+//                               >
+//                                 {company.companyName}
+//                               </Label>
+//                             </div>
+//                           ))}
+//                       </div>
 //                     </div>
 //                     <DialogFooter>
 //                       <Button onClick={handleSaveEdit}>Submit</Button>
@@ -1520,8 +1781,8 @@ export default function UsersList() {
 //               >
 //                 Cancel
 //               </Button>
-//               <Button 
-//                 type="button" 
+//               <Button
+//                 type="button"
 //                 disabled={isChangingPassword}
 //                 onClick={handleChangePassword}
 //               >
@@ -1575,4 +1836,3 @@ export default function UsersList() {
 //     </div>
 //   )
 // }
-

@@ -1099,6 +1099,7 @@ export interface GetBankLedger {
   accountsdetails: string | null
   notes: string | null
   partner: string | null
+  date: string
 }
 
 //edit journal notes
@@ -1298,6 +1299,7 @@ export interface PartnerLedgerType {
   partner: string
   coscenter: string
   department: string
+  date: string 
 }
 
 //cash flow statement type

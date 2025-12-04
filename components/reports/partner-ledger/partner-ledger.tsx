@@ -12,6 +12,7 @@ import { getPartnerLedgerByDate } from '@/api/partner-ledger-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { date } from 'zod'
 
 export default function PartnerLedger() {
   //getting userData from jotai atom component
@@ -25,13 +26,13 @@ export default function PartnerLedger() {
 
   const flattenData = (data: PartnerLedgerType[]) => {
     return data.map((item) => ({
-      VoucherID: item.voucherid,
+      date: item.date,
       VoucherNo: item.voucherno,
       AccountName: item.accountname,
       Debit: item.debit,
       Credit: item.credit,
-      Notes: item.notes,
       Partner: item.partner,
+      Notes: item.notes,
       CostCenter: item.coscenter,
       Department: item.department,
     }))
@@ -167,6 +168,7 @@ export default function PartnerLedger() {
          setTransactions(
            response.data && response.data.length > 0 ? response.data : []
          )
+         console.log(response.data)
        }
      } catch (error) {
        console.error('Error fetching transactions:', error)

@@ -1,7 +1,7 @@
 'use client'
 
-import { GetBankLedger } from "@/utils/type"
-import { useEffect, useState } from "react"
+import { GetBankLedger } from '@/utils/type'
+import { useEffect, useState } from 'react'
 
 interface BankLedgerListProps {
   transactions?: GetBankLedger[]
@@ -56,9 +56,7 @@ export default function BankLedgerList({
   // 🚫 No data case
   if (displayData.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        No available data
-      </div>
+      <div className="text-center py-10 text-gray-500">No available data</div>
     )
   }
 
@@ -68,12 +66,13 @@ export default function BankLedgerList({
       <table className="min-w-full bg-white border border-gray-300">
         <thead className="bg-gray-100">
           <tr>
+            <th className="py-2 px-4 border-b text-left">Date</th>
             <th className="py-2 px-4 border-b text-left">Voucher No</th>
             <th className="py-2 px-4 border-b text-left">Account Name</th>
             <th className="py-2 px-4 border-b text-right">Debit</th>
             <th className="py-2 px-4 border-b text-right">Credit</th>
-            <th className="py-2 px-4 border-b text-left">Notes</th>
             <th className="py-2 px-4 border-b text-left">Partner</th>
+            <th className="py-2 px-4 border-b text-left">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -82,6 +81,7 @@ export default function BankLedgerList({
               key={`${transaction.voucherid}-${index}`}
               className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
             >
+              <td className="py-2 px-4 border-b">{transaction.date}</td>
               <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
               <td className="py-2 px-4 border-b">{transaction.accountname}</td>
               <td className="py-2 px-4 border-b text-right">
@@ -90,8 +90,10 @@ export default function BankLedgerList({
               <td className="py-2 px-4 border-b text-right">
                 {transaction.credit.toLocaleString()}
               </td>
+              <td className="py-2 px-4 border-b">
+                {transaction.partner ?? '—'}
+              </td>
               <td className="py-2 px-4 border-b">{transaction.notes ?? '—'}</td>
-              <td className="py-2 px-4 border-b">{transaction.partner ?? '—'}</td>
             </tr>
           ))}
         </tbody>
