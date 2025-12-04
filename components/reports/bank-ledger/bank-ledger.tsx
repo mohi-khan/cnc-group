@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
+import { date } from 'zod'
 
 export default function BankLedger() {
   useInitializeUser()
@@ -132,12 +133,13 @@ export default function BankLedger() {
     const worksheet = XLSX.utils.json_to_sheet(
       transactions.map((transaction, index) => ({
         'S.No': index + 1,
+        date: transaction.date,
         'Voucher No': transaction.voucherno,
         'Account Name': transaction.accountname,
         Debit: transaction.debit,
         Credit: transaction.credit,
-        Notes: transaction.notes ?? '',
         Partner: transaction.partner ?? '',
+        Notes: transaction.notes ?? '',
       }))
     )
 
