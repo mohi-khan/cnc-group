@@ -85,6 +85,9 @@ interface Voucher {
   journalDetails?: JournalDetail[]
   createdBy: number
   createdByName?: string
+  accountName?: string
+  costCenterName?: string
+  departmentName?: string
 }
 
 export interface Column {
@@ -744,165 +747,172 @@ const VoucherList: React.FC<VoucherListProps> = ({
           </Button>
         </div>
       )}
-
-      <Table className="border shadow-md">
-        <TableHeader className="sticky top-28 bg-slate-200 shadow-md gap-1 ">
-          <TableRow>
-            {columns.map(({ key, label }) => (
-              <TableHead
-                key={key}
-                className="cursor-pointer text-center "
-                onClick={() => handleSort(key)}
-              >
-                <Button
-                  variant="ghost"
-                  className="hover:bg-transparent text-xs gap-1 min-h-1"
+      <div className="max-h-[500px] overflow-y-auto">
+        <Table className="border shadow-md">
+          <TableHeader className="sticky top-0 bg-slate-200 shadow-md gap-1 ">
+            <TableRow>
+              {columns.map(({ key, label }) => (
+                <TableHead
+                  key={key}
+                  className="cursor-pointer text-center "
+                  onClick={() => handleSort(key)}
                 >
-                  {label}
-                  <ArrowUpDown className="h-1 w-1" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    className="hover:bg-transparent text-xs gap-1 min-h-1"
+                  >
+                    {label}
+                    <ArrowUpDown className="h-1 w-1" />
+                  </Button>
+                </TableHead>
+              ))}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-0">
+                  <span>Action</span>
+                  {draftCashVouchers.length > 0 && (
+                    <Checkbox
+                      checked={selectAll}
+                      onCheckedChange={handleSelectAll}
+                      className="border border-black"
+                    />
+                  )}
+                </div>
               </TableHead>
-            ))}
-            <TableHead className="text-center">
-              <div className="flex items-center justify-center gap-0">
-                <span>Action</span>
-                {draftCashVouchers.length > 0 && (
-                  <Checkbox
-                    checked={selectAll}
-                    onCheckedChange={handleSelectAll}
-                    className="border border-black"
-                  />
-                )}
-              </div>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length + 1}
-                className="text-center py-4"
-              >
-                <Loader />
-              </TableCell>
-            </TableRow>
-          ) : currentVouchers.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length + 1}
-                className="text-center py-4"
-              >
-                No voucher is available.
-              </TableCell>
-            </TableRow>
-          ) : (
-            currentVouchers.map((voucher) => {
-              const isCurrentlyPosting = isPosting[voucher.voucherid]
-              const isButtonDisabled = voucher.state !== 0 || isCurrentlyPosting
-              const isDraftCashVoucher =
-                voucher.state === 0 && voucher.journaltype === 'Cash Voucher'
-              return (
-                <TableRow key={voucher.voucherid}>
-                  {columns.map(({ key }) => (
-                    <TableCell key={key} className="text-center text-xs">
-                      {key === 'voucherno' ? (
-                        <Tooltip open={hoveredVoucherId === voucher.voucherid}>
-                          <TooltipTrigger asChild>
-                            <Link
-                              target="_blank"
-                              href={linkGenerator(voucher.voucherid)}
-                              className="text-blue-600 hover:underline"
-                              onMouseEnter={() =>
-                                handleVoucherHoverStart(voucher.voucherid)
-                              }
-                              onMouseLeave={handleVoucherHoverEnd}
-                            >
-                              {voucher[key]}
-                            </Link>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="right"
-                            align="start"
-                            className="p-2"
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + 1}
+                  className="text-center py-4"
+                >
+                  <Loader />
+                </TableCell>
+              </TableRow>
+            ) : currentVouchers.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + 1}
+                  className="text-center py-4"
+                >
+                  No voucher is available.
+                </TableCell>
+              </TableRow>
+            ) : (
+              currentVouchers.map((voucher) => {
+                const isCurrentlyPosting = isPosting[voucher.voucherid]
+                const isButtonDisabled =
+                  voucher.state !== 0 || isCurrentlyPosting
+                const isDraftCashVoucher =
+                  voucher.state === 0 && voucher.journaltype === 'Cash Voucher'
+                return (
+                  <TableRow key={voucher.voucherid}>
+                    {columns.map(({ key }) => (
+                      <TableCell key={key} className="text-center text-xs">
+                        {key === 'voucherno' ? (
+                          <Tooltip
+                            open={hoveredVoucherId === voucher.voucherid}
                           >
-                            {renderTooltipContent()}
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : key === 'state' ? (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            voucher[key] === 0
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {voucher[key] === 0 ? 'Draft' : 'Posted'}
-                        </span>
-                      ) : key === 'totalamount' ? (
-                        <span className="font-mono text-center block">
-                          {voucher.currency && `${voucher.currency} `}
-                          {voucher[key].toFixed(2)}
-                        </span>
-                      ) : key === 'createdTime' ? (
-                        // <-- FORMAT createdTime here
-                        (() => {
-                          const d = new Date(voucher.createdTime)
-                          const year = d.getFullYear()
-                          const month = String(d.getMonth() + 1).padStart(
-                            2,
-                            '0'
-                          )
-                          const day = String(d.getDate()).padStart(2, '0')
-                          const hour = String(d.getHours()).padStart(2, '0')
-                          const minute = String(d.getMinutes()).padStart(2, '0')
-                          return `${year}-${month}-${day} [${hour}:${minute}]`
-                        })()
-                      ) : Array.isArray(voucher[key]) ? (
-                        JSON.stringify(voucher[key])
-                      ) : (
-                        voucher[key]
-                      )}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-left">
-                    <div className="flex gap-2 items-center justify-center">
-                      <Button
-                        disabled={voucher.state !== 0}
-                        variant="outline"
-                        onClick={() => openEditPopup(voucher)}
-                        className="min-w-[30px] text-xs"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        disabled={isButtonDisabled}
-                        variant="outline"
-                        onClick={() => handlePostJournal(voucher.voucherid)}
-                        className="min-w-[20px] text-xs"
-                      >
-                        {isCurrentlyPosting ? 'Posting...' : 'Post'}
-                      </Button>
-                      {isDraftCashVoucher && (
-                        <Checkbox
-                          checked={selectedIds.includes(voucher.voucherid)}
-                          onCheckedChange={(checked) =>
-                            handleIndividualSelection(
-                              voucher.voucherid,
-                              checked as boolean
+                            <TooltipTrigger asChild>
+                              <Link
+                                target="_blank"
+                                href={linkGenerator(voucher.voucherid)}
+                                className="text-blue-600 hover:underline"
+                                onMouseEnter={() =>
+                                  handleVoucherHoverStart(voucher.voucherid)
+                                }
+                                onMouseLeave={handleVoucherHoverEnd}
+                              >
+                                {voucher[key]}
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="right"
+                              align="start"
+                              className="p-2"
+                            >
+                              {renderTooltipContent()}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : key === 'state' ? (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              voucher[key] === 0
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {voucher[key] === 0 ? 'Draft' : 'Posted'}
+                          </span>
+                        ) : key === 'totalamount' ? (
+                          <span className="font-mono text-center block">
+                            {voucher.currency && `${voucher.currency} `}
+                            {voucher[key].toFixed(2)}
+                          </span>
+                        ) : key === 'createdTime' ? (
+                          // <-- FORMAT createdTime here
+                          (() => {
+                            const d = new Date(voucher.createdTime)
+                            const year = d.getFullYear()
+                            const month = String(d.getMonth() + 1).padStart(
+                              2,
+                              '0'
                             )
-                          }
-                        />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })
-          )}
-        </TableBody>
-      </Table>
+                            const day = String(d.getDate()).padStart(2, '0')
+                            const hour = String(d.getHours()).padStart(2, '0')
+                            const minute = String(d.getMinutes()).padStart(
+                              2,
+                              '0'
+                            )
+                            return `${year}-${month}-${day} [${hour}:${minute}]`
+                          })()
+                        ) : Array.isArray(voucher[key]) ? (
+                          JSON.stringify(voucher[key])
+                        ) : (
+                          voucher[key]
+                        )}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-left">
+                      <div className="flex gap-2 items-center justify-center">
+                        <Button
+                          disabled={voucher.state !== 0}
+                          variant="outline"
+                          onClick={() => openEditPopup(voucher)}
+                          className="min-w-[30px] text-xs"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          disabled={isButtonDisabled}
+                          variant="outline"
+                          onClick={() => handlePostJournal(voucher.voucherid)}
+                          className="min-w-[20px] text-xs"
+                        >
+                          {isCurrentlyPosting ? 'Posting...' : 'Post'}
+                        </Button>
+                        {isDraftCashVoucher && (
+                          <Checkbox
+                            checked={selectedIds.includes(voucher.voucherid)}
+                            onCheckedChange={(checked) =>
+                              handleIndividualSelection(
+                                voucher.voucherid,
+                                checked as boolean
+                              )
+                            }
+                          />
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {totalPages > 1 && (
         <Pagination
