@@ -63,7 +63,7 @@ export default function BankLedgerList({
   // ✅ Table render
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-300">
+      <table className="min-w-full bg-white border border-gray-300 text-sm">
         <thead className="bg-gray-100">
           <tr>
             <th className="py-2 px-4 border-b text-left">Date</th>

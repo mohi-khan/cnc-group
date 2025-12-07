@@ -1286,6 +1286,7 @@ export interface GeneralLedgerType {
   partner: string
   coscenter: string
   department: string
+  bankaccountnumber: string 
 }
 
 export interface PartnerLedgerType {

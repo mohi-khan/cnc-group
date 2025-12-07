@@ -336,6 +336,8 @@ const VoucherList: React.FC<VoucherListProps> = ({
   const isDayBook =
     pathname.includes('day-book') || pathname.includes('daybook')
   const NotDaybook = !isDayBook
+  const isCashBook = pathname.includes('cash-book') || pathname.includes('cashbook')
+    const NotCashBook = !isCashBook
 
   // Get only draft Cash vouchers for selection
   const draftCashVouchers = currentVouchers.filter(
@@ -721,7 +723,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
                 {openingBalance !== null ? openingBalance : '0.00'}
               </div>
             </div> */}
-            {NotDaybook && (
+            {NotDaybook && NotCashBook && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Opening Balance</Label>
                 <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
