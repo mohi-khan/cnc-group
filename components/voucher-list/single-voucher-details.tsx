@@ -547,6 +547,7 @@ export default function SingleVoucherDetails() {
       journalDetails: values.journalDetails.map((detail) => ({
         ...detail,
         createdBy: userData?.userId ?? 0,
+        bankaccountid: null,
       })),
     }
 

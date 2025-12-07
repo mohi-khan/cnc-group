@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getCashJournalByDate } from '@/api/cash-books-api'
+import { tr } from 'date-fns/locale'
 
 const CashBooks = () => {
   const router = useRouter()
@@ -113,7 +115,60 @@ const CashBooks = () => {
     return data.map((location) => location.location.locationId)
   }
 
-  const getallVoucher = useCallback(
+  // const getCashJournalVoucher = useCallback(
+  //   async (
+  //     company: number[],
+  //     location: number[],
+  //     start: string,
+  //     end: string
+  //   ) => {
+  //     try {
+  //       const voucherQuery: JournalQueryDateRange = {
+  //         startDate: start,
+  //         endDate: end,
+  //         companyId: company,
+  //         locationId: location,
+  //       }
+
+  //       const response = await getCashJournalByDate(voucherQuery, token)
+
+  //       if (!response.data) {
+  //         throw new Error('No data received from server')
+  //       }
+
+  //       let filteredData = Array.isArray(response.data) ? response.data : []
+
+  //       // Filter only Cash Vouchers
+  //       filteredData = filteredData.filter(
+  //         (item) => item.journaltype === 'Cash Voucher'
+  //       )
+
+  //       // Role check: If not admin, show only user's own vouchers
+  //       if (userData?.roleId !== 1) {
+  //         filteredData = filteredData.filter(
+  //           (item) => item.createdBy === userData?.userId
+  //         )
+  //       }
+
+  //       // Sort by newest created time
+  //       filteredData = filteredData.sort(
+  //         (a, b) =>
+  //           new Date(b.createdTime).getTime() -
+  //           new Date(a.createdTime).getTime()
+  //       )
+
+  //       setVoucherGrid(filteredData)
+
+  //       console.log('🔥 Filtered cash voucher data:', filteredData)
+  //     } catch (error) {
+        
+  //       setVoucherGrid([])
+  //       throw error
+  //     }
+  //   },
+  //   [token, userData]
+  // )
+  const getCashJournalVoucher = useCallback(
     async (
       company: number[],
       location: number[],
@@ -128,18 +183,17 @@ const CashBooks = () => {
           locationId: location,
         }
 
-        const response = await getAllVoucherByDate(voucherQuery, token)
+        const response = await getCashJournalByDate(voucherQuery, token)
 
         if (!response.data) {
           throw new Error('No data received from server')
         }
 
-        let filteredData = Array.isArray(response.data) ? response.data : []
+       let filteredData = Array.isArray(response.data) ? response.data : []
 
-        // Filter only Cash Vouchers
-        filteredData = filteredData.filter(
-          (item) => item.journaltype === 'Cash Voucher'
-        )
+       // Show only isCash = false
+       filteredData = filteredData.filter((item) => item.isCash === false)
+
 
         // Role check: If not admin, show only user's own vouchers
         if (userData?.roleId !== 1) {
@@ -147,6 +201,17 @@ const CashBooks = () => {
             (item) => item.createdBy === userData?.userId
           )
         }
+
+        // ❗ Remove duplicates by journalId + createdTime
+        const uniqueMap = new Map()
+        filteredData.forEach((item) => {
+          const uniqueKey = `${item.journalId}-${item.createdTime}`
+          if (!uniqueMap.has(uniqueKey)) {
+            uniqueMap.set(uniqueKey, item)
+          }
+        })
+
+        filteredData = Array.from(uniqueMap.values())
 
         // Sort by newest created time
         filteredData = filteredData.sort(
@@ -159,13 +224,13 @@ const CashBooks = () => {
 
         console.log('🔥 Filtered cash voucher data:', filteredData)
       } catch (error) {
-        
         setVoucherGrid([])
         throw error
       }
     },
     [token, userData]
   )
+
 
   const fetchVoucherData = useCallback(
     async (showRefreshingState = false) => {
@@ -178,7 +243,12 @@ const CashBooks = () => {
       try {
         const mycompanies = getCompanyIds(companies)
         const mylocations = getLocationIds(locations)
-        await getallVoucher(mycompanies, mylocations, startDate, endDate)
+        await getCashJournalVoucher(
+          mycompanies,
+          mylocations,
+          startDate,
+          endDate
+        )
 
         if (showRefreshingState) {
           toast({
@@ -187,8 +257,6 @@ const CashBooks = () => {
           })
         }
       } catch (error) {
-        
-       
       } finally {
         if (showRefreshingState) {
           setIsRefreshing(false)
@@ -197,7 +265,7 @@ const CashBooks = () => {
         }
       }
     },
-    [companies, locations, startDate, endDate, getallVoucher, toast]
+    [companies, locations, startDate, endDate, getCashJournalVoucher, toast]
   )
 
   useEffect(() => {
@@ -209,7 +277,7 @@ const CashBooks = () => {
     locations,
     startDate,
     endDate,
-    getallVoucher,
+    getCashJournalVoucher,
     toast,
     fetchVoucherData,
   ])
@@ -242,9 +310,12 @@ const CashBooks = () => {
     { key: 'voucherno', label: 'Voucher No' },
     { key: 'date', label: 'Date' },
     { key: 'createdTime', label: 'Created At' },
-    { key: 'journaltype', label: 'Voucher Type' },
+    // { key: 'journaltype', label: 'Voucher Type' },
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },
+    { key: 'accountName', label: 'Account Name' },
+    { key: 'costCenterName', label: 'Cost Center' },
+    { key: 'departmentName', label: 'Department' },
     { key: 'totalamount', label: 'Total Amount' },
     { key: 'createdByName', label: 'Created By' },
     { key: 'state', label: 'Status' },
@@ -324,7 +395,7 @@ const CashBooks = () => {
         </div>
       </div>
 
-      <VoucherList
+      <VoucherList 
         vouchers={filteredVouchers}
         columns={columns}
         isLoading={isLoading}
