@@ -223,7 +223,7 @@ export default function SingleTrialBalanceList({
         boxSizing: 'border-box',
       }}
     >
-      <table className="min-w-full table-fixed bg-white border border-gray-300">
+      <table className="min-w-full table-fixed bg-white border border-gray-300 text-sm">
         <thead className="pdf-table-header sticky top-0 bg-white z-10">
           <tr className="bg-gray-100">
             <SortableHeader field="voucherno">Voucher No</SortableHeader>
@@ -267,8 +267,8 @@ export default function SingleTrialBalanceList({
                 {index === 0
                   ? 'Opening Balance'
                   : index === sortedTransactions.length - 1
-                  ? 'Closing Balance'
-                  : transaction.accountname}
+                    ? 'Closing Balance'
+                    : `${transaction.accountname || '—'} (${transaction.bankaccountnumber || '—'})`}
               </td>
               <td className="py-2 px-2 border-b text-left w-[300px]">
                 {transaction.notes}
