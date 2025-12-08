@@ -83,7 +83,7 @@ export default function BankLedgerList({
             >
               <td className="py-2 px-4 border-b">{transaction.date}</td>
               <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
-              <td className="py-2 px-4 border-b">{transaction.accountname}</td>
+              <td className="py-2 px-4 border-b">{`${transaction.accountname} ${-transaction.bankaccountnumber || ' '}`}</td>
               <td className="py-2 px-4 border-b text-right">
                 {transaction.debit.toLocaleString()}
               </td>

@@ -9,6 +9,7 @@ import {
   GetAssetData,
   GetDepartment,
   LocationData,
+  Permission,
   ResPartner,
 } from '@/utils/type'
 import { CompanyType } from './company-api'
@@ -37,7 +38,7 @@ export async function getAllCompanies(token: string) {
     },
   })
 }
-export async function getFactoryLocaiton(token: string,companyId:number) {
+export async function getFactoryLocaiton(token: string, companyId: number) {
   return fetchApi<number>({
     url: `api/location/getFactoryLocaiton/${companyId}`,
     method: 'GET',
@@ -71,6 +72,37 @@ export async function getAllRoles(token: string) {
     },
   })
 }
+
+// Get all Permission Api
+export async function getAllPermissions(token: string) {
+  return fetchApi<Permission[]>({
+    url: 'api/roles/get-all-permissions',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+//update role permissions api
+export async function updateRolePermissions(
+  roleId: number,
+  permissions: number[], // ← Change from string[] to number[]
+  token: string
+) {
+  return fetchApi({
+    url: `api/roles/update-role-permissions/${roleId}`,
+    method: 'PUT',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: { permissions }
+  });
+}
+
+
 
 // All Department Get Api
 export async function getAllDepartments(token: string) {
@@ -107,7 +139,7 @@ export async function getResPartnersBySearch(search: string, token: string) {
   })
 }
 
-export async function getPartnerById(id:number, token: string) {
+export async function getPartnerById(id: number, token: string) {
   console.log(id);
   return fetchApi<ResPartner>({
     url: `api/res-partner/getbyId/${id}`,

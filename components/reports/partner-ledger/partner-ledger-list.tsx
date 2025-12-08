@@ -18,7 +18,7 @@ export default function PartnerLedgerList({
 
   return (
     <div className="overflow-x-auto" ref={targetRef}>
-      <table className="min-w-full bg-white border border-gray-300">
+      <table className="min-w-full bg-white border border-gray-300 text-sm">
         <thead className="pdf-table-header">
           <tr className="bg-gray-100">
             <th className="py-2 px-4 border-b">Date</th>
@@ -37,7 +37,7 @@ export default function PartnerLedgerList({
             <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
               <td className="py-2 px-4 border-b">{transaction.date}</td>
               <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
-              <td className="py-2 px-4 border-b">{transaction.accountname}</td>
+              <td className="py-2 px-4 border-b">{`${transaction.accountname} ${-transaction.bankaccountnumber || ' '}`}</td>
               <td className="py-2 px-4 border-b">{transaction.debit}</td>
               <td className="py-2 px-4 border-b">{transaction.credit}</td>
               <td className="py-2 px-4 border-b">{transaction.partner}</td>
