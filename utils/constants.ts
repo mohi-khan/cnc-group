@@ -711,6 +711,7 @@ export const MENU_ITEMS: MenuItem[] = [
           { name: "Posting Period", source: "/settings/posting-period" },
           { name: "Number Series", source: "/settings/number-series" },
           { name: "Exchange", source: "/settings/exchange" },
+          { name: "Role Permission", source: "/settings/permission" },
         ],
       },
     ],

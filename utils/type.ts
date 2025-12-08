@@ -1100,6 +1100,7 @@ export interface GetBankLedger {
   notes: string | null
   partner: string | null
   date: string
+  bankaccountnumber: string 
 }
 
 //edit journal notes
@@ -1301,6 +1302,7 @@ export interface PartnerLedgerType {
   coscenter: string
   department: string
   date: string 
+  bankaccountnumber: string
 }
 
 //cash flow statement type
@@ -2366,3 +2368,10 @@ export type BudgetReportType = {
   closingDebit: number;
   closingCredit: number;
 };
+
+//permissions type
+export interface Permission {
+  permissionId: number;
+  permissionName: string;
+}
+
