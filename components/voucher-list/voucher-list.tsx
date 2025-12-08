@@ -727,7 +727,7 @@ const VoucherList: React.FC<VoucherListProps> = ({
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Opening Balance</Label>
                 <div className="p-2 border rounded bg-white font-mono text-right font-semibold">
-                  {openingBalance !== null ? openingBalance.toFixed(2) : '0.00'}
+                  {openingBalance !== null ? openingBalance : '0.00'}
                 </div>
               </div>
             )}
