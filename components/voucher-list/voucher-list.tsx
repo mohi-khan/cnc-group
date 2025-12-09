@@ -854,17 +854,20 @@ const VoucherList: React.FC<VoucherListProps> = ({
                             {voucher[key].toFixed(2)}
                           </span>
                         ) : key === 'createdTime' ? (
-                          // <-- FORMAT createdTime here
+                          // <-- FORMAT createdTime here (UTC)
                           (() => {
                             const d = new Date(voucher.createdTime)
-                            const year = d.getFullYear()
-                            const month = String(d.getMonth() + 1).padStart(
+                            const year = d.getUTCFullYear()
+                            const month = String(d.getUTCMonth() + 1).padStart(
                               2,
                               '0'
                             )
-                            const day = String(d.getDate()).padStart(2, '0')
-                            const hour = String(d.getHours()).padStart(2, '0')
-                            const minute = String(d.getMinutes()).padStart(
+                            const day = String(d.getUTCDate()).padStart(2, '0')
+                            const hour = String(d.getUTCHours()).padStart(
+                              2,
+                              '0'
+                            )
+                            const minute = String(d.getUTCMinutes()).padStart(
                               2,
                               '0'
                             )

@@ -106,7 +106,7 @@ export default function Dashboard() {
   const [userData] = useAtom(userDataAtom)
 
   // Dynamic form state
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number>(3)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number >(3)
 
   const formatDateLocal = (date: Date) => date.toLocaleDateString('en-CA') // returns "YYYY-MM-DD" format in local timezone
 
@@ -706,10 +706,10 @@ export default function Dashboard() {
     setSelectedDepartment(departmentId)
   }
 
-  function handleCompanySelection(companyId: number | null): void {
-    if (companyId) {
+  function handleCompanySelection(companyId: number  ): void {
+   
       setSelectedCompanyId(companyId)
-    }
+    
   }
 
   // Function to handle Pie Chart Click
@@ -751,7 +751,7 @@ export default function Dashboard() {
             }
             onChange={(value: { id: string; name: string } | null) =>
               handleCompanySelection(
-                value ? Number.parseInt(value.id, 10) : null
+                value ? Number.parseInt(value.id, 10) : 0
               )
             }
             placeholder="Select company"

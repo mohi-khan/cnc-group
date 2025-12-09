@@ -231,14 +231,14 @@ export default function SingleTrialBalanceList({
               <span className="block w-[50px]">Date</span>
             </SortableHeader>
             <SortableHeader field="accountname">Account Name</SortableHeader>
-            <SortableHeader field="notes">
-              <span className="block w-[80px]">Notes</span>
-            </SortableHeader>
+            <SortableHeader field="debit">Debit</SortableHeader>
+            <SortableHeader field="credit">Credit</SortableHeader>
             <SortableHeader field="partner">Partner</SortableHeader>
             <SortableHeader field="coscenter">Cost Center</SortableHeader>
             <SortableHeader field="department">Department</SortableHeader>
-            <SortableHeader field="debit">Debit</SortableHeader>
-            <SortableHeader field="credit">Credit</SortableHeader>
+            <SortableHeader field="notes">
+              <span className="block w-[80px]">Notes</span>
+            </SortableHeader>
           </tr>
         </thead>
         <tbody>
@@ -270,8 +270,11 @@ export default function SingleTrialBalanceList({
                     ? 'Closing Balance'
                     : `${transaction.accountname || '—'} (${transaction.bankaccountnumber || '—'})`}
               </td>
-              <td className="py-2 px-2 border-b text-left w-[300px]">
-                {transaction.notes}
+              <td className="py-2 px-2 border-b text-right w-[100px]">
+                {transaction.debit?.toFixed(2)}
+              </td>
+              <td className="py-2 px-2 border-b text-right w-[100px]">
+                {transaction.credit?.toFixed(2)}
               </td>
               <td className="py-2 px-2 border-b text-center w-[150px]">
                 {transaction.partner}
@@ -282,11 +285,8 @@ export default function SingleTrialBalanceList({
               <td className="py-2 px-2 border-b text-center w-[120px]">
                 {transaction.department}
               </td>
-              <td className="py-2 px-2 border-b text-right w-[100px]">
-                {transaction.debit?.toFixed(2)}
-              </td>
-              <td className="py-2 px-2 border-b text-right w-[100px]">
-                {transaction.credit?.toFixed(2)}
+              <td className="py-2 px-2 border-b text-left w-[300px]">
+                {transaction.notes}
               </td>
             </tr>
           ))}

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import SingleTrialBalanceFind from './single-trial-balance-find'
 import SingleTrialBalanceList from './single-trial-balance-list'
-import type { GeneralLedgerType } from '@/utils/type'
+import type { AccountsHead, GeneralLedgerType } from '@/utils/type'
 import { getGeneralLedgerByDate } from '@/api/general-ledger-api'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
@@ -13,7 +13,7 @@ import jsPDF from 'jspdf'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { toast } from '@/hooks/use-toast'
-import { getAllCompanies } from '@/api/common-shared-api'
+import { getAllChartOfAccounts, getAllCompanies } from '@/api/common-shared-api'
 
 interface Company {
   id: number
@@ -54,6 +54,7 @@ export default function SingleTrialBalance() {
   const [transactions, setTransactions] = useState<GeneralLedgerType[]>([])
   const [showLogoInPdf, setShowLogoInPdf] = useState(false)
   const [companies, setCompanies] = useState<Company[]>([])
+  const [accounts, setAccounts] = useState<AccountsHead[]>([])
 
   // 🟢 Store latest selected filter values
   const [filters, setFilters] = useState({
@@ -97,9 +98,25 @@ export default function SingleTrialBalance() {
     }
   }, [token])
 
+  const fetchChartOfAccounts = React.useCallback(async () => {
+      if (!token) return
+      const fetchedAccounts = await getAllChartOfAccounts(token)
+      if (fetchedAccounts.error || !fetchedAccounts.data) {
+        console.error('Error getting chart of accounts:', fetchedAccounts.error)
+        toast({
+          title: 'Error',
+          description:
+            fetchedAccounts.error?.message || 'Failed to get chart of accounts',
+        })
+      } else {
+        setAccounts(fetchedAccounts.data)
+      }
+    }, [token])
+
   useEffect(() => {
     fetchCompanies()
-  }, [fetchCompanies])
+    fetchChartOfAccounts()
+  }, [fetchCompanies, fetchChartOfAccounts])
 
   const flattenData = (data: GeneralLedgerType[]) => {
     return data.map((item) => ({
@@ -129,89 +146,181 @@ export default function SingleTrialBalance() {
     saveAs(blob, `${fileName}.xlsx`)
   }
 
+
+
   const generatePdf = async () => {
     if (!targetRef.current) return
     document.body.classList.add('pdf-mode')
     setShowLogoInPdf(true)
     await new Promise((res) => setTimeout(res, 200))
-    const canvas = await html2canvas(targetRef.current, {
-      scale: 2,
-      useCORS: true,
-    })
+
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' })
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
-    const marginTop = 90
+    const marginTop = 110
     const marginBottom = 40
     const horizontalPadding = 30
     const usablePageHeight = pageHeight - marginTop - marginBottom
+
+    // 🟢 Find the table and process it in batches
+    const table = targetRef.current.querySelector('table')
+    if (!table) {
+      console.error('Table not found')
+      return
+    }
+
+    const thead = table.querySelector('thead')
+    const tbody = table.querySelector('tbody')
+
+    if (!thead || !tbody) {
+      console.error('Table structure incomplete')
+      return
+    }
+
+    // Capture header once
+    const headerCanvas = await html2canvas(thead, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    })
+
+    const rows = Array.from(tbody.querySelectorAll('tr'))
     const imgWidth = pageWidth - horizontalPadding * 2
-    const scale = imgWidth / canvas.width
-    let heightLeftPx = canvas.height
-    let sourceY = 0
-    let pageCount = 0
-    while (heightLeftPx > 0) {
-      const sliceHeightPx = Math.min(heightLeftPx, usablePageHeight / scale)
-      const tempCanvas = document.createElement('canvas')
-      const tempCtx = tempCanvas.getContext('2d')
-      tempCanvas.width = canvas.width
-      tempCanvas.height = sliceHeightPx
-      tempCtx?.drawImage(
-        canvas,
-        0,
-        sourceY,
-        canvas.width,
-        sliceHeightPx,
-        0,
-        0,
-        canvas.width,
-        sliceHeightPx
-      )
-      const imgDataSlice = tempCanvas.toDataURL('image/jpeg')
-      if (pageCount > 0) pdf.addPage()
+    const headerScale = imgWidth / headerCanvas.width
+    const headerHeight = headerCanvas.height * headerScale
+    const headerImg = headerCanvas.toDataURL('image/jpeg', 0.95)
+
+    let currentY = marginTop
+    let isFirstPage = true
+
+    // 🟢 Process rows in batches of 5 for speed
+    const batchSize = 19
+
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batchRows = rows.slice(i, Math.min(i + batchSize, rows.length))
+
+      // Create temporary container for batch
+      const batchContainer = document.createElement('div')
+      batchContainer.style.width = tbody.offsetWidth + 'px'
+
+      const batchTable = document.createElement('table')
+      batchTable.style.width = '100%'
+      batchTable.style.borderCollapse = 'collapse'
+
+      const batchTbody = document.createElement('tbody')
+      batchRows.forEach((row) => {
+        batchTbody.appendChild(row.cloneNode(true))
+      })
+
+      batchTable.appendChild(batchTbody)
+      batchContainer.appendChild(batchTable)
+      document.body.appendChild(batchContainer)
+
+      // Capture batch
+      const batchCanvas = await html2canvas(batchContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      })
+
+      document.body.removeChild(batchContainer)
+
+      const batchScale = imgWidth / batchCanvas.width
+      const batchHeight = batchCanvas.height * batchScale
+
+      // Check if batch fits on current page
+      if (!isFirstPage && currentY + batchHeight > pageHeight - marginBottom) {
+        // Add new page
+        pdf.addPage()
+        currentY = marginTop
+
+        // Add header to new page
+        pdf.addImage(
+          headerImg,
+          'JPEG',
+          horizontalPadding,
+          currentY,
+          imgWidth,
+          headerHeight
+        )
+        currentY += headerHeight
+      } else if (isFirstPage) {
+        // First page - add header
+        pdf.addImage(
+          headerImg,
+          'JPEG',
+          horizontalPadding,
+          currentY,
+          imgWidth,
+          headerHeight
+        )
+        currentY += headerHeight
+        isFirstPage = false
+      }
+
+      // Add batch to current page
+      const batchImg = batchCanvas.toDataURL('image/jpeg', 0.95)
       pdf.addImage(
-        imgDataSlice,
+        batchImg,
         'JPEG',
         horizontalPadding,
-        marginTop,
+        currentY,
         imgWidth,
-        sliceHeightPx * scale
+        batchHeight
       )
-      heightLeftPx -= sliceHeightPx
-      sourceY += sliceHeightPx
-      pageCount++
+      currentY += batchHeight
     }
 
     const totalPages = pdf.internal.pages.length - 1
-    // 🟢 Use dynamic filters instead of static searchParams
     const selectedCompany = companies.find(
       (c) => c.id === Number(filters.companyId)
     )
     const companyName = selectedCompany?.name || 'Company Name'
+
+    const selectedAccount = accounts.find(
+      (a) => a.accountId === Number(filters.accountcode)
+    )
+    const accountName = selectedAccount?.name || 'Account'
+
     const dateRange =
       filters.fromdate && filters.todate
         ? `From ${filters.fromdate} To ${filters.todate}`
         : ''
 
+    // Add headers and footers
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i)
-      pdf.setFontSize(14).setFont('bold')
-      pdf.text(companyName, pageWidth / 2, 35, { align: 'center' })
+
+      pdf.setFontSize(16).setFont('helvetica', 'bold')
+      pdf.text(companyName, pageWidth / 2, 30, { align: 'center' })
+
+      pdf.setFontSize(12).setFont('helvetica', 'normal')
+      pdf.text('Account Name: ' + accountName, pageWidth / 2, 50, {
+        align: 'center',
+      })
+
       if (dateRange) {
-        pdf.setFontSize(12).setFont('normal')
-        pdf.text(dateRange, pageWidth / 2, 55, { align: 'center' })
+        pdf.setFontSize(10).setFont('helvetica', 'normal')
+        pdf.text(dateRange, pageWidth / 2, 70, { align: 'center' })
       }
-      pdf.setFontSize(10).setFont('normal')
+
+      pdf.setFontSize(10).setFont('helvetica', 'normal')
       pdf.text(
         `Page ${i} of ${totalPages}`,
         pageWidth - horizontalPadding - 50,
         pageHeight - marginBottom + 20
       )
     }
+
     pdf.save(`single_trial_balance.pdf`)
     document.body.classList.remove('pdf-mode')
     setShowLogoInPdf(false)
   }
+
+  
+
+  
+
 
   const generateExcel = () =>
     exportToExcel(transactions, 'single-trial-balance')
@@ -221,14 +330,20 @@ export default function SingleTrialBalance() {
       (c) => c.id === Number(filters.companyId)
     )
     const companyName = selectedCompany?.name || 'Company Name'
+     const selectedAccount = accounts.find(
+       (a) => a.accountId === Number(filters.accountcode)
+     )
+     const accountName = selectedAccount?.name || 'Account'
+
     const dateRange =
       filters.fromdate && filters.todate
         ? `From ${filters.fromdate} To ${filters.todate}`
         : ''
 
     const printContents = `
-      <div style="text-align:center;margin-bottom:20px;">
+      <div style="text-align:center;margin-bottom:18px;">
         <h2>${companyName}</h2>
+        <h3>Account Name: ${accountName}</h3>
         <div>${dateRange}</div>
       </div>
       ${targetRef.current?.innerHTML || ''}
