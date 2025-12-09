@@ -67,8 +67,8 @@ export default function BankLedgerList({
         <thead className="bg-gray-100">
           <tr>
             <th className="py-2 px-4 border-b text-left">Date</th>
-            <th className="py-2 px-4 border-b text-left">Voucher No</th>
             <th className="py-2 px-4 border-b text-left">Account Name</th>
+            <th className="py-2 px-4 border-b text-left">Voucher No</th>
             <th className="py-2 px-4 border-b text-right">Debit</th>
             <th className="py-2 px-4 border-b text-right">Credit</th>
             <th className="py-2 px-4 border-b text-left">Partner</th>
@@ -82,8 +82,8 @@ export default function BankLedgerList({
               className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
             >
               <td className="py-2 px-4 border-b">{transaction.date}</td>
-              <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
               <td className="py-2 px-4 border-b">{`${transaction.accountname} ${-transaction.bankaccountnumber || ' '}`}</td>
+              <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
               <td className="py-2 px-4 border-b text-right">
                 {transaction.debit.toLocaleString()}
               </td>

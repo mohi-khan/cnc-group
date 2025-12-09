@@ -65,58 +65,166 @@ export default function BankLedger() {
     [token]
   )
 
+
+
   const generatePdf = async () => {
     if (!printRef.current) return
     setIsGeneratingPdf(true)
 
     try {
       const companyName = selectedCompanyName || 'Bank Ledger Report'
+      
       const dateRange =
         fromDate && toDate ? `${fromDate} to ${toDate}` : 'All Dates'
 
-      const canvas = await html2canvas(printRef.current, {
+      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const marginTop = 80
+      const marginBottom = 40
+      const horizontalPadding = 30
+      const usablePageHeight = pageHeight - marginTop - marginBottom
+
+      // Find the table and process it in batches
+      const table = printRef.current.querySelector('table')
+      if (!table) {
+        console.error('Table not found')
+        setIsGeneratingPdf(false)
+        return
+      }
+
+      const thead = table.querySelector('thead')
+      const tbody = table.querySelector('tbody')
+
+      if (!thead || !tbody) {
+        console.error('Table structure incomplete')
+        setIsGeneratingPdf(false)
+        return
+      }
+
+      // Capture header once
+      const headerCanvas = await html2canvas(thead, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: '#ffffff',
       })
 
-      const imgData = canvas.toDataURL('image/jpeg')
-      const pdf = new jsPDF('p', 'mm', 'a4')
+      const rows = Array.from(tbody.querySelectorAll('tr'))
+      const imgWidth = pageWidth - horizontalPadding * 2
+      const headerScale = imgWidth / headerCanvas.width
+      const headerHeight = headerCanvas.height * headerScale
+      const headerImg = headerCanvas.toDataURL('image/jpeg', 0.95)
 
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = canvas.width
-      const imgHeight = canvas.height
+      let currentY = marginTop
+      let isFirstPage = true
 
-      const scale = pdfWidth / imgWidth
-      const scaledHeight = imgHeight * scale
+      // Process rows in batches for better performance
+      const batchSize = 19
 
-      const headerHeight = 25
-      const pageContentHeight = pdfHeight - headerHeight - 10
-      let currentY = 0
-      let pageNumber = 1
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batchRows = rows.slice(i, Math.min(i + batchSize, rows.length))
 
-      while (currentY < scaledHeight) {
-        if (pageNumber > 1) pdf.addPage()
+        // Create temporary container for batch
+        const batchContainer = document.createElement('div')
+        batchContainer.style.width = tbody.offsetWidth + 'px'
 
-        // Header section
+        const batchTable = document.createElement('table')
+        batchTable.style.width = '100%'
+        batchTable.style.borderCollapse = 'collapse'
+
+        const batchTbody = document.createElement('tbody')
+        batchRows.forEach((row) => {
+          batchTbody.appendChild(row.cloneNode(true))
+        })
+
+        batchTable.appendChild(batchTbody)
+        batchContainer.appendChild(batchTable)
+        document.body.appendChild(batchContainer)
+
+        // Capture batch
+        const batchCanvas = await html2canvas(batchContainer, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        })
+
+        document.body.removeChild(batchContainer)
+
+        const batchScale = imgWidth / batchCanvas.width
+        const batchHeight = batchCanvas.height * batchScale
+
+        // Check if batch fits on current page
+        if (
+          !isFirstPage &&
+          currentY + batchHeight > pageHeight - marginBottom
+        ) {
+          // Add new page
+          pdf.addPage()
+          currentY = marginTop
+
+          // Add header to new page
+          pdf.addImage(
+            headerImg,
+            'JPEG',
+            horizontalPadding,
+            currentY,
+            imgWidth,
+            headerHeight
+          )
+          currentY += headerHeight
+        } else if (isFirstPage) {
+          // First page - add header
+          pdf.addImage(
+            headerImg,
+            'JPEG',
+            horizontalPadding,
+            currentY,
+            imgWidth,
+            headerHeight
+          )
+          currentY += headerHeight
+          isFirstPage = false
+        }
+
+        // Add batch to current page
+        const batchImg = batchCanvas.toDataURL('image/jpeg', 0.95)
+        pdf.addImage(
+          batchImg,
+          'JPEG',
+          horizontalPadding,
+          currentY,
+          imgWidth,
+          batchHeight
+        )
+        currentY += batchHeight
+      }
+
+      const totalPages = pdf.internal.pages.length - 1
+
+      // Add headers and footers to all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i)
+
+        // Company name header
         pdf.setFontSize(16)
         pdf.setFont('helvetica', 'bold')
-        pdf.text(companyName, pdfWidth / 2, 12, { align: 'center' })
+        pdf.text(companyName, pageWidth / 2, 30, { align: 'center' })
+
+        // Date range
         pdf.setFontSize(11)
         pdf.setFont('helvetica', 'normal')
-        pdf.text(`Date Range: ${dateRange}`, pdfWidth / 2, 20, {
+        pdf.text(`Date Range: ${dateRange}`, pageWidth / 2, 50, {
           align: 'center',
         })
 
-        // Table image
-        const remainingHeight = scaledHeight - currentY
-        const pageHeight = Math.min(pageContentHeight, remainingHeight)
-        pdf.addImage(imgData, 'JPEG', 0, headerHeight, pdfWidth, pageHeight)
-
-        currentY += pageContentHeight
-        pageNumber++
+        // Page number footer
+        pdf.setFontSize(10)
+        pdf.setFont('helvetica', 'normal')
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth - horizontalPadding - 50,
+          pageHeight - marginBottom + 20
+        )
       }
 
       pdf.save(`${companyName}-ledger-report.pdf`)
@@ -126,6 +234,8 @@ export default function BankLedger() {
       setIsGeneratingPdf(false)
     }
   }
+
+  
 
   const exportToExcel = () => {
     if (transactions.length === 0) return
