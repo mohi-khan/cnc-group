@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { FileText, File } from 'lucide-react'
+import { FileText, File, Printer } from 'lucide-react'
 import type { BankAccount } from '@/utils/type'
 import { getAllBankAccounts } from '@/api/common-shared-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
@@ -21,6 +21,7 @@ interface BankLedgerFindProps {
   onGeneratePdf: () => void
   onExportExcel: () => void
   isGeneratingPdf: boolean
+  generatePrint: () => void
 }
 
 export default function BankLedgerFind({
@@ -28,6 +29,7 @@ export default function BankLedgerFind({
   onGeneratePdf,
   onExportExcel,
   isGeneratingPdf,
+  generatePrint,
 }: BankLedgerFindProps) {
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
@@ -224,6 +226,15 @@ export default function BankLedgerFind({
             <File className="w-4 h-4 mr-2" />
             Excel
           </Button>
+          <Button
+          onClick={generatePrint}
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-900 hover:bg-blue-200"
+        >
+          <Printer className="h-4 w-4" />
+          <span className="font-medium">Print</span>
+        </Button>
         </div>
       </div>
     </div>
