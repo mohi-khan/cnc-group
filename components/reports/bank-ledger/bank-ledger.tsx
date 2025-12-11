@@ -235,6 +235,42 @@ export default function BankLedger() {
     }
   }
 
+  const handlePrint = () => {
+    if (!printRef.current) return
+
+    const companyName = selectedCompanyName || 'Bank Ledger Report'
+    const dateRange =
+      fromDate && toDate ? `From ${fromDate} To ${toDate}` : 'All Dates'
+
+    const printContents = `
+      <div style="text-align:center;margin-bottom:18px;">
+        <h2>${companyName}</h2>
+        <h3>Bank Ledger Report</h3>
+        <div>${dateRange}</div>
+      </div>
+      ${printRef.current?.innerHTML || ''}
+      <style>
+        @media print {
+          .sort-icons, .lucide-arrow-up, .lucide-arrow-down, svg { display: none !important; }
+          table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+          th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+        }
+        table { width:100%; border-collapse: collapse; }
+        th, td { border:1px solid #000; padding:4px; text-align:left; }
+      </style>
+    `
+    const newWin = window.open('', '', 'width=900,height=700')
+    if (!newWin) return
+    newWin.document.write(
+      `<html><head><title>Print Bank Ledger</title></head><body>${printContents}</body></html>`
+    )
+    newWin.document.close()
+    newWin.focus()
+    newWin.print()
+    newWin.close()
+  }
+
   
 
   const exportToExcel = () => {
@@ -261,6 +297,8 @@ export default function BankLedger() {
     )
   }
 
+  
+
   return (
     <div className="space-y-4 max-w-[98%] mx-auto mt-20">
       <BankLedgerFind
@@ -268,6 +306,7 @@ export default function BankLedger() {
         onGeneratePdf={generatePdf}
         onExportExcel={exportToExcel}
         isGeneratingPdf={isGeneratingPdf}
+        generatePrint={handlePrint}
       />
       <div ref={printRef}>
         <BankLedgerList transactions={transactions} />
