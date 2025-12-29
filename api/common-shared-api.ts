@@ -26,6 +26,16 @@ export async function getAllChartOfAccounts(token: string) {
     },
   })
 }
+export async function getAllChartOfAccountsWithCompany(token: string) {
+  return fetchApi<AccountsHead[]>({
+    url: 'api/chart-of-accounts/get-all-coa-with-company',
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
 
 // All Company Get Api
 export async function getAllCompanies(token: string) {
