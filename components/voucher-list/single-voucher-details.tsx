@@ -76,6 +76,9 @@ const printStyles = `
     .no-print {
       display: none !important;
     }
+      .tex-size-12 {
+      font-size: 12pt !important;
+    }
     .print\\:block {
       display: block !important;
     }
@@ -83,16 +86,28 @@ const printStyles = `
       margin-bottom: 2rem !important;
     }
     
-    /* Force single page layout for both orientations */
+    /* Force single page layout with increased font size */
     body {
-      zoom: 0.6;
+      zoom: 0.65;
+    height: 50% !important; /* 50% of parent container's height */
+    }
+    
+    /* Portrait specific settings */
+    @page {
+      margin: 2mm 2mm 2mm mm;
+       margin-top: 0 !important;
     }
   }
   
   @media print and (orientation: landscape) {
-    /* Align content to left side in landscape */
+    /* Landscape settings - left aligned, half page width */
     @page {
-      margin: 10mm 10mm 10mm 10mm;
+      margin: 2mm 2mm 2mm 0mm;
+    }
+    
+    body {
+      zoom: 0.65;
+      max-width: 50% !important;
     }
     
     body, .mx-auto {
@@ -140,7 +155,7 @@ export default function SingleVoucherDetails() {
     contentRef,
     pageStyle: `
     @page {
-      margin: 10mm;
+      margin: 4mm;
     }
   `,
   })
@@ -789,12 +804,31 @@ export default function SingleVoucherDetails() {
     <>
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
       <Card ref={contentRef} className="w-full max-w-5xl mx-auto mt-24">
+        {/* ADD THIS NEW SECTION */}
+            <div className=" grid-cols-[120px,1fr] gap-8 print:block hidden">
+              <span className="font-medium whitespace-nowrap">Printed On:</span>
+              <span>
+                {new Date().toLocaleString('en-GB', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
+              </span>
+            </div>
+            {/* END OF NEW SECTION */}
+
         <CardContent className="p-6 print:w-full print:max-w-none">
           <h1 className="text-center text-3xl font-bold">
             {data[0].companyname}
           </h1>
-          <p className="text-center mb-10 text-xl font-semibold">
+          <p className="text-center my-1 text-xl font-semibold">
             {data[0].location}{' '}
+          </p>
+          <p className="text-center mb-10 text-xs font-semibold">
+            {data[0].address}{' '}
           </p>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="space-y-4">
@@ -815,6 +849,7 @@ export default function SingleVoucherDetails() {
                 <span></span>
               </div>
             </div>
+            
             <div className="flex justify-end gap-2 no-print">
               {data[0].journaltype === VoucherTypes.BankVoucher && (
                 <Button
@@ -966,19 +1001,19 @@ export default function SingleVoucherDetails() {
               <Table className="shadow-md border">
                 <TableHeader className="bg-slate-200 shadow-md">
                   <TableRow>
-                    <TableHead>Accounts</TableHead>
-                    <TableHead>Bank Account</TableHead>
-                    <TableHead>Cost Center</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Partner</TableHead>
-                    <TableHead>
+                    <TableHead className="tex-size-12">Accounts</TableHead>
+                    <TableHead className="no-print">Bank Account</TableHead>
+                    <TableHead className="no-print">Cost Center</TableHead>
+                    <TableHead className="tex-size-12">Unit</TableHead>
+                    <TableHead className="tex-size-12">Employee</TableHead>
+                    <TableHead className="tex-size-12">Partner</TableHead>
+                    <TableHead className="no-print">
                       {data[0].journaltype === VoucherTypes.BankVoucher
                         ? 'Cheque No.'
                         : 'Notes'}
                     </TableHead>
-                    <TableHead>Debit</TableHead>
-                    <TableHead>Credit</TableHead>
+                    <TableHead className="tex-size-12">Debit</TableHead>
+                    <TableHead className="tex-size-12">Credit</TableHead>
                     <TableHead className="no-print">Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -989,17 +1024,27 @@ export default function SingleVoucherDetails() {
                     )
                     return (
                       <TableRow key={item.id}>
-                        <TableCell>{item.accountsname || 'N/A'}</TableCell>
-                        <TableCell>
+                        <TableCell className="tex-size-12">
+                          {item.accountsname || 'N/A'}
+                        </TableCell>
+                        <TableCell className="no-print">
                           {item.bankaccount && item.bankaccountName
                             ? `${item.bankaccount} - ${item.bankaccountName}-${item.accountNumber}`
                             : 'N/A'}
                         </TableCell>
-                        <TableCell>{item.costcenter || 'N/A'}</TableCell>
-                        <TableCell>{item.department || 'N/A'}</TableCell>
-                        <TableCell>{item.employeeName || 'N/A'}</TableCell>
-                        <TableCell>{item.partnar || 'N/A'}</TableCell>
-                        <TableCell>
+                        <TableCell className="no-print">
+                          {item.costcenter || 'N/A'}
+                        </TableCell>
+                        <TableCell className="tex-size-12">
+                          {item.department || 'N/A'}
+                        </TableCell>
+                        <TableCell className="tex-size-12">
+                          {item.employeeName || 'N/A'}
+                        </TableCell>
+                        <TableCell className="tex-size-12">
+                          {item.partnar || 'N/A'}
+                        </TableCell>
+                        <TableCell className="no-print">
                           {editingReferenceIndex === originalIndex ? (
                             <div className="flex gap-2 items-start align-top">
                               <Input
@@ -1016,10 +1061,10 @@ export default function SingleVoucherDetails() {
                             item.detail_notes
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="tex-size-12">
                           {item.debit > 0 ? item.debit.toFixed(2) : '-'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="tex-size-12">
                           {item.credit > 0 ? item.credit.toFixed(2) : '-'}
                         </TableCell>
                         <TableCell className="no-print">

@@ -1050,6 +1050,7 @@ const VoucherSchemaById = z.object({
   companyname: z.string(),
   companyId: z.number(),
   location: z.string(),
+  address: z.string(),
   locationId: z.number(),
   currency: z.string(),
   currencyId: z.number(),
