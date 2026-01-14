@@ -14,6 +14,10 @@ import {
   PackageX,
   PackageCheckIcon,
   User2Icon,
+  BookAudioIcon,
+  BookCheck,
+  BookDashed,
+  BookCopyIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -356,51 +360,7 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          {/* <div className="flex items-center ml-4">
-            <div className="relative" ref={profileRef}>
-              <button
-                className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
-                id="user-menu"
-                aria-label="User menu"
-                aria-haspopup="true"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-              >
-                <User2 className="h-9 w-9 text-gray-600 border border-gray-600 p-1 rounded-full" />
-              </button>
-              {isProfileOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
-                  <div
-                    className="py-1 rounded-md bg-white shadow-xs"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="user-menu"
-                  >
-                    <h1 className="px-4 pb-2 text-sm font-medium text-gray-900 border-b flex items-center gap-2">
-                      <User2 className="text-gray-700 w-4 h-4" />
-                      {userData?.username?.replace(/\b\w/g, (c) =>
-                        c.toUpperCase()
-                      )}
-                    </h1>
 
-                    <Link
-                      href="/change-password"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Change Password
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div> */}
           <div className="flex flex-col items-center ml-2">
             {/* USER ICON BUTTON (keep inside relative only) */}
             <div className="relative" ref={profileRef}>
@@ -455,6 +415,20 @@ export default function Navbar() {
       <div className="py-1 text-center">
         <TooltipProvider>
           <div className="flex gap-6 items-center justify-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={'/accounting/day-books'}>
+                  <Button variant="ghost" size="icon">
+                    <BookCopyIcon className="h-5 w-5" />
+                    <span className="sr-only">Day Books</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Day Books</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link href={'/cash/cash-voucher'}>
@@ -529,8 +503,6 @@ export default function Navbar() {
     </nav>
   )
 }
-
-
 
 // 'use client'
 
