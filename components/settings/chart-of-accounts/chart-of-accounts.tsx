@@ -82,6 +82,9 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { saveAs } from 'file-saver'
+import * as XLSX from 'xlsx'
+import { File } from 'lucide-react' // Add File icon
 
 const accountTypes = ['Equity', 'Asset', 'Liabilities', 'Income', 'Expense']
 const financialTags = [
@@ -113,12 +116,15 @@ export default function ChartOfAccountsTable() {
   const [showFilters, setShowFilters] = React.useState(false)
   const [activeAccountOnly, setActiveAccountOnly] = React.useState(false)
   const [accounts, setAccounts] = React.useState<AccountsHead[]>([])
-  const [filteredAccounts, setFilteredAccounts] = React.useState<AccountsHead[]>([])
+  const [filteredAccounts, setFilteredAccounts] = React.useState<
+    AccountsHead[]
+  >([])
   const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
   const [groups, setGroups] = React.useState<CodeGroup[]>([])
   const [isAddAccountOpen, setIsAddAccountOpen] = React.useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = React.useState(false)
-  const [editingAccount, setEditingAccount] = React.useState<AccountsHead | null>(null)
+  const [editingAccount, setEditingAccount] =
+    React.useState<AccountsHead | null>(null)
   const [parentCodes, setParentCodes] = React.useState<ChartOfAccount[]>([])
   const [currentPage, setCurrentPage] = React.useState(1)
   const itemsPerPage = 10
@@ -128,7 +134,9 @@ export default function ChartOfAccountsTable() {
   const [companies, setCompanies] = React.useState<any[]>([])
   const [selectedCompanies, setSelectedCompanies] = React.useState<number[]>([])
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [editSelectedCompanies, setEditSelectedCompanies] = React.useState<number[]>([])
+  const [editSelectedCompanies, setEditSelectedCompanies] = React.useState<
+    number[]
+  >([])
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -507,33 +515,45 @@ export default function ChartOfAccountsTable() {
     } else {
       // Remove duplicates by grouping by accountId and merging companyIds
       const uniqueAccountsMap = new Map<number, AccountsHead>()
-      
+
       fetchedAccounts.data.forEach((account: AccountsHead) => {
         const existing = uniqueAccountsMap.get(account.accountId)
         if (existing) {
           // Merge company IDs
-          const existingCompanyIds = Array.isArray(existing.companyIds) 
-            ? existing.companyIds 
-            : existing.companyIds ? [existing.companyIds] : []
+          const existingCompanyIds = Array.isArray(existing.companyIds)
+            ? existing.companyIds
+            : existing.companyIds
+              ? [existing.companyIds]
+              : []
           const newCompanyIds = Array.isArray(account.companyIds)
             ? account.companyIds
-            : account.companyIds ? [account.companyIds] : []
-          
+            : account.companyIds
+              ? [account.companyIds]
+              : []
+
           const merged = [...new Set([...existingCompanyIds, ...newCompanyIds])]
-          existing.companyIds = (merged.length > 0 ? merged : [0]) as [number, ...number[]]
+          existing.companyIds = (merged.length > 0 ? merged : [0]) as [
+            number,
+            ...number[],
+          ]
         } else {
           // Ensure companyIds is always an array
           const companyIds = Array.isArray(account.companyIds)
             ? account.companyIds
-            : account.companyIds ? [account.companyIds] : []
-          
+            : account.companyIds
+              ? [account.companyIds]
+              : []
+
           uniqueAccountsMap.set(account.accountId, {
             ...account,
-            companyIds: (companyIds.length > 0 ? companyIds : [0]) as [number, ...number[]]
+            companyIds: (companyIds.length > 0 ? companyIds : [0]) as [
+              number,
+              ...number[],
+            ],
           })
         }
       })
-      
+
       const uniqueAccounts = Array.from(uniqueAccountsMap.values())
       setAccounts(uniqueAccounts)
       const dynamicGroups = buildCodeGroups(uniqueAccounts)
@@ -546,7 +566,13 @@ export default function ChartOfAccountsTable() {
     fetchParentCodes()
     fetchCurrency()
     fetchCompanies()
-  }, [fetchCoaAccounts, fetchParentCodes, fetchCurrency, fetchCompanies, router])
+  }, [
+    fetchCoaAccounts,
+    fetchParentCodes,
+    fetchCurrency,
+    fetchCompanies,
+    router,
+  ])
 
   React.useEffect(() => {
     if (accounts.length > 0) {
@@ -642,14 +668,16 @@ export default function ChartOfAccountsTable() {
   const handleEditAccount = (account: AccountsHead) => {
     console.log('Edit button clicked, account:', account)
     setEditingAccount(account)
-    
-    const existingCompanyIds = account.companyIds 
-      ? (Array.isArray(account.companyIds) ? account.companyIds : [account.companyIds])
+
+    const existingCompanyIds = account.companyIds
+      ? Array.isArray(account.companyIds)
+        ? account.companyIds
+        : [account.companyIds]
       : []
-    
+
     console.log('Existing company IDs:', existingCompanyIds)
     setEditSelectedCompanies(existingCompanyIds)
-    
+
     setIsEditAccountOpen(true)
     console.log('Edit dialog opened')
   }
@@ -707,7 +735,7 @@ export default function ChartOfAccountsTable() {
 
       const response = await updateChartOfAccounts(updatedAccount, token)
       console.log('Update response:', response)
-      
+
       if (response.error || !response.data) {
         console.log('Update error:', response.error)
         toast({
@@ -722,7 +750,7 @@ export default function ChartOfAccountsTable() {
           title: 'Success',
           description: 'Chart of account updated successfully',
         })
-        
+
         await fetchCoaAccounts()
         setIsEditAccountOpen(false)
         setEditingAccount(null)
@@ -737,6 +765,96 @@ export default function ChartOfAccountsTable() {
       })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // 🟢 Excel Export Functions - Add before return statement
+  const flattenAccountsData = (data: AccountsHead[]) => {
+    return data.map((account) => {
+      const companyNames =
+        account.companyIds && Array.isArray(account.companyIds)
+          ? account.companyIds
+              .map(
+                (id) => companies.find((c) => c.companyId === id)?.companyName
+              )
+              .filter(Boolean)
+              .join(', ')
+          : 'All Companies'
+
+      return {
+        'Account Code': account.code || '—',
+        'Account Name': account.name || '—',
+        'Account Type': account.accountType || '—',
+        'Parent Account': account.parentName || '—',
+        'Is Group': account.isGroup ? 'Yes' : 'No',
+        'Is Reconcilable': account.isReconcilable ? 'Yes' : 'No',
+      }
+    })
+  }
+
+  const exportToExcel = () => {
+    if (filteredAccounts.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No accounts available to export',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(
+        flattenAccountsData(filteredAccounts)
+      )
+
+      const columnWidths = [
+        { wch: 15 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 25 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 20 },
+        { wch: 40 },
+        { wch: 30 },
+        { wch: 18 },
+        { wch: 18 },
+      ]
+      worksheet['!cols'] = columnWidths
+
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Chart of Accounts')
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      })
+      const blob = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+      })
+
+      const fileName = `chart_of_accounts_${new Date().toISOString().split('T')[0]}.xlsx`
+      saveAs(blob, fileName)
+
+      toast({
+        title: 'Success',
+        description: `Exported ${filteredAccounts.length} accounts to Excel successfully`,
+      })
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to export to Excel',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -786,7 +904,18 @@ export default function ChartOfAccountsTable() {
               <Filter className="h-4 w-4" />
             </Button>
           </div>
-
+          <div>
+            <Button
+            onClick={exportToExcel}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-900 hover:bg-green-200 whitespace-nowrap"
+            disabled={filteredAccounts.length === 0}
+          >
+            <File className="h-4 w-4" />
+            <span className="font-medium">Excel</span>
+          </Button>
+          </div>
           <Dialog
             open={isAddAccountOpen}
             onOpenChange={(open) => {
@@ -1195,7 +1324,11 @@ export default function ChartOfAccountsTable() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? 'Creating...' : 'Create Account'}
                   </Button>
                 </form>
@@ -1324,7 +1457,9 @@ export default function ChartOfAccountsTable() {
                     currentPage * itemsPerPage
                   )
                   .map((account, index) => (
-                    <TableRow key={`${account.accountId}-${account.code}-${index}`}>
+                    <TableRow
+                      key={`${account.accountId}-${account.code}-${index}`}
+                    >
                       <TableCell>{account.code}</TableCell>
                       <TableCell>{account.name}</TableCell>
                       <TableCell>
@@ -1437,14 +1572,17 @@ export default function ChartOfAccountsTable() {
         </div>
       </div>
 
-      <Dialog open={isEditAccountOpen} onOpenChange={(open) => {
-        console.log('Dialog onOpenChange:', open)
-        if (!open) {
-          setEditingAccount(null)
-          setEditSelectedCompanies([])
-        }
-        setIsEditAccountOpen(open)
-      }}>
+      <Dialog
+        open={isEditAccountOpen}
+        onOpenChange={(open) => {
+          console.log('Dialog onOpenChange:', open)
+          if (!open) {
+            setEditingAccount(null)
+            setEditSelectedCompanies([])
+          }
+          setIsEditAccountOpen(open)
+        }}
+      >
         <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Account</DialogTitle>
@@ -1484,7 +1622,7 @@ export default function ChartOfAccountsTable() {
                     console.log('Financial tag changed:', value)
                     setEditingAccount({
                       ...editingAccount,
-                      notes: value ? value.name : "",
+                      notes: value ? value.name : '',
                     })
                   }}
                   placeholder="Select financial tag (optional)"
@@ -1494,7 +1632,8 @@ export default function ChartOfAccountsTable() {
               <div className="space-y-2">
                 <Label>Additional Companies</Label>
                 <p className="text-sm text-muted-foreground">
-                  Select additional companies to add. Existing associations will be preserved.
+                  Select additional companies to add. Existing associations will
+                  be preserved.
                 </p>
                 <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
                   {companies.length === 0 ? (
@@ -1508,9 +1647,15 @@ export default function ChartOfAccountsTable() {
                         className="flex items-center space-x-2"
                       >
                         <Checkbox
-                          checked={editSelectedCompanies.includes(company.companyId)}
+                          checked={editSelectedCompanies.includes(
+                            company.companyId
+                          )}
                           onCheckedChange={(checked) => {
-                            console.log('Company checkbox changed:', company.companyId, checked)
+                            console.log(
+                              'Company checkbox changed:',
+                              company.companyId,
+                              checked
+                            )
                             if (checked) {
                               setEditSelectedCompanies([
                                 ...editSelectedCompanies,
@@ -1526,7 +1671,8 @@ export default function ChartOfAccountsTable() {
                           }}
                         />
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                          {company.companyName || `Company ${company.companyId}`}
+                          {company.companyName ||
+                            `Company ${company.companyId}`}
                         </label>
                       </div>
                     ))
@@ -1549,9 +1695,9 @@ export default function ChartOfAccountsTable() {
                 <Label htmlFor="edit-isReconcilable">Is Reconcilable</Label>
               </div>
 
-              <Button 
-                onClick={handleSaveEdit} 
-                className="w-full" 
+              <Button
+                onClick={handleSaveEdit}
+                className="w-full"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
@@ -1563,7 +1709,6 @@ export default function ChartOfAccountsTable() {
     </div>
   )
 }
-
 
 // 'use client'
 // import * as React from 'react'
