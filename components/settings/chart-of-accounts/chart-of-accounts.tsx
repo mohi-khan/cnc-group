@@ -503,7 +503,7 @@ export default function ChartOfAccountsTable() {
     const fetchedAccounts = await getAllChartOfAccountsWithCompany(token)
 
     if (fetchedAccounts?.error?.status === 401) {
-      router.push('/unauthorized-access')
+       router.push('/unauthorized-access')
       return
     } else if (fetchedAccounts.error || !fetchedAccounts.data) {
       toast({

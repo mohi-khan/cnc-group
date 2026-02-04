@@ -421,14 +421,14 @@ useEffect(() => {
           )}
         />
 
-        <FormField
+        {/* <FormField
           control={form.control}
           name="journalEntry.payTo"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Receiver Name</FormLabel>
               <div className="flex gap-4">
-                {/* Combobox Section */}
+                
                 <div className="flex-1">
                   <CustomCombobox
                     items={employeeData.map((employee) => ({
@@ -454,7 +454,7 @@ useEffect(() => {
                     disabled={!!form.watch('journalEntry.payToText')}
                   />
                 </div>
-                {/* Manual Text Input Section */}
+              
                 <div className="flex-1">
                   <FormControl>
                     <Input
@@ -473,7 +473,72 @@ useEffect(() => {
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
+
+         <FormField
+        control={form.control}
+        name="journalEntry.payTo"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Receiver Name</FormLabel>
+            <div className="flex gap-4">
+              {/* Combobox Section */}
+              <div className="flex-1">
+                <CustomCombobox
+                  items={employeeData.map((employee) => ({
+                    id: employee.id.toString(),
+                    name: `${employee.employeeName} (${employee.employeeId})`,
+                  }))}
+                  value={
+                    field.value && !form.watch('journalEntry.payToText')
+                      ? {
+                          id: field.value,
+                          name: field.value,
+                        }
+                      : null
+                  }
+                  onChange={(value: { id: string; name: string } | null) => {
+                    if (value) {
+                      field.onChange(value.name)
+                      form.setValue('journalEntry.payTo', value.name)
+                      form.setValue('journalEntry.payToText', '')
+                    } else {
+                      // Handle clearing the combobox
+                      field.onChange('')
+                      form.setValue('journalEntry.payTo', '')
+                      form.setValue('journalEntry.payToText', '')
+                    }
+                  }}
+                  placeholder="Select a receiver name"
+                  disabled={!!form.watch('journalEntry.payToText')?.trim()} // Only disable if manual input has content
+                />
+              </div>
+              {/* Manual Text Input Section */}
+              <div className="flex-1">
+                <FormControl>
+                  <Input
+                    placeholder="Enter receiver name"
+                    value={form.watch('journalEntry.payToText') || ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      form.setValue('journalEntry.payToText', value)
+                      form.setValue('journalEntry.payTo', value)
+                      if (value) {
+                        field.onChange(value)
+                      }
+                    }}
+                    disabled={
+                      !!form.watch('journalEntry.payTo') &&
+                      !form.watch('journalEntry.payToText')
+                    } // Disable if combobox has a value
+                  />
+                </FormControl>
+              </div>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       </div>
       <FormField
         control={form.control}
