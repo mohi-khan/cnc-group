@@ -75,6 +75,7 @@ export default function BankVoucher({
   const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>([])
   const [employees, setEmployees] = useState<any[]>([])
 
+
   const form = useForm<JournalEntryWithDetails>({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: initialData || {
@@ -456,6 +457,7 @@ export default function BankVoucher({
       journalDetails: journalDetailsFiltered.map((detail: any) => ({
         ...detail,
         notes: detail.notes || '',
+        remarks: detail.remarks || '',
         createdBy: user?.userId ?? 0,
         ...(isEdit && { updatedBy: user?.userId || 0 }),
         ...(isEdit &&

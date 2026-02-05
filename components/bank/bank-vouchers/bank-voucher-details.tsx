@@ -342,44 +342,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
-                {/* <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.departmentId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={formState.departments
-                              .filter((department) => department.isActive)
-                              .map((department) => ({
-                                id: department.departmentID.toString(),
-                                name:
-                                  department.departmentName || 'Unnamed Unit',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      formState.departments.find(
-                                        (d) => d.departmentID === field.value
-                                      )?.departmentName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select unit"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell> */}
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -550,10 +513,10 @@ export default function BankVoucherDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            value={field.value ?? ''} 
-                            placeholder="Enter cheque no" 
+                          <Input
+                            {...field}
+                            value={field.value ?? ''}
+                            placeholder="Enter cheque no"
                           />
                         </FormControl>
                       </FormItem>
@@ -567,10 +530,10 @@ export default function BankVoucherDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            value={field.value ?? ''} 
-                            placeholder="Enter remarks" 
+                          <Input
+                            {...field}
+                            value={field.value ?? ''}
+                            placeholder="Enter remarks"
                           />
                         </FormControl>
                       </FormItem>
@@ -665,9 +628,6 @@ export default function BankVoucherDetails({
     </div>
   )
 }
-
-
-
 
 // 'use client'
 // import { useFieldArray, type UseFormReturn } from 'react-hook-form'
