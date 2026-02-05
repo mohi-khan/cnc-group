@@ -1056,6 +1056,7 @@ const VoucherSchemaById = z.object({
   currencyId: z.number(),
   totalamount: z.number(),
   notes: z.string(),
+  remarks: z.string(),
   id: z.number(),
   accountsname: z.string(),
   accountId: z.number(),
