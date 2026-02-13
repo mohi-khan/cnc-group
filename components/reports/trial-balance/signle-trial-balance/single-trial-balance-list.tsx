@@ -216,15 +216,15 @@ export default function SingleTrialBalanceList({
 
   return (
     <div
-      className="overflow-x-auto mx-3 mb-3 shadow-md"
+      className="overflow-x-auto mx-3 mb-3 shadow-md max-h-[600px] mt-5"
       ref={targetRef}
       style={{
-        padding: '40px 40px',
+        padding: '0px 40px',
         boxSizing: 'border-box',
       }}
     >
-      <table className="min-w-full table-fixed bg-white border border-gray-300 text-sm">
-        <thead className="pdf-table-header sticky top-0 bg-white z-10">
+      <table className="min-w-full table-fixed bg-white border border-gray-300 text-sm mt-20">
+        <thead className="pdf-table-header sticky top-4 bg-white z-10">
           <tr className="bg-gray-100">
             <SortableHeader field="voucherno">Voucher No</SortableHeader>
             <SortableHeader field="date">
@@ -293,6 +293,7 @@ export default function SingleTrialBalanceList({
         </tbody>
       </table>
     </div>
+    
   )
 }
 
