@@ -237,6 +237,7 @@ const DayBooks = () => {
     { key: 'date', label: 'Date' },
     { key: 'createdTime', label: 'created At' },
     { key: 'journaltype', label: 'Voucher Type' },
+    { key: 'topHead', label: 'Top Head' }, // ✅ Add this line
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },
     { key: 'totalamount', label: 'Amount' },

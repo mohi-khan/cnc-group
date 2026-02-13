@@ -1,36 +1,68 @@
-# 1. Use official Node.js image as base
-FROM node:slim AS base
+# # 1. Use official Node.js image as base
+# FROM node:slim AS base
 
-# 2. Set working directory
+# # 2. Set working directory
+# WORKDIR /app
+
+# # 3. Install dependencies separately to leverage Docker cache
+# COPY package.json package-lock.json* ./
+# RUN npm ci
+
+# # 4. Copy the rest of the application code
+# COPY . .
+
+# # 5. Set environment variables (use runtime `.env` instead of hardcoding)
+# ENV NODE_ENV production
+
+# # 6. Build the Next.js app
+# RUN npm run build
+
+# # 7. Use a minimal image for final deployment
+# FROM node:slim AS runner
+
+# # 8. Set working directory in runner container
+# WORKDIR /app
+
+# # 9. Copy only the necessary files from build stage
+# COPY --from=base /app/public ./public
+# COPY --from=base /app/.next ./.next
+# COPY --from=base /app/node_modules ./node_modules
+# COPY --from=base /app/package.json ./package.json
+
+# # 10. Expose Next.js port
+# EXPOSE 3000
+
+# # 11. Start the app
+# CMD ["npm", "start"]
+
+
+# -------- Build stage --------
+FROM node:20-slim AS base
+
 WORKDIR /app
 
-# 3. Install dependencies separately to leverage Docker cache
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# 4. Copy the rest of the application code
 COPY . .
-
-# 5. Set environment variables (use runtime `.env` instead of hardcoding)
-ENV NODE_ENV production
-
-# 6. Build the Next.js app
+ENV NODE_ENV=production
 RUN npm run build
 
-# 7. Use a minimal image for final deployment
-FROM node:slim AS runner
 
-# 8. Set working directory in runner container
+# -------- Runtime stage --------
+FROM node:20-slim AS runner
+
 WORKDIR /app
+ENV NODE_ENV=production
 
-# 9. Copy only the necessary files from build stage
+# Copy required runtime files
 COPY --from=base /app/public ./public
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/package.json ./package.json
+COPY --from=base /app/next.config.* ./
 
-# 10. Expose Next.js port
 EXPOSE 3000
 
-# 11. Start the app
-CMD ["npm", "start"]
+# IMPORTANT: run Next directly
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3000"]
