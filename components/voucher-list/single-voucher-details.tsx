@@ -70,6 +70,7 @@ import { ToWords } from 'to-words'
 import { Textarea } from '../ui/textarea'
 import { getAllEmployees } from '@/api/payment-requisition-api'
 import { getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 const printStyles = `
   @media print {
@@ -1062,10 +1063,10 @@ export default function SingleVoucherDetails() {
                           )}
                         </TableCell>
                         <TableCell className="tex-size-12">
-                          {item.debit > 0 ? item.debit.toFixed(2) : '-'}
+                          {item.debit > 0 ? formatIndianNumber(item.debit) : '-'}
                         </TableCell>
                         <TableCell className="tex-size-12">
-                          {item.credit > 0 ? item.credit.toFixed(2) : '-'}
+                          {item.credit > 0 ? formatIndianNumber(item.credit) : '-'}
                         </TableCell>
                         <TableCell className="no-print">
                           {editingReferenceIndex === originalIndex ? (
@@ -1116,7 +1117,7 @@ export default function SingleVoucherDetails() {
               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
                 <span className="font-medium">Amount:</span>
                 <span>
-                  {data[data.length - 1].totalamount.toFixed(2)}{' '}
+                 {formatIndianNumber(data[data.length - 1].totalamount)}{' '}
                   {data[data.length - 1].currency}
                 </span>
               </div>
