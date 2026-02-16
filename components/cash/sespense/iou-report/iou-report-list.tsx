@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface Props {
   data: IouRecordGetType[]
@@ -110,8 +111,8 @@ const IouReportList: React.FC<Props> = ({
               <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
               <TableCell>{getCompanyName(loan.companyId)}</TableCell>
               <TableCell>{getLocationName(loan.locationId)}</TableCell>
-              <TableCell>{formatAmount(loan.amount)}</TableCell>
-              <TableCell>{formatAmount(loan.adjustedAmount)}</TableCell>
+              <TableCell>{formatIndianNumber(loan.amount)}</TableCell>
+              <TableCell>{formatIndianNumber(loan.adjustedAmount)}</TableCell>
               <TableCell>{loan.status}</TableCell>
               <TableCell>
                 {isNaN(new Date(loan.dueDate).getTime())

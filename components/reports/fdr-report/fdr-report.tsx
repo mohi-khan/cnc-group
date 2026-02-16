@@ -21,6 +21,7 @@ import { FileText, Download, File } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 // ----- Types to support both snake_case and camelCase FDR payloads -----
 type Snake = {
@@ -445,8 +446,8 @@ export default function Page() {
   }
 
   return (
-    <main className="w-full p-6 space-y-6">
-      <div className="flex gap-2 justify-end pr-5">
+    <main className="w-full my-2">
+      <div className="flex  justify-end pr-5">
         <Button
           onClick={generatePdf}
           variant="outline"
@@ -488,9 +489,9 @@ export default function Page() {
               </div>
             ) : (
               <div className="space-y-8">
-                <div className="overflow-x-auto">
-                  <Table className="border shadow-md">
-                    <TableHeader className="bg-slate-200 shadow-md pdf-table-header">
+                <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                  <Table className="border shadow-md ">
+                    <TableHeader className="bg-slate-200 shadow-md pdf-table-header sticky top-[0] z-10">
                       <TableRow>
                         <TableHead className="w-12">{'Sl #'}</TableHead>
                         <TableHead>{'FDR Date'}</TableHead>
@@ -529,10 +530,10 @@ export default function Page() {
                           <TableCell></TableCell>
                           <TableCell></TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(grand.actual)}
+                            {formatIndianNumber(grand.actual)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(grand.present)}
+                            {formatIndianNumber(grand.present)}
                           </TableCell>
                           <TableCell></TableCell>
                           <TableCell></TableCell>
@@ -559,10 +560,10 @@ function FragmentGroup({ group }: { group: Group }) {
           {group.name + ' Total:'}
         </TableCell>
         <TableCell className="text-right font-semibold">
-          {formatCurrency(group.totalActual)}
+          {formatIndianNumber(group.totalActual)}
         </TableCell>
         <TableCell className="text-right font-semibold">
-          {formatCurrency(group.totalPresent)}
+          {formatIndianNumber(group.totalPresent)}
         </TableCell>
         <TableCell colSpan={2}></TableCell>
       </TableRow>
@@ -577,10 +578,10 @@ function FragmentGroup({ group }: { group: Group }) {
             <TableCell>{g.accountNo(r)}</TableCell>
             <TableCell>{bankBranch}</TableCell>
             <TableCell className="text-right">
-              {formatCurrency(g.faceValue(r))}
+              {formatIndianNumber(g.faceValue(r))}
             </TableCell>
             <TableCell className="text-right">
-              {formatCurrency(g.presentValue(r))}
+              {formatIndianNumber(g.presentValue(r))}
             </TableCell>
             <TableCell>{formatDate(g.maturedDate(r))}</TableCell>
             <TableCell>

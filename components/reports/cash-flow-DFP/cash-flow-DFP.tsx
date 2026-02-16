@@ -21,6 +21,7 @@ import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import Loader from '@/utils/loader'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 function formatCurrency(amount: number): string {
   return amount.toLocaleString()
@@ -297,13 +298,13 @@ const CashFlowDFP = () => {
                           </TableCell>
                           <TableCell>{item.company_name}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.LCUnderProcess)}
+                            {formatIndianNumber(item.LCUnderProcess)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.DocNegotiateWithBank)}
+                            {formatIndianNumber(item.DocNegotiateWithBank)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.AcceptedValue)}
+                            {formatIndianNumber(item.AcceptedValue)}
                           </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(item.MaturedValue)}
@@ -324,16 +325,16 @@ const CashFlowDFP = () => {
                           </TableCell>
                           <TableCell></TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(totals.LCUnderProcess)}
+                            {formatIndianNumber(totals.LCUnderProcess)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(totals.DocNegotiateWithBank)}
+                            {formatIndianNumber(totals.DocNegotiateWithBank)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(totals.AcceptedValue)}
+                            {formatIndianNumber(totals.AcceptedValue)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            {formatCurrency(totals.MaturedValue)}
+                            {formatIndianNumber(totals.MaturedValue)}
                           </TableCell>
                         </TableRow>
                       </TableBody>

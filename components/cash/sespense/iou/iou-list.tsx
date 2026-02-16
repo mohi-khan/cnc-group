@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface LoanListProps {
   onAddCategory: () => void
@@ -257,8 +258,8 @@ const IouList: React.FC<LoanListProps> = ({
                   {/* Only show Amount and Adjusted Amount if they are different */}
                   {loan.amount !== loan.adjustedAmount ? (
                     <>
-                      <TableCell>{loan.amount}</TableCell>
-                      <TableCell>{loan.adjustedAmount}</TableCell>
+                      <TableCell>{formatIndianNumber(loan.amount)}</TableCell>
+                      <TableCell>{formatIndianNumber(loan.adjustedAmount)}</TableCell>
                     </>
                   ) : (
                     <>

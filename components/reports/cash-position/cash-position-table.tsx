@@ -7,6 +7,7 @@ import {
   TableHead,
   TableRow,
 } from '@/components/ui/table'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 import { BankBalance, CashBalance, LoanReport } from '@/utils/type'
 
 interface Props {
@@ -112,7 +113,7 @@ const CashPositionTable: React.FC<Props> = ({
             </TableRow>
             <TableRow className="bg-slate-200 shadow-md sticky top-28">
               <TableHead className="border font-semibold">Bank Name</TableHead>
-              <TableHead className="border font-semibold">৳  Amount</TableHead>
+              <TableHead className="border font-semibold">Amount</TableHead>
               <TableHead className="border font-semibold">A/C No.</TableHead>
               <TableHead className="border font-semibold">
                 Previous Balance
@@ -135,11 +136,13 @@ const CashPositionTable: React.FC<Props> = ({
                   {bank.BankName} - {bank.BranchName}
                 </TableCell>
                 <TableCell className="border">
-                  {bank.openingBalance + bank.closingBalance}
+                  ৳ {formatIndianNumber(bank.openingBalance + bank.closingBalance)}
                 </TableCell>
                 <TableCell className="border">{bank.BankAccount}</TableCell>
                 <TableCell className="border">
-                  ৳ {bank.openingBalance.toLocaleString()}
+                  {/* ৳ {bank.openingBalance.toLocaleString()} */}
+                 ৳ {formatIndianNumber(bank.openingBalance)}
+
                 </TableCell>
                 <TableCell className="border text-red-600">
                   ৳ {bank.debitSum.toLocaleString()}
@@ -158,11 +161,11 @@ const CashPositionTable: React.FC<Props> = ({
                   {cashkBalance.companyName} - {cashkBalance.locationName}
                 </TableCell>
                 <TableCell className="border">
-                  {cashkBalance.openingBalance + cashkBalance.closingBalance}
+                  {formatIndianNumber(cashkBalance.openingBalance + cashkBalance.closingBalance)}
                 </TableCell>
                 <TableCell className="border"></TableCell>
                 <TableCell className="border">
-                  ৳ {cashkBalance.openingBalance.toLocaleString()}
+                  ৳ {formatIndianNumber(cashkBalance.openingBalance).toLocaleString()}
                 </TableCell>
                 <TableCell className="border text-red-600">
                   ৳ {cashkBalance.debitSum.toLocaleString()}
@@ -181,20 +184,20 @@ const CashPositionTable: React.FC<Props> = ({
                 Total:
               </TableCell>
               <TableCell className="border">
-                ৳ {combinedTotals.totalAmount.toLocaleString()}
+                ৳ {formatIndianNumber(combinedTotals.totalAmount).toLocaleString()}
               </TableCell>
               <TableCell className="border"></TableCell>
               <TableCell className="border">
-                ৳ {combinedTotals.totalPreviousBalance.toLocaleString()}
+                ৳ {formatIndianNumber(combinedTotals.totalPreviousBalance).toLocaleString()}
               </TableCell>
               <TableCell className="border text-red-600">
-                ৳ {combinedTotals.totalDebit.toLocaleString()}
+                ৳ {formatIndianNumber(combinedTotals.totalDebit).toLocaleString()}
               </TableCell>
               <TableCell className="border text-green-600">
-                ৳ {combinedTotals.totalCredit.toLocaleString()}
+                ৳ {formatIndianNumber(combinedTotals.totalCredit).toLocaleString()}
               </TableCell>
               <TableCell className="border">
-                ৳ {combinedTotals.totalClosingBalance.toLocaleString()}
+                ৳ {formatIndianNumber(combinedTotals.totalClosingBalance).toLocaleString()}
               </TableCell>
             </TableRow>
           </TableBody>

@@ -705,7 +705,7 @@ const InvoicesList = () => {
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(
-                            invoice.invoiceAmount,
+                            (invoice.invoiceAmount),
                             invoice.currencyName
                           )}
                         </TableCell>

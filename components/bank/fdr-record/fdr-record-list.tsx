@@ -42,6 +42,7 @@ import {
   ArrowDown,
 } from 'lucide-react'
 import type { CompanyType } from '@/api/company-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 type SortField = keyof FdrGetType
 type SortOrder = 'asc' | 'desc'
@@ -336,7 +337,9 @@ const FdrRecordList: React.FC<FdrRecordListProps> = ({
                           {fdr.accountNo}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {formatCurrency(fdr.faceValue)}
+                          {/* {formatCurrency(fdr.faceValue)} */}
+                         { "৳  " + formatIndianNumber(fdr.faceValue) }
+
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1">

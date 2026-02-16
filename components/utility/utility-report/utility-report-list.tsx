@@ -1,3 +1,4 @@
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 import { UtilityBillSummary } from '@/utils/type'
 
 interface UtilityReportListProps {
@@ -118,7 +119,8 @@ export default function UtilityReportList({ bills }: UtilityReportListProps) {
                   </span>
                 </td>
                 <td className="py-2 px-3 border-b text-center">
-                  {Math.round(yearData.average).toLocaleString()}
+                  {/* {Math.round(yearData.average).toLocaleString()} */}
+                  {formatIndianNumber(Math.round(yearData.average))}
                 </td>
                 {months.map((month) => {
                   const bill = billsByYear[year]?.[month.num]
@@ -130,11 +132,11 @@ export default function UtilityReportList({ bills }: UtilityReportListProps) {
                       {bill ? (
                         <span
                           className={
-                            bill.unpaidAmount > 0 ? 'text-red-600' : ''
+                            Number(bill.unpaidAmount) > 0 ? 'text-red-600' : ''
                           }
                         >
-                          {bill.totalAmount.toLocaleString()}
-                          {bill.unpaidAmount > 0 && (
+                          {formatIndianNumber(Number(bill.totalAmount))}
+                          {Number(bill.unpaidAmount) > 0 && (
                             <sup className="text-red-500">*</sup>
                           )}
                         </span>
@@ -145,7 +147,7 @@ export default function UtilityReportList({ bills }: UtilityReportListProps) {
                   )
                 })}
                 <td className="py-2 px-3 border-b text-center font-medium">
-                  {yearData.totalAmount.toLocaleString()}
+                  {formatIndianNumber(yearData.totalAmount).toLocaleString()}
                 </td>
               </tr>
             )

@@ -1,5 +1,6 @@
 'use client'
 
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 import { GetBankLedger } from '@/utils/type'
 import { useEffect, useState } from 'react'
 
@@ -62,9 +63,9 @@ export default function BankLedgerList({
 
   // ✅ Table render
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-[500px] mb-4">
       <table className="min-w-full bg-white border border-gray-300 text-sm">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-200 sticky top-0 z-10">
           <tr>
             <th className="py-2 px-4 border-b text-left">Date</th>
             <th className="py-2 px-4 border-b text-left">Account Name</th>
@@ -85,10 +86,10 @@ export default function BankLedgerList({
               <td className="py-2 px-4 border-b">{`${transaction.accountname} ${-transaction.bankaccountnumber || ' '}`}</td>
               <td className="py-2 px-4 border-b">{transaction.voucherno}</td>
               <td className="py-2 px-4 border-b text-right">
-                {transaction.debit.toLocaleString()}
+                {formatIndianNumber(transaction.debit).toLocaleString()}
               </td>
               <td className="py-2 px-4 border-b text-right">
-                {transaction.credit.toLocaleString()}
+                {formatIndianNumber(transaction.credit).toLocaleString()}
               </td>
               <td className="py-2 px-4 border-b">
                 {transaction.partner ?? '—'}

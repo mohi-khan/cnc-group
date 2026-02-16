@@ -17,6 +17,7 @@ import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { getAllCurrency } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 const ApproveAdvance = () => {
   useInitializeUser()
@@ -204,7 +205,9 @@ const ApproveAdvance = () => {
                     <TableCell>{advance.checkName}</TableCell>
                     <TableCell>{advance.requestedDate}</TableCell>
                     <TableCell>
-                      {advance.advanceamount}{' '}
+                      {/* {advance.advanceamount}{' '} */}
+                      {formatIndianNumber(Number(advance?.advanceamount || 0))}{' '}
+
                       {
                         currency.find(
                           (c) => String(c.currencyId) === String(advance.currency)

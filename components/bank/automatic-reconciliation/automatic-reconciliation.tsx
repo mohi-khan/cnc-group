@@ -36,6 +36,7 @@ import { getAllBankAccounts } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 export default function AutomaticReconciliation() {
   //getting userData from jotai atom component
@@ -478,7 +479,7 @@ export default function AutomaticReconciliation() {
                         {new Date(transaction.date).toISOString().split('T')[0]}
                       </TableCell>
                       <TableCell>{transaction.description}</TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
+                      <TableCell>{formatIndianNumber(Number(transaction.amount || 0))}</TableCell>
                       <TableCell>{transaction.currency}</TableCell>
                       <TableCell>{transaction.status}</TableCell>
                       <TableCell>{transaction.checkNo}</TableCell>
@@ -532,7 +533,7 @@ export default function AutomaticReconciliation() {
                     >
                       <TableCell>{reconciliation.voucherId}</TableCell>
                       <TableCell>{reconciliation.checkNo}</TableCell>
-                      <TableCell>{reconciliation.amount}</TableCell>
+                      <TableCell>{formatIndianNumber(Number(reconciliation.amount || 0))}</TableCell>
                       <TableCell>{reconciliation.type}</TableCell>
                       <TableCell>
                         {editingId === reconciliation.id ? (

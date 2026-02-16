@@ -61,6 +61,7 @@ import {
 } from '@/utils/type'
 import { getAllBankAccounts, getAllCurrency } from '@/api/common-shared-api'
 import { CustomCombobox } from '@/utils/custom-combobox'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 type SortColumn =
   | 'date'
@@ -376,7 +377,7 @@ export default function EntryBankTransaction() {
                       ? new Date(transaction.date).toLocaleDateString()
                       : '-'}
                   </TableCell>
-                  <TableCell>{transaction.amount}</TableCell>
+                  <TableCell>{formatIndianNumber(transaction.amount || 0)}</TableCell>
                   <TableCell>{transaction.currency}</TableCell>
                   <TableCell>{transaction.description || '-'}</TableCell>
                   <TableCell>
