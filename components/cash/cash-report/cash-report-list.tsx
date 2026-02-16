@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import type { GetCashReport, IouRecordGetType } from '@/utils/type'
 import { VoucherTypes } from '@/utils/type'
 import Link from 'next/link'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface CashReportProps {
   cashReport: GetCashReport[]
@@ -144,7 +145,10 @@ const CashReportList: React.FC<CashReportProps> = ({
                                   {transaction.oppositeNarration}
                                 </TableCell>
                                 <TableCell className="p-2 text-right">
-                                  {Number(transaction.oppositeAmount).toFixed(2)}
+                                  {/* {Number(transaction.oppositeAmount).toFixed(2)} */}
+                                  {formatIndianNumber(
+                                    Number(transaction?.oppositeAmount || 0)
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -193,7 +197,10 @@ const CashReportList: React.FC<CashReportProps> = ({
                                   {transaction.oppositeNarration}
                                 </TableCell>
                                 <TableCell className="p-2 text-right">
-                                  {Number(transaction.oppositeAmount).toFixed(2)}
+                                  {/* {Number(transaction.oppositeAmount).toFixed(2)} */}
+                                  {formatIndianNumber(
+                                    Number(transaction.oppositeAmount)
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -210,7 +217,8 @@ const CashReportList: React.FC<CashReportProps> = ({
                                 Closing Balance
                               </TableCell>
                               <TableCell className="p-2 text-right">
-                                {Number(bal.balance).toFixed(2)}
+                                {/* {Number(bal.balance).toFixed(2)} */}
+                                {formatIndianNumber(Number(bal.balance))}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -222,15 +230,21 @@ const CashReportList: React.FC<CashReportProps> = ({
                   <div className="border rounded p-2 ml-auto w-1/2">
                     <div className="mt-1 font-bold">
                       Total IOU:&nbsp;
-                      {loanData
+                      {/* {loanData
                         ?.reduce((sum, loan) => sum + loan.amount, 0)
-                        .toFixed(2)}
+                        .toFixed(2)} */}
+                      {formatIndianNumber(
+                        loanData?.reduce(
+                          (sum, loan) => sum + Number(loan.amount || 0),
+                          0
+                        ) || 0
+                      )}
                     </div>
                   </div>
 
                   <div className="border rounded p-2 ml-auto w-1/2">
                     <div className="font-bold mb-1">
-                      Total Amount: {totalAmount.toFixed(2)}
+                      Total Amount: {formatIndianNumber(totalAmount)}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -286,7 +300,9 @@ const CashReportList: React.FC<CashReportProps> = ({
                     </div>
 
                     <div className="mt-3 font-bold">
-                      Note Total: {noteTotal.toFixed(2)}
+                      Note Total:
+                      {/* {noteTotal.toFixed(2)} */}
+                      {formatIndianNumber(Number(noteTotal || 0))}
                     </div>
                     {/* <div className="mt-1 font-bold text-red-600">
                       Rest Amount: {restAmount.toFixed(2)}
@@ -302,9 +318,6 @@ const CashReportList: React.FC<CashReportProps> = ({
   )
 }
 export default CashReportList
-
-
-
 
 // 'use client'
 

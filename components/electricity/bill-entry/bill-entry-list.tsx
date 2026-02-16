@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface BillTableProps {
   onAddCategory: () => void
@@ -139,7 +140,7 @@ const BillTable: React.FC<BillTableProps> = ({ onAddCategory, billEntry }) => {
             <TableRow key={index}>
               <TableCell>{row.meterName}</TableCell>
               <TableCell>{row.billDate}</TableCell>
-              <TableCell>{row.amount}</TableCell>
+              <TableCell>{formatIndianNumber(row.amount)}</TableCell>
               <TableCell>
                 {row.payment === 0 ? 'Pre-paid' : 'Post-paid'}
               </TableCell>
@@ -148,42 +149,6 @@ const BillTable: React.FC<BillTableProps> = ({ onAddCategory, billEntry }) => {
         </TableBody>
       </Table>
       <div className="mt-4">
-        {/* <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() =>
-                  setCurrentPage((prev) => Math.max(prev - 1, 1))
-                }
-                className={
-                  currentPage === 1 ? 'pointer-events-none opacity-50' : ''
-                }
-              />
-            </PaginationItem>
-            {[...Array(totalPages)].map((_, index) => (
-              <PaginationItem key={index}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(index + 1)}
-                  isActive={currentPage === index + 1}
-                >
-                  {index + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : ''
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination> */}
         <Pagination>
           <PaginationContent>
             <PaginationItem>

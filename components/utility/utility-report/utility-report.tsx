@@ -46,7 +46,7 @@ export default function UtilityReport() {
   )
 
   return (
-    <div className="space-y-4 container mx-auto mt-20">
+    <div className="space-y-4 container  mt-20 mx-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Utility Bills Report</h1>
         <p className="text-gray-600">View utility bills summary by date range and meter number</p>

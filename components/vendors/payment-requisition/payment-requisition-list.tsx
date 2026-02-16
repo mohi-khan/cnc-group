@@ -37,6 +37,7 @@ import { useReactToPrint } from 'react-to-print'
 import { toWords } from 'number-to-words'
 import { getAllCurrency } from '@/api/common-shared-api'
 import { useRouter } from 'next/navigation'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 type SortField = keyof GetPaymentOrder
 type SortDirection = 'asc' | 'desc' | null
@@ -355,10 +356,11 @@ const PaymentRequisitionList: React.FC<PaymentRequisitionListProps> = ({
                   <TableCell className="font-medium">
                     {req.companyName}
                   </TableCell>
-                  <TableCell>{req.poNo}</TableCell>
+                <TableCell>{req.poNo}</TableCell>
                   <TableCell>{req.vendorName}</TableCell>
                   <TableCell>
-                    {req.amount}{' '}
+                   {formatIndianNumber(Number(req?.amount || 0))}{' '}
+
                     {
                       currency.find(
                         (c) => String(c.currencyId) === String(req.currency)

@@ -40,6 +40,7 @@ import { useRouter } from 'next/navigation'
 import BoeReceiptForm from './boe-receipt-form'
 import { getSettings } from '@/api/shared-api'
 import { getAllCurrency, getCurrency } from '@/api/currency-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 // ✅ Corrected Date Formatting Function
 const formatDate = (date: string | Date | null | undefined) => {
@@ -527,10 +528,10 @@ const BillOfExchange = () => {
                     <TableCell>{formatDate(boe.negotiationDate)}</TableCell>
                     <TableCell>{formatDate(boe.maturityDate)}</TableCell>
                     <TableCell className="text-right">
-                      ${boe.usdAmount.toFixed(2)}
+                      ${formatIndianNumber(boe.usdAmount)}
                     </TableCell>
                     <TableCell className="text-right">
-                      ৳{boe.bdtAmount?.toFixed(2)}
+                      ৳{formatIndianNumber(boe.bdtAmount)}
                     </TableCell>
                     <TableCell>{getBoeStatus(boe)}</TableCell>
                     <TableCell>

@@ -79,6 +79,7 @@ import { useRouter } from 'next/navigation'
 import { CustomCombobox } from '@/utils/custom-combobox'
 import type { CompanyData } from '@/api/create-user-api'
 import { getLcInfoByCostIsActive } from '@/api/import-lc-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 type SortColumn =
   | 'accountName'
@@ -1240,7 +1241,7 @@ export default function BankAccounts() {
                 <TableCell>{account.bankName}</TableCell>
                 <TableCell>{currency.find((curr) => curr.currencyId === Number(account.currencyId))?.currencyCode || 'Unknown'}</TableCell>
                 <TableCell>{account.accountType}</TableCell>
-                <TableCell>{account.openingBalance}</TableCell>
+                <TableCell>{formatIndianNumber(account.openingBalance)}</TableCell>
                 <TableCell>{companies.find((company) => company.companyId === account.companyId)?.companyName}</TableCell>
                 <TableCell>{account.isActive ? 'Active' : 'Inactive'}</TableCell>
                 <TableCell>
