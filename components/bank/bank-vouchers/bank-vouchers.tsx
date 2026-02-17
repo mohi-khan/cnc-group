@@ -80,18 +80,30 @@ export default function BankVoucher({
   const hasRestoredBankAccount = React.useRef(false)
 
   // Load last used values from localStorage
+  // const getLastUsedValues = useCallback(() => {
+  //   try {
+  //     const saved = localStorage.getItem('lastBankVoucherValues')
+  //     console.log('🔍 Checking localStorage for last used values:', saved)
+  //     const parsed = saved ? JSON.parse(saved) : null
+  //     console.log('📋 Parsed last used values:', parsed)
+  //     return parsed
+  //   } catch (error) {
+  //     console.error('❌ Error loading last used values:', error)
+  //     return null
+  //   }
+  // }, [])
   const getLastUsedValues = useCallback(() => {
-    try {
-      const saved = localStorage.getItem('lastBankVoucherValues')
-      console.log('🔍 Checking localStorage for last used values:', saved)
-      const parsed = saved ? JSON.parse(saved) : null
-      console.log('📋 Parsed last used values:', parsed)
-      return parsed
-    } catch (error) {
-      console.error('❌ Error loading last used values:', error)
-      return null
-    }
-  }, [])
+  try {
+    if (typeof window === 'undefined') return null  // ← Add this line
+    
+    const saved = localStorage.getItem('lastBankVoucherValues')
+    const parsed = saved ? JSON.parse(saved) : null
+    return parsed
+  } catch (error) {
+    console.error('❌ Error loading last used values:', error)
+    return null
+  }
+}, [])
 
   // Memoize lastUsedValues to prevent infinite loops
   const lastUsedValues = useMemo(() => {
