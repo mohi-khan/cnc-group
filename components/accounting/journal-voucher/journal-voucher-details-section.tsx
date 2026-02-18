@@ -64,11 +64,15 @@ export function JournalVoucherDetailsSection({
   const { watch } = form
 
   const [costCenters, setCostCenters] = React.useState<CostCenter[]>([])
-  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>([])
+  const [chartOfAccounts, setChartOfAccounts] = React.useState<AccountsHead[]>(
+    []
+  )
   const [departments, setDepartments] = React.useState<GetDepartment[]>([])
   const [partners, setPartners] = React.useState<ResPartner[]>([])
   const [companyChartOfAccount, setCompanyChartOfAccount] = useState<any[]>([])
-  const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>([])
+  const [companyFilteredAccounts, setCompanyFilteredAccounts] = useState<any[]>(
+    []
+  )
 
   const newRowRef = useRef<HTMLButtonElement>(null)
   const entries = form.watch('journalDetails')
@@ -120,7 +124,8 @@ export function JournalVoucherDetailsSection({
       console.error('Error getting Chart Of accounts:', response.error)
       toast({
         title: 'Error',
-        description: response.error?.message || 'Failed to get Chart Of accounts',
+        description:
+          response.error?.message || 'Failed to get Chart Of accounts',
       })
     } else {
       const filteredCoa = response.data?.filter((account) => {
@@ -194,10 +199,15 @@ export function JournalVoucherDetailsSection({
         router.push('/unauthorized-access')
         return
       } else if (response.error || !response.data) {
-        console.error('Error getting company chart of accounts:', response.error)
+        console.error(
+          'Error getting company chart of accounts:',
+          response.error
+        )
         toast({
           title: 'Error',
-          description: response.error?.message || 'Failed to load company chart of accounts',
+          description:
+            response.error?.message ||
+            'Failed to load company chart of accounts',
         })
         setCompanyChartOfAccount([])
         return
@@ -248,7 +258,8 @@ export function JournalVoucherDetailsSection({
 
       const filtered = chartOfAccounts.filter(
         (account) =>
-          companyAccountIds.includes(account.accountId) && account.isGroup === false
+          companyAccountIds.includes(account.accountId) &&
+          account.isGroup === false
       )
 
       setCompanyFilteredAccounts(filtered)
@@ -259,14 +270,19 @@ export function JournalVoucherDetailsSection({
 
   useEffect(() => {
     const selectedCompanyId = form.getValues('journalEntry.companyId')
-    if (selectedCompanyId && companyChartOfAccount.length && chartOfAccounts.length) {
+    if (
+      selectedCompanyId &&
+      companyChartOfAccount.length &&
+      chartOfAccounts.length
+    ) {
       const companyAccountIds = companyChartOfAccount
         .filter((mapping) => mapping.companyId === selectedCompanyId)
         .map((mapping) => mapping.chartOfAccountId)
 
       const filtered = chartOfAccounts.filter(
         (account) =>
-          companyAccountIds.includes(account.accountId) && account.isGroup === false
+          companyAccountIds.includes(account.accountId) &&
+          account.isGroup === false
       )
 
       setCompanyFilteredAccounts(filtered)
@@ -304,135 +320,71 @@ export function JournalVoucherDetailsSection({
     }
   }, [entries.length, form, userData])
 
-  // Auto-balance function - adjusts debit rows to match total credits
-  const autoBalanceDebits = (updatedEntries: typeof entries) => {
-    // Calculate total credits
-    let totalCredits = 0
-    for (let i = 0; i < updatedEntries.length; i++) {
-      totalCredits += updatedEntries[i].credit
-    }
-
-    // Calculate total debits
-    let totalDebits = 0
-    const debitIndices: number[] = []
-    for (let i = 0; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        totalDebits += updatedEntries[i].debit
-        debitIndices.push(i)
-      }
-    }
-
-    // If credits exceed debits, adjust the first debit row
-    if (totalCredits > totalDebits && debitIndices.length > 0) {
-      const difference = totalCredits - totalDebits
-      const firstDebitIndex = debitIndices[0]
-      updatedEntries[firstDebitIndex].debit = Number((updatedEntries[firstDebitIndex].debit + difference).toFixed(2))
-      form.setValue(`journalDetails.${firstDebitIndex}.debit`, updatedEntries[firstDebitIndex].debit)
-    }
+  /**
+   * Core formula:
+   *   remaining = totalDebits - totalCredits (across ALL rows)
+   *
+   * This "remaining" is what the NEXT new row's credit should be pre-filled with.
+   * It is also recalculated after every debit/credit change.
+   */
+  const getRemainingBalance = (currentEntries: typeof entries) => {
+    const totalDebits = currentEntries.reduce(
+      (sum, e) => sum + (e.debit || 0),
+      0
+    )
+    const totalCredits = currentEntries.reduce(
+      (sum, e) => sum + (e.credit || 0),
+      0
+    )
+    return Number((totalDebits - totalCredits).toFixed(2))
   }
 
   const handleDebitChange = (index: number, value: string) => {
-    const updatedEntries = [...entries]
-    updatedEntries[index].debit = value === '' ? 0 : Number(value)
+    const updatedEntries = entries.map((e) => ({ ...e }))
+    const newDebit = value === '' ? 0 : Number(value)
+
+    // Set this row's debit; clear its credit (a row is either debit OR credit)
+    updatedEntries[index].debit = newDebit
     updatedEntries[index].credit = 0
 
-    const debitValue = value === '' ? 0 : Number(value)
-
-    // Find all credit rows immediately after this debit (until next debit or end)
-    let lastCreditIndex = -1
-    
-    for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        break
-      }
-      lastCreditIndex = i
-    }
-    
-    // Update the last credit row in this group
-    if (lastCreditIndex !== -1) {
-      let otherCredits = 0
-      for (let i = index + 1; i < lastCreditIndex; i++) {
-        otherCredits += updatedEntries[i].credit
-      }
-      
-      updatedEntries[lastCreditIndex].credit = Number((debitValue - otherCredits).toFixed(2))
-      form.setValue(`journalDetails.${lastCreditIndex}.credit`, updatedEntries[lastCreditIndex].credit)
-    }
-
-    // Update current row
-    form.setValue(`journalDetails.${index}.debit`, updatedEntries[index].debit)
-    form.setValue(`journalDetails.${index}.credit`, updatedEntries[index].credit)
+    // Commit all values back to the form
+    updatedEntries.forEach((entry, i) => {
+      form.setValue(`journalDetails.${i}.debit`, entry.debit)
+      form.setValue(`journalDetails.${i}.credit`, entry.credit)
+    })
     form.setValue('journalDetails', updatedEntries)
   }
 
   const handleCreditChange = (index: number, value: string) => {
-    const updatedEntries = [...entries]
-    const oldCredit = updatedEntries[index].credit
-    updatedEntries[index].credit = value === '' ? 0 : Number(value)
+    const updatedEntries = entries.map((e) => ({ ...e }))
+    const newCredit = value === '' ? 0 : Number(value)
+
+    // Set this row's credit; clear its debit
+    updatedEntries[index].credit = newCredit
     updatedEntries[index].debit = 0
 
-    // Calculate the difference
-    const difference = oldCredit - updatedEntries[index].credit
-
-    // Find next credit row and add the difference to it (before hitting another debit)
-    for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        break
-      }
-      if (updatedEntries[i].debit === 0) {
-        updatedEntries[i].credit = Number((updatedEntries[i].credit + difference).toFixed(2))
-        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-        break
-      }
-    }
-
-    // Auto-balance debits to match total credits
-    autoBalanceDebits(updatedEntries)
-
-    // Update all form values
-    for (let i = 0; i < updatedEntries.length; i++) {
-      form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
-      form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-    }
-
+    // Commit all values back to the form
+    updatedEntries.forEach((entry, i) => {
+      form.setValue(`journalDetails.${i}.debit`, entry.debit)
+      form.setValue(`journalDetails.${i}.credit`, entry.credit)
+    })
     form.setValue('journalDetails', updatedEntries)
   }
 
   const addEntry = () => {
-    const currentEntries = [...entries]
-    
-    // Find the last debit row
-    let lastDebitIndex = -1
-    let lastDebitValue = 0
-    
-    for (let i = currentEntries.length - 1; i >= 0; i--) {
-      if (currentEntries[i].debit > 0) {
-        lastDebitIndex = i
-        lastDebitValue = currentEntries[i].debit
-        break
-      }
-    }
-    
-    let remainingCredit = 0
-    
-    if (lastDebitIndex !== -1) {
-      // Calculate total credits after the last debit
-      let totalCreditsAfterLastDebit = 0
-      for (let i = lastDebitIndex + 1; i < currentEntries.length; i++) {
-        if (currentEntries[i].debit === 0) {
-          totalCreditsAfterLastDebit += currentEntries[i].credit
-        }
-      }
-      
-      remainingCredit = lastDebitValue - totalCreditsAfterLastDebit
-    }
-    
+    const currentEntries = entries.map((e) => ({ ...e }))
+
+    // remaining = totalDebits - totalCredits
+    // positive → debits exceed credits → new row should be credit
+    // negative → credits exceed debits → new row should be debit
+    const remaining = getRemainingBalance(currentEntries)
+
     const newEntry = {
       accountId: 0,
       costCenterId: null,
       departmentId: null,
-      debit: 0,
-      credit: Number(remainingCredit.toFixed(2)),
+      debit: remaining < 0 ? Math.abs(remaining) : 0, // credits > debits → pre-fill debit
+      credit: remaining > 0 ? remaining : 0, // debits > credits → pre-fill credit
       notes: '',
       createdBy: userData?.userId || 0,
       analyticTags: null,
@@ -442,11 +394,11 @@ export function JournalVoucherDetailsSection({
 
     const newEntries = [...currentEntries, newEntry]
     form.setValue('journalDetails', newEntries)
-    
-    // Force update the credit field for the new row
+
+    // Also set the individual fields so RHF picks them up immediately
     const newIndex = newEntries.length - 1
-    form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit.toFixed(2)))
-    form.setValue(`journalDetails.${newIndex}.debit`, 0)
+    form.setValue(`journalDetails.${newIndex}.debit`, newEntry.debit)
+    form.setValue(`journalDetails.${newIndex}.credit`, newEntry.credit)
   }
 
   const calculateTotals = () => {
@@ -484,7 +436,9 @@ export function JournalVoucherDetailsSection({
           <div>Action</div>
         </div>
         {entries.map((_, index) => {
-          const selectedAccountId = form.watch(`journalDetails.${index}.accountId`)
+          const selectedAccountId = form.watch(
+            `journalDetails.${index}.accountId`
+          )
           const selectedAccount = companyFilteredAccounts.find(
             (account) => account.accountId === selectedAccountId
           )
@@ -527,10 +481,16 @@ export function JournalVoucherDetailsSection({
                             (account) => account.accountId === newAccountId
                           )
                           if (!newAccount?.withholdingTax) {
-                            form.setValue(`journalDetails.${index}.resPartnerId`, null)
+                            form.setValue(
+                              `journalDetails.${index}.resPartnerId`,
+                              null
+                            )
                           }
                         } else {
-                          form.setValue(`journalDetails.${index}.resPartnerId`, null)
+                          form.setValue(
+                            `journalDetails.${index}.resPartnerId`,
+                            null
+                          )
                         }
                       }}
                       placeholder={
@@ -540,7 +500,10 @@ export function JournalVoucherDetailsSection({
                             ? 'No accounts for this company'
                             : 'Select an account'
                       }
-                      disabled={!selectedCompanyId || companyFilteredAccounts.length === 0}
+                      disabled={
+                        !selectedCompanyId ||
+                        companyFilteredAccounts.length === 0
+                      }
                     />
                     <FormMessage />
                   </FormItem>
@@ -557,20 +520,24 @@ export function JournalVoucherDetailsSection({
                           .filter((center) => center.isActive)
                           .map((center) => ({
                             id: center.costCenterId.toString(),
-                            name: center.costCenterName || 'Unnamed Cost Center',
+                            name:
+                              center.costCenterName || 'Unnamed Cost Center',
                           }))}
                         value={
                           field.value
                             ? {
                                 id: field.value.toString(),
                                 name:
-                                  costCenters.find((c) => c.costCenterId === field.value)
-                                    ?.costCenterName || '',
+                                  costCenters.find(
+                                    (c) => c.costCenterId === field.value
+                                  )?.costCenterName || '',
                               }
                             : null
                         }
                         onChange={(value) =>
-                          field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
                         }
                         placeholder="Select cost center"
                       />
@@ -594,33 +561,39 @@ export function JournalVoucherDetailsSection({
                           )
                           .map((department) => ({
                             id: department.departmentID.toString(),
-                            name: department.departmentName || 'Unnamed Department',
+                            name:
+                              department.departmentName || 'Unnamed Department',
                           }))}
                         value={
                           field.value
                             ? {
                                 id: field.value.toString(),
                                 name:
-                                  departments.find((d) => d.departmentID === field.value)
-                                    ?.departmentName || '',
+                                  departments.find(
+                                    (d) => d.departmentID === field.value
+                                  )?.departmentName || '',
                               }
                             : null
                         }
                         onChange={(value) =>
-                          field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
                         }
                         placeholder={
                           !isCompanySelected
                             ? 'Select company first'
-                            : departments.filter((d) => d.companyCode === selectedCompanyId)
-                                  .length === 0
+                            : departments.filter(
+                                  (d) => d.companyCode === selectedCompanyId
+                                ).length === 0
                               ? 'No departments for this company'
                               : 'Select a department'
                         }
                         disabled={
                           !isCompanySelected ||
-                          departments.filter((d) => d.companyCode === selectedCompanyId)
-                            .length === 0
+                          departments.filter(
+                            (d) => d.companyCode === selectedCompanyId
+                          ).length === 0
                         }
                       />
                     </FormControl>
@@ -650,7 +623,9 @@ export function JournalVoucherDetailsSection({
                             : null
                         }
                         onChange={(value) =>
-                          field.onChange(value ? Number.parseInt(value.id, 10) : null)
+                          field.onChange(
+                            value ? Number.parseInt(value.id, 10) : null
+                          )
                         }
                         placeholder="Select an employee"
                       />
@@ -664,7 +639,9 @@ export function JournalVoucherDetailsSection({
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <div className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed' : ''}`}>
+                      <div
+                        className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed' : ''}`}
+                      >
                         <CustomComboboxWithApi
                           items={partners.map((partner) => ({
                             id: partner.id.toString(),
@@ -672,7 +649,9 @@ export function JournalVoucherDetailsSection({
                           }))}
                           value={
                             field.value
-                              ? (partners.find((p) => p.id === Number(field.value)) ?? {
+                              ? (partners.find(
+                                  (p) => p.id === Number(field.value)
+                                ) ?? {
                                   id: field.value,
                                   name: partnerValue?.name || '',
                                 })
@@ -690,7 +669,10 @@ export function JournalVoucherDetailsSection({
                               typeof id === 'string' && /^\d+$/.test(id)
                                 ? parseInt(id, 10)
                                 : (id as number)
-                            const partner = await getPartnerById(numericId, token)
+                            const partner = await getPartnerById(
+                              numericId,
+                              token
+                            )
                             return partner?.data
                               ? {
                                   id: partner.data.id.toString(),
@@ -716,7 +698,9 @@ export function JournalVoucherDetailsSection({
                         type="number"
                         {...field}
                         value={field.value === 0 ? '' : field.value}
-                        onChange={(e) => handleDebitChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleDebitChange(index, e.target.value)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -733,7 +717,9 @@ export function JournalVoucherDetailsSection({
                         type="number"
                         {...field}
                         value={field.value === 0 ? '' : field.value}
-                        onChange={(e) => handleCreditChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleCreditChange(index, e.target.value)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -781,5 +767,3 @@ export function JournalVoucherDetailsSection({
     </div>
   )
 }
-
-

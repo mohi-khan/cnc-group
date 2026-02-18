@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
@@ -179,127 +180,57 @@ export function ContraVoucherDetailsSection({
     }
   }
 
-  // ─── Auto-balance: adjusts debit rows to match total credits ─────────────────
-  const autoBalanceDebits = (updatedEntries: typeof entries) => {
-    let totalCredits = 0
-    for (let i = 0; i < updatedEntries.length; i++) {
-      totalCredits += updatedEntries[i].credit
-    }
-
-    let totalDebits = 0
-    const debitIndices: number[] = []
-    for (let i = 0; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        totalDebits += updatedEntries[i].debit
-        debitIndices.push(i)
-      }
-    }
-
-    if (totalCredits > totalDebits && debitIndices.length > 0) {
-      const difference = totalCredits - totalDebits
-      const firstDebitIndex = debitIndices[0]
-      updatedEntries[firstDebitIndex].debit = Number(
-        (updatedEntries[firstDebitIndex].debit + difference).toFixed(2)
-      )
-      form.setValue(
-        `journalDetails.${firstDebitIndex}.debit`,
-        updatedEntries[firstDebitIndex].debit
-      )
-    }
+  /**
+   * Core formula:
+   *   remaining = totalDebits - totalCredits (across ALL rows)
+   *
+   * positive → debits exceed credits → new row pre-fills credit
+   * negative → credits exceed debits → new row pre-fills debit
+   */
+  const getRemainingBalance = (currentEntries: typeof entries) => {
+    const totalDebits = currentEntries.reduce((sum, e) => sum + (e.debit || 0), 0)
+    const totalCredits = currentEntries.reduce((sum, e) => sum + (e.credit || 0), 0)
+    return Number((totalDebits - totalCredits).toFixed(2))
   }
 
   const handleDebitChange = (index: number, value: string) => {
-    const updatedEntries = [...entries]
+    const updatedEntries = entries.map((e) => ({ ...e }))
     updatedEntries[index].debit = value === '' ? 0 : Number(value)
+    // A row is either debit OR credit
     updatedEntries[index].credit = 0
 
-    const debitValue = value === '' ? 0 : Number(value)
-
-    let lastCreditIndex = -1
-    for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) break
-      lastCreditIndex = i
-    }
-
-    if (lastCreditIndex !== -1) {
-      let otherCredits = 0
-      for (let i = index + 1; i < lastCreditIndex; i++) {
-        otherCredits += updatedEntries[i].credit
-      }
-      updatedEntries[lastCreditIndex].credit = Number(
-        (debitValue - otherCredits).toFixed(2)
-      )
-      form.setValue(
-        `journalDetails.${lastCreditIndex}.credit`,
-        updatedEntries[lastCreditIndex].credit
-      )
-    }
-
-    form.setValue(`journalDetails.${index}.debit`, updatedEntries[index].debit)
-    form.setValue(`journalDetails.${index}.credit`, updatedEntries[index].credit)
+    updatedEntries.forEach((entry, i) => {
+      form.setValue(`journalDetails.${i}.debit`, entry.debit)
+      form.setValue(`journalDetails.${i}.credit`, entry.credit)
+    })
     form.setValue('journalDetails', updatedEntries)
   }
 
   const handleCreditChange = (index: number, value: string) => {
-    const updatedEntries = [...entries]
-    const oldCredit = updatedEntries[index].credit
+    const updatedEntries = entries.map((e) => ({ ...e }))
     updatedEntries[index].credit = value === '' ? 0 : Number(value)
+    // A row is either debit OR credit
     updatedEntries[index].debit = 0
 
-    const difference = oldCredit - updatedEntries[index].credit
-
-    // Find next credit row and redistribute the difference
-    for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) break
-      if (updatedEntries[i].debit === 0) {
-        updatedEntries[i].credit = Number(
-          (updatedEntries[i].credit + difference).toFixed(2)
-        )
-        form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-        break
-      }
-    }
-
-    // ✅ Auto-balance debits to match total credits (same as journal voucher)
-    autoBalanceDebits(updatedEntries)
-
-    for (let i = 0; i < updatedEntries.length; i++) {
-      form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
-      form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-    }
-
+    updatedEntries.forEach((entry, i) => {
+      form.setValue(`journalDetails.${i}.debit`, entry.debit)
+      form.setValue(`journalDetails.${i}.credit`, entry.credit)
+    })
     form.setValue('journalDetails', updatedEntries)
   }
 
   const addEntry = () => {
-    const currentEntries = [...entries]
+    const currentEntries = entries.map((e) => ({ ...e }))
 
-    let lastDebitIndex = -1
-    let lastDebitValue = 0
-    for (let i = currentEntries.length - 1; i >= 0; i--) {
-      if (currentEntries[i].debit > 0) {
-        lastDebitIndex = i
-        lastDebitValue = currentEntries[i].debit
-        break
-      }
-    }
-
-    let remainingCredit = 0
-    if (lastDebitIndex !== -1) {
-      let totalCreditsAfterLastDebit = 0
-      for (let i = lastDebitIndex + 1; i < currentEntries.length; i++) {
-        if (currentEntries[i].debit === 0) {
-          totalCreditsAfterLastDebit += currentEntries[i].credit
-        }
-      }
-      remainingCredit = lastDebitValue - totalCreditsAfterLastDebit
-    }
+    // remaining > 0 → debits exceed credits → pre-fill credit
+    // remaining < 0 → credits exceed debits → pre-fill debit
+    const remaining = getRemainingBalance(currentEntries)
 
     const newEntry = {
       bankaccountid: 0,
       accountId: cashCoa[0]?.accountId || 0,
-      debit: 0,
-      credit: Number(remainingCredit.toFixed(2)),
+      debit: remaining < 0 ? Math.abs(remaining) : 0,
+      credit: remaining > 0 ? remaining : 0,
       notes: '',
       createdBy: userData?.userId || 0,
       analyticTags: null,
@@ -310,8 +241,8 @@ export function ContraVoucherDetailsSection({
     form.setValue('journalDetails', newEntries)
 
     const newIndex = newEntries.length - 1
-    form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit.toFixed(2)))
-    form.setValue(`journalDetails.${newIndex}.debit`, 0)
+    form.setValue(`journalDetails.${newIndex}.debit`, newEntry.debit)
+    form.setValue(`journalDetails.${newIndex}.credit`, newEntry.credit)
 
     setDisabledStates((prev) => ({
       ...prev,
@@ -550,12 +481,10 @@ export function ContraVoucherDetailsSection({
 //   onRemoveEntry,
 //   isEdit = false,
 // }: ContraVoucherDetailsSectionProps) {
-//   //getting userData from jotai atom component
 //   useInitializeUser()
 //   const [userData] = useAtom(userDataAtom)
 //   const [token] = useAtom(tokenAtom)
 
-//   // State variables
 //   const [accounts, setAccounts] = useState<BankAccount[]>([])
 //   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
 //   const [cashCoa, setCashCoa] = React.useState<AccountsHead[]>([])
@@ -564,67 +493,54 @@ export function ContraVoucherDetailsSection({
 //   >({})
 //   const [userId, setUserId] = useState<number>()
 
-//   // Watch the selected company ID from master section
 //   const selectedCompanyId = form.watch('journalEntry.companyId')
 
-//   // Filter bank accounts based on selected company
 //   const filteredBankAccounts = useMemo(() => {
-//     if (!selectedCompanyId) {
-//       return [] // Return empty array if no company is selected
-//     }
-
+//     if (!selectedCompanyId) return []
 //     return accounts.filter(
 //       (account) => account.isActive && account.companyId === selectedCompanyId
 //     )
 //   }, [accounts, selectedCompanyId])
 
 //   React.useEffect(() => {
-//     if (userData) {
-//       setUserId(userData.userId)
-//     }
+//     if (userData) setUserId(userData.userId)
 //   }, [userData])
 
 //   const entries = form.watch('journalDetails')
 
-//   // Clear bank account selections when company changes
 //   useEffect(() => {
 //     if (selectedCompanyId) {
-//       // Clear all bank account selections in details when company changes
 //       const currentEntries = form.getValues('journalDetails')
 //       const updatedEntries = currentEntries.map((entry) => ({
 //         ...entry,
-//         bankaccountid: 0, // Clear bank account selection
+//         bankaccountid: 0,
 //       }))
 //       form.setValue('journalDetails', updatedEntries)
 
-//       // Reset disabled states for bank accounts
 //       setDisabledStates((prev) => {
 //         const newStates = { ...prev }
 //         Object.keys(newStates).forEach((key) => {
-//           newStates[Number(key)] = {
-//             ...newStates[Number(key)],
-//             bank: false, // Re-enable bank account selection
-//           }
+//           newStates[Number(key)] = { ...newStates[Number(key)], bank: false }
 //         })
 //         return newStates
 //       })
 //     }
 //   }, [selectedCompanyId, form])
 
-//   // Initialize with one entry if empty
 //   useEffect(() => {
 //     if (entries.length === 0) {
-//       const defaultEntry = {
-//         bankaccountid: 0,
-//         accountId: 0,
-//         debit: 0,
-//         credit: 0,
-//         notes: '',
-//         createdBy: 0,
-//         analyticTags: null,
-//         taxId: null,
-//       }
-//       form.setValue('journalDetails', [defaultEntry])
+//       form.setValue('journalDetails', [
+//         {
+//           bankaccountid: 0,
+//           accountId: 0,
+//           debit: 0,
+//           credit: 0,
+//           notes: '',
+//           createdBy: 0,
+//           analyticTags: null,
+//           taxId: null,
+//         },
+//       ])
 //     }
 //   }, [entries.length, form])
 
@@ -633,8 +549,7 @@ export function ContraVoucherDetailsSection({
 //     if (response.error || !response.data) {
 //       toast({
 //         title: 'Error',
-//         description:
-//           response.error?.message || 'Failed to fetch Chart of Accounts',
+//         description: response.error?.message || 'Failed to fetch Chart of Accounts',
 //       })
 //     } else {
 //       setChartOfAccounts(response.data)
@@ -642,13 +557,7 @@ export function ContraVoucherDetailsSection({
 //   }, [token])
 
 //   React.useEffect(() => {
-//     const filteredCoa = chartOfAccounts?.filter((account) => {
-//       return account.isGroup === false
-//     })
-
-//     const isCashCoa = chartOfAccounts?.filter((account) => {
-//       return account.isCash === true
-//     })
+//     const isCashCoa = chartOfAccounts?.filter((account) => account.isCash === true)
 //     setCashCoa(isCashCoa || [])
 //   }, [chartOfAccounts])
 
@@ -684,10 +593,7 @@ export function ContraVoucherDetailsSection({
 //   ) => {
 //     setDisabledStates((prev) => ({
 //       ...prev,
-//       [index]: {
-//         ...prev[index],
-//         [field]: value,
-//       },
+//       [index]: { ...prev[index], [field]: value },
 //     }))
 //   }
 
@@ -718,6 +624,35 @@ export function ContraVoucherDetailsSection({
 //     }
 //   }
 
+//   // ─── Auto-balance: adjusts debit rows to match total credits ─────────────────
+//   const autoBalanceDebits = (updatedEntries: typeof entries) => {
+//     let totalCredits = 0
+//     for (let i = 0; i < updatedEntries.length; i++) {
+//       totalCredits += updatedEntries[i].credit
+//     }
+
+//     let totalDebits = 0
+//     const debitIndices: number[] = []
+//     for (let i = 0; i < updatedEntries.length; i++) {
+//       if (updatedEntries[i].debit > 0) {
+//         totalDebits += updatedEntries[i].debit
+//         debitIndices.push(i)
+//       }
+//     }
+
+//     if (totalCredits > totalDebits && debitIndices.length > 0) {
+//       const difference = totalCredits - totalDebits
+//       const firstDebitIndex = debitIndices[0]
+//       updatedEntries[firstDebitIndex].debit = Number(
+//         (updatedEntries[firstDebitIndex].debit + difference).toFixed(2)
+//       )
+//       form.setValue(
+//         `journalDetails.${firstDebitIndex}.debit`,
+//         updatedEntries[firstDebitIndex].debit
+//       )
+//     }
+//   }
+
 //   const handleDebitChange = (index: number, value: string) => {
 //     const updatedEntries = [...entries]
 //     updatedEntries[index].debit = value === '' ? 0 : Number(value)
@@ -725,31 +660,26 @@ export function ContraVoucherDetailsSection({
 
 //     const debitValue = value === '' ? 0 : Number(value)
 
-//     // Find all credit rows immediately after this debit (until next debit or end)
 //     let lastCreditIndex = -1
-    
 //     for (let i = index + 1; i < updatedEntries.length; i++) {
-//       if (updatedEntries[i].debit > 0) {
-//         // Hit another debit, stop
-//         break
-//       }
+//       if (updatedEntries[i].debit > 0) break
 //       lastCreditIndex = i
 //     }
-    
-//     // Update the last credit row in this group
+
 //     if (lastCreditIndex !== -1) {
-//       // Calculate what the last credit should be
-//       // We need to keep all other credits and adjust only the last one
 //       let otherCredits = 0
 //       for (let i = index + 1; i < lastCreditIndex; i++) {
 //         otherCredits += updatedEntries[i].credit
 //       }
-      
-//       updatedEntries[lastCreditIndex].credit = Number((debitValue - otherCredits).toFixed(2))
-//       form.setValue(`journalDetails.${lastCreditIndex}.credit`, updatedEntries[lastCreditIndex].credit)
+//       updatedEntries[lastCreditIndex].credit = Number(
+//         (debitValue - otherCredits).toFixed(2)
+//       )
+//       form.setValue(
+//         `journalDetails.${lastCreditIndex}.credit`,
+//         updatedEntries[lastCreditIndex].credit
+//       )
 //     }
 
-//     // Update current row
 //     form.setValue(`journalDetails.${index}.debit`, updatedEntries[index].debit)
 //     form.setValue(`journalDetails.${index}.credit`, updatedEntries[index].credit)
 //     form.setValue('journalDetails', updatedEntries)
@@ -761,24 +691,23 @@ export function ContraVoucherDetailsSection({
 //     updatedEntries[index].credit = value === '' ? 0 : Number(value)
 //     updatedEntries[index].debit = 0
 
-//     // Calculate the difference
 //     const difference = oldCredit - updatedEntries[index].credit
 
-//     // Find next credit row and add the difference to it (before hitting another debit)
+//     // Find next credit row and redistribute the difference
 //     for (let i = index + 1; i < updatedEntries.length; i++) {
-//       if (updatedEntries[i].debit > 0) {
-//         // Hit a debit row, stop
-//         break
-//       }
+//       if (updatedEntries[i].debit > 0) break
 //       if (updatedEntries[i].debit === 0) {
-//         // Found next credit row, add the difference
-//         updatedEntries[i].credit = Number((updatedEntries[i].credit + difference).toFixed(2))
+//         updatedEntries[i].credit = Number(
+//           (updatedEntries[i].credit + difference).toFixed(2)
+//         )
 //         form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
 //         break
 //       }
 //     }
 
-//     // Update all form values
+//     // ✅ Auto-balance debits to match total credits (same as journal voucher)
+//     autoBalanceDebits(updatedEntries)
+
 //     for (let i = 0; i < updatedEntries.length; i++) {
 //       form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
 //       form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
@@ -789,11 +718,9 @@ export function ContraVoucherDetailsSection({
 
 //   const addEntry = () => {
 //     const currentEntries = [...entries]
-    
-//     // Find the last debit row
+
 //     let lastDebitIndex = -1
 //     let lastDebitValue = 0
-    
 //     for (let i = currentEntries.length - 1; i >= 0; i--) {
 //       if (currentEntries[i].debit > 0) {
 //         lastDebitIndex = i
@@ -801,27 +728,23 @@ export function ContraVoucherDetailsSection({
 //         break
 //       }
 //     }
-    
+
 //     let remainingCredit = 0
-    
 //     if (lastDebitIndex !== -1) {
-//       // Calculate total credits after the last debit (excluding rows with debit)
 //       let totalCreditsAfterLastDebit = 0
 //       for (let i = lastDebitIndex + 1; i < currentEntries.length; i++) {
 //         if (currentEntries[i].debit === 0) {
 //           totalCreditsAfterLastDebit += currentEntries[i].credit
 //         }
 //       }
-      
-//       // Remaining credit for new row
 //       remainingCredit = lastDebitValue - totalCreditsAfterLastDebit
 //     }
-    
+
 //     const newEntry = {
 //       bankaccountid: 0,
 //       accountId: cashCoa[0]?.accountId || 0,
 //       debit: 0,
-//       credit: Number(remainingCredit),
+//       credit: Number(remainingCredit.toFixed(2)),
 //       notes: '',
 //       createdBy: userData?.userId || 0,
 //       analyticTags: null,
@@ -830,12 +753,11 @@ export function ContraVoucherDetailsSection({
 
 //     const newEntries = [...currentEntries, newEntry]
 //     form.setValue('journalDetails', newEntries)
-    
-//     // Force update the credit field for the new row
+
 //     const newIndex = newEntries.length - 1
-//     form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit))
+//     form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit.toFixed(2)))
 //     form.setValue(`journalDetails.${newIndex}.debit`, 0)
-    
+
 //     setDisabledStates((prev) => ({
 //       ...prev,
 //       [entries.length]: { bank: false, account: false },
@@ -856,9 +778,7 @@ export function ContraVoucherDetailsSection({
 //   const totals = calculateTotals()
 
 //   const handleRemoveEntry = (index: number) => {
-//     if (entries.length > 2) {
-//       onRemoveEntry(index)
-//     }
+//     if (entries.length > 2) onRemoveEntry(index)
 //   }
 
 //   return (
@@ -871,6 +791,7 @@ export function ContraVoucherDetailsSection({
 //         <div>Notes</div>
 //         <div>Action</div>
 //       </div>
+
 //       {entries.map((entry, index) => (
 //         <div
 //           key={index}
@@ -891,20 +812,14 @@ export function ContraVoucherDetailsSection({
 //                       ? {
 //                           id: field.value,
 //                           name:
-//                             filteredBankAccounts.find(
-//                               (account) =>
-//                                 Number(account.id) === Number(field.value)
-//                             )?.bankName +
-//                               '-' +
-//                               filteredBankAccounts.find(
-//                                 (account) =>
-//                                   Number(account.id) === Number(field.value)
-//                               )?.accountName +
-//                               ' - ' +
-//                               filteredBankAccounts.find(
-//                                 (account) =>
-//                                   Number(account.id) === Number(field.value)
-//                               )?.accountNumber || '',
+//                             (() => {
+//                               const found = filteredBankAccounts.find(
+//                                 (account) => Number(account.id) === Number(field.value)
+//                               )
+//                               return found
+//                                 ? `${found.bankName}-${found.accountName} - ${found.accountNumber}`
+//                                 : ''
+//                             })(),
 //                         }
 //                       : null
 //                   }
@@ -916,9 +831,7 @@ export function ContraVoucherDetailsSection({
 //                     }
 //                   }}
 //                   placeholder={
-//                     selectedCompanyId
-//                       ? 'Select a Bank Account'
-//                       : 'Select company first'
+//                     selectedCompanyId ? 'Select a Bank Account' : 'Select company first'
 //                   }
 //                   disabled={
 //                     !selectedCompanyId ||
@@ -930,6 +843,7 @@ export function ContraVoucherDetailsSection({
 //               </FormItem>
 //             )}
 //           />
+
 //           <FormField
 //             control={form.control}
 //             name={`journalDetails.${index}.accountId`}
@@ -965,6 +879,7 @@ export function ContraVoucherDetailsSection({
 //               </FormItem>
 //             )}
 //           />
+
 //           <FormField
 //             control={form.control}
 //             name={`journalDetails.${index}.debit`}
@@ -982,6 +897,7 @@ export function ContraVoucherDetailsSection({
 //               </FormItem>
 //             )}
 //           />
+
 //           <FormField
 //             control={form.control}
 //             name={`journalDetails.${index}.credit`}
@@ -999,6 +915,7 @@ export function ContraVoucherDetailsSection({
 //               </FormItem>
 //             )}
 //           />
+
 //           <FormField
 //             control={form.control}
 //             name={`journalDetails.${index}.notes`}
@@ -1011,6 +928,7 @@ export function ContraVoucherDetailsSection({
 //               </FormItem>
 //             )}
 //           />
+
 //           <Button
 //             type="button"
 //             variant="outline"
@@ -1022,11 +940,13 @@ export function ContraVoucherDetailsSection({
 //           </Button>
 //         </div>
 //       ))}
+
 //       {!isEdit && (
 //         <Button type="button" className="mx-4" variant="outline" onClick={addEntry}>
 //           Add Another
 //         </Button>
 //       )}
+
 //       <div className="mt-4 flex justify-between gap-2 items-center px-4">
 //         <div>
 //           <p>Total Debit: {totals.debit.toFixed(2)}</p>
