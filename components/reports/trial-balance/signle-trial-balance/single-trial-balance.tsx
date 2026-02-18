@@ -271,6 +271,28 @@ export default function SingleTrialBalance() {
       currentY += batchHeight
     }
 
+    const tfoot = table.querySelector('tfoot')
+  if (tfoot) {
+    const tfootCanvas = await html2canvas(tfoot, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    })
+
+    const tfootScale = imgWidth / tfootCanvas.width
+    const tfootHeight = tfootCanvas.height * tfootScale
+
+    if (currentY + tfootHeight > pageHeight - marginBottom) {
+      pdf.addPage()
+      currentY = marginTop
+      pdf.addImage(headerImg, 'JPEG', horizontalPadding, currentY, imgWidth, headerHeight)
+      currentY += headerHeight
+    }
+
+    const tfootImg = tfootCanvas.toDataURL('image/jpeg', 0.95)
+    pdf.addImage(tfootImg, 'JPEG', horizontalPadding, currentY, imgWidth, tfootHeight)
+  }
+
     const totalPages = pdf.internal.pages.length - 1
     const selectedCompany = companies.find(
       (c) => c.id === Number(filters.companyId)
