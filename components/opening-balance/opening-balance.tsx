@@ -1,8 +1,8 @@
 'use client'
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
@@ -23,7 +23,6 @@ import {
   getAllVoucher,
 } from '@/api/vouchers-api'
 import VoucherList from '@/components/voucher-list/voucher-list'
-
 import { useForm } from 'react-hook-form'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
@@ -46,6 +45,34 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+
+// ─── localStorage key ──────────────────────────────────────────────────────────
+const LAST_USED_KEY = 'lastOpeningBalanceValues'
+
+// ─── Shape saved to localStorage ──────────────────────────────────────────────
+export interface LastUsedOpeningBalanceValues {
+  companyId: number
+  locationId: number
+  currencyId: number
+  formType: 'Credit' | 'Debit'
+  date: string
+}
+
+// ─── Blank detail row ─────────────────────────────────────────────────────────
+const BLANK_DETAIL = {
+  accountId: 0,
+  costCenterId: null,
+  departmentId: null,
+  employeeId: null,
+  debit: 0,
+  credit: 0,
+  analyticTags: null,
+  taxId: null,
+  resPartnerId: null,
+  bankaccountid: null,
+  notes: '',
+  createdBy: 0,
+}
 
 interface OpeningBalanceProps {
   initialData?: JournalEntryWithDetails
@@ -70,6 +97,67 @@ export default function OpeningBalance({
   const [user, setUser] = React.useState<User | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [settings, setSettings] = useState<number | null>(null)
+
+  // ── Last-used state (client-only — starts null/false to avoid SSR mismatch) ──
+  const [lastUsedValues, setLastUsedValues] =
+    useState<LastUsedOpeningBalanceValues | null>(null)
+  const [showLastUsedBanner, setShowLastUsedBanner] = useState(false)
+
+  // ─── localStorage helpers ────────────────────────────────────────────────────
+  const getLastUsedValues =
+    useCallback((): LastUsedOpeningBalanceValues | null => {
+      try {
+        const saved = localStorage.getItem(LAST_USED_KEY)
+        return saved ? JSON.parse(saved) : null
+      } catch {
+        return null
+      }
+    }, [])
+
+  const saveLastUsedValues = useCallback(
+    (
+      companyId: number,
+      locationId: number,
+      currencyId: number,
+      formType: 'Credit' | 'Debit',
+      date: string
+    ) => {
+      try {
+        const toSave: LastUsedOpeningBalanceValues = {
+          companyId,
+          locationId,
+          currencyId,
+          formType,
+          date,
+        }
+        localStorage.setItem(LAST_USED_KEY, JSON.stringify(toSave))
+        setLastUsedValues(toSave)
+        setShowLastUsedBanner(true)
+      } catch {
+        // silently ignore write failures
+      }
+    },
+    []
+  )
+
+  const clearLastUsedValues = useCallback(() => {
+    try {
+      localStorage.removeItem(LAST_USED_KEY)
+    } catch {
+      // ignore
+    }
+    setLastUsedValues(null)
+    setShowLastUsedBanner(false)
+  }, [])
+
+  // ─── Client-only: restore last-used values AFTER first paint ─────────────────
+  useEffect(() => {
+    const last = getLastUsedValues()
+    if (!last) return
+    if (!last.companyId && !last.currencyId) return
+    setLastUsedValues(last)
+    setShowLastUsedBanner(true)
+  }, [getLastUsedValues])
 
   const fetchSettings = React.useCallback(async () => {
     if (!token) return
@@ -103,22 +191,7 @@ export default function OpeningBalance({
         notes: '',
         createdBy: 0,
       },
-      journalDetails: [
-        {
-          accountId: 0,
-          costCenterId: null,
-          departmentId: null,
-          employeeId: null,
-          debit: 0,
-          credit: 0,
-          analyticTags: null,
-          taxId: null,
-          resPartnerId: null,
-          bankaccountid: null,
-          notes: '',
-          createdBy: 0,
-        },
-      ],
+      journalDetails: [{ ...BLANK_DETAIL }],
     },
   })
 
@@ -137,16 +210,26 @@ export default function OpeningBalance({
     status: 'Draft',
   })
 
-  React.useEffect(() => {
-    const checkUserData = () => {
-      const storedUserData = localStorage.getItem('currentUser')
-      const storedToken = localStorage.getItem('authToken')
-      if (!storedUserData || !storedToken) {
-        router.push('/')
-        return
-      }
-    }
+  // ─── Apply last-used values to form + formState when dialog opens ─────────────
+  useEffect(() => {
+    if (!isDialogOpen || !lastUsedValues || initialData || isEdit) return
 
+    form.setValue('journalEntry.companyId', lastUsedValues.companyId, {
+      shouldDirty: false,
+    })
+    form.setValue('journalEntry.locationId', lastUsedValues.locationId, {
+      shouldDirty: false,
+    })
+    form.setValue('journalEntry.currencyId', lastUsedValues.currencyId, {
+      shouldDirty: false,
+    })
+    form.setValue('journalEntry.date', lastUsedValues.date, {
+      shouldDirty: false,
+    })
+    setFormState((prev) => ({ ...prev, formType: lastUsedValues.formType }))
+  }, [isDialogOpen, lastUsedValues, form, initialData, isEdit])
+
+  React.useEffect(() => {
     if (userData) {
       setFormState((prevState) => ({
         ...prevState,
@@ -212,9 +295,7 @@ export default function OpeningBalance({
   }, [token, router])
 
   React.useEffect(() => {
-    if (userData) {
-      setUser(userData)
-    }
+    if (userData) setUser(userData)
   }, [userData])
 
   const getCompanyIds = React.useCallback((data: any[]): number[] => {
@@ -266,7 +347,7 @@ export default function OpeningBalance({
           const mylocations = getLocationIds(formState.locations)
           await getallVoucher(mycompanies, mylocations)
           setDataLoaded(true)
-        } catch (error) {
+        } catch {
           toast({
             title: 'Error',
             description: 'Failed to load voucher data. Please try again.',
@@ -285,6 +366,31 @@ export default function OpeningBalance({
     getallVoucher,
     dataLoaded,
   ])
+
+  // ─── Helper: reset form but keep master fields pre-filled ────────────────────
+  const resetFormKeepMaster = React.useCallback(() => {
+    const keepCompanyId = form.getValues('journalEntry.companyId')
+    const keepLocationId = form.getValues('journalEntry.locationId')
+    const keepCurrencyId = form.getValues('journalEntry.currencyId')
+    const keepDate = form.getValues('journalEntry.date')
+
+    form.reset({
+      journalEntry: {
+        date: keepDate,
+        journalType: VoucherTypes.OpeningBalance,
+        companyId: keepCompanyId,
+        locationId: keepLocationId,
+        currencyId: keepCurrencyId,
+        exchangeRate: 1,
+        amountTotal: 0,
+        payTo: '',
+        notes: '',
+        createdBy: 0,
+      },
+      journalDetails: [{ ...BLANK_DETAIL }],
+    })
+    // formType is kept as-is in formState (not reset)
+  }, [form])
 
   const onSubmit = async (values: any, status: 'Draft' | 'Posted') => {
     const updatedValues = {
@@ -355,13 +461,11 @@ export default function OpeningBalance({
         })
       } else {
         setDataLoaded(false)
-        const mycompanies = getCompanyIds(formState.companies)
-        const mylocations = getLocationIds(formState.locations)
-        getallVoucher(mycompanies, mylocations)
-        toast({
-          title: 'Success',
-          description: 'Voucher is edited successfully',
-        })
+        getallVoucher(
+          getCompanyIds(formState.companies),
+          getLocationIds(formState.locations)
+        )
+        toast({ title: 'Success', description: 'Voucher is edited successfully' })
         onClose?.()
         setIsDialogOpen(false)
         form.reset()
@@ -374,19 +478,54 @@ export default function OpeningBalance({
           description: response.error?.message || 'Error creating Journal',
         })
       } else {
+        // ✅ Persist last-used values (company, location, currency, type, date)
+        saveLastUsedValues(
+          values.journalEntry.companyId,
+          values.journalEntry.locationId,
+          values.journalEntry.currencyId,
+          formState.formType,
+          values.journalEntry.date
+        )
+
         setDataLoaded(false)
-        const mycompanies = getCompanyIds(formState.companies)
-        const mylocations = getLocationIds(formState.locations)
-        getallVoucher(mycompanies, mylocations)
+        // Refetch list in background — dialog stays open
+        getallVoucher(
+          getCompanyIds(formState.companies),
+          getLocationIds(formState.locations)
+        )
+
         toast({
           title: 'Success',
           description: 'Opening Voucher is created successfully',
         })
-        onClose?.()
-        setIsDialogOpen(false)
-        form.reset()
+
+        // ✅ Reset detail rows only, keep master fields pre-filled
+        // Dialog is NOT closed — stays open for next entry
+        resetFormKeepMaster()
       }
     }
+  }
+
+  // ─── Clear banner handler ────────────────────────────────────────────────────
+  const handleClearBanner = () => {
+    setShowLastUsedBanner(false)
+    clearLastUsedValues()
+    form.reset({
+      journalEntry: {
+        date: new Date().toISOString().split('T')[0],
+        journalType: VoucherTypes.OpeningBalance,
+        companyId: 0,
+        locationId: 0,
+        currencyId: 1,
+        exchangeRate: 1,
+        amountTotal: 0,
+        payTo: '',
+        notes: '',
+        createdBy: 0,
+      },
+      journalDetails: [{ ...BLANK_DETAIL }],
+    })
+    setFormState((prev) => ({ ...prev, formType: 'Credit' }))
   }
 
   const columns = [
@@ -401,6 +540,64 @@ export default function OpeningBalance({
 
   const linkGenerator = (voucherId: number) =>
     `/voucher-list/single-voucher-details/${voucherId}?voucherType=${VoucherTypes.OpeningBalance}`
+
+  const dialogForm = (
+    <>
+      {/*
+        ── Last-used banner ──
+        showLastUsedBanner starts false on server + first client render.
+        Only set to true via useEffect (client-only) — zero SSR mismatch.
+      */}
+      {showLastUsedBanner && !initialData && !isEdit && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-600 font-medium">
+              ℹ️ Using last filled values
+            </span>
+            <span className="text-sm text-blue-700">
+              (Company, Location, Currency, Type, Date)
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearBanner}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Clear
+          </Button>
+        </div>
+      )}
+
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit((values) =>
+            onSubmit(values, formState.status)
+          )}
+          className="space-y-8"
+        >
+          {validationError && (
+            <div className="text-red-500 text-sm mb-4">{validationError}</div>
+          )}
+          <OpeningBalanceMaster
+            form={form}
+            formState={formState}
+            requisition={undefined}
+            setFormState={setFormState}
+          />
+          <OpeningBalanceDetails
+            form={form}
+            formState={formState}
+            requisition={undefined}
+            partners={formState.partners}
+            isEdit={isEdit}
+          />
+          <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
+        </form>
+      </Form>
+    </>
+  )
 
   return (
     <div className="w-[97%] mx-auto py-10">
@@ -421,34 +618,7 @@ export default function OpeningBalance({
       {initialData ? (
         <div>
           <h1 className="text-2xl font-bold mb-6">Edit Opening Balance</h1>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((values) =>
-                onSubmit(values, formState.status)
-              )}
-              className="space-y-8"
-            >
-              {validationError && (
-                <div className="text-red-500 text-sm mb-4">
-                  {validationError}
-                </div>
-              )}
-              <OpeningBalanceMaster
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                setFormState={setFormState}
-              />
-              <OpeningBalanceDetails
-                form={form}
-                formState={formState}
-                requisition={undefined}
-                partners={formState.partners}
-                isEdit={isEdit}
-              />
-              <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
-            </form>
-          </Form>
+          {dialogForm}
         </div>
       ) : (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
@@ -463,35 +633,7 @@ export default function OpeningBalance({
                 are done.
               </DialogDescription>
             </DialogHeader>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((values) =>
-                  onSubmit(values, formState.status)
-                )}
-                className="space-y-8"
-              >
-                {validationError && (
-                  <div className="text-red-500 text-sm mb-4">
-                    {validationError}
-                  </div>
-                )}
-                <OpeningBalanceMaster
-                  form={form}
-                  formState={formState}
-                  requisition={undefined}
-                  setFormState={setFormState}
-                />
-                <OpeningBalanceDetails
-                  form={form}
-                  formState={formState}
-                  requisition={undefined}
-                  partners={formState.partners}
-                  isEdit={isEdit}
-                />
-                <OpeningBalanceSubmit form={form} onSubmit={onSubmit} />
-              </form>
-            </Form>
+            {dialogForm}
           </DialogContent>
         </Dialog>
       )}
@@ -541,7 +683,6 @@ export default function OpeningBalance({
 //   getAllVoucher,
 // } from '@/api/vouchers-api'
 // import VoucherList from '@/components/voucher-list/voucher-list'
-// import { Popup } from '@/utils/popup'
 
 // import { useForm } from 'react-hook-form'
 // import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
@@ -551,6 +692,7 @@ export default function OpeningBalance({
 //   getAllChartOfAccounts,
 //   getAllCostCenters,
 //   getAllDepartments,
+//   getEmployee,
 //   getResPartnersBySearch,
 //   getSettings,
 // } from '@/api/common-shared-api'
@@ -566,21 +708,15 @@ export default function OpeningBalance({
 // } from '@/components/ui/dialog'
 
 // interface OpeningBalanceProps {
-//   // fetchAllVoucher: (company: number[], location: number[]) => void
-//   // onOpenChange?: (open: boolean) => void // Optional for duplication mode
-//   initialData?: JournalEntryWithDetails // Optional initial data for duplication
+//   initialData?: JournalEntryWithDetails
 //   onClose?: () => void
 //   isEdit?: boolean
-//   // isOpen?: boolean
 // }
 
 // export default function OpeningBalance({
-//   // fetchAllVoucher,
 //   initialData,
 //   onClose,
 //   isEdit,
-//   // isOpen,
-//   // onOpenChange,
 // }: OpeningBalanceProps) {
 //   useInitializeUser()
 //   const router = useRouter()
@@ -632,6 +768,7 @@ export default function OpeningBalance({
 //           accountId: 0,
 //           costCenterId: null,
 //           departmentId: null,
+//           employeeId: null,
 //           debit: 0,
 //           credit: 0,
 //           analyticTags: null,
@@ -693,12 +830,14 @@ export default function OpeningBalance({
 //         costCentersResponse,
 //         partnersResponse,
 //         departmentsResponse,
+//         employeesResponse,
 //       ] = await Promise.all([
 //         getAllBankAccounts(token),
 //         getAllChartOfAccounts(token),
 //         getAllCostCenters(token),
 //         getResPartnersBySearch(search, token),
 //         getAllDepartments(token),
+//         getEmployee(token),
 //       ])
 
 //       if (
@@ -706,7 +845,8 @@ export default function OpeningBalance({
 //         chartOfAccountsResponse?.error?.status === 441 ||
 //         costCentersResponse?.error?.status === 441 ||
 //         partnersResponse?.error?.status === 441 ||
-//         departmentsResponse?.error?.status === 441
+//         departmentsResponse?.error?.status === 441 ||
+//         employeesResponse?.error?.status === 441
 //       ) {
 //         router.push('/unauthorized-access')
 //         return
@@ -724,6 +864,7 @@ export default function OpeningBalance({
 //         costCenters: costCentersResponse.data || [],
 //         partners: partnersResponse.data || [],
 //         departments: departmentsResponse.data || [],
+//         employees: employeesResponse.data || [],
 //       }))
 //     }
 
@@ -842,12 +983,13 @@ export default function OpeningBalance({
 //             accountId: formState.selectedBankAccount?.glCode || settings || 0,
 //             costCenterId: null,
 //             departmentId: null,
+//             employeeId: null,
 //             debit:
-//               formState.formType === 'Credit' // Reversed logic here
+//               formState.formType === 'Credit'
 //                 ? updatedValues.journalEntry.amountTotal
 //                 : 0,
 //             credit:
-//               formState.formType === 'Debit' // Reversed logic here
+//               formState.formType === 'Debit'
 //                 ? updatedValues.journalEntry.amountTotal
 //                 : 0,
 //             analyticTags: null,
@@ -881,12 +1023,11 @@ export default function OpeningBalance({
 //           description: 'Voucher is edited successfully',
 //         })
 //         onClose?.()
-//         setIsDialogOpen(false) // ✅ close popup after submit
+//         setIsDialogOpen(false)
 //         form.reset()
 //       }
 //     } else {
 //       const response = await createJournalEntryWithDetails(finalValues, token)
-//       console.log('🚀 ~ onSubmit ~ finalValues:', finalValues)
 //       if (response.error || !response.data) {
 //         toast({
 //           title: 'Error',
@@ -902,7 +1043,7 @@ export default function OpeningBalance({
 //           description: 'Opening Voucher is created successfully',
 //         })
 //         onClose?.()
-//         setIsDialogOpen(false) // ✅ close popup after submit
+//         // setIsDialogOpen(false)
 //         form.reset()
 //       }
 //     }
@@ -972,10 +1113,9 @@ export default function OpeningBalance({
 //       ) : (
 //         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
 //           <DialogContent
-//             onInteractOutside={(e) => e.preventDefault()} // Prevent outside click from closing
+//             onInteractOutside={(e) => e.preventDefault()}
 //             className="max-w-6xl h-[95vh] overflow-auto"
 //           >
-//             {/* Header */}
 //             <DialogHeader>
 //               <DialogTitle>Opening Balance</DialogTitle>
 //               <DialogDescription>
@@ -984,7 +1124,6 @@ export default function OpeningBalance({
 //               </DialogDescription>
 //             </DialogHeader>
 
-//             {/* Form */}
 //             <Form {...form}>
 //               <form
 //                 onSubmit={form.handleSubmit((values) =>
@@ -1036,3 +1175,4 @@ export default function OpeningBalance({
 //     </div>
 //   )
 // }
+

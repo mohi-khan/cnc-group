@@ -36,12 +36,10 @@ export function ContraVoucherDetailsSection({
   onRemoveEntry,
   isEdit = false,
 }: ContraVoucherDetailsSectionProps) {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
-  // State variables
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [chartOfAccounts, setChartOfAccounts] = useState<AccountsHead[]>([])
   const [cashCoa, setCashCoa] = React.useState<AccountsHead[]>([])
@@ -50,67 +48,54 @@ export function ContraVoucherDetailsSection({
   >({})
   const [userId, setUserId] = useState<number>()
 
-  // Watch the selected company ID from master section
   const selectedCompanyId = form.watch('journalEntry.companyId')
 
-  // Filter bank accounts based on selected company
   const filteredBankAccounts = useMemo(() => {
-    if (!selectedCompanyId) {
-      return [] // Return empty array if no company is selected
-    }
-
+    if (!selectedCompanyId) return []
     return accounts.filter(
       (account) => account.isActive && account.companyId === selectedCompanyId
     )
   }, [accounts, selectedCompanyId])
 
   React.useEffect(() => {
-    if (userData) {
-      setUserId(userData.userId)
-    }
+    if (userData) setUserId(userData.userId)
   }, [userData])
 
   const entries = form.watch('journalDetails')
 
-  // Clear bank account selections when company changes
   useEffect(() => {
     if (selectedCompanyId) {
-      // Clear all bank account selections in details when company changes
       const currentEntries = form.getValues('journalDetails')
       const updatedEntries = currentEntries.map((entry) => ({
         ...entry,
-        bankaccountid: 0, // Clear bank account selection
+        bankaccountid: 0,
       }))
       form.setValue('journalDetails', updatedEntries)
 
-      // Reset disabled states for bank accounts
       setDisabledStates((prev) => {
         const newStates = { ...prev }
         Object.keys(newStates).forEach((key) => {
-          newStates[Number(key)] = {
-            ...newStates[Number(key)],
-            bank: false, // Re-enable bank account selection
-          }
+          newStates[Number(key)] = { ...newStates[Number(key)], bank: false }
         })
         return newStates
       })
     }
   }, [selectedCompanyId, form])
 
-  // Initialize with one entry if empty
   useEffect(() => {
     if (entries.length === 0) {
-      const defaultEntry = {
-        bankaccountid: 0,
-        accountId: 0,
-        debit: 0,
-        credit: 0,
-        notes: '',
-        createdBy: 0,
-        analyticTags: null,
-        taxId: null,
-      }
-      form.setValue('journalDetails', [defaultEntry])
+      form.setValue('journalDetails', [
+        {
+          bankaccountid: 0,
+          accountId: 0,
+          debit: 0,
+          credit: 0,
+          notes: '',
+          createdBy: 0,
+          analyticTags: null,
+          taxId: null,
+        },
+      ])
     }
   }, [entries.length, form])
 
@@ -119,8 +104,7 @@ export function ContraVoucherDetailsSection({
     if (response.error || !response.data) {
       toast({
         title: 'Error',
-        description:
-          response.error?.message || 'Failed to fetch Chart of Accounts',
+        description: response.error?.message || 'Failed to fetch Chart of Accounts',
       })
     } else {
       setChartOfAccounts(response.data)
@@ -128,13 +112,7 @@ export function ContraVoucherDetailsSection({
   }, [token])
 
   React.useEffect(() => {
-    const filteredCoa = chartOfAccounts?.filter((account) => {
-      return account.isGroup === false
-    })
-
-    const isCashCoa = chartOfAccounts?.filter((account) => {
-      return account.isCash === true
-    })
+    const isCashCoa = chartOfAccounts?.filter((account) => account.isCash === true)
     setCashCoa(isCashCoa || [])
   }, [chartOfAccounts])
 
@@ -170,10 +148,7 @@ export function ContraVoucherDetailsSection({
   ) => {
     setDisabledStates((prev) => ({
       ...prev,
-      [index]: {
-        ...prev[index],
-        [field]: value,
-      },
+      [index]: { ...prev[index], [field]: value },
     }))
   }
 
@@ -204,6 +179,35 @@ export function ContraVoucherDetailsSection({
     }
   }
 
+  // ─── Auto-balance: adjusts debit rows to match total credits ─────────────────
+  const autoBalanceDebits = (updatedEntries: typeof entries) => {
+    let totalCredits = 0
+    for (let i = 0; i < updatedEntries.length; i++) {
+      totalCredits += updatedEntries[i].credit
+    }
+
+    let totalDebits = 0
+    const debitIndices: number[] = []
+    for (let i = 0; i < updatedEntries.length; i++) {
+      if (updatedEntries[i].debit > 0) {
+        totalDebits += updatedEntries[i].debit
+        debitIndices.push(i)
+      }
+    }
+
+    if (totalCredits > totalDebits && debitIndices.length > 0) {
+      const difference = totalCredits - totalDebits
+      const firstDebitIndex = debitIndices[0]
+      updatedEntries[firstDebitIndex].debit = Number(
+        (updatedEntries[firstDebitIndex].debit + difference).toFixed(2)
+      )
+      form.setValue(
+        `journalDetails.${firstDebitIndex}.debit`,
+        updatedEntries[firstDebitIndex].debit
+      )
+    }
+  }
+
   const handleDebitChange = (index: number, value: string) => {
     const updatedEntries = [...entries]
     updatedEntries[index].debit = value === '' ? 0 : Number(value)
@@ -211,31 +215,26 @@ export function ContraVoucherDetailsSection({
 
     const debitValue = value === '' ? 0 : Number(value)
 
-    // Find all credit rows immediately after this debit (until next debit or end)
     let lastCreditIndex = -1
-    
     for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        // Hit another debit, stop
-        break
-      }
+      if (updatedEntries[i].debit > 0) break
       lastCreditIndex = i
     }
-    
-    // Update the last credit row in this group
+
     if (lastCreditIndex !== -1) {
-      // Calculate what the last credit should be
-      // We need to keep all other credits and adjust only the last one
       let otherCredits = 0
       for (let i = index + 1; i < lastCreditIndex; i++) {
         otherCredits += updatedEntries[i].credit
       }
-      
-      updatedEntries[lastCreditIndex].credit = Number((debitValue - otherCredits).toFixed(2))
-      form.setValue(`journalDetails.${lastCreditIndex}.credit`, updatedEntries[lastCreditIndex].credit)
+      updatedEntries[lastCreditIndex].credit = Number(
+        (debitValue - otherCredits).toFixed(2)
+      )
+      form.setValue(
+        `journalDetails.${lastCreditIndex}.credit`,
+        updatedEntries[lastCreditIndex].credit
+      )
     }
 
-    // Update current row
     form.setValue(`journalDetails.${index}.debit`, updatedEntries[index].debit)
     form.setValue(`journalDetails.${index}.credit`, updatedEntries[index].credit)
     form.setValue('journalDetails', updatedEntries)
@@ -247,24 +246,23 @@ export function ContraVoucherDetailsSection({
     updatedEntries[index].credit = value === '' ? 0 : Number(value)
     updatedEntries[index].debit = 0
 
-    // Calculate the difference
     const difference = oldCredit - updatedEntries[index].credit
 
-    // Find next credit row and add the difference to it (before hitting another debit)
+    // Find next credit row and redistribute the difference
     for (let i = index + 1; i < updatedEntries.length; i++) {
-      if (updatedEntries[i].debit > 0) {
-        // Hit a debit row, stop
-        break
-      }
+      if (updatedEntries[i].debit > 0) break
       if (updatedEntries[i].debit === 0) {
-        // Found next credit row, add the difference
-        updatedEntries[i].credit = Number((updatedEntries[i].credit + difference).toFixed(2))
+        updatedEntries[i].credit = Number(
+          (updatedEntries[i].credit + difference).toFixed(2)
+        )
         form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
         break
       }
     }
 
-    // Update all form values
+    // ✅ Auto-balance debits to match total credits (same as journal voucher)
+    autoBalanceDebits(updatedEntries)
+
     for (let i = 0; i < updatedEntries.length; i++) {
       form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
       form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
@@ -275,11 +273,9 @@ export function ContraVoucherDetailsSection({
 
   const addEntry = () => {
     const currentEntries = [...entries]
-    
-    // Find the last debit row
+
     let lastDebitIndex = -1
     let lastDebitValue = 0
-    
     for (let i = currentEntries.length - 1; i >= 0; i--) {
       if (currentEntries[i].debit > 0) {
         lastDebitIndex = i
@@ -287,27 +283,23 @@ export function ContraVoucherDetailsSection({
         break
       }
     }
-    
+
     let remainingCredit = 0
-    
     if (lastDebitIndex !== -1) {
-      // Calculate total credits after the last debit (excluding rows with debit)
       let totalCreditsAfterLastDebit = 0
       for (let i = lastDebitIndex + 1; i < currentEntries.length; i++) {
         if (currentEntries[i].debit === 0) {
           totalCreditsAfterLastDebit += currentEntries[i].credit
         }
       }
-      
-      // Remaining credit for new row
       remainingCredit = lastDebitValue - totalCreditsAfterLastDebit
     }
-    
+
     const newEntry = {
       bankaccountid: 0,
       accountId: cashCoa[0]?.accountId || 0,
       debit: 0,
-      credit: Number(remainingCredit),
+      credit: Number(remainingCredit.toFixed(2)),
       notes: '',
       createdBy: userData?.userId || 0,
       analyticTags: null,
@@ -316,12 +308,11 @@ export function ContraVoucherDetailsSection({
 
     const newEntries = [...currentEntries, newEntry]
     form.setValue('journalDetails', newEntries)
-    
-    // Force update the credit field for the new row
+
     const newIndex = newEntries.length - 1
-    form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit))
+    form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit.toFixed(2)))
     form.setValue(`journalDetails.${newIndex}.debit`, 0)
-    
+
     setDisabledStates((prev) => ({
       ...prev,
       [entries.length]: { bank: false, account: false },
@@ -342,9 +333,7 @@ export function ContraVoucherDetailsSection({
   const totals = calculateTotals()
 
   const handleRemoveEntry = (index: number) => {
-    if (entries.length > 2) {
-      onRemoveEntry(index)
-    }
+    if (entries.length > 2) onRemoveEntry(index)
   }
 
   return (
@@ -357,6 +346,7 @@ export function ContraVoucherDetailsSection({
         <div>Notes</div>
         <div>Action</div>
       </div>
+
       {entries.map((entry, index) => (
         <div
           key={index}
@@ -377,20 +367,14 @@ export function ContraVoucherDetailsSection({
                       ? {
                           id: field.value,
                           name:
-                            filteredBankAccounts.find(
-                              (account) =>
-                                Number(account.id) === Number(field.value)
-                            )?.bankName +
-                              '-' +
-                              filteredBankAccounts.find(
-                                (account) =>
-                                  Number(account.id) === Number(field.value)
-                              )?.accountName +
-                              ' - ' +
-                              filteredBankAccounts.find(
-                                (account) =>
-                                  Number(account.id) === Number(field.value)
-                              )?.accountNumber || '',
+                            (() => {
+                              const found = filteredBankAccounts.find(
+                                (account) => Number(account.id) === Number(field.value)
+                              )
+                              return found
+                                ? `${found.bankName}-${found.accountName} - ${found.accountNumber}`
+                                : ''
+                            })(),
                         }
                       : null
                   }
@@ -402,9 +386,7 @@ export function ContraVoucherDetailsSection({
                     }
                   }}
                   placeholder={
-                    selectedCompanyId
-                      ? 'Select a Bank Account'
-                      : 'Select company first'
+                    selectedCompanyId ? 'Select a Bank Account' : 'Select company first'
                   }
                   disabled={
                     !selectedCompanyId ||
@@ -416,6 +398,7 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name={`journalDetails.${index}.accountId`}
@@ -451,6 +434,7 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name={`journalDetails.${index}.debit`}
@@ -468,6 +452,7 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name={`journalDetails.${index}.credit`}
@@ -485,6 +470,7 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name={`journalDetails.${index}.notes`}
@@ -497,6 +483,7 @@ export function ContraVoucherDetailsSection({
               </FormItem>
             )}
           />
+
           <Button
             type="button"
             variant="outline"
@@ -508,11 +495,13 @@ export function ContraVoucherDetailsSection({
           </Button>
         </div>
       ))}
+
       {!isEdit && (
         <Button type="button" className="mx-4" variant="outline" onClick={addEntry}>
           Add Another
         </Button>
       )}
+
       <div className="mt-4 flex justify-between gap-2 items-center px-4">
         <div>
           <p>Total Debit: {totals.debit.toFixed(2)}</p>
@@ -549,7 +538,6 @@ export function ContraVoucherDetailsSection({
 //   getAllBankAccounts,
 //   getAllChartOfAccounts,
 // } from '@/api/common-shared-api'
-// import { is } from 'date-fns/locale'
 
 // interface ContraVoucherDetailsSectionProps {
 //   form: UseFormReturn<JournalEntryWithDetails>
@@ -593,7 +581,6 @@ export function ContraVoucherDetailsSection({
 //   React.useEffect(() => {
 //     if (userData) {
 //       setUserId(userData.userId)
-//     } else {
 //     }
 //   }, [userData])
 
@@ -688,7 +675,7 @@ export function ContraVoucherDetailsSection({
 //   useEffect(() => {
 //     fetchChartOfAccounts()
 //     fetchBankAccounts()
-//   }, [fetchBankAccounts, fetchChartOfAccounts]) // Added fetchBankAccounts to dependencies
+//   }, [fetchBankAccounts, fetchChartOfAccounts])
 
 //   const updateDisabledStates = (
 //     index: number,
@@ -731,94 +718,7 @@ export function ContraVoucherDetailsSection({
 //     }
 //   }
 
-//   const handleNumberInput = (value: string) => {
-//     // Remove any non-numeric characters except decimal point
-//     const sanitizedValue = value.replace(/[^\d.]/g, '')
-//     // Ensure only one decimal point
-//     const parts = sanitizedValue.split('.')
-//     if (parts.length > 2) {
-//       return parts[0] + '.' + parts.slice(1).join('')
-//     }
-//     return sanitizedValue
-//   }
-
-//   // const handleDebitChange = (index: number, value: string) => {
-//   //   const updatedEntries = [...entries]
-//   //   updatedEntries[index].debit = value === '' ? 0 : Number(value)
-//   //   updatedEntries[index].credit = 0
-
-//   //   if (index === 0) {
-//   //     const debitValue = value === '' ? 0 : Number(value)
-//   //     let remainingCredit = debitValue
-
-//   //     // Start from index 1 and distribute remaining amount
-//   //     for (let i = 1; i < updatedEntries.length; i++) {
-//   //       if (i === updatedEntries.length - 1) {
-//   //         // Last entry gets remaining amount
-//   //         updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
-//   //       } else {
-//   //         // Use existing credit value if available, otherwise use remaining credit
-//   //         const existingCredit = updatedEntries[i].credit || 0
-//   //         updatedEntries[i].credit =
-//   //           existingCredit || Number(remainingCredit.toFixed(2))
-//   //       }
-//   //       updatedEntries[i].debit = 0
-//   //       remainingCredit -= updatedEntries[i].credit
-//   //       form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-//   //       form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
-//   //     }
-//   //   }
-
-//   //   form.setValue('journalDetails', updatedEntries)
-//   // }
-
-//   // const handleDebitChange = (index: number, value: string) => {
-//   //   const updatedEntries = [...entries]
-//   //   updatedEntries[index].debit = value === '' ? 0 : Number(value)
-//   //   updatedEntries[index].credit = 0
-
-//   //   // Calculate total debits (including first row)
-//   //   let totalDebits = 0
-//   //   for (let i = 0; i < updatedEntries.length; i++) {
-//   //     totalDebits += updatedEntries[i].debit
-//   //   }
-
-//   //   // Calculate total manual credits (all credit rows except the last one)
-//   //   let totalManualCredits = 0
-//   //   let lastCreditIndex = -1
-    
-//   //   for (let i = 1; i < updatedEntries.length; i++) {
-//   //     if (updatedEntries[i].debit === 0) {
-//   //       lastCreditIndex = i
-//   //     }
-//   //   }
-    
-//   //   // Sum up all credits except the last credit row
-//   //   for (let i = 1; i < updatedEntries.length; i++) {
-//   //     if (updatedEntries[i].debit === 0 && i !== lastCreditIndex) {
-//   //       totalManualCredits += updatedEntries[i].credit
-//   //     }
-//   //   }
-
-//   //   // Calculate remaining credit for the last credit row
-//   //   const remainingCredit = totalDebits - totalManualCredits
-
-//   //   // Update the last credit row
-//   //   if (lastCreditIndex !== -1) {
-//   //     updatedEntries[lastCreditIndex].credit = Number(remainingCredit.toFixed(2))
-//   //     updatedEntries[lastCreditIndex].debit = 0
-//   //   }
-
-//   //   // Update all form values
-//   //   for (let i = 0; i < updatedEntries.length; i++) {
-//   //     form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
-//   //     form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-//   //   }
-
-//   //   form.setValue('journalDetails', updatedEntries)
-//   // }
-
-// const handleDebitChange = (index: number, value: string) => {
+//   const handleDebitChange = (index: number, value: string) => {
 //     const updatedEntries = [...entries]
 //     updatedEntries[index].debit = value === '' ? 0 : Number(value)
 //     updatedEntries[index].credit = 0
@@ -826,7 +726,6 @@ export function ContraVoucherDetailsSection({
 //     const debitValue = value === '' ? 0 : Number(value)
 
 //     // Find all credit rows immediately after this debit (until next debit or end)
-//     let totalCreditsAfter = 0
 //     let lastCreditIndex = -1
     
 //     for (let i = index + 1; i < updatedEntries.length; i++) {
@@ -834,7 +733,6 @@ export function ContraVoucherDetailsSection({
 //         // Hit another debit, stop
 //         break
 //       }
-//       totalCreditsAfter += updatedEntries[i].credit
 //       lastCreditIndex = i
 //     }
     
@@ -859,30 +757,31 @@ export function ContraVoucherDetailsSection({
 
 //   const handleCreditChange = (index: number, value: string) => {
 //     const updatedEntries = [...entries]
+//     const oldCredit = updatedEntries[index].credit
 //     updatedEntries[index].credit = value === '' ? 0 : Number(value)
 //     updatedEntries[index].debit = 0
 
-//     if (index > 0) {
-//       const firstEntryDebit = updatedEntries[0].debit
-//       let usedCredit = 0
+//     // Calculate the difference
+//     const difference = oldCredit - updatedEntries[index].credit
 
-//       // Calculate used credit from entries 1 to current index
-//       for (let i = 1; i <= index; i++) {
-//         usedCredit += updatedEntries[i].credit
+//     // Find next credit row and add the difference to it (before hitting another debit)
+//     for (let i = index + 1; i < updatedEntries.length; i++) {
+//       if (updatedEntries[i].debit > 0) {
+//         // Hit a debit row, stop
+//         break
 //       }
-
-//       // Distribute remaining amount to next entries if any
-//       const remainingCredit = firstEntryDebit - usedCredit
-//       for (let i = index + 1; i < updatedEntries.length; i++) {
-//         if (i === updatedEntries.length - 1) {
-//           updatedEntries[i].credit = Number(remainingCredit.toFixed(2))
-//         } else {
-//           updatedEntries[i].credit = 0
-//         }
-//         updatedEntries[i].debit = 0
+//       if (updatedEntries[i].debit === 0) {
+//         // Found next credit row, add the difference
+//         updatedEntries[i].credit = Number((updatedEntries[i].credit + difference).toFixed(2))
 //         form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
-//         form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+//         break
 //       }
+//     }
+
+//     // Update all form values
+//     for (let i = 0; i < updatedEntries.length; i++) {
+//       form.setValue(`journalDetails.${i}.debit`, updatedEntries[i].debit)
+//       form.setValue(`journalDetails.${i}.credit`, updatedEntries[i].credit)
 //     }
 
 //     form.setValue('journalDetails', updatedEntries)
@@ -890,29 +789,53 @@ export function ContraVoucherDetailsSection({
 
 //   const addEntry = () => {
 //     const currentEntries = [...entries]
-//     const firstEntry = currentEntries[0]
+    
+//     // Find the last debit row
+//     let lastDebitIndex = -1
+//     let lastDebitValue = 0
+    
+//     for (let i = currentEntries.length - 1; i >= 0; i--) {
+//       if (currentEntries[i].debit > 0) {
+//         lastDebitIndex = i
+//         lastDebitValue = currentEntries[i].debit
+//         break
+//       }
+//     }
+    
+//     let remainingCredit = 0
+    
+//     if (lastDebitIndex !== -1) {
+//       // Calculate total credits after the last debit (excluding rows with debit)
+//       let totalCreditsAfterLastDebit = 0
+//       for (let i = lastDebitIndex + 1; i < currentEntries.length; i++) {
+//         if (currentEntries[i].debit === 0) {
+//           totalCreditsAfterLastDebit += currentEntries[i].credit
+//         }
+//       }
+      
+//       // Remaining credit for new row
+//       remainingCredit = lastDebitValue - totalCreditsAfterLastDebit
+//     }
+    
 //     const newEntry = {
 //       bankaccountid: 0,
-//       accountId: cashCoa[0]?.accountId,
+//       accountId: cashCoa[0]?.accountId || 0,
 //       debit: 0,
-//       credit: 0,
+//       credit: Number(remainingCredit),
 //       notes: '',
-//       createdBy: userData?.userId,
+//       createdBy: userData?.userId || 0,
 //       analyticTags: null,
 //       taxId: null,
 //     }
 
-//     if (firstEntry && firstEntry.debit > 0) {
-//       const totalUsedCredit = currentEntries.reduce((sum, entry, index) => {
-//         return index === 0 ? sum : sum + entry.credit
-//       }, 0)
-//       newEntry.credit = firstEntry.debit - totalUsedCredit
-//     }
-
-//     form.setValue('journalDetails', [
-//       ...entries,
-//       { ...newEntry, createdBy: userData?.userId || 0 },
-//     ])
+//     const newEntries = [...currentEntries, newEntry]
+//     form.setValue('journalDetails', newEntries)
+    
+//     // Force update the credit field for the new row
+//     const newIndex = newEntries.length - 1
+//     form.setValue(`journalDetails.${newIndex}.credit`, Number(remainingCredit))
+//     form.setValue(`journalDetails.${newIndex}.debit`, 0)
+    
 //     setDisabledStates((prev) => ({
 //       ...prev,
 //       [entries.length]: { bank: false, account: false },
@@ -931,7 +854,6 @@ export function ContraVoucherDetailsSection({
 //   }
 
 //   const totals = calculateTotals()
-//   const isBalanced = totals.debit === totals.credit
 
 //   const handleRemoveEntry = (index: number) => {
 //     if (entries.length > 2) {
@@ -940,7 +862,7 @@ export function ContraVoucherDetailsSection({
 //   }
 
 //   return (
-//     <div  className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">
+//     <div className="space-y-4 border pb-4 mb-4 rounded-md shadow-md">
 //       <div className="grid grid-cols-[1fr,1fr,1fr,1fr,1fr,auto] gap-2 items-center text-sm font-medium border-b p-4 bg-slate-200 shadow-md">
 //         <div>Bank Account</div>
 //         <div>Account Name</div>
@@ -960,12 +882,10 @@ export function ContraVoucherDetailsSection({
 //             render={({ field }) => (
 //               <FormItem className="flex flex-col">
 //                 <CustomCombobox
-//                   // Use filtered bank accounts instead of all accounts
 //                   items={filteredBankAccounts.map((account) => ({
 //                     id: account.id,
 //                     name: `${account.bankName}-${account.accountName} - ${account.accountNumber}`,
 //                   }))}
-//                   // When a value is selected, find the corresponding account and set the field's value.
 //                   value={
 //                     field.value && selectedCompanyId
 //                       ? {
@@ -988,11 +908,9 @@ export function ContraVoucherDetailsSection({
 //                         }
 //                       : null
 //                   }
-//                   // When an item is selected, update both the form field and perform additional logic.
 //                   onChange={(selectedItem) => {
 //                     const selectedId = selectedItem?.id || null
 //                     field.onChange(selectedId)
-//                     // Only trigger the bank account change if a valid account is selected.
 //                     if (selectedId !== null) {
 //                       handleBankAccountChange(index, selectedId)
 //                     }
@@ -1002,7 +920,6 @@ export function ContraVoucherDetailsSection({
 //                       ? 'Select a Bank Account'
 //                       : 'Select company first'
 //                   }
-//                   // Disable the combobox if no company is selected or based on your external disabled state.
 //                   disabled={
 //                     !selectedCompanyId ||
 //                     filteredBankAccounts.length === 0 ||
@@ -1019,14 +936,12 @@ export function ContraVoucherDetailsSection({
 //             render={({ field }) => (
 //               <FormItem>
 //                 <CustomCombobox
-//                   // Convert each chart-of-accounts entry into an object with id and name.
 //                   items={chartOfAccounts
 //                     .filter((account) => account.isActive)
 //                     .map((account) => ({
 //                       id: account.accountId,
 //                       name: account.name,
 //                     }))}
-//                   // Set the current value by finding the matching account.
 //                   value={
 //                     field.value
 //                       ? {
@@ -1038,14 +953,12 @@ export function ContraVoucherDetailsSection({
 //                         }
 //                       : null
 //                   }
-//                   // When an item is selected, update the field and trigger your account change handler.
 //                   onChange={(selectedItem) => {
 //                     const value = selectedItem?.id || null
 //                     field.onChange(Number(value))
 //                     handleAccountNameChange(index, Number(value))
 //                   }}
 //                   placeholder="Select an Account"
-//                   // Use the same disabled condition as before.
 //                   disabled={disabledStates[index]?.account}
 //                 />
 //                 <FormMessage />
@@ -1110,23 +1023,17 @@ export function ContraVoucherDetailsSection({
 //         </div>
 //       ))}
 //       {!isEdit && (
-//       <Button type="button" className='mx-4' variant="outline" onClick={addEntry}>
-//         Add Another 
-//       </Button>
+//         <Button type="button" className="mx-4" variant="outline" onClick={addEntry}>
+//           Add Another
+//         </Button>
 //       )}
 //       <div className="mt-4 flex justify-between gap-2 items-center px-4">
 //         <div>
 //           <p>Total Debit: {totals.debit.toFixed(2)}</p>
 //           <p>Total Credit: {totals.credit.toFixed(2)}</p>
 //         </div>
-//         {/* <div>
-//           {isBalanced ? (
-//             <p className="text-green-500">Voucher is Balanced</p>
-//           ) : (
-//             <p className="text-red-500">Voucher is Not Balanced</p>
-//           )}
-//         </div> */}
 //       </div>
 //     </div>
 //   )
 // }
+
