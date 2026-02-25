@@ -1307,6 +1307,21 @@ export interface PartnerLedgerType {
   bankaccountnumber: string
 }
 
+export interface EmployeeLedgerType {
+  voucherid: number
+  voucherno: string
+  accountname: string
+  debit: number
+  credit: number
+  accountsdetails: number
+  notes: string
+  employee: string
+  coscenter: string
+  department: string
+  date: string 
+  bankaccountnumber: string
+}
+
 //cash flow statement type
 export interface CashflowStatement {
   debit: number
