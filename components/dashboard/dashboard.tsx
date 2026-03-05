@@ -517,7 +517,33 @@ export default function Dashboard() {
     fetchCostBreakdown,
   ])
 
-  React.useEffect(() => {
+  // React.useEffect(() => {
+  //   const checkUserData = () => {
+  //     const storedUserData = localStorage.getItem('currentUser')
+  //     const storedToken = localStorage.getItem('authToken')
+  //     if (!storedUserData || !storedToken) {
+  //       console.log('No user data or token found in localStorage')
+  //       router.push('/')
+  //       return
+  //     }
+  //   }
+  //   checkUserData()
+  //   fetchAdvances()
+  //   fetchDepartments()
+  //   fetchAllCompany()
+  //   fetchRequisitions()
+  //   fetchAllFinancialYears()
+  // }, [
+  //   token,
+  //   fetchAdvances,
+  //   fetchDepartments,
+  //   fetchAllCompany,
+  //   fetchAllFinancialYears,
+  //   fetchRequisitions,
+  //   router,
+  // ])
+
+   React.useEffect(() => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
@@ -533,15 +559,8 @@ export default function Dashboard() {
     fetchAllCompany()
     fetchRequisitions()
     fetchAllFinancialYears()
-  }, [
-    token,
-    fetchAdvances,
-    fetchDepartments,
-    fetchAllCompany,
-    fetchAllFinancialYears,
-    fetchRequisitions,
-    router,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
 
   // Trigger data fetch when dynamic values change
   React.useEffect(() => {
