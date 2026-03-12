@@ -16,6 +16,7 @@ import { createFdrUpdate } from "@/api/fdr-value-update-api"
 
 import { CustomCombobox } from "@/utils/custom-combobox" // Import CustomCombobox
 import { getFdrData } from "@/api/fdr-record-api"
+import { v4 as uuidv4 } from "uuid"
 
 const FdrValueUpdate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -52,7 +53,7 @@ const FdrValueUpdate = () => {
   // Initialize with one empty row
   const [rows, setRows] = useState<(NewFdrValueUpdate & { id: string })[]>([
     {
-      id: crypto.randomUUID(), // Client-side unique ID (string)
+      id: uuidv4(), // Client-side unique ID (string)
       fdrNo: "",
       newValue: 0,
       updateDate: format(new Date(), "yyyy-MM-dd"),
@@ -67,7 +68,7 @@ const FdrValueUpdate = () => {
   // Add a new row
   const addRow = () => {
     const newRow = {
-      id: crypto.randomUUID(), // Client-side unique ID (string)
+      id:  uuidv4(), // Client-side unique ID (string)
       fdrNo: "",
       newValue: 0,
       updateDate: format(new Date(), "yyyy-MM-dd"),
@@ -209,7 +210,7 @@ const FdrValueUpdate = () => {
       // Reset form after successful submission
       setRows([
         {
-          id: crypto.randomUUID(), // New client-side ID for the reset row
+          id: uuidv4(), // New client-side ID for the reset row
           fdrNo: '',
           newValue: 0,
           updateDate: format(new Date(), 'yyyy-MM-dd'),
