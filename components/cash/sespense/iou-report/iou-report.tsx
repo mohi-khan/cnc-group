@@ -33,6 +33,7 @@ const IouReport = () => {
   const [employeeData, setEmployeeData] = useState<Employee[]>([])
   const [companyData, setCompanyData] = useState<CompanyType[]>([])
   const [locationData, setLocationData] = useState<LocationData[]>([])
+  const [employeeSearch, setEmployeeSearch] = useState<string>('')
 
   // ---------- PDF export (hide .hide-in-pdf elements before capture) ----------
   const generatePdf = async () => {
@@ -203,14 +204,17 @@ const IouReport = () => {
         setIsLoading(true)
         const loansdataByDate = await getLoanDataByDate(token, date)
 
+
         if (loansdataByDate?.error?.status === 401) {
           router.push('/unauthorized-access')
           return
         } else if (loansdataByDate.error || !loansdataByDate.data) {
           console.error('Error fetching loans:', loansdataByDate.error)
           setLoanDataByDate([])
+          
         } else {
           setLoanDataByDate(loansdataByDate.data)
+         
         }
       } catch (err) {
         console.error(
@@ -218,6 +222,7 @@ const IouReport = () => {
           err instanceof Error ? err.message : 'An error occurred'
         )
         setLoanDataByDate([])
+        
       } finally {
         setIsLoading(false)
       }
@@ -271,6 +276,8 @@ const IouReport = () => {
         onDateChange={setSelectedDate}
         generatePdf={generatePdf}
         generateExcel={generateExcel}
+        employeeSearch={employeeSearch}
+        onEmployeeSearchChange={setEmployeeSearch}
       />
       {isLoading ? (
         <div>Loading...</div>
@@ -281,6 +288,7 @@ const IouReport = () => {
           employees={employeeData}
           companies={companyData}
           locations={locationData}
+           employeeSearch={employeeSearch}
         />
       )}
     </div>

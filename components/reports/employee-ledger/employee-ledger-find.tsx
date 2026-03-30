@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import type { Employee, Company } from '@/utils/type'
 import { FileText, Printer } from 'lucide-react'
-import {
-  getAllCompanies,
-  getEmployee,
-} from '@/api/common-shared-api'
+import { getAllCompanies, getEmployee } from '@/api/common-shared-api'
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
@@ -47,10 +44,10 @@ export default function EmployeeedgerFind({
   const router = useRouter()
 
   const [fromDate, setFromDate] = useState<string>('')
-  const [toDate, setToDate] = useState<string>('')
-//   const [selectedEmployee, setselectedEmployee] = useState<
-//     string | number
-//   >('')
+  // const [toDate, setToDate] = useState<string>('')
+  const [toDate, setToDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  )
   const [selectedCompany, setSelectedCompany] = useState<ComboboxItem | null>(
     null
   )
