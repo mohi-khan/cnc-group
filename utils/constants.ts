@@ -617,7 +617,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: "Ledger Reports",
         items: [
           { name: "Bank Ledger", source: "/reports/bank-ledger" },
-          { name: "General Ledger", source: "/reports/general-ledger" },
+          // { name: "General Ledger", source: "/reports/general-ledger" },
           { name: "Partner Ledger", source: "/reports/partner-ledger" },
           { name: "Employee Ledger", source: "/reports/employee-ledger" },
         ],

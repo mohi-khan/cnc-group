@@ -72,7 +72,7 @@ import { getAllEmployees } from '@/api/payment-requisition-api'
 import { getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
 import { formatIndianNumber } from '@/utils/Formatindiannumber'
 import { ContraVoucherPopup } from '../cash/contra-voucher/contra-voucher-popup'
-
+import CashVoucher from '../cash/cash-voucher/cash-voucher' // ← import CashVoucher
 
 const printStyles = `
   @media print {
@@ -155,6 +155,9 @@ export default function SingleVoucherDetails() {
   // ── New Contra Voucher dialog state ──────────────────────────────────────────
   const [isContraVoucherDialogOpen, setIsContraVoucherDialogOpen] = useState(false)
 
+  // ── New Cash Voucher dialog state ─────────────────────────────────────────────
+  const [isCashVoucherDialogOpen, setIsCashVoucherDialogOpen] = useState(false)
+
   const [validationError, setValidationError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [notes, setNotes] = useState<string>('')
@@ -209,12 +212,8 @@ export default function SingleVoucherDetails() {
   })
 
   // ── Build initialData for ContraVoucherPopup ──────────────────────────────────
-  // Waits until bankAccounts + chartOfAccounts are fetched so IDs can be resolved.
-  // Until then returns undefined → button is disabled, popup is not mounted.
   const contraVoucherInitialData = useMemo<JournalEntryWithDetails | undefined>(() => {
     if (!data || data.length === 0) return undefined
-
-    // Don't build until reference data is available — prevents empty dropdowns
     if (!formState.bankAccounts.length || !formState.chartOfAccounts.length) return undefined
 
     const voucherData = data[0]
@@ -240,20 +239,15 @@ export default function SingleVoucherDetails() {
         createdBy: userData?.userId || 0,
       },
       journalDetails: data.map((item) => {
-        // ── Resolve bank account ID by account number (most reliable) or name ──
         const matchedBank = formState.bankAccounts.find(
           (bank) =>
             bank.accountNumber === item.accountNumber ||
             bank.accountName === item.bankaccountName
         )
-
-        // ── Resolve chart of account ID by case-insensitive name match ──────────
         const matchedCoa = formState.chartOfAccounts.find(
           (coa) =>
-            coa.name?.toLowerCase().trim() ===
-            item.accountsname?.toLowerCase().trim()
+            coa.name?.toLowerCase().trim() === item.accountsname?.toLowerCase().trim()
         )
-
         return {
           bankaccountid: matchedBank?.id || 0,
           accountId: matchedCoa?.accountId || 0,
@@ -266,12 +260,62 @@ export default function SingleVoucherDetails() {
         }
       }),
     }
-  }, [
-    data,
-    userData,
-    formState.bankAccounts,    // re-runs once bank accounts are loaded
-    formState.chartOfAccounts, // re-runs once COA is loaded
-  ])
+  }, [data, userData, formState.bankAccounts, formState.chartOfAccounts])
+
+  // ── Build initialData for CashVoucher popup ───────────────────────────────────
+  // Resolves company/location IDs and maps detail rows into the CashVoucher shape.
+  // Returns undefined until voucher data + reference data are all available.
+  const cashVoucherInitialData = useMemo<JournalEntryWithDetails | undefined>(() => {
+    if (!data || data.length === 0) return undefined
+    if (!formState.chartOfAccounts.length) return undefined
+
+    const voucherData = data[0]
+
+    const selectedCompany = userData?.userCompanies?.find(
+      (comp) => comp.company?.companyName === voucherData.companyname
+    )
+    const selectedLocation = userData?.userLocations?.find(
+      (loc) => loc.location?.address === voucherData.location
+    )
+
+    return {
+      journalEntry: {
+        date: voucherData.date || new Date().toISOString().split('T')[0],
+        journalType: VoucherTypes.CashVoucher,
+        state: 0,
+        companyId: selectedCompany?.company?.companyId || 0,
+        locationId: selectedLocation?.location?.locationId || 0,
+        currencyId: 1,
+        exchangeRate: 1,
+        amountTotal: voucherData.totalamount || 0,
+        payTo: voucherData.payTo || '',
+        notes: voucherData.MasterNotes || '',
+        createdBy: userData?.userId || 0,
+      },
+      journalDetails: data.map((item) => {
+        const matchedCoa = formState.chartOfAccounts.find(
+          (coa) =>
+            coa.name?.toLowerCase().trim() === item.accountsname?.toLowerCase().trim()
+        )
+        // Determine type from debit/credit
+        const type = item.debit > 0 ? 'Payment' : 'Receipt'
+        return {
+          accountId: matchedCoa?.accountId || 0,
+          costCenterId: null,
+          departmentId: null,
+          employeeId: null,
+          debit: Number(item.debit || 0),
+          credit: Number(item.credit || 0),
+          analyticTags: null,
+          taxId: null,
+          resPartnerId: null,
+          notes: item.detail_notes || '',
+          createdBy: userData?.userId || 0,
+          type,
+        }
+      }),
+    }
+  }, [data, userData, formState.chartOfAccounts])
 
   // ── Dummy fetchAllVoucher for ContraVoucherPopup ──────────────────────────────
   const fetchAllVoucherDummy = useCallback(
@@ -384,28 +428,22 @@ export default function SingleVoucherDetails() {
         const mappedDetails = (currentDetails as any[]).map((detail: any) => {
           const account = formState.filteredChartOfAccounts.find(
             (acc) =>
-              acc.name?.toLowerCase().trim() ===
-              detail._accountName?.toLowerCase().trim()
+              acc.name?.toLowerCase().trim() === detail._accountName?.toLowerCase().trim()
           )
           const costCenter = formState.costCenters.find(
             (cc) =>
-              cc.costCenterName?.toLowerCase().trim() ===
-              detail._costCenterName?.toLowerCase().trim()
+              cc.costCenterName?.toLowerCase().trim() === detail._costCenterName?.toLowerCase().trim()
           )
           const department = formState.departments.find(
             (dept) =>
-              dept.departmentName?.toLowerCase().trim() ===
-              detail._departmentName?.toLowerCase().trim()
+              dept.departmentName?.toLowerCase().trim() === detail._departmentName?.toLowerCase().trim()
           )
           const partner = formState.partners.find(
-            (p) =>
-              p.name?.toLowerCase().trim() ===
-              detail._partnerName?.toLowerCase().trim()
+            (p) => p.name?.toLowerCase().trim() === detail._partnerName?.toLowerCase().trim()
           )
           const employee = formState.employees.find(
             (e) =>
-              e.employeeName?.toLowerCase().trim() ===
-              detail._employeeName?.toLowerCase().trim()
+              e.employeeName?.toLowerCase().trim() === detail._employeeName?.toLowerCase().trim()
           )
           return {
             accountId: account?.accountId || 0,
@@ -769,7 +807,7 @@ export default function SingleVoucherDetails() {
             {/* Right: action buttons */}
             <div className="flex justify-end gap-2 no-print">
 
-              {/* ── New Bank Voucher button (unchanged) ── */}
+              {/* ── New Bank Voucher button ── */}
               {data[0].journaltype === VoucherTypes.BankVoucher && (
                 <Button variant="outline" size="sm" onClick={handleReceiptClick}>
                   <Pencil className="w-4 h-4 mr-2" />
@@ -784,14 +822,12 @@ export default function SingleVoucherDetails() {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsContraVoucherDialogOpen(true)}
-                    // Disabled until reference data is loaded so IDs can be resolved
                     disabled={!contraVoucherInitialData}
                   >
                     <Pencil className="w-4 h-4 mr-2" />
                     New Contra Voucher
                   </Button>
 
-                  {/* Mount popup only when initialData is ready (IDs resolved) */}
                   {contraVoucherInitialData && (
                     <ContraVoucherPopup
                       fetchAllVoucher={fetchAllVoucherDummy}
@@ -807,6 +843,19 @@ export default function SingleVoucherDetails() {
                     />
                   )}
                 </>
+              )}
+
+              {/* ── New Cash Voucher button ── */}
+              {data[0].journaltype === VoucherTypes.CashVoucher && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCashVoucherDialogOpen(true)}
+                  disabled={!cashVoucherInitialData}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  New Cash Voucher
+                </Button>
               )}
 
               {/* ── Reverse button ── */}
@@ -861,6 +910,30 @@ export default function SingleVoucherDetails() {
               </Button>
             </div>
           </div>
+
+          {/* ── Cash Voucher creation dialog ──────────────────────────────────────── */}
+          <Dialog open={isCashVoucherDialogOpen} onOpenChange={setIsCashVoucherDialogOpen}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  Create Cash Voucher from {data[0].journaltype} {data[0].voucherno}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                {cashVoucherInitialData && (
+                  <CashVoucher
+                    initialData={cashVoucherInitialData}
+                    isEdit={false}
+                    onClose={() => setIsCashVoucherDialogOpen(false)}
+                    onSuccess={() => {
+                      setIsCashVoucherDialogOpen(false)
+                      router.refresh()
+                    }}
+                  />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* ── Bank Voucher creation dialog ─────────────────────────────────────── */}
           <Dialog open={isBankVoucherDialogOpen} onOpenChange={setIsBankVoucherDialogOpen}>
@@ -1089,7 +1162,7 @@ export default function SingleVoucherDetails() {
 
 // 'use client'
 
-// import React, { useState, useEffect, useRef, useCallback } from 'react'
+// import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 // import { useParams, useRouter } from 'next/navigation'
 // import { CardContent } from '@/components/ui/card'
 // import { Button } from '@/components/ui/button'
@@ -1160,6 +1233,7 @@ export default function SingleVoucherDetails() {
 // import { getAllEmployees } from '@/api/payment-requisition-api'
 // import { getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
 // import { formatIndianNumber } from '@/utils/Formatindiannumber'
+// import { ContraVoucherPopup } from '../cash/contra-voucher/contra-voucher-popup'
 
 // const printStyles = `
 //   @media print {
@@ -1176,21 +1250,18 @@ export default function SingleVoucherDetails() {
 //       margin-bottom: 2rem !important;
 //     }
     
-//     /* Force single page layout with increased font size */
 //     body {
 //       zoom: 0.65;
-//     height: 50% !important; /* 50% of parent container's height */
+//       height: 50% !important;
 //     }
     
-//     /* Portrait specific settings */
 //     @page {
 //       margin: 2mm 2mm 2mm mm;
-//        margin-top: 0 !important;
+//       margin-top: 0 !important;
 //     }
 //   }
   
 //   @media print and (orientation: landscape) {
-//     /* Landscape settings - left aligned, half page width */
 //     @page {
 //       margin: 2mm 2mm 2mm 0mm;
 //     }
@@ -1209,13 +1280,7 @@ export default function SingleVoucherDetails() {
 
 // const updateVoucherNotes = async (id: number, notes: string, token: string) => {
 //   try {
-//     const response = await editJournalDetailsNotes(
-//       {
-//         id,
-//         notes,
-//       },
-//       token
-//     )
+//     const response = await editJournalDetailsNotes({ id, notes }, token)
 //     return response
 //   } catch (error) {
 //     console.error('Error updating voucher notes:', error)
@@ -1243,19 +1308,16 @@ export default function SingleVoucherDetails() {
 //   const checkRef = useRef<HTMLDivElement>(null)
 //   const reactToPrintFn = useReactToPrint({
 //     contentRef,
-//     pageStyle: `
-//     @page {
-//       margin: 4mm;
-//     }
-//   `,
+//     pageStyle: `@page { margin: 4mm; }`,
 //   })
-
 //   const printCheckFn = useReactToPrint({ contentRef: checkRef })
 
 //   const [userId, setUserId] = React.useState<number | null>(null)
 //   const [isBankVoucherDialogOpen, setIsBankVoucherDialogOpen] = useState(false)
 
-//   const isContraVoucher = data?.[0]?.journaltype === VoucherTypes.ContraVoucher
+//   // ── New Contra Voucher dialog state ──────────────────────────────────────────
+//   const [isContraVoucherDialogOpen, setIsContraVoucherDialogOpen] =
+//     useState(false)
 
 //   const [validationError, setValidationError] = useState<string | null>(null)
 //   const [amountError, setAmountError] = useState<string | null>(null)
@@ -1312,12 +1374,87 @@ export default function SingleVoucherDetails() {
 //     status: 'Draft',
 //   })
 
-//   // Load basic voucher data into form when dialog opens
+//   // ── Build initialData for ContraVoucherPopup ──────────────────────────────────
+//   // Waits until bankAccounts + chartOfAccounts are fetched so IDs can be resolved.
+//   // Until then returns undefined → button is disabled, popup is not mounted.
+//   const contraVoucherInitialData = useMemo<
+//     JournalEntryWithDetails | undefined
+//   >(() => {
+//     if (!data || data.length === 0) return undefined
+
+//     // Don't build until reference data is available — prevents empty dropdowns
+//     if (!formState.bankAccounts.length || !formState.chartOfAccounts.length)
+//       return undefined
+
+//     const voucherData = data[0]
+
+//     const selectedCompany = userData?.userCompanies?.find(
+//       (comp) => comp.company?.companyName === voucherData.companyname
+//     )
+//     const selectedLocation = userData?.userLocations?.find(
+//       (loc) => loc.location?.address === voucherData.location
+//     )
+
+//     return {
+//       journalEntry: {
+//         date: voucherData.date || new Date().toISOString().split('T')[0],
+//         journalType: VoucherTypes.ContraVoucher,
+//         state: 0,
+//         companyId: selectedCompany?.company?.companyId || 0,
+//         locationId: selectedLocation?.location?.locationId || 0,
+//         currencyId: 1,
+//         exchangeRate: 1,
+//         amountTotal: voucherData.totalamount || 0,
+//         notes: voucherData.MasterNotes || '',
+//         createdBy: userData?.userId || 0,
+//       },
+//       journalDetails: data.map((item) => {
+//         // ── Resolve bank account ID by account number (most reliable) or name ──
+//         const matchedBank = formState.bankAccounts.find(
+//           (bank) =>
+//             bank.accountNumber === item.accountNumber ||
+//             bank.accountName === item.bankaccountName
+//         )
+
+//         // ── Resolve chart of account ID by case-insensitive name match ──────────
+//         const matchedCoa = formState.chartOfAccounts.find(
+//           (coa) =>
+//             coa.name?.toLowerCase().trim() ===
+//             item.accountsname?.toLowerCase().trim()
+//         )
+
+//         return {
+//           bankaccountid: matchedBank?.id || 0,
+//           accountId: matchedCoa?.accountId || 0,
+//           debit: Number(item.debit || 0),
+//           credit: Number(item.credit || 0),
+//           notes: item.detail_notes || '',
+//           createdBy: userData?.userId || 0,
+//           analyticTags: null,
+//           taxId: null,
+//         }
+//       }),
+//     }
+//   }, [
+//     data,
+//     userData,
+//     formState.bankAccounts, // re-runs once bank accounts are loaded
+//     formState.chartOfAccounts, // re-runs once COA is loaded
+//   ])
+
+//   // ── Dummy fetchAllVoucher for ContraVoucherPopup ──────────────────────────────
+//   const fetchAllVoucherDummy = useCallback(
+//     async (_company: number[], _location: number[]) => {
+//       router.refresh()
+//     },
+//     [router]
+//   )
+
+//   // ── Populate bank voucher form when its dialog opens ─────────────────────────
 //   useEffect(() => {
 //     if (isBankVoucherDialogOpen && data && data.length > 0) {
 //       const voucherData = data[0]
 
-//       // Find company and location
 //       const selectedCompany =
 //         userData?.userCompanies?.find(
 //           (comp) => comp.company?.companyName === voucherData.companyname
@@ -1328,11 +1465,10 @@ export default function SingleVoucherDetails() {
 //           (loc) => loc.location?.address === voucherData.location
 //         ) || userData?.userLocations?.[0]
 
-//       // Prepare journal details (exclude bank account entries)
 //       const mappedJournalDetails = data
-//         .filter((item) => !item.bankaccount) // Exclude bank account rows
+//         .filter((item) => !item.bankaccount)
 //         .map((item) => ({
-//           accountId: 0, // Will be mapped after accounts are loaded
+//           accountId: 0,
 //           costCenterId: null,
 //           departmentId: null,
 //           employeeId: null,
@@ -1343,7 +1479,6 @@ export default function SingleVoucherDetails() {
 //           resPartnerId: null,
 //           notes: item.detail_notes || '',
 //           createdBy: userData?.userId || 0,
-//           // Store original names for later mapping
 //           _accountName: item.accountsname,
 //           _costCenterName: item.costcenter,
 //           _departmentName: item.department,
@@ -1351,7 +1486,6 @@ export default function SingleVoucherDetails() {
 //           _employeeName: item.employeeName,
 //         }))
 
-//       // Set basic form values
 //       form.setValue(
 //         'journalEntry.companyId',
 //         selectedCompany?.company?.companyId || 0
@@ -1367,11 +1501,8 @@ export default function SingleVoucherDetails() {
 //       form.setValue('journalEntry.amountTotal', voucherData.totalamount || 0)
 //       form.setValue('journalEntry.payTo', voucherData.payTo || '')
 //       form.setValue('journalEntry.notes', voucherData.MasterNotes || '')
-
-//       // Set journal details
 //       form.setValue('journalDetails', mappedJournalDetails)
 
-//       // Find and set bank account
 //       const bankRow = data.find((item) => item.bankaccount)
 //       if (bankRow) {
 //         const bankAccount = formState.bankAccounts.find(
@@ -1379,7 +1510,6 @@ export default function SingleVoucherDetails() {
 //             acc.accountName === bankRow.bankaccountName ||
 //             acc.accountNumber === bankRow.accountNumber
 //         )
-
 //         if (bankAccount) {
 //           setFormState((prev) => ({
 //             ...prev,
@@ -1402,12 +1532,7 @@ export default function SingleVoucherDetails() {
 //         router.push('/unauthorized-access')
 //         return
 //       } else if (response.error || !response.data) {
-//         console.error(
-//           'Error getting company chart of accounts:',
-//           response.error
-//         )
 //         setCompanyChartOfAccount([])
-//         return
 //       } else {
 //         setCompanyChartOfAccount(response.data)
 //       }
@@ -1417,7 +1542,7 @@ export default function SingleVoucherDetails() {
 //     }
 //   }, [token, router])
 
-//   // Map account names to IDs after reference data is loaded
+//   // ── Map account names → IDs after reference data loads (bank voucher form) ───
 //   useEffect(() => {
 //     if (
 //       isBankVoucherDialogOpen &&
@@ -1428,10 +1553,8 @@ export default function SingleVoucherDetails() {
 //       formState.employees.length > 0
 //     ) {
 //       const currentDetails = form.getValues('journalDetails')
-
 //       if (!currentDetails || currentDetails.length === 0) return
 
-//       // Check if we need to map (accountId is still 0 and we have original names)
 //       if (
 //         currentDetails[0]?.accountId === 0 &&
 //         (currentDetails[0] as any)?._accountName
@@ -1442,31 +1565,26 @@ export default function SingleVoucherDetails() {
 //               acc.name?.toLowerCase().trim() ===
 //               detail._accountName?.toLowerCase().trim()
 //           )
-
 //           const costCenter = formState.costCenters.find(
 //             (cc) =>
 //               cc.costCenterName?.toLowerCase().trim() ===
 //               detail._costCenterName?.toLowerCase().trim()
 //           )
-
 //           const department = formState.departments.find(
 //             (dept) =>
 //               dept.departmentName?.toLowerCase().trim() ===
 //               detail._departmentName?.toLowerCase().trim()
 //           )
-
 //           const partner = formState.partners.find(
 //             (p) =>
 //               p.name?.toLowerCase().trim() ===
 //               detail._partnerName?.toLowerCase().trim()
 //           )
-
 //           const employee = formState.employees.find(
 //             (e) =>
 //               e.employeeName?.toLowerCase().trim() ===
 //               detail._employeeName?.toLowerCase().trim()
 //           )
-
 //           return {
 //             accountId: account?.accountId || 0,
 //             costCenterId: costCenter?.costCenterId || null,
@@ -1481,10 +1599,7 @@ export default function SingleVoucherDetails() {
 //             createdBy: userData?.userId || 0,
 //           }
 //         })
-
 //         form.setValue('journalDetails', mappedDetails)
-
-//         // Trigger validation
 //         setTimeout(() => form.trigger(), 100)
 //       }
 //     }
@@ -1499,11 +1614,10 @@ export default function SingleVoucherDetails() {
 //     userData,
 //   ])
 
-//   // Filter accounts based on selected company
+//   // ── Filter COA by selected company (bank voucher form) ───────────────────────
 //   useEffect(() => {
 //     const subscription = form.watch((value) => {
 //       const selectedCompanyId = value.journalEntry?.companyId
-
 //       if (
 //         !selectedCompanyId ||
 //         !companyChartOfAccount.length ||
@@ -1512,20 +1626,16 @@ export default function SingleVoucherDetails() {
 //         setCompanyFilteredAccounts([])
 //         return
 //       }
-
 //       const companyAccountIds = companyChartOfAccount
 //         .filter((mapping) => mapping.companyId === selectedCompanyId)
 //         .map((mapping) => mapping.chartOfAccountId)
-
 //       const filtered = formState.chartOfAccounts.filter(
 //         (account) =>
 //           companyAccountIds.includes(account.accountId) &&
 //           account.isGroup === false
 //       )
-
 //       setCompanyFilteredAccounts(filtered)
 //     })
-
 //     return () => subscription.unsubscribe()
 //   }, [form, companyChartOfAccount, formState.chartOfAccounts])
 
@@ -1538,20 +1648,15 @@ export default function SingleVoucherDetails() {
 //       })
 //       return
 //     }
-
-//     // Reset form state
 //     setFormState((prevState) => ({
 //       ...prevState,
 //       status: 'Draft',
 //       formType: 'Credit',
 //       selectedBankAccount: null,
 //     }))
-
-//     // Open dialog - useEffect will handle population
 //     setIsBankVoucherDialogOpen(true)
 //   }, [data])
 
-//   // Initialize form state data
 //   useEffect(() => {
 //     if (userData) {
 //       setFormState((prevState) => ({
@@ -1562,23 +1667,17 @@ export default function SingleVoucherDetails() {
 //     }
 //   }, [userData])
 
-//   // Fetch initial data for bank voucher form
+//   // ── Fetch all reference data on mount ────────────────────────────────────────
 //   useEffect(() => {
 //     const checkUserData = () => {
 //       const storedUserData = localStorage.getItem('currentUser')
 //       const storedToken = localStorage.getItem('authToken')
-//       if (!storedUserData || !storedToken) {
-//         router.push('/')
-//         return
-//       }
+//       if (!storedUserData || !storedToken) router.push('/')
 //     }
-
 //     checkUserData()
 
 //     const fetchInitialData = async () => {
-//       const search = ''
 //       if (!token) return
-
 //       try {
 //         const [
 //           bankAccountsResponse,
@@ -1591,7 +1690,7 @@ export default function SingleVoucherDetails() {
 //           getAllBankAccounts(token),
 //           getAllChartOfAccounts(token),
 //           getAllCostCenters(token),
-//           getResPartnersBySearch(search, token),
+//           getResPartnersBySearch('', token),
 //           getAllDepartments(token),
 //           getAllEmployees(token),
 //         ])
@@ -1608,9 +1707,9 @@ export default function SingleVoucherDetails() {
 //           return
 //         }
 
-//         const filteredCoa = chartOfAccountsResponse.data?.filter((account) => {
-//           return account.isGroup === false
-//         })
+//         const filteredCoa = chartOfAccountsResponse.data?.filter(
+//           (account) => account.isGroup === false
+//         )
 
 //         setFormState((prevState) => ({
 //           ...prevState,
@@ -1633,15 +1732,14 @@ export default function SingleVoucherDetails() {
 //     }
 
 //     fetchInitialData()
-//     fetchCompanyChartOfAccounts() // ADD THIS LINE
+//     fetchCompanyChartOfAccounts()
 //   }, [token, router, fetchCompanyChartOfAccounts])
 
-//   // Updated onSubmit function
+//   // ── Bank voucher submit ───────────────────────────────────────────────────────
 //   const onSubmit = async (
 //     values: JournalEntryWithDetails,
 //     status: 'Draft' | 'Posted'
 //   ) => {
-//     // Validate bank account selection
 //     if (!formState.selectedBankAccount) {
 //       toast({
 //         title: 'Error',
@@ -1650,8 +1748,6 @@ export default function SingleVoucherDetails() {
 //       })
 //       return
 //     }
-
-//     // Validate amount
 //     if (
 //       !values.journalEntry.amountTotal ||
 //       values.journalEntry.amountTotal <= 0
@@ -1681,7 +1777,6 @@ export default function SingleVoucherDetails() {
 //       })),
 //     }
 
-//     // Add bank account entry
 //     const finalValues = {
 //       ...updatedValues,
 //       journalDetails: [
@@ -1711,7 +1806,6 @@ export default function SingleVoucherDetails() {
 
 //     try {
 //       const response = await createJournalEntryWithDetails(finalValues, token)
-
 //       if (response.error || !response.data) {
 //         toast({
 //           title: 'Error',
@@ -1723,8 +1817,6 @@ export default function SingleVoucherDetails() {
 //           title: 'Success',
 //           description: 'Bank Voucher created successfully',
 //         })
-
-//         // Close dialog and reset
 //         setIsBankVoucherDialogOpen(false)
 //         form.reset()
 //         setFormState((prevState) => ({
@@ -1733,8 +1825,6 @@ export default function SingleVoucherDetails() {
 //           formType: 'Credit',
 //           status: 'Draft',
 //         }))
-
-//         // Refresh the page
 //         router.refresh()
 //       }
 //     } catch (error) {
@@ -1747,6 +1837,7 @@ export default function SingleVoucherDetails() {
 //     }
 //   }
 
+//   // ── Fetch single voucher ──────────────────────────────────────────────────────
 //   useEffect(() => {
 //     async function fetchVoucher() {
 //       if (!voucherid || !token) return
@@ -1778,9 +1869,7 @@ export default function SingleVoucherDetails() {
 //   }
 
 //   React.useEffect(() => {
-//     if (userData) {
-//       setUserId(userData.userId)
-//     }
+//     if (userData) setUserId(userData.userId)
 //   }, [userData])
 
 //   const handleReferenceSave = async () => {
@@ -1796,12 +1885,8 @@ export default function SingleVoucherDetails() {
 //         }
 //         setData(updatedData)
 //         setEditingReferenceIndex(null)
-//         toast({
-//           title: 'Success',
-//           description: 'Notes updated successfully',
-//         })
+//         toast({ title: 'Success', description: 'Notes updated successfully' })
 //       } catch (error) {
-//         console.error('Error updating notes:', error)
 //         toast({
 //           title: 'Error',
 //           description: 'Failed to update notes. Please try again.',
@@ -1818,25 +1903,13 @@ export default function SingleVoucherDetails() {
 //     setEditingReferenceText('')
 //   }
 
-//   const handleReverseVoucher = () => {
-//     setIsAlertDialogOpen(true)
-//   }
+//   const handleReverseVoucher = () => setIsAlertDialogOpen(true)
 
 //   const confirmReverseVoucher = async () => {
 //     setIsAlertDialogOpen(false)
 //     const createdId = userId ?? 0
 //     const voucherId = data?.[0].voucherno
-
 //     if (!voucherId || !data) return
-
-//     if (!voucherId) {
-//       toast({
-//         title: 'Error',
-//         description: 'Invalid voucher number',
-//         variant: 'destructive',
-//       })
-//       return
-//     }
 
 //     try {
 //       setIsReversingVoucher(true)
@@ -1846,7 +1919,6 @@ export default function SingleVoucherDetails() {
 //         token,
 //         notes
 //       )
-
 //       if (!response.data || response.error) {
 //         toast({
 //           title: 'Error',
@@ -1862,7 +1934,6 @@ export default function SingleVoucherDetails() {
 //         router.refresh()
 //       }
 //     } catch (error: any) {
-//       console.error('Reverse voucher error:', error)
 //       toast({
 //         title: 'Error',
 //         description: error.message || 'Failed to reverse the voucher',
@@ -1894,33 +1965,34 @@ export default function SingleVoucherDetails() {
 //     <>
 //       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
 //       <Card ref={contentRef} className="w-full max-w-5xl mx-auto mt-24">
-//         {/* ADD THIS NEW SECTION */}
-//             <div className=" grid-cols-[120px,1fr] gap-8 print:block hidden">
-//               <span className="font-medium whitespace-nowrap">Printed On:</span>
-//               <span>
-//                 {new Date().toLocaleString('en-GB', {
-//                   day: '2-digit',
-//                   month: '2-digit',
-//                   year: 'numeric',
-//                   hour: '2-digit',
-//                   minute: '2-digit',
-//                   hour12: true,
-//                 })}
-//               </span>
-//             </div>
-//             {/* END OF NEW SECTION */}
+//         {/* Printed On — visible only when printing */}
+//         <div className="grid-cols-[120px,1fr] gap-8 print:block hidden">
+//           <span className="font-medium whitespace-nowrap">Printed On:</span>
+//           <span>
+//             {new Date().toLocaleString('en-GB', {
+//               day: '2-digit',
+//               month: '2-digit',
+//               year: 'numeric',
+//               hour: '2-digit',
+//               minute: '2-digit',
+//               hour12: true,
+//             })}
+//           </span>
+//         </div>
 
 //         <CardContent className="p-6 print:w-full print:max-w-none">
 //           <h1 className="text-center text-3xl font-bold">
 //             {data[0].companyname}
 //           </h1>
 //           <p className="text-center my-1 text-xl font-semibold">
-//             {data[0].location}{' '}
+//             {data[0].location}
 //           </p>
 //           <p className="text-center mb-10 text-xs font-semibold">
-//             {data[0].address}{' '}
+//             {data[0].address}
 //           </p>
+
 //           <div className="grid grid-cols-2 gap-6 mb-8">
+//             {/* Left: voucher meta */}
 //             <div className="space-y-4">
 //               <div className="grid grid-cols-[120px,1fr] gap-8">
 //                 <span className="font-medium">Voucher No:</span>
@@ -1939,8 +2011,10 @@ export default function SingleVoucherDetails() {
 //                 <span></span>
 //               </div>
 //             </div>
-            
+
+//             {/* Right: action buttons */}
 //             <div className="flex justify-end gap-2 no-print">
+//               {/* ── New Bank Voucher button (unchanged) ── */}
 //               {data[0].journaltype === VoucherTypes.BankVoucher && (
 //                 <Button
 //                   variant="outline"
@@ -1952,6 +2026,39 @@ export default function SingleVoucherDetails() {
 //                 </Button>
 //               )}
 
+//               {/* ── New Contra Voucher button ── */}
+//               {data[0].journaltype === VoucherTypes.ContraVoucher && (
+//                 <>
+//                   <Button
+//                     variant="outline"
+//                     size="sm"
+//                     onClick={() => setIsContraVoucherDialogOpen(true)}
+//                     // Disabled until reference data is loaded so IDs can be resolved
+//                     disabled={!contraVoucherInitialData}
+//                   >
+//                     <Pencil className="w-4 h-4 mr-2" />
+//                     New Contra Voucher
+//                   </Button>
+
+//                   {/* Mount popup only when initialData is ready (IDs resolved) */}
+//                   {contraVoucherInitialData && (
+//                     <ContraVoucherPopup
+//                       fetchAllVoucher={fetchAllVoucherDummy}
+//                       isOpen={isContraVoucherDialogOpen}
+//                       onOpenChange={setIsContraVoucherDialogOpen}
+//                       initialData={contraVoucherInitialData}
+//                       isEdit={false}
+//                       onClose={() => setIsContraVoucherDialogOpen(false)}
+//                       onSuccess={() => {
+//                         setIsContraVoucherDialogOpen(false)
+//                         router.refresh()
+//                       }}
+//                     />
+//                   )}
+//                 </>
+//               )}
+
+//               {/* ── Reverse button ── */}
 //               <AlertDialog
 //                 open={isAlertDialogOpen}
 //                 onOpenChange={setIsAlertDialogOpen}
@@ -1977,7 +2084,6 @@ export default function SingleVoucherDetails() {
 //                       (optional):
 //                     </AlertDialogDescription>
 //                   </AlertDialogHeader>
-
 //                   <div className="my-4">
 //                     <Textarea
 //                       value={notes}
@@ -1986,7 +2092,6 @@ export default function SingleVoucherDetails() {
 //                       className="w-full border rounded p-2"
 //                     />
 //                   </div>
-
 //                   <AlertDialogFooter>
 //                     <AlertDialogCancel>No</AlertDialogCancel>
 //                     <AlertDialogAction onClick={confirmReverseVoucher}>
@@ -1996,6 +2101,7 @@ export default function SingleVoucherDetails() {
 //                 </AlertDialogContent>
 //               </AlertDialog>
 
+//               {/* ── Print Check (bank voucher only) ── */}
 //               {data[0].journaltype === VoucherTypes.BankVoucher && (
 //                 <Button
 //                   variant="outline"
@@ -2006,6 +2112,8 @@ export default function SingleVoucherDetails() {
 //                   Print Check
 //                 </Button>
 //               )}
+
+//               {/* ── Print Voucher ── */}
 //               <Button
 //                 variant="outline"
 //                 size="sm"
@@ -2017,7 +2125,7 @@ export default function SingleVoucherDetails() {
 //             </div>
 //           </div>
 
-//           {/* Bank Voucher Dialog */}
+//           {/* ── Bank Voucher creation dialog ─────────────────────────────────────── */}
 //           <Dialog
 //             open={isBankVoucherDialogOpen}
 //             onOpenChange={setIsBankVoucherDialogOpen}
@@ -2032,9 +2140,9 @@ export default function SingleVoucherDetails() {
 //               <div className="mt-4">
 //                 <Form {...form}>
 //                   <form
-//                     onSubmit={form.handleSubmit((values) => {
+//                     onSubmit={form.handleSubmit((values) =>
 //                       onSubmit(values, formState.status)
-//                     })}
+//                     )}
 //                     className="space-y-8"
 //                   >
 //                     {validationError && (
@@ -2058,7 +2166,7 @@ export default function SingleVoucherDetails() {
 //                       form={form}
 //                       formState={{
 //                         ...formState,
-//                         filteredChartOfAccounts: companyFilteredAccounts, // CHANGE THIS LINE
+//                         filteredChartOfAccounts: companyFilteredAccounts,
 //                       }}
 //                       requisition={undefined}
 //                       partners={formState.partners}
@@ -2077,7 +2185,7 @@ export default function SingleVoucherDetails() {
 //             </DialogContent>
 //           </Dialog>
 
-//           {/* Journal Items Table */}
+//           {/* ── Journal Items Table ───────────────────────────────────────────────── */}
 //           <Card className="mb-6">
 //             <CardHeader>
 //               <CardTitle>
@@ -2108,7 +2216,7 @@ export default function SingleVoucherDetails() {
 //                   </TableRow>
 //                 </TableHeader>
 //                 <TableBody>
-//                   {sortedData.map((item, index) => {
+//                   {sortedData.map((item) => {
 //                     const originalIndex = data.findIndex(
 //                       (d) => d.id === item.id
 //                     )
@@ -2152,10 +2260,14 @@ export default function SingleVoucherDetails() {
 //                           )}
 //                         </TableCell>
 //                         <TableCell className="tex-size-12">
-//                           {item.debit > 0 ? formatIndianNumber(item.debit) : '-'}
+//                           {item.debit > 0
+//                             ? formatIndianNumber(item.debit)
+//                             : '-'}
 //                         </TableCell>
 //                         <TableCell className="tex-size-12">
-//                           {item.credit > 0 ? formatIndianNumber(item.credit) : '-'}
+//                           {item.credit > 0
+//                             ? formatIndianNumber(item.credit)
+//                             : '-'}
 //                         </TableCell>
 //                         <TableCell className="no-print">
 //                           {editingReferenceIndex === originalIndex ? (
@@ -2198,15 +2310,15 @@ export default function SingleVoucherDetails() {
 //                   })}
 //                 </TableBody>
 //               </Table>
+
 //               <div className="mt-6 grid grid-cols-[170px,1fr] gap-2">
 //                 <span className="font-medium">Reference:</span>
 //                 <span>{data?.[0]?.MasterNotes || 'Not available'}</span>
 //               </div>
-//               {/* Total Amount */}
 //               <div className="mt-4 grid grid-cols-[170px,1fr] gap-2">
 //                 <span className="font-medium">Amount:</span>
 //                 <span>
-//                  {formatIndianNumber(data[data.length - 1].totalamount)}{' '}
+//                   {formatIndianNumber(data[data.length - 1].totalamount)}{' '}
 //                   {data[data.length - 1].currency}
 //                 </span>
 //               </div>
@@ -2219,6 +2331,7 @@ export default function SingleVoucherDetails() {
 //                   {data[data.length - 1].currency} only
 //                 </span>
 //               </div>
+
 //               <div className="flex justify-between mt-20">
 //                 <h1 className="border-t-2 border-black pt-2">
 //                   Signature of Recipient
@@ -2240,7 +2353,6 @@ export default function SingleVoucherDetails() {
 //           <div ref={checkRef} className="p-8 bg-white">
 //             <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
 //               <div className="relative p-6 border border-gray-300 bg-white">
-//                 {/* Bank Header */}
 //                 <div className="flex justify-end items-start mb-8">
 //                   <div className="text-right">
 //                     <div className="flex items-center justify-end">
@@ -2248,16 +2360,14 @@ export default function SingleVoucherDetails() {
 //                     </div>
 //                   </div>
 //                 </div>
-//                 {/* Payee Section */}
 //                 <div className="mb-6">
 //                   <div className="flex items-center mb-1">
-//                     <p className="flex-1 pb-1 pt-2 ">{data[0]?.payTo}</p>
+//                     <p className="flex-1 pb-1 pt-2">{data[0]?.payTo}</p>
 //                   </div>
 //                 </div>
-//                 {/* Amount Section */}
 //                 <div className="flex mb-6">
 //                   <div className="flex-1">
-//                     <p className="flex-1 pb-1 pt-2 ">
+//                     <p className="flex-1 pb-1 pt-2">
 //                       {item.debit === 0
 //                         ? toWords(item.credit)
 //                         : toWords(item.debit)}
@@ -2277,3 +2387,6 @@ export default function SingleVoucherDetails() {
 //     </>
 //   )
 // }
+
+
+
