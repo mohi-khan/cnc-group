@@ -66,6 +66,21 @@ export default function CashVoucherDetails({
     name: 'journalDetails',
   })
 
+  // ─── Watch all journal details for live total calculation ─────────────────────
+  const watchedDetails = watch('journalDetails')
+
+  const totalPayment =
+    watchedDetails?.reduce((sum: number, detail: any) => {
+      return detail?.type === 'Payment' ? sum + (Number(detail.debit) || 0) : sum
+    }, 0) || 0
+
+  const totalReceipt =
+    watchedDetails?.reduce((sum: number, detail: any) => {
+      return detail?.type === 'Receipt' ? sum + (Number(detail.credit) || 0) : sum
+    }, 0) || 0
+
+  // ─────────────────────────────────────────────────────────────────────────────
+
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {
       const response = await getResPartnersBySearch(query, token)
@@ -160,7 +175,7 @@ export default function CashVoucherDetails({
         <TableBody>
           {fields.map((field, index) => {
             const currentType =
-              form.watch(`journalDetails.${index}.type`) || 'Receipt'
+              form.watch(`journalDetails.${index}.type`) || 'Payment'
             const selectedAccountId = form.watch(
               `journalDetails.${index}.accountId`
             )
@@ -314,45 +329,6 @@ export default function CashVoucherDetails({
                   />
                 </TableCell>
 
-                {/* <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.departmentId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={departments
-                              .filter((department) => department.isActive)
-                              .map((department) => ({
-                                id: department.departmentID.toString(),
-                                name:
-                                  department.departmentName ||
-                                  'Unnamed Department',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      departments.find(
-                                        (d) => d.departmentID === field.value
-                                      )?.departmentName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select a unit"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell> */}
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -421,7 +397,7 @@ export default function CashVoucherDetails({
                           <CustomCombobox
                             items={employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name: `${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
+                              name: `${employee.employeeName} (${employee.employeeId})`,
                             }))}
                             value={
                               field.value
@@ -560,6 +536,43 @@ export default function CashVoucherDetails({
               </TableRow>
             )
           })}
+
+          {/* ── Total Summary Row ── */}
+          <TableRow className="bg-slate-100 font-semibold border-t-2 border-slate-300">
+            <TableCell colSpan={7} className="text-right text-sm text-slate-600">
+              Total
+            </TableCell>
+            <TableCell>
+              <div className="flex flex-col gap-1">
+                {totalPayment > 0 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-500">Payment:</span>
+                    <span className="text-sm font-semibold text-red-600">
+                      {totalPayment.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+                {totalReceipt > 0 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-500">Receipt:</span>
+                    <span className="text-sm font-semibold text-green-600">
+                      {totalReceipt.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+                {totalPayment === 0 && totalReceipt === 0 && (
+                  <span className="text-xs text-slate-400">0.00</span>
+                )}
+              </div>
+            </TableCell>
+            <TableCell />
+          </TableRow>
         </TableBody>
       </Table>
 
@@ -618,7 +631,6 @@ export default function CashVoucherDetails({
     </div>
   )
 }
-
 
 
 

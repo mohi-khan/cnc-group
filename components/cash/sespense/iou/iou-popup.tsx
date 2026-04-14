@@ -190,9 +190,31 @@ export default function IouPopUp({
                       {...field}
                       type="number"
                       step="0.01"
+                      min="0"
                       placeholder="Enter amount"
-                      onChange={(e) =>
-                        field.onChange(Number.parseFloat(e.target.value) || 0)
+                      onChange={(e) => {
+                        const raw = e.target.value
+
+                        if (raw === '') {
+                          field.onChange('')
+                          return
+                        }
+
+                        const parsed = Number.parseFloat(raw)
+
+                        if (isNaN(parsed) || parsed <= 0) {
+                          field.onChange('')
+                          return
+                        }
+
+                        field.onChange(parsed)
+                      }}
+                      value={
+                        field.value === 0 ||
+                        field.value === undefined ||
+                        field.value === null
+                          ? ''
+                          : field.value
                       }
                     />
                   </FormControl>
@@ -210,7 +232,7 @@ export default function IouPopUp({
                   <CustomCombobox
                     items={employeeData.map((employee) => ({
                       id: employee.id.toString(),
-                       name: `${employee.employeeName} (${employee.employeeId})`, // 👈 
+                      name: `${employee.employeeName} (${employee.employeeId})`, // 👈
                     }))}
                     value={
                       field.value
@@ -362,7 +384,7 @@ export default function IouPopUp({
               )}
             />
 
-            <div className="flex justify-end space-x-4">
+            {/* <div className="flex justify-end space-x-4">
               <Button
                 type="button"
                 variant="outline"
@@ -372,6 +394,41 @@ export default function IouPopUp({
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div> */}
+
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+
+              {/* Draft Button */}
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isSubmitting}
+                onClick={() => {
+                  form.setValue('status', 'draft')
+                  form.handleSubmit(onSubmit)()
+                }}
+              >
+                {isSubmitting ? 'Saving...' : 'Save as Draft'}
+              </Button>
+
+              {/* Post/Submit Button */}
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  form.setValue('status', 'active')
+                  form.handleSubmit(onSubmit)()
+                }}
+              >
+                {isSubmitting ? 'Submitting...' : 'Post'}
               </Button>
             </div>
           </form>

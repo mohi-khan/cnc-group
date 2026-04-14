@@ -1423,7 +1423,7 @@ export const IouRecordGetSchema = z.object({
   dueDate: z.date(),
   locationId: z.number().int().positive(),
   companyId: z.number().int().positive(),
-  status: z.enum(['active', 'inactive']).default('active'),
+  status: z.enum(["draft", "active", "inactive"]).default("draft"),
   notes: z.string().optional(),
   createdBy: z.number().int().positive(),
 })
@@ -1439,7 +1439,7 @@ export const IouRecordCreateSchema = z.object({
   dueDate: z.coerce.date(),
   locationId: z.number().int().positive(),
   companyId: z.number().int().positive(),
-  status: z.enum(['active', 'inactive']).default('active'),
+  status: z.enum(["draft", "active", "inactive"]).default("draft"),
   notes: z.string().optional(),
   createdBy: z.number().int().positive(),
 })
