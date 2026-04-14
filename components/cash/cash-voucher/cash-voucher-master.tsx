@@ -273,60 +273,6 @@ export default function CashVoucherMaster({
         )}
       />
 
-      {/* <FormField
-        control={form.control}
-        name="journalEntry.payTo"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Receiver Name</FormLabel>
-            <div className="flex gap-4">
-              
-              <div className="flex-1">
-                <CustomCombobox
-                  items={employeeData.map((employee) => ({
-                    id: employee.id.toString(),
-                    name:`${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
-                  }))}
-                  value={
-                    field.value && !form.watch('journalEntry.payToText')
-                      ? {
-                          id: field.value,
-                          name: field.value,
-                        }
-                      : null
-                  }
-                  onChange={(value: { id: string; name: string } | null) => {
-                    if (value) {
-                      field.onChange(value.name)
-                      form.setValue('journalEntry.payTo', value.name)
-                      form.setValue('journalEntry.payToText', '') // clear manual input
-                    }
-                  }}
-                  placeholder="Select a receiver name"
-                  disabled={!!form.watch('journalEntry.payToText')}
-                />
-              </div>
-            
-              <div className="flex-1">
-                <FormControl>
-                  <Input
-                    placeholder="Enter receiver name"
-                    value={form.watch('journalEntry.payToText') || ''}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      form.setValue('journalEntry.payToText', value)
-                      form.setValue('journalEntry.payTo', value) // <- ensures value goes to DB
-                      field.onChange(value)
-                    }}
-                  />
-                </FormControl>
-              </div>
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      /> */}
-
       <FormField
         control={form.control}
         name="journalEntry.payTo"

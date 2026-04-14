@@ -69,3 +69,26 @@ export async function createAdjustment(data: IouAdjustmentCreateType, token: str
 }
 
 
+// IOU post api
+export async function postIouRecord(iouId: number, token: string) {
+  return fetchApi<void>({
+    url: `api/iou/${iouId}/post`,
+    method: 'PATCH',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
+// IOU delete api
+export async function deleteIouRecord(iouId: number, token: string | null) {
+  return fetchApi<void>({
+    url: `api/iou/${iouId}`,
+    method: 'DELETE',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}

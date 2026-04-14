@@ -67,7 +67,7 @@ const BLANK_DETAIL = {
   taxId: null,
   resPartnerId: null,
   notes: '',
-  type: 'Receipt' as const,
+  type: 'Payment' as const,
   createdBy: 0,
 }
 
@@ -136,6 +136,15 @@ export default function CashVoucher({
     }
   }, [])
 
+  //local timezone offset helper
+const getLocalDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`; // Local date, UTC নয়
+};
+
   const saveLastUsedValues = useCallback((values: JournalEntryWithDetails) => {
     try {
       localStorage.setItem(
@@ -160,7 +169,7 @@ export default function CashVoucher({
     resolver: zodResolver(JournalEntryWithDetailsSchema),
     defaultValues: initialData || {
       journalEntry: {
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
         journalType: VoucherTypes.CashVoucher,
         companyId: 0,
         locationId: 0,
@@ -248,7 +257,7 @@ export default function CashVoucher({
     async (company: number[], location: number[]) => {
       try {
         const voucherQuery: JournalQuery = {
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
           companyId: company,
           locationId: location,
           voucherType: VoucherTypes.CashVoucher,
@@ -638,6 +647,8 @@ export default function CashVoucher({
         title: 'Success',
         description: `Voucher ${isEdit ? 'edited' : 'created'} successfully`,
       })
+
+      await fetchVoucherData()
       window.dispatchEvent(new Event('voucherUpdated'))
       if (onSuccess) onSuccess()
       onClose?.()
