@@ -701,6 +701,10 @@ export function JournalVoucherDetailsSection({
                         onChange={(e) =>
                           handleDebitChange(index, e.target.value)
                         }
+                        onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                       />
                     </FormControl>
                     <FormMessage />
@@ -720,6 +724,10 @@ export function JournalVoucherDetailsSection({
                         onChange={(e) =>
                           handleCreditChange(index, e.target.value)
                         }
+                         onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                       />
                     </FormControl>
                     <FormMessage />

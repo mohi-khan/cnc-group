@@ -27,6 +27,7 @@ import {
 import { useAtom } from 'jotai'
 import { tokenAtom } from '@/utils/user'
 import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api'
+import { getAccountClosingBalance } from '@/api/chart-of-accounts-api'
 import { useEffect, useCallback, useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { Trash } from 'lucide-react'
@@ -59,6 +60,11 @@ export default function CashVoucherDetails({
     id: number | string
     name: string
   } | null>(null)
+
+  const [accountBalances, setAccountBalances] = useState<
+    Record<number, number>
+  >({})
+
   const { watch } = form
 
   const { fields, remove, append } = useFieldArray({
@@ -66,20 +72,21 @@ export default function CashVoucherDetails({
     name: 'journalDetails',
   })
 
-  // ─── Watch all journal details for live total calculation ─────────────────────
   const watchedDetails = watch('journalDetails')
 
   const totalPayment =
     watchedDetails?.reduce((sum: number, detail: any) => {
-      return detail?.type === 'Payment' ? sum + (Number(detail.debit) || 0) : sum
+      return detail?.type === 'Payment'
+        ? sum + (Number(detail.debit) || 0)
+        : sum
     }, 0) || 0
 
   const totalReceipt =
     watchedDetails?.reduce((sum: number, detail: any) => {
-      return detail?.type === 'Receipt' ? sum + (Number(detail.credit) || 0) : sum
+      return detail?.type === 'Receipt'
+        ? sum + (Number(detail.credit) || 0)
+        : sum
     }, 0) || 0
-
-  // ─────────────────────────────────────────────────────────────────────────────
 
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {
@@ -94,6 +101,28 @@ export default function CashVoucherDetails({
     }
   }
 
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+  const isCompanySelected = !!selectedCompanyId
+
+  const fetchClosingBalance = async (accountId: number, index: number) => {
+    if (!accountId || !selectedCompanyId) return
+    try {
+      const response = await getAccountClosingBalance(
+        accountId,
+        selectedCompanyId,
+        token
+      )
+      if (response?.data?.balance !== undefined) {
+        setAccountBalances((prev: Record<number, number>) => ({
+          ...prev,
+          [index]: response.data!.balance,
+        }))
+      }
+    } catch (err) {
+      console.error('[fetchClosingBalance] API call threw an error:', err)
+    }
+  }
+
   const watchedPartnerId = watch('journalDetails.0.resPartnerId')
 
   useEffect(() => {
@@ -102,19 +131,16 @@ export default function CashVoucherDetails({
         setPartnerValue(null)
         return
       }
-
       const local = partners.find((p) => p.id === Number(watchedPartnerId))
       if (local) {
         setPartnerValue(local)
         return
       }
-
       const partner = await getPartnerById(Number(watchedPartnerId), token)
       if (partner?.data) {
         setPartnerValue({ id: partner.data.id, name: partner.data.name || '' })
       }
     }
-
     loadPartner()
   }, [watchedPartnerId, partners, token])
 
@@ -146,14 +172,11 @@ export default function CashVoucherDetails({
     { id: 'Receipt', name: 'Receipt' },
   ]
 
-  const selectedCompanyId = form.watch('journalEntry.companyId')
-  const isCompanySelected = !!selectedCompanyId
-
   return (
     <div className="mb-6">
       {!isCompanySelected && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
-          ⚠️ Please select a company first to see available Transaction .
+          ⚠️ Please select a company first to see available Transaction.
         </div>
       )}
 
@@ -184,45 +207,52 @@ export default function CashVoucherDetails({
             )
             const isPartnerFieldEnabled =
               selectedAccount?.withholdingTax === true
+            const hasBalance = accountBalances[index] !== undefined
 
             return (
-              <TableRow key={field.id}>
+              <TableRow key={field.id} className="align-top">
+                {/* Type */}
                 <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.type`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={typeOptions}
-                            value={
-                              field.value
-                                ? { id: field.value, name: field.value }
-                                : null
-                            }
-                            onChange={(value) => {
-                              const newType = value ? value.id : null
-                              field.onChange(newType)
-                              if (newType === 'Payment') {
-                                form.setValue(
-                                  `journalDetails.${index}.credit`,
-                                  0
-                                )
-                              } else if (newType === 'Receipt') {
-                                form.setValue(
-                                  `journalDetails.${index}.debit`,
-                                  0
-                                )
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.type`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <CustomCombobox
+                              items={typeOptions}
+                              value={
+                                field.value
+                                  ? { id: field.value, name: field.value }
+                                  : null
                               }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                              onChange={(value) => {
+                                const newType = value ? value.id : null
+                                field.onChange(newType)
+                                if (newType === 'Payment') {
+                                  form.setValue(
+                                    `journalDetails.${index}.credit`,
+                                    0
+                                  )
+                                } else if (newType === 'Receipt') {
+                                  form.setValue(
+                                    `journalDetails.${index}.debit`,
+                                    0
+                                  )
+                                }
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    {/* Spacer — same height as balance row */}
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
                 </TableCell>
 
+                {/* Account Name — balance shown below */}
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -230,248 +260,101 @@ export default function CashVoucherDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <CustomCombobox
-                            items={filteredChartOfAccounts
-                              .filter((account) => account.isActive)
-                              .map((account) => ({
-                                id: account.accountId.toString(),
-                                name: account.name || 'Unnamed Account',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      filteredChartOfAccounts.find(
-                                        (a) => a.accountId === field.value
-                                      )?.name || '',
+                          <div className="flex flex-col">
+                            <CustomCombobox
+                              items={filteredChartOfAccounts
+                                .filter((account) => account.isActive)
+                                .map((account) => ({
+                                  id: account.accountId.toString(),
+                                  name: account.name || 'Unnamed Account',
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        filteredChartOfAccounts.find(
+                                          (a) => a.accountId === field.value
+                                        )?.name || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) => {
+                                const newAccountId = value
+                                  ? Number.parseInt(value.id, 10)
+                                  : null
+                                field.onChange(newAccountId)
+
+                                if (newAccountId) {
+                                  fetchClosingBalance(newAccountId, index)
+                                } else {
+                                  setAccountBalances(
+                                    (prev: Record<number, number>) => {
+                                      const updated = { ...prev }
+                                      delete updated[index]
+                                      return updated
+                                    }
+                                  )
+                                }
+
+                                if (newAccountId) {
+                                  const newAccount =
+                                    filteredChartOfAccounts.find(
+                                      (a) => a.accountId === newAccountId
+                                    )
+                                  if (!newAccount?.withholdingTax) {
+                                    form.setValue(
+                                      `journalDetails.${index}.resPartnerId`,
+                                      null
+                                    )
                                   }
-                                : null
-                            }
-                            onChange={(value) => {
-                              const newAccountId = value
-                                ? Number.parseInt(value.id, 10)
-                                : null
-                              field.onChange(newAccountId)
-                              if (newAccountId) {
-                                const newAccount = filteredChartOfAccounts.find(
-                                  (account) =>
-                                    account.accountId === newAccountId
-                                )
-                                if (!newAccount?.withholdingTax) {
+                                } else {
                                   form.setValue(
                                     `journalDetails.${index}.resPartnerId`,
                                     null
                                   )
                                 }
-                              } else {
-                                form.setValue(
-                                  `journalDetails.${index}.resPartnerId`,
-                                  null
-                                )
-                              }
-                            }}
-                            placeholder={
-                              !isCompanySelected
-                                ? 'Select company first'
-                                : filteredChartOfAccounts.length === 0
-                                  ? 'No accounts for this company'
-                                  : 'Select an account'
-                            }
-                            disabled={
-                              !isCompanySelected ||
-                              filteredChartOfAccounts.length === 0
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.costCenterId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={costCenters
-                              .filter((center) => center.isActive)
-                              .map((center) => ({
-                                id: center.costCenterId.toString(),
-                                name:
-                                  center.costCenterName ||
-                                  'Unnamed Cost Center',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      costCenters.find(
-                                        (c) => c.costCenterId === field.value
-                                      )?.costCenterName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select a cost center"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.departmentId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={departments
-                              .filter(
-                                (department) =>
-                                  department.isActive &&
-                                  department.companyCode === selectedCompanyId
-                              )
-                              .map((department) => ({
-                                id: department.departmentID.toString(),
-                                name:
-                                  department.departmentName ||
-                                  'Unnamed Department',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      departments.find(
-                                        (d) => d.departmentID === field.value
-                                      )?.departmentName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder={
-                              !isCompanySelected
-                                ? 'Select company first'
-                                : departments.filter(
-                                      (d) => d.companyCode === selectedCompanyId
-                                    ).length === 0
-                                  ? 'No departments for this company'
-                                  : 'Select a department'
-                            }
-                            disabled={
-                              !isCompanySelected ||
-                              departments.filter(
-                                (d) => d.companyCode === selectedCompanyId
-                              ).length === 0
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.employeeId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CustomCombobox
-                            items={employees.map((employee) => ({
-                              id: employee.id.toString(),
-                              name: `${employee.employeeName} (${employee.employeeId})`,
-                            }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      employees.find(
-                                        (e) => e.id === field.value
-                                      )?.employeeName || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) =>
-                              field.onChange(
-                                value ? Number.parseInt(value.id, 10) : null
-                              )
-                            }
-                            placeholder="Select an employee"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.resPartnerId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div
-                            className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed ' : ''}`}
-                          >
-                            <CustomComboboxWithApi
-                              items={partners.map((partner) => ({
-                                id: partner.id.toString(),
-                                name: partner.name || '',
-                              }))}
-                              value={
-                                field.value
-                                  ? (partners.find(
-                                      (p) => p.id === Number(field.value)
-                                    ) ?? {
-                                      id: field.value,
-                                      name: partnerValue?.name || '',
-                                    })
-                                  : null
-                              }
-                              onChange={(item) =>
-                                field.onChange(
-                                  item ? Number.parseInt(item.id) : null
-                                )
-                              }
-                              placeholder="Select partner"
-                              searchFunction={searchPartners}
-                              fetchByIdFunction={async (id) => {
-                                const numericId: number =
-                                  typeof id === 'string' && /^\d+$/.test(id)
-                                    ? parseInt(id, 10)
-                                    : (id as number)
-                                const partner = await getPartnerById(
-                                  numericId,
-                                  token
-                                )
-                                return partner?.data
-                                  ? {
-                                      id: partner.data.id.toString(),
-                                      name: partner.data.name ?? '',
-                                    }
-                                  : null
                               }}
+                              placeholder={
+                                !isCompanySelected
+                                  ? 'Select company first'
+                                  : filteredChartOfAccounts.length === 0
+                                    ? 'No accounts for this company'
+                                    : 'Select an account'
+                              }
+                              disabled={
+                                !isCompanySelected ||
+                                filteredChartOfAccounts.length === 0
+                              }
                             />
+
+                            {/* Balance row — always reserves space */}
+                            <div className="min-h-[18px] px-1 mt-0.5">
+                              {hasBalance && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-[10px] text-slate-400">
+                                    Balance:
+                                  </span>
+                                  <span
+                                    className={`text-[11px] font-semibold tabular-nums ${
+                                      accountBalances[index] > 0
+                                        ? 'text-emerald-600'
+                                        : accountBalances[index] < 0
+                                          ? 'text-red-500'
+                                          : 'text-slate-400'
+                                    }`}
+                                  >
+                                    {accountBalances[index].toLocaleString(
+                                      'en-US',
+                                      {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      }
+                                    )}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </FormControl>
                       </FormItem>
@@ -479,67 +362,294 @@ export default function CashVoucherDetails({
                   />
                 </TableCell>
 
+                {/* Cost Center */}
                 <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.notes`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter remarks"
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.costCenterId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <CustomCombobox
+                              items={costCenters
+                                .filter((center) => center.isActive)
+                                .map((center) => ({
+                                  id: center.costCenterId.toString(),
+                                  name:
+                                    center.costCenterName ||
+                                    'Unnamed Cost Center',
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        costCenters.find(
+                                          (c) => c.costCenterId === field.value
+                                        )?.costCenterName || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) =>
+                                field.onChange(
+                                  value ? Number.parseInt(value.id, 10) : null
+                                )
+                              }
+                              placeholder="Select a cost center"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
                 </TableCell>
 
+                {/* Unit / Department */}
                 <TableCell>
-                  <FormField
-                    control={form.control}
-                    name={`journalDetails.${index}.${currentType === 'Payment' ? 'debit' : 'credit'}`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder={`Enter ${currentType === 'Payment' ? 'payment' : 'receipt'} amount`}
-                            {...field}
-                            value={field.value === 0 ? '' : field.value}
-                            onChange={(e) =>
-                              field.onChange(
-                                Number.parseFloat(e.target.value) || 0
-                              )
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.departmentId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <CustomCombobox
+                              items={departments
+                                .filter(
+                                  (department) =>
+                                    department.isActive &&
+                                    department.companyCode === selectedCompanyId
+                                )
+                                .map((department) => ({
+                                  id: department.departmentID.toString(),
+                                  name:
+                                    department.departmentName ||
+                                    'Unnamed Department',
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        departments.find(
+                                          (d) => d.departmentID === field.value
+                                        )?.departmentName || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) =>
+                                field.onChange(
+                                  value ? Number.parseInt(value.id, 10) : null
+                                )
+                              }
+                              placeholder={
+                                !isCompanySelected
+                                  ? 'Select company first'
+                                  : departments.filter(
+                                        (d) =>
+                                          d.companyCode === selectedCompanyId
+                                      ).length === 0
+                                    ? 'No departments for this company'
+                                    : 'Select a department'
+                              }
+                              disabled={
+                                !isCompanySelected ||
+                                departments.filter(
+                                  (d) => d.companyCode === selectedCompanyId
+                                ).length === 0
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
                 </TableCell>
 
+                {/* Employee */}
                 <TableCell>
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-red-500"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.employeeId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <CustomCombobox
+                              items={employees.map((employee) => ({
+                                id: employee.id.toString(),
+                                name: `${employee.employeeName} (${employee.employeeId})`,
+                              }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        employees.find(
+                                          (e) => e.id === field.value
+                                        )?.employeeName || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) =>
+                                field.onChange(
+                                  value ? Number.parseInt(value.id, 10) : null
+                                )
+                              }
+                              placeholder="Select an employee"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
+                </TableCell>
+
+                {/* Partner */}
+                <TableCell>
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.resPartnerId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div
+                              className={`${!isPartnerFieldEnabled ? 'cursor-not-allowed' : ''}`}
+                            >
+                              <CustomComboboxWithApi
+                                items={partners.map((partner) => ({
+                                  id: partner.id.toString(),
+                                  name: partner.name || '',
+                                }))}
+                                value={
+                                  field.value
+                                    ? (partners.find(
+                                        (p) => p.id === Number(field.value)
+                                      ) ?? {
+                                        id: field.value,
+                                        name: partnerValue?.name || '',
+                                      })
+                                    : null
+                                }
+                                onChange={(item) =>
+                                  field.onChange(
+                                    item ? Number.parseInt(item.id) : null
+                                  )
+                                }
+                                placeholder="Select partner"
+                                searchFunction={searchPartners}
+                                fetchByIdFunction={async (id) => {
+                                  const numericId: number =
+                                    typeof id === 'string' && /^\d+$/.test(id)
+                                      ? parseInt(id, 10)
+                                      : (id as number)
+                                  const partner = await getPartnerById(
+                                    numericId,
+                                    token
+                                  )
+                                  return partner?.data
+                                    ? {
+                                        id: partner.data.id.toString(),
+                                        name: partner.data.name ?? '',
+                                      }
+                                    : null
+                                }}
+                              />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
+                </TableCell>
+
+                {/* Remarks */}
+                <TableCell>
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.notes`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter remarks"
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
+                </TableCell>
+
+                {/* Amount */}
+                <TableCell>
+                  <div className="flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name={`journalDetails.${index}.${currentType === 'Payment' ? 'debit' : 'credit'}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={`Enter ${currentType === 'Payment' ? 'payment' : 'receipt'} amount`}
+                              {...field}
+                              value={field.value === 0 ? '' : field.value}
+                              onChange={(e) =>
+                                field.onChange(
+                                  Number.parseFloat(e.target.value) || 0
+                                )
+                              }
+                              onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
+                </TableCell>
+
+                {/* Action */}
+                <TableCell>
+                  <div className="flex flex-col">
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-red-500"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <div className="min-h-[18px] mt-0.5" />
+                  </div>
                 </TableCell>
               </TableRow>
             )
           })}
 
-          {/* ── Total Summary Row ── */}
+          {/* Total row */}
           <TableRow className="bg-slate-100 font-semibold border-t-2 border-slate-300">
-            <TableCell colSpan={7} className="text-right text-sm text-slate-600">
+            <TableCell
+              colSpan={7}
+              className="text-right text-sm text-slate-600"
+            >
               Total
             </TableCell>
             <TableCell>
@@ -576,61 +686,54 @@ export default function CashVoucherDetails({
         </TableBody>
       </Table>
 
-      <div className="text-right">
-        <div className="flex justify-between">
-          <div className="mt-4">
-            {!isEdit && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const lastType =
-                    fields.length > 0
-                      ? form.getValues(
-                          `journalDetails.${fields.length - 1}.type`
-                        )
-                      : 'Receipt'
-                  append({
-                    type: lastType,
-                    accountId: null,
-                    costCenterId: null,
-                    departmentId: null,
-                    employeeId: null,
-                    resPartnerId: null,
-                    notes: '',
-                    debit: lastType === 'Payment' ? 0 : 0,
-                    credit: lastType === 'Receipt' ? 0 : 0,
-                  })
-                }}
-                disabled={!isCompanySelected}
-              >
-                Add Another
-              </Button>
-            )}
-          </div>
-          <div className="flex justify-end space-x-2 mt-4">
+      <div className="flex justify-between mt-4">
+        <div>
+          {!isEdit && (
             <Button
               type="button"
               variant="outline"
-              onClick={() => onSubmit(form.getValues(), 'Draft')}
+              onClick={() => {
+                const lastType =
+                  fields.length > 0
+                    ? form.getValues(`journalDetails.${fields.length - 1}.type`)
+                    : 'Receipt'
+                append({
+                  type: lastType,
+                  accountId: null,
+                  costCenterId: null,
+                  departmentId: null,
+                  employeeId: null,
+                  resPartnerId: null,
+                  notes: '',
+                  debit: 0,
+                  credit: 0,
+                })
+              }}
               disabled={!isCompanySelected}
             >
-              Save as Draft
+              Add Another
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onSubmit(form.getValues(), 'Posted')}
-              disabled={!isCompanySelected}
-            >
-              Save as Post
-            </Button>
-          </div>
+          )}
+        </div>
+        <div className="flex space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSubmit(form.getValues(), 'Draft')}
+            disabled={!isCompanySelected}
+          >
+            Save as Draft
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSubmit(form.getValues(), 'Posted')}
+            disabled={!isCompanySelected}
+          >
+            Save as Post
+          </Button>
         </div>
       </div>
     </div>
   )
 }
-
-
-

@@ -561,6 +561,10 @@ export default function BankVoucherDetails({
                                 setTimeout(() => calculateTotalAmount(), 0)
                               }
                             }}
+                            onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                           />
                         </FormControl>
                       </FormItem>
