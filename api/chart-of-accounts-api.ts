@@ -65,3 +65,20 @@ export async function getCompanyWiseChartOfAccounts(token: string, ) {
     },
   })
 }
+
+
+// get closing balance of an account
+export async function getAccountClosingBalance(
+  accountId: number,
+  companyId: number,
+  token: string
+) {
+  return fetchApi<{ balance: number }>({
+    url: `api/chart-of-accounts/closing-balance?accountId=${accountId}&companyId=${companyId}`,
+    method: 'GET',
+    headers: {
+      Authorization: `${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+}

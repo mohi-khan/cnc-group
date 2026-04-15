@@ -240,7 +240,8 @@ const DayBooks = () => {
     { key: 'topHead', label: 'Top Head' }, // ✅ Add this line
     { key: 'companyname', label: 'Company Name' },
     { key: 'location', label: 'Location' },
-    { key: 'totalamount', label: 'Amount' },
+    { key: 'debit', label: 'Debit' },    // ✅ নতুন
+  { key: 'credit', label: 'Credit' },  // ✅ নতুন
     { key: 'createdByName', label: 'Created By' },
     { key: 'state', label: 'Status' },
   ]

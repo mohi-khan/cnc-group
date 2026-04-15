@@ -75,13 +75,13 @@ export default function BankVoucherMaster({
       const totalDebit = journalDetails.reduce((sum: number, detail: any) => {
         return sum + (Number(detail.debit) || 0)
       }, 0)
-      
+
       const totalCredit = journalDetails.reduce((sum: number, detail: any) => {
         return sum + (Number(detail.credit) || 0)
       }, 0)
-      
+
       const calculatedAmount = Math.max(totalDebit, totalCredit)
-      
+
       form.setValue('journalEntry.amountTotal', calculatedAmount)
     }
   }, [journalDetails, isEdit, form])
@@ -117,10 +117,8 @@ export default function BankVoucherMaster({
     ) {
       if (initialData.journalDetails && initialData.journalDetails.length > 0) {
         const bankDetail = initialData.journalDetails.find(
-          (d: {
-            bankaccountid?: number
-            debit?: number
-          }) => d.bankaccountid || d.bankaccountid
+          (d: { bankaccountid?: number; debit?: number }) =>
+            d.bankaccountid || d.bankaccountid
         )
 
         if (
@@ -460,7 +458,8 @@ export default function BankVoucherMaster({
                   placeholder="Enter amount"
                   {...field}
                   onChange={(e) => {
-                    const amount = Number.parseFloat(e.target.value)
+                    const raw = e.target.value
+                    const amount = raw === '' ? '' : Number.parseFloat(raw)
                     field.onChange(amount)
                     const detailsArray = form.getValues('journalDetails') || []
                     if (detailsArray.length > 0) {
@@ -468,13 +467,14 @@ export default function BankVoucherMaster({
                       updatedDetails[0] = {
                         ...updatedDetails[0],
                         [formState.formType === 'Credit' ? 'debit' : 'credit']:
-                          amount,
+                          amount === '' ? 0 : amount,
                       }
                       form.setValue('journalDetails', updatedDetails)
                     }
                   }}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   readOnly={isEdit}
-                  className={isEdit ? 'bg-gray-100 cursor-not-allowed' : ''}
+                  className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none${isEdit ? ' bg-gray-100 cursor-not-allowed' : ''}`}
                 />
               </FormControl>
               <FormMessage />
@@ -482,79 +482,81 @@ export default function BankVoucherMaster({
           )}
         />
 
-         <FormField
-        control={form.control}
-        name="journalEntry.payTo"
-        render={({ field }) => {
-          const payToText = form.watch('journalEntry.payToText')
-          const hasPayToText = payToText && payToText.trim()
-          
-          // Find matching employee to get proper display value
-          const selectedEmployee = employeeData.find(
-            (emp) => `${emp.employeeName} (${emp.employeeId})` === field.value
-          )
-          
-          return (
-            <FormItem>
-              <FormLabel>Receiver Name</FormLabel>
-              <div className="flex gap-4">
-                {/* Combobox Section */}
-                <div className="flex-1">
-                  <CustomCombobox
-                    items={employeeData.map((employee) => ({
-                      id: employee.id.toString(),
-                      name: `${employee.employeeName} (${employee.employeeId})`,
-                    }))}
-                    value={
-                      selectedEmployee && !hasPayToText
-                        ? {
-                            id: selectedEmployee.id.toString(),
-                            name: `${selectedEmployee.employeeName} (${selectedEmployee.employeeId})`,
-                          }
-                        : null
-                    }
-                    onChange={(value: { id: string; name: string } | null) => {
-                      if (value) {
-                        field.onChange(value.name)
-                        form.setValue('journalEntry.payTo', value.name)
-                        form.setValue('journalEntry.payToText', '')
-                      } else {
-                        // Handle clearing the combobox
-                        field.onChange(null)
-                        form.setValue('journalEntry.payTo', null)
-                        form.setValue('journalEntry.payToText', null)
+        <FormField
+          control={form.control}
+          name="journalEntry.payTo"
+          render={({ field }) => {
+            const payToText = form.watch('journalEntry.payToText')
+            const hasPayToText = payToText && payToText.trim()
+
+            // Find matching employee to get proper display value
+            const selectedEmployee = employeeData.find(
+              (emp) => `${emp.employeeName} (${emp.employeeId})` === field.value
+            )
+
+            return (
+              <FormItem>
+                <FormLabel>Receiver Name</FormLabel>
+                <div className="flex gap-4">
+                  {/* Combobox Section */}
+                  <div className="flex-1">
+                    <CustomCombobox
+                      items={employeeData.map((employee) => ({
+                        id: employee.id.toString(),
+                        name: `${employee.employeeName} (${employee.employeeId})`,
+                      }))}
+                      value={
+                        selectedEmployee && !hasPayToText
+                          ? {
+                              id: selectedEmployee.id.toString(),
+                              name: `${selectedEmployee.employeeName} (${selectedEmployee.employeeId})`,
+                            }
+                          : null
                       }
-                    }}
-                    placeholder="Select a receiver name"
-                    disabled={!!hasPayToText}
-                  />
-                </div>
-                {/* Manual Text Input Section */}
-                <div className="flex-1">
-                  <FormControl>
-                    <Input
-                      placeholder="Enter receiver name"
-                      value={payToText || ''}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        form.setValue('journalEntry.payToText', value)
-                        form.setValue('journalEntry.payTo', value)
+                      onChange={(
+                        value: { id: string; name: string } | null
+                      ) => {
                         if (value) {
-                          field.onChange(value)
+                          field.onChange(value.name)
+                          form.setValue('journalEntry.payTo', value.name)
+                          form.setValue('journalEntry.payToText', '')
                         } else {
+                          // Handle clearing the combobox
                           field.onChange(null)
+                          form.setValue('journalEntry.payTo', null)
+                          form.setValue('journalEntry.payToText', null)
                         }
                       }}
-                      disabled={!!selectedEmployee && !hasPayToText}
+                      placeholder="Select a receiver name"
+                      disabled={!!hasPayToText}
                     />
-                  </FormControl>
+                  </div>
+                  {/* Manual Text Input Section */}
+                  <div className="flex-1">
+                    <FormControl>
+                      <Input
+                        placeholder="Enter receiver name"
+                        value={payToText || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          form.setValue('journalEntry.payToText', value)
+                          form.setValue('journalEntry.payTo', value)
+                          if (value) {
+                            field.onChange(value)
+                          } else {
+                            field.onChange(null)
+                          }
+                        }}
+                        disabled={!!selectedEmployee && !hasPayToText}
+                      />
+                    </FormControl>
+                  </div>
                 </div>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )
-        }}
-      />
+                <FormMessage />
+              </FormItem>
+            )
+          }}
+        />
       </div>
       <FormField
         control={form.control}
@@ -572,6 +574,3 @@ export default function BankVoucherMaster({
     </div>
   )
 }
-
-
-

@@ -551,6 +551,10 @@ export default function OpeningBalanceDetails({
                               const num = parseFloat(e.target.value)
                               field.onChange(Number.isNaN(num) ? 0 : num)
                             }}
+                             onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                           />
                         </FormControl>
                       </FormItem>
