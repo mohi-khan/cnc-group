@@ -31,6 +31,7 @@ import { getAccountClosingBalance } from '@/api/chart-of-accounts-api'
 import { useEffect, useCallback, useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { Trash } from 'lucide-react'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface CashVoucherDetailsProps {
   form: UseFormReturn<any>
@@ -118,6 +119,7 @@ export default function CashVoucherDetails({
           [index]: response.data!.balance,
         }))
       }
+      console.log('balance: ', accountBalances[index])
     } catch (err) {
       console.error('[fetchClosingBalance] API call threw an error:', err)
     }
@@ -332,7 +334,7 @@ export default function CashVoucherDetails({
                             <div className="min-h-[18px] px-1 mt-0.5">
                               {hasBalance && (
                                 <p className="flex items-center gap-1">
-                                  <span className="text-[10px] text-slate-400">
+                                  <span className="text-[10px] text-black font-bold">
                                     Balance:
                                   </span>
                                   <span
@@ -344,12 +346,8 @@ export default function CashVoucherDetails({
                                           : 'text-slate-400'
                                     }`}
                                   >
-                                    {accountBalances[index].toLocaleString(
-                                      'en-US',
-                                      {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      }
+                                    {formatIndianNumber(
+                                      accountBalances[index] || 0
                                     )}
                                   </span>
                                 </p>

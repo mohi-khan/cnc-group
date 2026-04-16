@@ -1,6 +1,5 @@
 'use client'
 
-import { getAllVoucherByDate } from '@/api/day-books-api'
 import { Input } from '@/components/ui/input'
 import VoucherList, { Column } from '@/components/voucher-list/voucher-list'
 import { useToast } from '@/hooks/use-toast'
@@ -26,6 +25,7 @@ import {
 } from '@/components/ui/select'
 import { getCashJournalByDate } from '@/api/cash-books-api'
 import { tr } from 'date-fns/locale'
+import { getLocalDateString } from '@/utils/localtime'
 
 const CashBooks = () => {
   const router = useRouter()
@@ -44,7 +44,7 @@ const CashBooks = () => {
   const [currentPage, setCurrentPage] = useState(1)
 
   // Date range states
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDateString()
   const [startDate, setStartDate] = useState<string>(today)
   const [endDate, setEndDate] = useState<string>(today)
 
@@ -161,7 +161,7 @@ const CashBooks = () => {
 
   //       console.log('🔥 Filtered cash voucher data:', filteredData)
   //     } catch (error) {
-        
+
   //       setVoucherGrid([])
   //       throw error
   //     }
@@ -189,11 +189,10 @@ const CashBooks = () => {
           throw new Error('No data received from server')
         }
 
-       let filteredData = Array.isArray(response.data) ? response.data : []
+        let filteredData = Array.isArray(response.data) ? response.data : []
 
-       // Show only isCash = false
-       filteredData = filteredData.filter((item) => item.isCash === false)
-
+        // Show only isCash = false
+        filteredData = filteredData.filter((item) => item.isCash === false)
 
         // Role check: If not admin, show only user's own vouchers
         if (userData?.roleId !== 1) {
@@ -230,7 +229,6 @@ const CashBooks = () => {
     },
     [token, userData]
   )
-
 
   const fetchVoucherData = useCallback(
     async (showRefreshingState = false) => {
@@ -395,7 +393,7 @@ const CashBooks = () => {
         </div>
       </div>
 
-      <VoucherList 
+      <VoucherList
         vouchers={filteredVouchers}
         columns={columns}
         isLoading={isLoading}
