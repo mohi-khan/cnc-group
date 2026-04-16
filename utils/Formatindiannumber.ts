@@ -50,3 +50,7 @@ export function formatIndianNumber(value: number | null | undefined, decimals: n
 export function formatIndianNumberInteger(value: number | null | undefined): string {
   return formatIndianNumber(value, 0)
 }
+
+
+
+

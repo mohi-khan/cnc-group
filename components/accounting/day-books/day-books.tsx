@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getLocalDateString } from '@/utils/localtime'
 
 const DayBooks = () => {
   const router = useRouter()
@@ -43,7 +44,7 @@ const DayBooks = () => {
   const [currentPage, setCurrentPage] = useState(1)
 
   // New states for date range
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDateString()
   const [startDate, setStartDate] = useState<string>(today)
   const [endDate, setEndDate] = useState<string>(today)
 

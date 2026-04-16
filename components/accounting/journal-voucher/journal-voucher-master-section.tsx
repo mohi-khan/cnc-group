@@ -28,6 +28,7 @@ import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { HoverCard, HoverCardTrigger } from '@/components/ui/hover-card'
+import { getLocalDateString } from '@/utils/localtime'
 
 interface JournalVoucherMasterSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -70,7 +71,7 @@ export function JournalVoucherMasterSection({
   const fetchAllVoucher = React.useCallback(
     async (company: number[], location: number[]) => {
       const voucherQuery: JournalQuery = {
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
         companyId: company,
         locationId: location,
         voucherType: VoucherTypes.JournalVoucher,
