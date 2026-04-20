@@ -27,6 +27,8 @@ import {
 import { getPartnerById, getResPartnersBySearch } from '@/api/common-shared-api'
 import { useAtom } from 'jotai'
 import { tokenAtom } from '@/utils/user'
+import { getAccountClosingBalance } from '@/api/chart-of-accounts-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 export default function BankVoucherDetails({
   form,
@@ -53,6 +55,10 @@ export default function BankVoucherDetails({
   })
 
   const [token] = useAtom(tokenAtom)
+
+  const [accountBalances, setAccountBalances] = useState<
+    Record<number, number>
+  >({})
 
   const [partnerValue, setPartnerValue] = useState<{
     id: number | string
@@ -142,6 +148,26 @@ export default function BankVoucherDetails({
     })
   }
 
+  const fetchClosingBalance = async (accountId: number, index: number) => {
+    if (!accountId || !selectedCompanyId) return
+    try {
+      const response = await getAccountClosingBalance(
+        accountId,
+        selectedCompanyId,
+        token
+      )
+      if (response?.data?.balance !== undefined) {
+        setAccountBalances((prev: Record<number, number>) => ({
+          ...prev,
+          [index]: response.data!.balance,
+        }))
+      }
+      console.log('balance: ', accountBalances[index])
+    } catch (err) {
+      console.error('[fetchClosingBalance] API call threw an error:', err)
+    }
+  }
+
   // Validation function to check if all required fields are filled
   const validateRequiredFields = useCallback(() => {
     const details = form.getValues('journalDetails') || []
@@ -222,8 +248,12 @@ export default function BankVoucherDetails({
             const isCostCenterFieldRequired =
               selectedAccount?.isCostCenter === true
 
+            // Derived flag for whether a closing balance exists for this row
+            const hasBalance = accountBalances[index] !== undefined
+
             return (
               <TableRow key={field.id}>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -231,45 +261,51 @@ export default function BankVoucherDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <CustomCombobox
-                            items={formState.filteredChartOfAccounts
-                              .filter((account) => account.isActive)
-                              .map((account) => ({
-                                id: account.accountId.toString(),
-                                name: account.name || 'Unnamed Account',
-                              }))}
-                            value={
-                              field.value
-                                ? {
-                                    id: field.value.toString(),
-                                    name:
-                                      formState.filteredChartOfAccounts.find(
-                                        (a) => a.accountId === field.value
-                                      )?.name || '',
-                                  }
-                                : null
-                            }
-                            onChange={(value) => {
-                              const newAccountId = value
-                                ? Number.parseInt(value.id, 10)
-                                : null
-                              field.onChange(newAccountId)
-                              if (!isFromInvoice) {
+                          <div className="flex flex-col">
+                            <CustomCombobox
+                              items={formState.filteredChartOfAccounts
+                                .filter((account) => account.isActive)
+                                .map((account) => ({
+                                  id: account.accountId.toString(),
+                                  name: account.name || 'Unnamed Account',
+                                }))}
+                              value={
+                                field.value
+                                  ? {
+                                      id: field.value.toString(),
+                                      name:
+                                        formState.filteredChartOfAccounts.find(
+                                          (a) => a.accountId === field.value
+                                        )?.name || '',
+                                    }
+                                  : null
+                              }
+                              onChange={(value) => {
+                                const newAccountId = value
+                                  ? Number.parseInt(value.id, 10)
+                                  : null
+                                field.onChange(newAccountId)
+
+                                if (newAccountId) {
+                                  fetchClosingBalance(newAccountId, index)
+                                } else {
+                                  setAccountBalances(
+                                    (prev: Record<number, number>) => {
+                                      const updated = { ...prev }
+                                      delete updated[index]
+                                      return updated
+                                    }
+                                  )
+                                }
+
                                 if (newAccountId) {
                                   const newAccount =
                                     formState.filteredChartOfAccounts.find(
-                                      (account) =>
-                                        account.accountId === newAccountId
+                                      (a) => a.accountId === newAccountId
                                     )
                                   if (!newAccount?.withholdingTax) {
                                     form.setValue(
                                       `journalDetails.${index}.resPartnerId`,
-                                      null
-                                    )
-                                  }
-                                  if (!newAccount?.isCostCenter) {
-                                    form.setValue(
-                                      `journalDetails.${index}.costCenterId`,
                                       null
                                     )
                                   }
@@ -278,20 +314,51 @@ export default function BankVoucherDetails({
                                     `journalDetails.${index}.resPartnerId`,
                                     null
                                   )
-                                  form.setValue(
-                                    `journalDetails.${index}.costCenterId`,
-                                    null
-                                  )
                                 }
+                              }}
+                              placeholder={
+                                !isCompanySelected
+                                  ? 'Select company first'
+                                  : formState.filteredChartOfAccounts.length === 0
+                                    ? 'No accounts for this company'
+                                    : 'Select an account'
                               }
-                            }}
-                            placeholder="Select account"
-                          />
+                              disabled={
+                                !isCompanySelected ||
+                                formState.filteredChartOfAccounts.length === 0
+                              }
+                            />
+
+                            {/* Balance row — always reserves space */}
+                            <div className="min-h-[18px] px-1 mt-0.5">
+                              {hasBalance && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-[10px] text-black font-bold">
+                                    Balance:
+                                  </span>
+                                  <span
+                                    className={`text-[11px] font-semibold tabular-nums ${
+                                      accountBalances[index] > 0
+                                        ? 'text-emerald-600'
+                                        : accountBalances[index] < 0
+                                          ? 'text-red-500'
+                                          : 'text-slate-400'
+                                    }`}
+                                  >
+                                    {formatIndianNumber(
+                                      accountBalances[index] || 0
+                                    )}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -400,6 +467,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -410,7 +478,7 @@ export default function BankVoucherDetails({
                           <CustomCombobox
                             items={employees.map((employee) => ({
                               id: employee.id.toString(),
-                              name: `${employee.employeeName} (${employee.employeeId})`, // 👈 Show both,
+                              name: `${employee.employeeName} (${employee.employeeId})`,
                             }))}
                             value={
                               field.value
@@ -435,6 +503,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -506,6 +575,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -523,6 +593,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -540,6 +611,7 @@ export default function BankVoucherDetails({
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -562,15 +634,16 @@ export default function BankVoucherDetails({
                               }
                             }}
                             onWheel={(e) =>
-                                (e.target as HTMLInputElement).blur()
-                              }
-                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
+                              (e.target as HTMLInputElement).blur()
+                            }
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </FormControl>
                       </FormItem>
                     )}
                   />
                 </TableCell>
+
                 <TableCell>
                   <Button
                     type="button"
@@ -632,4 +705,3 @@ export default function BankVoucherDetails({
     </div>
   )
 }
-
