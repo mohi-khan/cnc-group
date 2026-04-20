@@ -35,7 +35,8 @@ import {
 import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
-import { getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
+import { getAccountClosingBalance, getCompanyWiseChartOfAccounts } from '@/api/chart-of-accounts-api'
+import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 interface JournalVoucherDetailsSectionProps {
   form: UseFormReturn<JournalEntryWithDetails>
@@ -74,8 +75,14 @@ export function JournalVoucherDetailsSection({
     []
   )
 
+  // Closing balance state: keyed by row index
+  const [accountBalances, setAccountBalances] = useState<Record<number, number>>({})
+
   const newRowRef = useRef<HTMLButtonElement>(null)
   const entries = form.watch('journalDetails')
+
+  const selectedCompanyId = form.watch('journalEntry.companyId')
+  const isCompanySelected = !!selectedCompanyId
 
   const searchPartners = async (query: string): Promise<ComboboxItem[]> => {
     try {
@@ -320,6 +327,26 @@ export function JournalVoucherDetailsSection({
     }
   }, [entries.length, form, userData])
 
+  // Fetch and store the closing balance for a given account + row index
+  const fetchClosingBalance = async (accountId: number, index: number) => {
+    if (!accountId || !selectedCompanyId) return
+    try {
+      const response = await getAccountClosingBalance(
+        accountId,
+        selectedCompanyId,
+        token
+      )
+      if (response?.data?.balance !== undefined) {
+        setAccountBalances((prev) => ({
+          ...prev,
+          [index]: response.data!.balance,
+        }))
+      }
+    } catch (err) {
+      console.error('[fetchClosingBalance] API call threw an error:', err)
+    }
+  }
+
   /**
    * Core formula:
    *   remaining = totalDebits - totalCredits (across ALL rows)
@@ -383,8 +410,8 @@ export function JournalVoucherDetailsSection({
       accountId: 0,
       costCenterId: null,
       departmentId: null,
-      debit: remaining < 0 ? Math.abs(remaining) : 0, // credits > debits → pre-fill debit
-      credit: remaining > 0 ? remaining : 0, // debits > credits → pre-fill credit
+      debit: remaining < 0 ? Math.abs(remaining) : 0,
+      credit: remaining > 0 ? remaining : 0,
       notes: '',
       createdBy: userData?.userId || 0,
       analyticTags: null,
@@ -413,8 +440,6 @@ export function JournalVoucherDetailsSection({
   }
 
   const totals = calculateTotals()
-  const selectedCompanyId = form.watch('journalEntry.companyId')
-  const isCompanySelected = !!selectedCompanyId
 
   return (
     <div>
@@ -444,6 +469,9 @@ export function JournalVoucherDetailsSection({
           )
           const isPartnerFieldEnabled = selectedAccount?.withholdingTax === true
 
+          // Derived flag for whether a closing balance exists for this row
+          const hasBalance = accountBalances[index] !== undefined
+
           return (
             <div
               key={index}
@@ -454,61 +482,95 @@ export function JournalVoucherDetailsSection({
                 name={`journalDetails.${index}.accountId`}
                 render={({ field }) => (
                   <FormItem>
-                    <CustomCombobox
-                      items={companyFilteredAccounts
-                        .filter((account) => account.isActive)
-                        .map((account) => ({
-                          id: account.accountId,
-                          name: account.name,
-                        }))}
-                      value={
-                        field.value
-                          ? {
-                              id: field.value,
-                              name:
-                                companyFilteredAccounts.find(
-                                  (account) => account.accountId === field.value
-                                )?.name || '',
-                            }
-                          : null
-                      }
-                      onChange={(selectedItem) => {
-                        const newAccountId = selectedItem?.id || null
-                        field.onChange(newAccountId)
+                    <div className="flex flex-col">
+                      <CustomCombobox
+                        items={companyFilteredAccounts
+                          .filter((account) => account.isActive)
+                          .map((account) => ({
+                            id: account.accountId,
+                            name: account.name,
+                          }))}
+                        value={
+                          field.value
+                            ? {
+                                id: field.value,
+                                name:
+                                  companyFilteredAccounts.find(
+                                    (account) =>
+                                      account.accountId === field.value
+                                  )?.name || '',
+                              }
+                            : null
+                        }
+                        onChange={(selectedItem) => {
+                          const newAccountId = selectedItem?.id || null
+                          field.onChange(newAccountId)
 
-                        if (newAccountId) {
-                          const newAccount = companyFilteredAccounts.find(
-                            (account) => account.accountId === newAccountId
-                          )
-                          if (!newAccount?.withholdingTax) {
+                          if (newAccountId) {
+                            fetchClosingBalance(Number(newAccountId), index)
+
+                            const newAccount = companyFilteredAccounts.find(
+                              (account) => account.accountId === newAccountId
+                            )
+                            if (!newAccount?.withholdingTax) {
+                              form.setValue(
+                                `journalDetails.${index}.resPartnerId`,
+                                null
+                              )
+                            }
+                          } else {
+                            // Clear balance when account is deselected
+                            setAccountBalances((prev) => {
+                              const updated = { ...prev }
+                              delete updated[index]
+                              return updated
+                            })
                             form.setValue(
                               `journalDetails.${index}.resPartnerId`,
                               null
                             )
                           }
-                        } else {
-                          form.setValue(
-                            `journalDetails.${index}.resPartnerId`,
-                            null
-                          )
+                        }}
+                        placeholder={
+                          !selectedCompanyId
+                            ? 'Select company first'
+                            : companyFilteredAccounts.length === 0
+                              ? 'No accounts for this company'
+                              : 'Select an account'
                         }
-                      }}
-                      placeholder={
-                        !selectedCompanyId
-                          ? 'Select company first'
-                          : companyFilteredAccounts.length === 0
-                            ? 'No accounts for this company'
-                            : 'Select an account'
-                      }
-                      disabled={
-                        !selectedCompanyId ||
-                        companyFilteredAccounts.length === 0
-                      }
-                    />
+                        disabled={
+                          !selectedCompanyId ||
+                          companyFilteredAccounts.length === 0
+                        }
+                      />
+
+                      {/* Balance row — always reserves space */}
+                      <div className="min-h-[18px] px-1 mt-0.5">
+                        {hasBalance && (
+                          <p className="flex items-center gap-1">
+                            <span className="text-[10px] text-black font-bold">
+                              Balance:
+                            </span>
+                            <span
+                              className={`text-[11px] font-semibold tabular-nums ${
+                                accountBalances[index] > 0
+                                  ? 'text-emerald-600'
+                                  : accountBalances[index] < 0
+                                    ? 'text-red-500'
+                                    : 'text-slate-400'
+                              }`}
+                            >
+                              {formatIndianNumber(accountBalances[index] || 0)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.costCenterId`}
@@ -633,6 +695,7 @@ export function JournalVoucherDetailsSection({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.resPartnerId`}
@@ -688,6 +751,7 @@ export function JournalVoucherDetailsSection({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.debit`}
@@ -702,15 +766,16 @@ export function JournalVoucherDetailsSection({
                           handleDebitChange(index, e.target.value)
                         }
                         onWheel={(e) =>
-                                (e.target as HTMLInputElement).blur()
-                              }
-                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
+                          (e.target as HTMLInputElement).blur()
+                        }
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.credit`}
@@ -724,16 +789,17 @@ export function JournalVoucherDetailsSection({
                         onChange={(e) =>
                           handleCreditChange(index, e.target.value)
                         }
-                         onWheel={(e) =>
-                                (e.target as HTMLInputElement).blur()
-                              }
-                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
+                        onWheel={(e) =>
+                          (e.target as HTMLInputElement).blur()
+                        }
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name={`journalDetails.${index}.notes`}
@@ -746,6 +812,7 @@ export function JournalVoucherDetailsSection({
                   </FormItem>
                 )}
               />
+
               <div>
                 <Button
                   type="button"
