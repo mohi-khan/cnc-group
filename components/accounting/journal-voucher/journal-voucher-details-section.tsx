@@ -482,7 +482,7 @@ export function JournalVoucherDetailsSection({
                 name={`journalDetails.${index}.accountId`}
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col mt-5">
                       <CustomCombobox
                         items={companyFilteredAccounts
                           .filter((account) => account.isActive)

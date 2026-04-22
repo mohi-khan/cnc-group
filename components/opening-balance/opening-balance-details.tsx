@@ -320,7 +320,7 @@ export default function OpeningBalanceDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col mt-5">
                             <CustomCombobox
                               items={formState.filteredChartOfAccounts
                                 .filter((account) => account.isActive)

@@ -140,11 +140,11 @@ const DayBooks = () => {
         // 🔥 ROLE CHECK
         // If admin -> show all
         // If not admin -> show only createdBy = current user
-        if (userData?.roleId !== 1) {
-          filteredData = filteredData.filter(
-            (item) => item.createdBy === userData?.userId
-          )
-        }
+        // if (userData?.roleId !== 1) {
+        //   filteredData = filteredData.filter(
+        //     (item) => item.createdBy === userData?.userId
+        //   )
+        // }
 
         // Sort by newest created time
         filteredData = filteredData.sort(
@@ -161,7 +161,7 @@ const DayBooks = () => {
         throw error
       }
     },
-    [token, userData]
+    [token]
   )
 
   const fetchVoucherData = useCallback(

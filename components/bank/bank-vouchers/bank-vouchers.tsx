@@ -472,28 +472,37 @@ export default function BankVoucher({
   }, [])
 
   const getallVoucher = useCallback(
-    async (company: number[], location: number[]) => {
-      if (!token) return
-      let localVoucherGrid: JournalResult[] = []
-      try {
-        const voucherQuery: JournalQuery = {
-          date: getLocalDateString(),
-          companyId: company,
-          locationId: location,
-          voucherType: VoucherTypes.BankVoucher,
-        }
-        const response = await getAllVoucher(voucherQuery, token)
-        if (response?.error?.status === 401) router.push('/unauthorized-access')
-        else if (!response.data) throw new Error('No data received from server')
-        localVoucherGrid = Array.isArray(response.data) ? response.data : []
-      } catch (error) {
-        console.error('Error getting Voucher Data:', error)
-        throw error
+  async (company: number[], location: number[]) => {
+    if (!token) return
+    let localVoucherGrid: JournalResult[] = []
+    try {
+      const voucherQuery: JournalQuery = {
+        date: getLocalDateString(),
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.BankVoucher,
       }
-      setVoucherGrid(localVoucherGrid)
-    },
-    [token, router]
-  )
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response?.error?.status === 401) router.push('/unauthorized-access')
+      else if (!response.data) throw new Error('No data received from server')
+      
+      localVoucherGrid = Array.isArray(response.data) ? response.data : []
+
+      // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
+      if (userData?.roleId !== 1) {
+        localVoucherGrid = localVoucherGrid.filter(
+          (item) => Number(item.createdBy) === Number(userData?.userId)
+        )
+      }
+
+    } catch (error) {
+      console.error('Error getting Voucher Data:', error)
+      throw error
+    }
+    setVoucherGrid(localVoucherGrid)
+  },
+  [token, router, userData] // ✅ userData যোগ করুন
+)
 
   useEffect(() => {
     const fetchVoucherData = async () => {

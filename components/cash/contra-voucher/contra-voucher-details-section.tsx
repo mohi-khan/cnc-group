@@ -398,7 +398,7 @@ export function ContraVoucherDetailsSection({
               name={`journalDetails.${index}.accountId`}
               render={({ field }) => (
                 <FormItem>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col mt-5">
                     <CustomCombobox
                       items={chartOfAccounts
                         .filter((account) => account.isActive)

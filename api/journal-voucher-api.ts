@@ -101,3 +101,14 @@ export async function editJournalMasterWithDetail(data: JournalEntryWithDetails,
     }, 
   })
 }
+
+// delete journal entry when it is in draft state
+export async function deleteDraftJournal(journalId: number, token: string) {
+  return fetchApi({
+    url: `api/journal/draft/${journalId}`,
+    method: 'DELETE',
+    headers: {
+      Authorization: `${token}`,
+    },
+  })
+}
