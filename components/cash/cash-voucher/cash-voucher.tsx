@@ -253,26 +253,57 @@ const getLocalDateString = () => {
   }
 
   // ─── Voucher list fetch ────────────────────────────────────────────────────────
+  // const getallVoucher = useCallback(
+  //   async (company: number[], location: number[]) => {
+  //     try {
+  //       const voucherQuery: JournalQuery = {
+  //         date: getLocalDateString(),
+  //         companyId: company,
+  //         locationId: location,
+  //         voucherType: VoucherTypes.CashVoucher,
+  //       }
+  //       const response = await getAllVoucher(voucherQuery, token)
+  //       if (!response.data) throw new Error('No data received from server')
+  //       setVoucherGrid(Array.isArray(response.data) ? response.data : [])
+  //     } catch (error) {
+  //       console.error('Error getting Voucher Data:', error)
+  //       setVoucherGrid([])
+  //       throw error
+  //     }
+  //   },
+  //   [token]
+  // )
+
   const getallVoucher = useCallback(
-    async (company: number[], location: number[]) => {
-      try {
-        const voucherQuery: JournalQuery = {
-          date: getLocalDateString(),
-          companyId: company,
-          locationId: location,
-          voucherType: VoucherTypes.CashVoucher,
-        }
-        const response = await getAllVoucher(voucherQuery, token)
-        if (!response.data) throw new Error('No data received from server')
-        setVoucherGrid(Array.isArray(response.data) ? response.data : [])
-      } catch (error) {
-        console.error('Error getting Voucher Data:', error)
-        setVoucherGrid([])
-        throw error
+  async (company: number[], location: number[]) => {
+    try {
+      const voucherQuery: JournalQuery = {
+        date: getLocalDateString(),
+        companyId: company,
+        locationId: location,
+        voucherType: VoucherTypes.CashVoucher,
       }
-    },
-    [token]
-  )
+      const response = await getAllVoucher(voucherQuery, token)
+      if (!response.data) throw new Error('No data received from server')
+      
+      let data = Array.isArray(response.data) ? response.data : []
+
+      // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
+      if (userData?.roleId !== 1) {
+        data = data.filter(
+          (item) => Number(item.createdBy) === Number(userData?.userId)
+        )
+      }
+
+      setVoucherGrid(data)
+    } catch (error) {
+      console.error('Error getting Voucher Data:', error)
+      setVoucherGrid([])
+      throw error
+    }
+  },
+  [token, userData]  // ✅ userData dependency যোগ করুন
+)
 
   const fetchVoucherData = React.useCallback(async () => {
     if (!token) return
@@ -686,6 +717,7 @@ const getLocalDateString = () => {
       })
     }
   }
+  
 
   // ─── Columns ──────────────────────────────────────────────────────────────────
   const columns = [

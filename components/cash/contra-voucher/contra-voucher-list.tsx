@@ -90,24 +90,33 @@ export default function ContraVoucherTable() {
 
   // ─── Fetch vouchers ──────────────────────────────────────────────────────────
   const fetchAllVoucher = useCallback(
-    async (company: number[], location: number[]) => {
-      setIsLoading(true)
-      const voucherQuery: JournalQuery = {
-        date: getLocalDateString(),
-        companyId: company,
-        locationId: location,
-        voucherType: VoucherTypes.ContraVoucher,
+  async (company: number[], location: number[]) => {
+    setIsLoading(true)
+    const voucherQuery: JournalQuery = {
+      date: getLocalDateString(),
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.ContraVoucher,
+    }
+    const response = await getAllVoucher(voucherQuery, token)
+    if (response.data && Array.isArray(response.data)) {
+      let data = response.data
+
+      // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
+      if (userData?.roleId !== 1) {
+        data = data.filter(
+          (item) => Number(item.createdBy) === Number(userData?.userId)
+        )
       }
-      const response = await getAllVoucher(voucherQuery, token)
-      if (response.data && Array.isArray(response.data)) {
-        setVouchers(response.data)
-      } else {
-        setVouchers([])
-      }
-      setIsLoading(false)
-    },
-    [token]
-  )
+
+      setVouchers(data)
+    } else {
+      setVouchers([])
+    }
+    setIsLoading(false)
+  },
+  [token, userData] // ✅ userData যোগ করুন
+)
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)

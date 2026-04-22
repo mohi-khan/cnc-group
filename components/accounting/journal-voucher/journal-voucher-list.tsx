@@ -110,44 +110,53 @@ export default function VoucherTable() {
 
   // ─── Fetch vouchers ──────────────────────────────────────────────────────────
   const fetchAllVoucher = useCallback(
-    async (company: number[], location: number[], token: string) => {
-      setIsLoading(true)
-      const voucherQuery: JournalQuery = {
-        date: getLocalDateString(),
-        companyId: company,
-        locationId: location,
-        voucherType: VoucherTypes.JournalVoucher,
-      }
+  async (company: number[], location: number[], token: string) => {
+    setIsLoading(true)
+    const voucherQuery: JournalQuery = {
+      date: getLocalDateString(),
+      companyId: company,
+      locationId: location,
+      voucherType: VoucherTypes.JournalVoucher,
+    }
 
-      try {
-        if (!token) return
-        const response = await getAllVoucher(voucherQuery, token)
-        if (response?.error?.status === 401) {
-          router.push('/unauthorized-access')
-          return
-        } else if (response.error || !response.data) {
-          toast({
-            title: 'Error',
-            description: response.error?.message || 'Failed to fetch vouchers',
-            variant: 'destructive',
-          })
-          setVouchers([])
-        } else {
-          setVouchers(Array.isArray(response.data) ? response.data : [])
-        }
-      } catch (error) {
+    try {
+      if (!token) return
+      const response = await getAllVoucher(voucherQuery, token)
+      if (response?.error?.status === 401) {
+        router.push('/unauthorized-access')
+        return
+      } else if (response.error || !response.data) {
         toast({
           title: 'Error',
-          description: 'Failed to fetch vouchers. Please try again.',
+          description: response.error?.message || 'Failed to fetch vouchers',
           variant: 'destructive',
         })
         setVouchers([])
-      } finally {
-        setIsLoading(false)
+      } else {
+        let data = Array.isArray(response.data) ? response.data : []
+
+        // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
+        if (userData?.roleId !== 1) {
+          data = data.filter(
+            (item) => Number(item.createdBy) === Number(userData?.userId)
+          )
+        }
+
+        setVouchers(data)
       }
-    },
-    [router]
-  )
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch vouchers. Please try again.',
+        variant: 'destructive',
+      })
+      setVouchers([])
+    } finally {
+      setIsLoading(false)
+    }
+  },
+  [router, userData] // ✅ userData যোগ করুন
+)
 
   function getCompanyIds(data: CompanyFromLocalstorage[]): number[] {
     return data.map((company) => company.company.companyId)

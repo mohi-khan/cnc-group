@@ -261,7 +261,7 @@ export default function BankVoucherDetails({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col mt-6">
                             <CustomCombobox
                               items={formState.filteredChartOfAccounts
                                 .filter((account) => account.isActive)
