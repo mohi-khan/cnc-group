@@ -36,25 +36,24 @@ import { useRouter } from 'next/navigation'
 import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 export const BankReconciliation = () => {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
   const [token] = useAtom(tokenAtom)
 
   const router = useRouter()
 
-  // State variables
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
   const [selectedBankAccount, setSelectedBankAccount] =
     useState<BankAccount | null>(null)
   const [reconciliations, setReconciliations] = useState<
     BankReconciliationType[]
   >([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<boolean>(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const [selectAll, setSelectAll] = useState(false)
+  const [selectAll, setSelectAll] = useState<boolean>(false)
   const { toast } = useToast()
+
   const form = useForm({
     defaultValues: {
       bankAccount: '',
@@ -63,11 +62,29 @@ export const BankReconciliation = () => {
     },
   })
 
+  // ✅ Fixed: case-insensitive type comparison
+  const calculateBalances = () => {
+    let totalDebit = 0
+    let totalCredit = 0
+
+    reconciliations.forEach((item: BankReconciliationType) => {
+      const type = item.type?.toUpperCase()
+      if (type === 'DEPOSIT') {
+        totalDebit += Number(item.amount)
+      }
+      if (type === 'WITHDRAW') {
+        totalCredit += Number(item.amount)
+      }
+    })
+
+    const balance = totalDebit - totalCredit
+    return { totalDebit, totalCredit, balance }
+  }
+
   useEffect(() => {
     const checkUserData = () => {
       const storedUserData = localStorage.getItem('currentUser')
       const storedToken = localStorage.getItem('authToken')
-
       if (!storedUserData || !storedToken) {
         router.push('/')
         return
@@ -75,6 +92,7 @@ export const BankReconciliation = () => {
     }
 
     checkUserData()
+
     const fetchBankAccounts = async () => {
       if (!token) return
       try {
@@ -116,38 +134,34 @@ export const BankReconciliation = () => {
           data.toDate,
           data.token
         )
+
         if (response?.error?.status === 401) {
           router.push('/unauthorized-access')
           return
         } else if (response.error || !response.data) {
-          console.error('Error getting gl bank account:', response.error)
           toast({
             title: 'Error',
             description:
               response.error?.message || 'Failed to get gl bank accounts',
           })
         } else {
-          // Filter out reconciled items
           const unReconciledItems = response.data.filter(
-            (item) => !item.reconciled
+            (item: BankReconciliationType) => !item.reconciled
           )
 
-          // Group by voucherId and sum amounts
           const groupedData = unReconciledItems.reduce(
-            (acc: BankReconciliationType[], item) => {
+            (acc: BankReconciliationType[], item: BankReconciliationType) => {
               const existingItem = acc.find(
-                (r) => r.voucherId === item.voucherId
+                (r: BankReconciliationType) => r.voucherId === item.voucherId
               )
 
               if (existingItem) {
-                // Sum the amounts
                 const existingAmount = existingItem.amount
                   ? Number(existingItem.amount)
                   : 0
                 const itemAmount = item.amount ? Number(item.amount) : 0
                 existingItem.amount = existingAmount + itemAmount
               } else {
-                // Add new item
                 acc.push({ ...item })
               }
 
@@ -157,13 +171,10 @@ export const BankReconciliation = () => {
           )
 
           setReconciliations(groupedData || [])
-          console.log('data riad: ', groupedData || [])
-          // Reset selections when new data is loaded
           setSelectedIds([])
           setSelectAll(false)
         }
       } catch (error) {
-        console.error('Error fetching reconciliations:', error)
         toast({
           title: 'Error',
           description: 'Failed to fetch reconciliations',
@@ -179,34 +190,32 @@ export const BankReconciliation = () => {
     }
   }
 
-  // Handle individual checkbox selection
   const handleIndividualSelection = (id: number, checked: boolean) => {
     if (checked) {
-      setSelectedIds((prev) => [...prev, id])
+      setSelectedIds((prev: number[]) => [...prev, id])
     } else {
-      setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id))
+      setSelectedIds((prev: number[]) =>
+        prev.filter((selectedId: number) => selectedId !== id)
+      )
       setSelectAll(false)
     }
   }
 
-  // Handle select all checkbox
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked)
     if (checked) {
-      setSelectedIds(reconciliations.map((r) => r.id))
+      setSelectedIds(reconciliations.map((r: BankReconciliationType) => r.id))
     } else {
       setSelectedIds([])
     }
   }
 
-  // Update select all state when individual selections change
   useEffect(() => {
     if (reconciliations.length > 0) {
       setSelectAll(selectedIds.length === reconciliations.length)
     }
   }, [selectedIds, reconciliations])
 
-  // Handle bulk reconciliation update
   const handleBulkReconciliation = async () => {
     if (selectedIds.length === 0) {
       toast({
@@ -226,7 +235,6 @@ export const BankReconciliation = () => {
         description: `${selectedIds.length} reconciliation(s) updated successfully`,
       })
 
-      // Refresh the data after successful update
       const formData = form.getValues()
       await fetchReconciliations({ ...formData, token })
     } catch (error) {
@@ -240,7 +248,6 @@ export const BankReconciliation = () => {
     }
   }
 
-  // Update the handleReconciliationUpdate function
   const handleReconciliationUpdate = async (
     id: number,
     reconciled: boolean,
@@ -248,7 +255,6 @@ export const BankReconciliation = () => {
   ) => {
     try {
       setLoading(true)
-      // Update both reconciled status and comments in a single API call
       await updateBankReconciliation(id, reconciled, comments, token)
 
       setEditingId(null)
@@ -267,228 +273,31 @@ export const BankReconciliation = () => {
     }
   }
 
-  // Update the updateLocalReconciliation function
   const updateLocalReconciliation = (
     id: number,
     field: 'reconciled' | 'comments',
-    value: any,
+    value: string | boolean,
     token: string
   ) => {
-    setReconciliations((prevReconciliations) =>
-      prevReconciliations.map((r) =>
+    setReconciliations((prevReconciliations: BankReconciliationType[]) =>
+      prevReconciliations.map((r: BankReconciliationType) =>
         r.id === id
           ? {
               ...r,
-              [field]: field === 'reconciled' ? (value ? true : false) : value,
+              [field]: field === 'reconciled' ? Boolean(value) : value,
             }
           : r
       )
     )
   }
 
-  // Helper function to toggle edit mode for a reconciliation
   const toggleEditMode = (id: number) => {
     setEditingId(id === editingId ? null : id)
   }
 
-  // return (
-  //   <Form {...form}>
-  //     <form
-  //       onSubmit={form.handleSubmit((data) =>
-  //         fetchReconciliations({ ...data, token })
-  //       )}
-  //       className="w-[98%] mx-auto p-4"
-  //     >
-  //       <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">
-  //         <FormField
-  //           control={form.control}
-  //           name="fromDate"
-  //           render={({ field }) => (
-  //             <FormItem>
-  //               <FormLabel>From Date</FormLabel>
-  //               <Input type="date" {...field} />
-  //               <FormMessage />
-  //             </FormItem>
-  //           )}
-  //         />
-  //         <FormField
-  //           control={form.control}
-  //           name="toDate"
-  //           render={({ field }) => (
-  //             <FormItem>
-  //               <FormLabel>To Date</FormLabel>
-  //               <Input type="date" {...field} />
-  //               <FormMessage />
-  //             </FormItem>
-  //           )}
-  //         />
-  //         <FormField
-  //           control={form.control}
-  //           name="bankAccount"
-  //           render={({ field }) => (
-  //             <FormItem className="w-1/3">
-  //               <FormLabel>Bank Account</FormLabel>
-  //               <CustomCombobox
-  //                 items={bankAccounts.map((account) => ({
-  //                   id: account.id.toString(),
-  //                   name: `${account.bankName} - ${account.accountName} - ${account.accountNumber}`,
-  //                 }))}
-  //                 value={
-  //                   selectedBankAccount
-  //                     ? {
-  //                         id: selectedBankAccount.id.toString(),
-  //                         name: `${selectedBankAccount.bankName} - ${selectedBankAccount.accountName} - ${selectedBankAccount.accountNumber}`,
-  //                       }
-  //                     : null
-  //                 }
-  //                 onChange={(value) => {
-  //                   if (!value) {
-  //                     setSelectedBankAccount(null)
-  //                     field.onChange(null)
-  //                     return
-  //                   }
-  //                   const selected = bankAccounts.find(
-  //                     (account) => account.id.toString() === value.id
-  //                   )
-  //                   setSelectedBankAccount(selected || null)
-  //                   field.onChange(value.id)
-  //                 }}
-  //                 placeholder="Select bank account"
-  //               />
-  //               <FormMessage />
-  //             </FormItem>
-  //           )}
-  //         />
-  //         <Button type="submit" disabled={!form.formState.isValid}>
-  //           Show
-  //         </Button>
-  //       </div>
+  const { totalDebit, totalCredit, balance } = calculateBalances()
 
-  //       {/* Bulk Action Button */}
-  //       {reconciliations.length > 0 && (
-  //         <div className="mb-4 flex justify-end">
-  //           <Button
-  //             type="button"
-  //             onClick={handleBulkReconciliation}
-  //             disabled={selectedIds.length === 0 || loading}
-  //           >
-  //             Mark Selected as Reconciled ({selectedIds.length})
-  //           </Button>
-  //         </div>
-  //       )}
-
-  //       <Table className="mt-4 shadow-md border">
-  //         <TableHeader className="bg-slate-200 shadow-md ">
-  //           <TableRow>
-  //             <TableHead>Voucher ID</TableHead>
-  //             <TableHead>Date</TableHead>
-  //             <TableHead>Check No</TableHead>
-  //             <TableHead>Amount</TableHead>
-  //             <TableHead>Type</TableHead>
-  //             <TableHead>
-  //               <div className="flex items-center gap-2">
-  //                 Reconciled
-  //                 <Checkbox
-  //                   checked={selectAll}
-  //                   onCheckedChange={handleSelectAll}
-  //                   disabled={reconciliations.length === 0}
-  //                   className="border border-black"
-  //                 />
-  //               </div>
-  //             </TableHead>
-  //             <TableHead>Comments</TableHead>
-  //             <TableHead>Actions</TableHead>
-  //           </TableRow>
-  //         </TableHeader>
-  //         <TableBody>
-  //           {loading ? (
-  //             <TableRow>
-  //               <TableCell colSpan={8} className="text-center">
-  //                 Loading...
-  //               </TableCell>
-  //             </TableRow>
-  //           ) : selectedBankAccount && reconciliations.length > 0 ? (
-  //             reconciliations.map((reconciliation) => (
-  //               <TableRow key={reconciliation.id}>
-  //                 <TableCell>{reconciliation.voucherId}</TableCell>
-  //                 <TableCell>{reconciliation.date}</TableCell>
-  //                 <TableCell>{reconciliation.checkNo}</TableCell>
-  //                 <TableCell>{formatIndianNumber(reconciliation.amount)}</TableCell>
-  //                 <TableCell>{reconciliation.type}</TableCell>
-
-  //                 {/* Reconciled column - always checkbox, used for selection */}
-  //                 <TableCell>
-  //                   <Checkbox
-  //                     checked={selectedIds.includes(reconciliation.id)}
-  //                     onCheckedChange={(checked) =>
-  //                       handleIndividualSelection(
-  //                         reconciliation.id,
-  //                         checked as boolean
-  //                       )
-  //                     }
-  //                   />
-  //                 </TableCell>
-
-  //                 {/* Comments column - only editable when in edit mode */}
-  //                 <TableCell>
-  //                   {editingId === reconciliation.id ? (
-  //                     <Input
-  //                       value={reconciliation.comments || ''}
-  //                       onChange={(e) =>
-  //                         updateLocalReconciliation(
-  //                           reconciliation.id,
-  //                           'comments',
-  //                           e.target.value,
-  //                           token
-  //                         )
-  //                       }
-  //                     />
-  //                   ) : (
-  //                     reconciliation.comments || ''
-  //                   )}
-  //                 </TableCell>
-
-  //                 <TableCell>
-  //                   {editingId === reconciliation.id ? (
-  //                     <Button
-  //                       type="button"
-  //                       onClick={() =>
-  //                         handleReconciliationUpdate(
-  //                           reconciliation.id,
-  //                           reconciliation.reconciled ?? false,
-  //                           reconciliation.comments || ''
-  //                         )
-  //                       }
-  //                     >
-  //                       <Check className="h-4 w-4" />
-  //                     </Button>
-  //                   ) : (
-  //                     <Button
-  //                       type="button"
-  //                       onClick={() => toggleEditMode(reconciliation.id)}
-  //                     >
-  //                       <Edit className="h-4 w-4" />
-  //                     </Button>
-  //                   )}
-  //                 </TableCell>
-  //               </TableRow>
-  //             ))
-  //           ) : (
-  //             <TableRow>
-  //               <TableCell colSpan={8} className="text-center">
-  //                 Please select a bank account and date range, then click
-  //                 &quot;Show&quot;
-  //               </TableCell>
-  //             </TableRow>
-  //           )}
-  //         </TableBody>
-  //       </Table>
-  //     </form>
-     
-  //   </Form>
-  // )
-
-    return (
+  return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) =>
@@ -496,6 +305,7 @@ export const BankReconciliation = () => {
         )}
         className="w-[98%] mx-auto p-4"
       >
+        {/* Filter Section */}
         <div className="flex justify-between items-end mb-4 gap-4 w-fit mx-auto">
           <FormField
             control={form.control}
@@ -526,7 +336,7 @@ export const BankReconciliation = () => {
               <FormItem className="w-1/3">
                 <FormLabel>Bank Account</FormLabel>
                 <CustomCombobox
-                  items={bankAccounts.map((account) => ({
+                  items={bankAccounts.map((account: BankAccount) => ({
                     id: account.id.toString(),
                     name: `${account.bankName} - ${account.accountName} - ${account.accountNumber}`,
                   }))}
@@ -545,7 +355,8 @@ export const BankReconciliation = () => {
                       return
                     }
                     const selected = bankAccounts.find(
-                      (account) => account.id.toString() === value.id
+                      (account: BankAccount) =>
+                        account.id.toString() === value.id
                     )
                     setSelectedBankAccount(selected || null)
                     field.onChange(value.id)
@@ -574,7 +385,7 @@ export const BankReconciliation = () => {
           </div>
         )}
 
-        {/* Table container with fixed header */}
+        {/* Table */}
         <div className="relative border rounded-md shadow-md max-h-[510px] overflow-auto">
           <Table className="relative">
             <TableHeader className="bg-slate-200 sticky top-0 z-10 shadow-md">
@@ -582,8 +393,15 @@ export const BankReconciliation = () => {
                 <TableHead className="bg-slate-200">Voucher ID</TableHead>
                 <TableHead className="bg-slate-200">Date</TableHead>
                 <TableHead className="bg-slate-200">Check No</TableHead>
-                <TableHead className="bg-slate-200">Amount</TableHead>
-                <TableHead className="bg-slate-200">Type</TableHead>
+                <TableHead className="bg-slate-200 text-blue-700 font-bold">
+                  Debit
+                </TableHead>
+                <TableHead className="bg-slate-200 text-red-700 font-bold">
+                  Credit
+                </TableHead>
+                <TableHead className="bg-slate-200 text-green-700 font-bold">
+                  Balance
+                </TableHead>
                 <TableHead className="bg-slate-200">
                   <div className="flex items-center gap-2">
                     Reconciled
@@ -599,82 +417,181 @@ export const BankReconciliation = () => {
                 <TableHead className="bg-slate-200">Actions</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">
+                  <TableCell colSpan={9} className="text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : selectedBankAccount && reconciliations.length > 0 ? (
-                reconciliations.map((reconciliation) => (
-                  <TableRow key={reconciliation.id}>
-                    <TableCell>{reconciliation.voucherId}</TableCell>
-                    <TableCell>{reconciliation.date}</TableCell>
-                    <TableCell>{reconciliation.checkNo}</TableCell>
-                    <TableCell>{formatIndianNumber(reconciliation.amount)}</TableCell>
-                    <TableCell>{reconciliation.type}</TableCell>
+                <>
+                  {(() => {
+                    let runningBalance = 0
 
-                    {/* Reconciled column - always checkbox, used for selection */}
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedIds.includes(reconciliation.id)}
-                        onCheckedChange={(checked) =>
-                          handleIndividualSelection(
-                            reconciliation.id,
-                            checked as boolean
-                          )
-                        }
-                      />
-                    </TableCell>
+                    return reconciliations.map(
+                      (reconciliation: BankReconciliationType) => {
+                        const amount = Number(reconciliation.amount)
+                        // ✅ Fixed: toUpperCase() for case-insensitive comparison
+                        const type = reconciliation.type?.toUpperCase()
+                        const debit = type === 'DEPOSIT' ? amount : 0
+                        const credit = type === 'WITHDRAW' ? amount : 0
 
-                    {/* Comments column - only editable when in edit mode */}
-                    <TableCell>
-                      {editingId === reconciliation.id ? (
-                        <Input
-                          value={reconciliation.comments || ''}
-                          onChange={(e) =>
-                            updateLocalReconciliation(
-                              reconciliation.id,
-                              'comments',
-                              e.target.value,
-                              token
-                            )
-                          }
-                        />
-                      ) : (
-                        reconciliation.comments || ''
-                      )}
-                    </TableCell>
+                        runningBalance = runningBalance + debit - credit
 
-                    <TableCell>
-                      {editingId === reconciliation.id ? (
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            handleReconciliationUpdate(
-                              reconciliation.id,
-                              reconciliation.reconciled ?? false,
-                              reconciliation.comments || ''
-                            )
-                          }
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          onClick={() => toggleEditMode(reconciliation.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
+                        return (
+                          <TableRow key={reconciliation.id}>
+                            <TableCell>{reconciliation.voucherId}</TableCell>
+                            <TableCell>{reconciliation.date}</TableCell>
+                            <TableCell>{reconciliation.checkNo}</TableCell>
+
+                            {/* Debit — only for DEPOSIT */}
+                            <TableCell className="text-blue-700 font-medium">
+                              {debit > 0 ? formatIndianNumber(debit) : '—'}
+                            </TableCell>
+
+                            {/* Credit — only for WITHDRAW */}
+                            <TableCell className="text-red-700 font-medium">
+                              {credit > 0 ? formatIndianNumber(credit) : '—'}
+                            </TableCell>
+
+                            {/* Running Balance */}
+                            <TableCell
+                              className={`font-semibold ${
+                                runningBalance >= 0
+                                  ? 'text-green-700'
+                                  : 'text-orange-700'
+                              }`}
+                            >
+                              {formatIndianNumber(Math.abs(runningBalance))}{' '}
+                              <span className="text-xs font-bold">
+                                {runningBalance >= 0 ? 'Dr' : 'Cr'}
+                              </span>
+                            </TableCell>
+
+                            {/* Reconciled Checkbox */}
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedIds.includes(
+                                  reconciliation.id
+                                )}
+                                onCheckedChange={(checked) =>
+                                  handleIndividualSelection(
+                                    reconciliation.id,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                            </TableCell>
+
+                            {/* Comments */}
+                            <TableCell>
+                              {editingId === reconciliation.id ? (
+                                <Input
+                                  value={reconciliation.comments || ''}
+                                  onChange={(e) =>
+                                    updateLocalReconciliation(
+                                      reconciliation.id,
+                                      'comments',
+                                      e.target.value,
+                                      token
+                                    )
+                                  }
+                                />
+                              ) : (
+                                reconciliation.comments || ''
+                              )}
+                            </TableCell>
+
+                            {/* Actions */}
+                            <TableCell>
+                              {editingId === reconciliation.id ? (
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    handleReconciliationUpdate(
+                                      reconciliation.id,
+                                      reconciliation.reconciled ?? false,
+                                      reconciliation.comments || ''
+                                    )
+                                  }
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    toggleEditMode(reconciliation.id)
+                                  }
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      }
+                    )
+                  })()}
+
+                  {/* Total Debit Row */}
+                  <TableRow className="bg-blue-50 font-semibold border-t-2 border-blue-200">
+                    <TableCell colSpan={3} className="text-right text-blue-700">
+                      Total Debit :
                     </TableCell>
+                    <TableCell className="text-blue-700 font-bold">
+                      {formatIndianNumber(totalDebit)}
+                    </TableCell>
+                    <TableCell colSpan={5} />
                   </TableRow>
-                ))
+
+                  {/* Total Credit Row */}
+                  <TableRow className="bg-red-50 font-semibold">
+                    <TableCell colSpan={3} className="text-right text-red-700">
+                      Total Credit :
+                    </TableCell>
+                    <TableCell />
+                    <TableCell className="text-red-700 font-bold">
+                      {formatIndianNumber(totalCredit)}
+                    </TableCell>
+                    <TableCell colSpan={4} />
+                  </TableRow>
+
+                  {/* Net Balance Row */}
+                  <TableRow
+                    className={`font-bold border-t-2 ${
+                      balance >= 0
+                        ? 'bg-green-50 border-green-300'
+                        : 'bg-orange-50 border-orange-300'
+                    }`}
+                  >
+                    <TableCell
+                      colSpan={3}
+                      className={`text-right ${
+                        balance >= 0 ? 'text-green-700' : 'text-orange-700'
+                      }`}
+                    >
+                      Net Balance:
+                    </TableCell>
+                    <TableCell colSpan={2} />
+                    <TableCell
+                      className={`font-bold ${
+                        balance >= 0 ? 'text-green-700' : 'text-orange-700'
+                      }`}
+                    >
+                      {formatIndianNumber(Math.abs(balance))}{' '}
+                      <span className="text-sm">
+                        {balance >= 0 ? '(Dr)' : '(Cr)'}
+                      </span>
+                    </TableCell>
+                    <TableCell colSpan={3} />
+                  </TableRow>
+                </>
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center">
+                  <TableCell colSpan={9} className="text-center">
                     Please select a bank account and date range, then click
                     &quot;Show&quot;
                   </TableCell>
@@ -684,7 +601,6 @@ export const BankReconciliation = () => {
           </Table>
         </div>
       </form>
-     
     </Form>
   )
 }
@@ -724,6 +640,7 @@ export const BankReconciliation = () => {
 // import { useAtom } from 'jotai'
 // import { tokenAtom, useInitializeUser, userDataAtom } from '@/utils/user'
 // import { useRouter } from 'next/navigation'
+// import { formatIndianNumber } from '@/utils/Formatindiannumber'
 
 // export const BankReconciliation = () => {
 //   //getting userData from jotai atom component
@@ -759,7 +676,6 @@ export const BankReconciliation = () => {
 //       const storedToken = localStorage.getItem('authToken')
 
 //       if (!storedUserData || !storedToken) {
-
 //         router.push('/')
 //         return
 //       }
@@ -822,7 +738,33 @@ export const BankReconciliation = () => {
 //           const unReconciledItems = response.data.filter(
 //             (item) => !item.reconciled
 //           )
-//           setReconciliations(unReconciledItems || [])
+
+//           // Group by voucherId and sum amounts
+//           const groupedData = unReconciledItems.reduce(
+//             (acc: BankReconciliationType[], item) => {
+//               const existingItem = acc.find(
+//                 (r) => r.voucherId === item.voucherId
+//               )
+
+//               if (existingItem) {
+//                 // Sum the amounts
+//                 const existingAmount = existingItem.amount
+//                   ? Number(existingItem.amount)
+//                   : 0
+//                 const itemAmount = item.amount ? Number(item.amount) : 0
+//                 existingItem.amount = existingAmount + itemAmount
+//               } else {
+//                 // Add new item
+//                 acc.push({ ...item })
+//               }
+
+//               return acc
+//             },
+//             []
+//           )
+
+//           setReconciliations(groupedData || [])
+//           console.log('data riad: ', groupedData || [])
 //           // Reset selections when new data is loaded
 //           setSelectedIds([])
 //           setSelectAll(false)
@@ -838,7 +780,6 @@ export const BankReconciliation = () => {
 //         setLoading(false)
 //       }
 //     } else {
-
 //       setReconciliations([])
 //       setSelectedIds([])
 //       setSelectAll(false)
@@ -1043,112 +984,117 @@ export const BankReconciliation = () => {
 //           </div>
 //         )}
 
-//         <Table className="mt-4 shadow-md border">
-//           <TableHeader className="bg-slate-200 shadow-md">
-//             <TableRow>
-//               <TableHead>Voucher ID</TableHead>
-//               <TableHead>Date</TableHead>
-//               <TableHead>Check No</TableHead>
-//               <TableHead>Amount</TableHead>
-//               <TableHead>Type</TableHead>
-//               <TableHead>
-//                 <div className="flex items-center gap-2">
-//                   Reconciled
-//                   <Checkbox
-//                     checked={selectAll}
-//                     onCheckedChange={handleSelectAll}
-//                     disabled={reconciliations.length === 0}
-//                     className='border border-black'
-//                   />
-//                 </div>
-//               </TableHead>
-//               <TableHead>Comments</TableHead>
-//               <TableHead>Actions</TableHead>
-//             </TableRow>
-//           </TableHeader>
-//           <TableBody>
-//             {loading ? (
+//         {/* Table container with fixed header */}
+//         <div className="relative border rounded-md shadow-md max-h-[510px] overflow-auto">
+//           <Table className="relative">
+//             <TableHeader className="bg-slate-200 sticky top-0 z-10 shadow-md">
 //               <TableRow>
-//                 <TableCell colSpan={8} className="text-center">
-//                   Loading...
-//                 </TableCell>
-//               </TableRow>
-//             ) : selectedBankAccount && reconciliations.length > 0 ? (
-//               reconciliations.map((reconciliation) => (
-//                 <TableRow key={reconciliation.id}>
-//                   <TableCell>{reconciliation.voucherId}</TableCell>
-//                   <TableCell>{reconciliation.date}</TableCell>
-//                   <TableCell>{reconciliation.checkNo}</TableCell>
-//                   <TableCell>{reconciliation.amount}</TableCell>
-//                   <TableCell>{reconciliation.type}</TableCell>
-
-//                   {/* Reconciled column - always checkbox, used for selection */}
-//                   <TableCell>
+//                 <TableHead className="bg-slate-200">Voucher ID</TableHead>
+//                 <TableHead className="bg-slate-200">Date</TableHead>
+//                 <TableHead className="bg-slate-200">Check No</TableHead>
+//                 <TableHead className="bg-slate-200">Amount</TableHead>
+//                 <TableHead className="bg-slate-200">Type</TableHead>
+//                 <TableHead className="bg-slate-200">
+//                   <div className="flex items-center gap-2">
+//                     Reconciled
 //                     <Checkbox
-//                       checked={selectedIds.includes(reconciliation.id)}
-//                       onCheckedChange={(checked) =>
-//                         handleIndividualSelection(
-//                           reconciliation.id,
-//                           checked as boolean
-//                         )
-//                       }
+//                       checked={selectAll}
+//                       onCheckedChange={handleSelectAll}
+//                       disabled={reconciliations.length === 0}
+//                       className="border border-black"
 //                     />
+//                   </div>
+//                 </TableHead>
+//                 <TableHead className="bg-slate-200">Comments</TableHead>
+//                 <TableHead className="bg-slate-200">Actions</TableHead>
+//               </TableRow>
+//             </TableHeader>
+//             <TableBody>
+//               {loading ? (
+//                 <TableRow>
+//                   <TableCell colSpan={8} className="text-center">
+//                     Loading...
 //                   </TableCell>
+//                 </TableRow>
+//               ) : selectedBankAccount && reconciliations.length > 0 ? (
+//                 reconciliations.map((reconciliation) => (
+//                   <TableRow key={reconciliation.id}>
+//                     <TableCell>{reconciliation.voucherId}</TableCell>
+//                     <TableCell>{reconciliation.date}</TableCell>
+//                     <TableCell>{reconciliation.checkNo}</TableCell>
+//                     <TableCell>
+//                       {formatIndianNumber(reconciliation.amount)}
+//                     </TableCell>
+//                     <TableCell>{reconciliation.type}</TableCell>
 
-//                   {/* Comments column - only editable when in edit mode */}
-//                   <TableCell>
-//                     {editingId === reconciliation.id ? (
-//                       <Input
-//                         value={reconciliation.comments || ''}
-//                         onChange={(e) =>
-//                           updateLocalReconciliation(
+//                     {/* Reconciled column - always checkbox, used for selection */}
+//                     <TableCell>
+//                       <Checkbox
+//                         checked={selectedIds.includes(reconciliation.id)}
+//                         onCheckedChange={(checked) =>
+//                           handleIndividualSelection(
 //                             reconciliation.id,
-//                             'comments',
-//                             e.target.value,
-//                             token
+//                             checked as boolean
 //                           )
 //                         }
 //                       />
-//                     ) : (
-//                       reconciliation.comments || ''
-//                     )}
-//                   </TableCell>
+//                     </TableCell>
 
-//                   <TableCell>
-//                     {editingId === reconciliation.id ? (
-//                       <Button
-//                         type="button"
-//                         onClick={() =>
-//                           handleReconciliationUpdate(
-//                             reconciliation.id,
-//                             reconciliation.reconciled ?? false,
-//                             reconciliation.comments || ''
-//                           )
-//                         }
-//                       >
-//                         <Check className="h-4 w-4" />
-//                       </Button>
-//                     ) : (
-//                       <Button
-//                         type="button"
-//                         onClick={() => toggleEditMode(reconciliation.id)}
-//                       >
-//                         <Edit className="h-4 w-4" />
-//                       </Button>
-//                     )}
+//                     {/* Comments column - only editable when in edit mode */}
+//                     <TableCell>
+//                       {editingId === reconciliation.id ? (
+//                         <Input
+//                           value={reconciliation.comments || ''}
+//                           onChange={(e) =>
+//                             updateLocalReconciliation(
+//                               reconciliation.id,
+//                               'comments',
+//                               e.target.value,
+//                               token
+//                             )
+//                           }
+//                         />
+//                       ) : (
+//                         reconciliation.comments || ''
+//                       )}
+//                     </TableCell>
+
+//                     <TableCell>
+//                       {editingId === reconciliation.id ? (
+//                         <Button
+//                           type="button"
+//                           onClick={() =>
+//                             handleReconciliationUpdate(
+//                               reconciliation.id,
+//                               reconciliation.reconciled ?? false,
+//                               reconciliation.comments || ''
+//                             )
+//                           }
+//                         >
+//                           <Check className="h-4 w-4" />
+//                         </Button>
+//                       ) : (
+//                         <Button
+//                           type="button"
+//                           onClick={() => toggleEditMode(reconciliation.id)}
+//                         >
+//                           <Edit className="h-4 w-4" />
+//                         </Button>
+//                       )}
+//                     </TableCell>
+//                   </TableRow>
+//                 ))
+//               ) : (
+//                 <TableRow>
+//                   <TableCell colSpan={8} className="text-center">
+//                     Please select a bank account and date range, then click
+//                     &quot;Show&quot;
 //                   </TableCell>
 //                 </TableRow>
-//               ))
-//             ) : (
-//               <TableRow>
-//                 <TableCell colSpan={8} className="text-center">
-//                   Please select a bank account and date range, then click
-//                   &quot;Show&quot;
-//                 </TableCell>
-//               </TableRow>
-//             )}
-//           </TableBody>
-//         </Table>
+//               )}
+//             </TableBody>
+//           </Table>
+//         </div>
 //       </form>
 //     </Form>
 //   )
