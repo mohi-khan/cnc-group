@@ -150,14 +150,14 @@ const PostingPeriodManager = () => {
     const openPeriodsCount = periods.filter((p) => p.isOpen).length
     const isCurrentlyOpen = periods.find((p) => p.periodId === periodId)?.isOpen
 
-    if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Only two periods can be open at a time.',
-      })
-      return
-    }
+    // if (newStatus && !isCurrentlyOpen && openPeriodsCount >= 2) {
+    //   toast({
+    //     variant: 'destructive',
+    //     title: 'Error',
+    //     description: 'Only two periods can be open at a time.',
+    //   })
+    //   return
+    // }
 
     // Add period to updating set to show loading state
     setUpdatingPeriods((prev) => new Set(prev).add(periodId))

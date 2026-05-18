@@ -612,6 +612,14 @@ export default function CashVoucherDetails({
                               onWheel={(e) =>
                                 (e.target as HTMLInputElement).blur()
                               }
+                              onKeyDown={(e) => {
+                                if (
+                                  e.key === 'ArrowUp' ||
+                                  e.key === 'ArrowDown'
+                                ) {
+                                  e.preventDefault()
+                                }
+                              }}
                               className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                             />
                           </FormControl>

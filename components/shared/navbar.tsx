@@ -9,18 +9,11 @@ import {
   User2,
   Search,
   X,
-  Folder,
-  PackageMinusIcon,
-  PackageX,
   PackageCheckIcon,
-  User2Icon,
-  BookAudioIcon,
-  BookCheck,
-  BookDashed,
   BookCopyIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import type { CompanyFromLocalstorage, User } from '@/utils/type'
 import { MENU_ITEMS } from '@/utils/constants'
 import { DollarSign, Building, BookOpen, Repeat } from 'lucide-react'
@@ -42,11 +35,9 @@ interface SearchResult {
 }
 
 export default function Navbar() {
-  //getting userData from jotai atom component
   useInitializeUser()
   const [userData] = useAtom(userDataAtom)
 
-  // State variables
   const [user, setUser] = useState<User | null>(null)
   const [companies, setCompanies] = useState<CompanyFromLocalstorage[]>([])
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
@@ -64,6 +55,18 @@ export default function Navbar() {
   const searchDropdownRef = useRef<HTMLDivElement>(null)
 
   const router = useRouter()
+  const pathname = usePathname() // ✅ current page track করবে
+
+// ✅ একই পেজে থাকলে refresh করবে, না হলে push করবে
+
+const handleNavClick = (e: React.MouseEvent, source: string) => {
+  e.preventDefault()
+  if (pathname === source) {
+    window.location.href = source // same page এ এটাই সবচেয়ে reliable
+  } else {
+    router.push(source) // different page এ fast
+  }
+}
 
   const handleSignOut = () => {
     localStorage.removeItem('currentUser')
@@ -76,12 +79,11 @@ export default function Navbar() {
     setSearchQuery(query)
     const results: SearchResult[] = []
 
-    // Search through all menu items
     MENU_ITEMS.forEach((menuItem) => {
       menuItem.subItemGroups.forEach((group) => {
         group.items.forEach((item) => {
           if (
-            query.trim() === '' || // Show all items when no query
+            query.trim() === '' ||
             item.name.toLowerCase().includes(query.toLowerCase()) ||
             group.name.toLowerCase().includes(query.toLowerCase()) ||
             menuItem.name.toLowerCase().includes(query.toLowerCase())
@@ -98,7 +100,7 @@ export default function Navbar() {
     })
 
     setSearchResults(results)
-    setIsSearchOpen(true) // Always show dropdown when focused
+    setIsSearchOpen(true)
     setSelectedIndex(-1)
   }
 
@@ -126,6 +128,9 @@ export default function Navbar() {
         e.preventDefault()
         if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
           const selectedResult = searchResults[selectedIndex]
+          if (pathname === selectedResult.source) {
+            router.refresh() // ✅ same page হলে refresh
+          }
           router.push(selectedResult.source)
           clearSearch()
           setActiveMenu(null)
@@ -165,12 +170,10 @@ export default function Navbar() {
     handleSearch('')
   }
 
-  // getting userData from local storage
   useEffect(() => {
     if (userData) {
       setUser(userData)
       setCompanies(userData.userCompanies)
-    } else {
     }
   }, [userData])
 
@@ -275,7 +278,8 @@ export default function Navbar() {
                     <Link
                       key={index}
                       href={result.source}
-                      onClick={() => {
+                      onClick={(e) => {
+                        handleNavClick(e, result.source) // ✅
                         clearSearch()
                         setActiveMenu(null)
                       }}
@@ -299,12 +303,15 @@ export default function Navbar() {
 
           <div className="flex items-center justify-between">
             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
+              {/* ✅ Dashboard */}
               <Link
                 href={'/dashboard'}
+                onClick={(e) => handleNavClick(e, '/dashboard')}
                 className="font-medium text-gray-900 text-sm"
               >
                 Dashboard
               </Link>
+
               {MENU_ITEMS.map((menuItem, index) => (
                 <div
                   key={index}
@@ -333,13 +340,17 @@ export default function Navbar() {
                                   {group.name}
                                 </p>
                                 {group.items.map((item, itemIndex) => (
+                                  // ✅ dropdown items
                                   <Link
                                     key={itemIndex}
                                     href={item.source}
                                     onClick={(e) => {
                                       if (!item.source) {
                                         e.preventDefault()
+                                        return
                                       }
+                                      handleNavClick(e, item.source)
+                                      setActiveMenu(null)
                                     }}
                                     className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-100 transition ease-in-out duration-150"
                                   >
@@ -362,7 +373,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex flex-col items-center ml-2">
-            {/* USER ICON BUTTON (keep inside relative only) */}
             <div className="relative" ref={profileRef}>
               <button
                 className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
@@ -374,7 +384,6 @@ export default function Navbar() {
                 <User2 className="h-8 w-8 text-gray-600 border border-gray-600 p-1 rounded-full" />
               </button>
 
-              {/* DROPDOWN MENU */}
               {isProfileOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
                   <div
@@ -403,21 +412,25 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* ✅ USERNAME BELOW ICON & CENTERED */}
             {userData?.username && (
-              <p className="text-xs text-gray-700 font-bold ring-1 ring-black rounded-lg px-2 py-1  text-center">
+              <p className="text-xs text-gray-700 font-bold ring-1 ring-black rounded-lg px-2 py-1 text-center">
                 {userData.username.replace(/\b\w/g, (c) => c.toUpperCase())}
               </p>
             )}
           </div>
         </div>
       </div>
+
+      {/* ✅ Bottom quick buttons */}
       <div className="py-1 text-center">
         <TooltipProvider>
           <div className="flex gap-6 items-center justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/accounting/day-books'}>
+                <Link
+                  href={'/accounting/day-books'}
+                  onClick={(e) => handleNavClick(e, '/accounting/day-books')}
+                >
                   <Button variant="ghost" size="icon">
                     <BookCopyIcon className="h-5 w-5" />
                     <span className="sr-only">Day Books</span>
@@ -431,7 +444,10 @@ export default function Navbar() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/cash/cash-voucher'}>
+                <Link
+                  href={'/cash/cash-voucher'}
+                  onClick={(e) => handleNavClick(e, '/cash/cash-voucher')}
+                >
                   <Button variant="ghost" size="icon">
                     <DollarSign className="h-5 w-5" />
                     <span className="sr-only">Cash Voucher</span>
@@ -445,7 +461,10 @@ export default function Navbar() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/bank/bank-vouchers'}>
+                <Link
+                  href={'/bank/bank-vouchers'}
+                  onClick={(e) => handleNavClick(e, '/bank/bank-vouchers')}
+                >
                   <Button variant="ghost" size="icon">
                     <Building className="h-5 w-5" />
                     <span className="sr-only">Bank Voucher</span>
@@ -459,7 +478,12 @@ export default function Navbar() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/accounting/journal-voucher'}>
+                <Link
+                  href={'/accounting/journal-voucher'}
+                  onClick={(e) =>
+                    handleNavClick(e, '/accounting/journal-voucher')
+                  }
+                >
                   <Button variant="ghost" size="icon">
                     <BookOpen className="h-5 w-5" />
                     <span className="sr-only">Journal Voucher</span>
@@ -473,7 +497,10 @@ export default function Navbar() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/cash/contra-vouchers'}>
+                <Link
+                  href={'/cash/contra-vouchers'}
+                  onClick={(e) => handleNavClick(e, '/cash/contra-vouchers')}
+                >
                   <Button variant="ghost" size="icon">
                     <Repeat className="h-5 w-5" />
                     <span className="sr-only">Contra Voucher</span>
@@ -484,9 +511,13 @@ export default function Navbar() {
                 <p>Contra Voucher</p>
               </TooltipContent>
             </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={'/opening-balance'}>
+                <Link
+                  href={'/opening-balance'}
+                  onClick={(e) => handleNavClick(e, '/opening-balance')}
+                >
                   <Button variant="ghost" size="icon">
                     <PackageCheckIcon className="h-5 w-5" />
                     <span className="sr-only">Opening Balance</span>
@@ -504,14 +535,31 @@ export default function Navbar() {
   )
 }
 
+
 // 'use client'
 
-// import React, { useState, useRef, useEffect } from 'react'
+// import type React from 'react'
+
+// import { useState, useRef, useEffect } from 'react'
 // import Image from 'next/image'
-// import { ChevronDown, User2 } from 'lucide-react'
+// import {
+//   ChevronDown,
+//   User2,
+//   Search,
+//   X,
+//   Folder,
+//   PackageMinusIcon,
+//   PackageX,
+//   PackageCheckIcon,
+//   User2Icon,
+//   BookAudioIcon,
+//   BookCheck,
+//   BookDashed,
+//   BookCopyIcon,
+// } from 'lucide-react'
 // import Link from 'next/link'
 // import { useRouter } from 'next/navigation'
-// import { Company, CompanyFromLocalstorage, User } from '@/utils/type'
+// import type { CompanyFromLocalstorage, User } from '@/utils/type'
 // import { MENU_ITEMS } from '@/utils/constants'
 // import { DollarSign, Building, BookOpen, Repeat } from 'lucide-react'
 // import { Button } from '@/components/ui/button'
@@ -524,6 +572,13 @@ export default function Navbar() {
 // import { useInitializeUser, userDataAtom } from '@/utils/user'
 // import { useAtom } from 'jotai'
 
+// interface SearchResult {
+//   name: string
+//   source: string
+//   category: string
+//   group: string
+// }
+
 // export default function Navbar() {
 //   //getting userData from jotai atom component
 //   useInitializeUser()
@@ -535,8 +590,16 @@ export default function Navbar() {
 //   const [activeMenu, setActiveMenu] = useState<string | null>(null)
 //   const [isProfileOpen, setIsProfileOpen] = useState(false)
 //   const [isCompaniesOpen, setIsCompaniesOpen] = useState(false)
+//   const [searchQuery, setSearchQuery] = useState('')
+//   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+//   const [isSearchOpen, setIsSearchOpen] = useState(false)
+//   const [selectedIndex, setSelectedIndex] = useState(-1)
+//   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+
 //   const profileRef = useRef<HTMLDivElement>(null)
 //   const companiesRef = useRef<HTMLDivElement>(null)
+//   const searchRef = useRef<HTMLDivElement>(null)
+//   const searchDropdownRef = useRef<HTMLDivElement>(null)
 
 //   const router = useRouter()
 
@@ -545,6 +608,99 @@ export default function Navbar() {
 //     localStorage.removeItem('authToken')
 //     setIsProfileOpen(false)
 //     router.push('/')
+//   }
+
+//   const handleSearch = (query: string) => {
+//     setSearchQuery(query)
+//     const results: SearchResult[] = []
+
+//     // Search through all menu items
+//     MENU_ITEMS.forEach((menuItem) => {
+//       menuItem.subItemGroups.forEach((group) => {
+//         group.items.forEach((item) => {
+//           if (
+//             query.trim() === '' || // Show all items when no query
+//             item.name.toLowerCase().includes(query.toLowerCase()) ||
+//             group.name.toLowerCase().includes(query.toLowerCase()) ||
+//             menuItem.name.toLowerCase().includes(query.toLowerCase())
+//           ) {
+//             results.push({
+//               name: item.name,
+//               source: item.source,
+//               category: menuItem.name,
+//               group: group.name,
+//             })
+//           }
+//         })
+//       })
+//     })
+
+//     setSearchResults(results)
+//     setIsSearchOpen(true) // Always show dropdown when focused
+//     setSelectedIndex(-1)
+//   }
+
+//   const handleKeyDown = (e: React.KeyboardEvent) => {
+//     if (!isSearchOpen || searchResults.length === 0) return
+
+//     switch (e.key) {
+//       case 'ArrowDown':
+//         e.preventDefault()
+//         setSelectedIndex((prev) => {
+//           const newIndex = prev < searchResults.length - 1 ? prev + 1 : 0
+//           setTimeout(() => scrollToSelectedItem(newIndex), 0)
+//           return newIndex
+//         })
+//         break
+//       case 'ArrowUp':
+//         e.preventDefault()
+//         setSelectedIndex((prev) => {
+//           const newIndex = prev > 0 ? prev - 1 : searchResults.length - 1
+//           setTimeout(() => scrollToSelectedItem(newIndex), 0)
+//           return newIndex
+//         })
+//         break
+//       case 'Enter':
+//         e.preventDefault()
+//         if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
+//           const selectedResult = searchResults[selectedIndex]
+//           router.push(selectedResult.source)
+//           clearSearch()
+//           setActiveMenu(null)
+//         }
+//         break
+//       case 'Escape':
+//         clearSearch()
+//         break
+//     }
+//   }
+
+//   const scrollToSelectedItem = (index: number) => {
+//     if (searchDropdownRef.current && index >= 0) {
+//       const selectedElement = searchDropdownRef.current.children[0]?.children[
+//         index
+//       ] as HTMLElement
+//       if (selectedElement) {
+//         selectedElement.scrollIntoView({
+//           behavior: 'smooth',
+//           block: 'nearest',
+//           inline: 'nearest',
+//         })
+//       }
+//     }
+//   }
+
+//   const clearSearch = () => {
+//     setSearchQuery('')
+//     setSearchResults([])
+//     setIsSearchOpen(false)
+//     setSelectedIndex(-1)
+//     setIsSearchExpanded(false)
+//   }
+
+//   const handleSearchIconClick = () => {
+//     setIsSearchExpanded(true)
+//     handleSearch('')
 //   }
 
 //   // getting userData from local storage
@@ -560,12 +716,24 @@ export default function Navbar() {
 //     function handleClickOutside(event: MouseEvent) {
 //       if (
 //         profileRef.current &&
-//         !profileRef.current.contains(event.target as Node) &&
+//         !profileRef.current.contains(event.target as Node)
+//       ) {
+//         setIsProfileOpen(false)
+//       }
+
+//       if (
 //         companiesRef.current &&
 //         !companiesRef.current.contains(event.target as Node)
 //       ) {
-//         setIsProfileOpen(false)
 //         setIsCompaniesOpen(false)
+//       }
+
+//       if (
+//         searchRef.current &&
+//         !searchRef.current.contains(event.target as Node)
+//       ) {
+//         setIsSearchOpen(false)
+//         setIsSearchExpanded(false)
 //       }
 //     }
 
@@ -573,7 +741,7 @@ export default function Navbar() {
 //     return () => {
 //       document.removeEventListener('mousedown', handleClickOutside)
 //     }
-//   }, [profileRef, companiesRef])
+//   }, [profileRef, companiesRef, searchRef])
 
 //   return (
 //     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -588,6 +756,85 @@ export default function Navbar() {
 //               alt="Profile"
 //             />
 //           </div>
+
+//           <div
+//             className={`mx-8 relative transition-all duration-300 ease-in-out ${
+//               isSearchExpanded ? 'flex-1 max-w-lg' : 'w-auto'
+//             }`}
+//             ref={searchRef}
+//           >
+//             {!isSearchExpanded ? (
+//               <button
+//                 onClick={handleSearchIconClick}
+//                 className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors duration-200"
+//               >
+//                 <Search className="h-5 w-5 text-gray-600" />
+//               </button>
+//             ) : (
+//               <div className="relative">
+//                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//                   <Search className="h-4 w-4 text-gray-400" />
+//                 </div>
+//                 <input
+//                   type="text"
+//                   placeholder="Search navigation items..."
+//                   value={searchQuery}
+//                   onChange={(e) => handleSearch(e.target.value)}
+//                   onFocus={() => handleSearch(searchQuery)}
+//                   onBlur={() => {
+//                     if (!isSearchOpen) {
+//                       setIsSearchExpanded(false)
+//                     }
+//                   }}
+//                   onKeyDown={handleKeyDown}
+//                   autoFocus
+//                   className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all duration-300"
+//                 />
+//                 {searchQuery && (
+//                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+//                     <button
+//                       onClick={clearSearch}
+//                       className="text-gray-400 hover:text-gray-600"
+//                     >
+//                       <X className="h-4 w-4" />
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             )}
+
+//             {isSearchOpen && searchResults.length > 0 && isSearchExpanded && (
+//               <div
+//                 ref={searchDropdownRef}
+//                 className="absolute z-50 mt-1 w-full bg-white rounded-md shadow-2xl ring-2 ring-black ring-opacity-10 border-2 border-gray-200 max-h-[500px] overflow-y-auto"
+//               >
+//                 <div className="py-2">
+//                   {searchResults.map((result, index) => (
+//                     <Link
+//                       key={index}
+//                       href={result.source}
+//                       onClick={() => {
+//                         clearSearch()
+//                         setActiveMenu(null)
+//                       }}
+//                       className={`block px-4 py-3 text-sm border-b border-gray-100 last:border-b-0 transition-colors duration-150 ${
+//                         index === selectedIndex
+//                           ? 'bg-blue-50 text-blue-700 border-blue-200'
+//                           : 'text-gray-700 hover:bg-gray-100'
+//                       }`}
+//                       onMouseEnter={() => setSelectedIndex(index)}
+//                     >
+//                       <div className="font-medium">{result.name}</div>
+//                       <div className="text-xs text-gray-500 mt-1">
+//                         {result.category} → {result.group}
+//                       </div>
+//                     </Link>
+//                   ))}
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+
 //           <div className="flex items-center justify-between">
 //             <div className="hidden sm:flex sm:items-center sm:space-x-4 ml-4">
 //               <Link
@@ -651,7 +898,9 @@ export default function Navbar() {
 //               ))}
 //             </div>
 //           </div>
-//           <div className="flex items-center ml-4">
+
+//           <div className="flex flex-col items-center ml-2">
+//             {/* USER ICON BUTTON (keep inside relative only) */}
 //             <div className="relative" ref={profileRef}>
 //               <button
 //                 className="flex items-center justify-center w-10 h-10 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition duration-500 ease-in-out"
@@ -660,8 +909,10 @@ export default function Navbar() {
 //                 aria-haspopup="true"
 //                 onClick={() => setIsProfileOpen(!isProfileOpen)}
 //               >
-//                 <User2 className="h-9 w-9 text-gray-600 border border-gray-600 p-1 rounded-full" />
+//                 <User2 className="h-8 w-8 text-gray-600 border border-gray-600 p-1 rounded-full" />
 //               </button>
+
+//               {/* DROPDOWN MENU */}
 //               {isProfileOpen && (
 //                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg">
 //                   <div
@@ -677,6 +928,7 @@ export default function Navbar() {
 //                     >
 //                       Change Password
 //                     </Link>
+
 //                     <button
 //                       onClick={handleSignOut}
 //                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -688,12 +940,33 @@ export default function Navbar() {
 //                 </div>
 //               )}
 //             </div>
+
+//             {/* ✅ USERNAME BELOW ICON & CENTERED */}
+//             {userData?.username && (
+//               <p className="text-xs text-gray-700 font-bold ring-1 ring-black rounded-lg px-2 py-1  text-center">
+//                 {userData.username.replace(/\b\w/g, (c) => c.toUpperCase())}
+//               </p>
+//             )}
 //           </div>
 //         </div>
 //       </div>
 //       <div className="py-1 text-center">
 //         <TooltipProvider>
 //           <div className="flex gap-6 items-center justify-center">
+//             <Tooltip>
+//               <TooltipTrigger asChild>
+//                 <Link href={'/accounting/day-books'}>
+//                   <Button variant="ghost" size="icon">
+//                     <BookCopyIcon className="h-5 w-5" />
+//                     <span className="sr-only">Day Books</span>
+//                   </Button>
+//                 </Link>
+//               </TooltipTrigger>
+//               <TooltipContent>
+//                 <p>Day Books</p>
+//               </TooltipContent>
+//             </Tooltip>
+
 //             <Tooltip>
 //               <TooltipTrigger asChild>
 //                 <Link href={'/cash/cash-voucher'}>
@@ -749,9 +1022,24 @@ export default function Navbar() {
 //                 <p>Contra Voucher</p>
 //               </TooltipContent>
 //             </Tooltip>
+//             <Tooltip>
+//               <TooltipTrigger asChild>
+//                 <Link href={'/opening-balance'}>
+//                   <Button variant="ghost" size="icon">
+//                     <PackageCheckIcon className="h-5 w-5" />
+//                     <span className="sr-only">Opening Balance</span>
+//                   </Button>
+//                 </Link>
+//               </TooltipTrigger>
+//               <TooltipContent>
+//                 <p>Opening Balance</p>
+//               </TooltipContent>
+//             </Tooltip>
 //           </div>
 //         </TooltipProvider>
 //       </div>
 //     </nav>
 //   )
 // }
+
+
