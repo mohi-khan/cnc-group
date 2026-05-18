@@ -473,6 +473,14 @@ export default function BankVoucherMaster({
                     }
                   }}
                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  onKeyDown={(e) => {
+                                if (
+                                  e.key === 'ArrowUp' ||
+                                  e.key === 'ArrowDown'
+                                ) {
+                                  e.preventDefault()
+                                }
+                              }}
                   readOnly={isEdit}
                   className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none${isEdit ? ' bg-gray-100 cursor-not-allowed' : ''}`}
                 />

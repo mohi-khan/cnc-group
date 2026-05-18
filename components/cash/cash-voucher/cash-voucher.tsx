@@ -137,13 +137,13 @@ export default function CashVoucher({
   }, [])
 
   //local timezone offset helper
-const getLocalDateString = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`; // Local date, UTC নয়
-};
+  const getLocalDateString = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}` // Local date, UTC নয়
+  }
 
   const saveLastUsedValues = useCallback((values: JournalEntryWithDetails) => {
     try {
@@ -275,35 +275,35 @@ const getLocalDateString = () => {
   // )
 
   const getallVoucher = useCallback(
-  async (company: number[], location: number[]) => {
-    try {
-      const voucherQuery: JournalQuery = {
-        date: getLocalDateString(),
-        companyId: company,
-        locationId: location,
-        voucherType: VoucherTypes.CashVoucher,
-      }
-      const response = await getAllVoucher(voucherQuery, token)
-      if (!response.data) throw new Error('No data received from server')
-      
-      let data = Array.isArray(response.data) ? response.data : []
+    async (company: number[], location: number[]) => {
+      try {
+        const voucherQuery: JournalQuery = {
+          date: getLocalDateString(),
+          companyId: company,
+          locationId: location,
+          voucherType: VoucherTypes.CashVoucher,
+        }
+        const response = await getAllVoucher(voucherQuery, token)
+        if (!response.data) throw new Error('No data received from server')
 
-      // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
-      if (userData?.roleId !== 1) {
-        data = data.filter(
-          (item) => Number(item.createdBy) === Number(userData?.userId)
-        )
-      }
+        let data = Array.isArray(response.data) ? response.data : []
 
-      setVoucherGrid(data)
-    } catch (error) {
-      console.error('Error getting Voucher Data:', error)
-      setVoucherGrid([])
-      throw error
-    }
-  },
-  [token, userData]  // ✅ userData dependency যোগ করুন
-)
+        // ✅ Admin হলে সব দেখাবে, অন্যরা শুধু নিজেরটা
+        if (userData?.roleId !== 1) {
+          data = data.filter(
+            (item) => Number(item.createdBy) === Number(userData?.userId)
+          )
+        }
+
+        setVoucherGrid(data)
+      } catch (error) {
+        console.error('Error getting Voucher Data:', error)
+        setVoucherGrid([])
+        throw error
+      }
+    },
+    [token, userData] // ✅ userData dependency যোগ করুন
+  )
 
   const fetchVoucherData = React.useCallback(async () => {
     if (!token) return
@@ -565,6 +565,22 @@ const getLocalDateString = () => {
   ) => {
     if (userData) setUser(userData)
 
+    // ✅ Amount validation — 0 amount দিয়ে submit করা যাবে না
+    const hasZeroAmount = values.journalDetails.some((detail) => {
+      if (detail.type === 'Payment') return !detail.debit || detail.debit <= 0
+      if (detail.type === 'Receipt') return !detail.credit || detail.credit <= 0
+      return true
+    })
+
+    if (hasZeroAmount) {
+      toast({
+        title: 'Validation Error',
+        description:
+          'Amount cannot be 0 or blank . Please enter a valid amount for each row.',
+      })
+      return
+    }
+
     if (isEdit) {
       const totalDebit = values.journalDetails.reduce(
         (s, d) => s + (d.debit || 0),
@@ -679,10 +695,17 @@ const getLocalDateString = () => {
         description: `Voucher ${isEdit ? 'edited' : 'created'} successfully`,
       })
 
+      // ✅ Edit mode: আগে onSuccess call করুন (parent refresh হবে), তারপর close
+      if (isEdit) {
+        if (onSuccess) onSuccess() // parent এ list refresh হবে
+        onClose?.() // তারপর modal/panel বন্ধ হবে
+        return // নিচের কোড আর চলবে না
+      }
+
+      // ✅ Create mode: নিজেই list refresh করে form reset করবে
       await fetchVoucherData()
       window.dispatchEvent(new Event('voucherUpdated'))
       if (onSuccess) onSuccess()
-      onClose?.()
 
       // Keep company / location / currency / date; clear everything else
       const keepCompanyId = form.getValues('journalEntry.companyId')
@@ -717,7 +740,6 @@ const getLocalDateString = () => {
       })
     }
   }
-  
 
   // ─── Columns ──────────────────────────────────────────────────────────────────
   const columns = [

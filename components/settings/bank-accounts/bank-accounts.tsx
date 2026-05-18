@@ -159,7 +159,7 @@ export default function BankAccounts() {
       accountNumber: '',
       bankName: '',
       currencyId: '',
-      accountType: 'DEPOSIT AWAITING FOR DISPOSAL',
+      accountType: undefined,
       openingBalance: '',
       isActive: true,
       isReconcilable: true,
@@ -336,7 +336,7 @@ export default function BankAccounts() {
         accountNumber: '',
         bankName: '',
         currencyId: '',
-        accountType: 'DEPOSIT AWAITING FOR DISPOSAL',
+        accountType: undefined,
         openingBalance: '',
         isActive: true,
         isReconcilable: true,
@@ -1234,7 +1234,7 @@ export default function BankAccounts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedAccounts.map((account: any) => (
+            {paginatedAccounts.map((account: BankAccount) => (
               <TableRow key={account.id}>
                 <TableCell>{account.accountName}</TableCell>
                 <TableCell>{account.accountNumber}</TableCell>

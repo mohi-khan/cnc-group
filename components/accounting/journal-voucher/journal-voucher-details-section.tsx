@@ -743,7 +743,7 @@ export function JournalVoucherDetailsSection({
                                 }
                               : null
                           }}
-                          disabled={!isPartnerFieldEnabled}
+                          
                         />
                       </div>
                     </FormControl>
@@ -768,6 +768,14 @@ export function JournalVoucherDetailsSection({
                         onWheel={(e) =>
                           (e.target as HTMLInputElement).blur()
                         }
+                        onKeyDown={(e) => {
+                                if (
+                                  e.key === 'ArrowUp' ||
+                                  e.key === 'ArrowDown'
+                                ) {
+                                  e.preventDefault()
+                                }
+                              }}
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </FormControl>
@@ -792,6 +800,14 @@ export function JournalVoucherDetailsSection({
                         onWheel={(e) =>
                           (e.target as HTMLInputElement).blur()
                         }
+                        onKeyDown={(e) => {
+                                if (
+                                  e.key === 'ArrowUp' ||
+                                  e.key === 'ArrowDown'
+                                ) {
+                                  e.preventDefault()
+                                }
+                              }}
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </FormControl>
