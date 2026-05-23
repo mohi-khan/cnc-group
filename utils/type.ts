@@ -1469,6 +1469,10 @@ export const EmployeeSchema = z.object({
   email: z.string().email(),
   department: z.string(),
   status: z.enum(['active', 'inactive']),
+  employeeType: z.enum(['employee', 'worker']),
+
+
+ 
 })
 
 // employee master employeee TypeScript type
