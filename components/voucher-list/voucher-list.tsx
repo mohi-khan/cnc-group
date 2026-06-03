@@ -150,24 +150,47 @@ const VoucherList: React.FC<VoucherListProps> = ({
   //   columns.reduce((acc, col) => ({ ...acc, [col.key]: true }), {})
   // )
   // Column visibility state
-  const DEFAULT_VISIBLE_COLUMNS = new Set([
-    'voucherno',
-    'date',
-    'journaltype',
-    'topHead',
-    'debit',
-    'credit',
-  ])
+  // const DEFAULT_VISIBLE_COLUMNS = new Set([
+  //   'voucherno',
+  //   'date',
+  //   'journaltype',
+  //   'topHead',
+  //   'debit',
+  //   'credit',
+  // ])
 
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
-    columns.reduce(
-      (acc, col) => ({
-        ...acc,
-        [col.key]: DEFAULT_VISIBLE_COLUMNS.has(col.key),
-      }),
-      {}
-    )
+  // const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+  //   columns.reduce(
+  //     (acc, col) => ({
+  //       ...acc,
+  //       [col.key]: DEFAULT_VISIBLE_COLUMNS.has(col.key),
+  //     }),
+  //     {}
+  //   )
+  // )
+  const isDayBook =
+  pathname.includes('day-book') || pathname.includes('daybook')
+
+const DEFAULT_VISIBLE_COLUMNS = isDayBook
+  ? new Set([
+      'voucherno',
+      'date',
+      'journaltype',
+      'topHead',
+      'debit',
+      'credit',
+    ])
+  : new Set(columns.map((col) => col.key))
+
+const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+  columns.reduce(
+    (acc, col) => ({
+      ...acc,
+      [col.key]: DEFAULT_VISIBLE_COLUMNS.has(col.key),
+    }),
+    {}
   )
+)
 
   // Expanded vouchers state
   const [expandedVouchers, setExpandedVouchers] = useState<Set<number>>(
@@ -403,8 +426,8 @@ const [viewDetailVoucherId, setViewDetailVoucherId] = useState<number | null>(nu
   const endIndex = startIndex + itemsPerPage
   const currentVouchers = sortedVouchers.slice(startIndex, endIndex)
 
-  const isDayBook =
-    pathname.includes('day-book') || pathname.includes('daybook')
+  // const isDayBook =
+  //   pathname.includes('day-book') || pathname.includes('daybook')
   const NotDaybook = !isDayBook
   const isCashBook =
     pathname.includes('cash-book') || pathname.includes('cashbook')
