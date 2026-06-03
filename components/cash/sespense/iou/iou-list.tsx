@@ -434,6 +434,18 @@ const IouList: React.FC<LoanListProps> = ({
                               ? ''
                               : field.value
                           }
+                          onWheel={(e) =>
+                                (e.target as HTMLInputElement).blur()
+                              }
+                              onKeyDown={(e) => {
+                                if (
+                                  e.key === 'ArrowUp' ||
+                                  e.key === 'ArrowDown'
+                                ) {
+                                  e.preventDefault()
+                                }
+                              }}
+                              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // 👈 Add this
                         />
                       </FormControl>
                       <FormMessage />
@@ -930,7 +942,7 @@ export default IouList
 //   TableHead as TableHeadCell,
 // } from '@/components/ui/table'
 // import { Button } from '@/components/ui/button'
-// import { ArrowUpDown, Search, Settings } from 'lucide-react'
+// import { ArrowUpDown, Search } from 'lucide-react'
 // import type { Employee, IouRecordGetType, LocationData } from '@/utils/type'
 // import Loader from '@/utils/loader'
 // import IouAdjPopUp from './iou-adj-popup'
@@ -950,13 +962,6 @@ export default IouList
 //   SelectTrigger,
 //   SelectValue,
 // } from '@/components/ui/select'
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from '@/components/ui/popover'
-// import { Checkbox } from '@/components/ui/checkbox'
-// import { Label } from '@/components/ui/label'
 // import { formatIndianNumber } from '@/utils/Formatindiannumber'
 // import { toast } from '@/hooks/use-toast'
 // import { tokenAtom, useInitializeUser } from '@/utils/user'
@@ -972,19 +977,6 @@ export default IouList
 //   getLoaction: LocationData[]
 //   fetchLoanData: () => Promise<void>
 // }
-
-// const ALL_COLUMNS = [
-//   { key: 'dateIssued', label: 'Issued Date' },
-//   { key: 'iouId', label: 'IOU Id' },
-//   { key: 'employeeId', label: 'Employee Name' },
-//   { key: 'companyId', label: 'Company Name' },
-//   { key: 'locationId', label: 'Location Name' },
-//   { key: 'amount', label: 'Amount' },
-//   { key: 'adjustedAmount', label: 'Adjusted Amount' },
-//   { key: 'dueDate', label: 'Due Date' },
-//   { key: 'notes', label: 'Notes' },
-//   { key: 'status', label: 'Status' },
-// ]
 
 // const IouList: React.FC<LoanListProps> = ({
 //   onAddCategory,
@@ -1008,18 +1000,7 @@ export default IouList
 //   const [itemsPerPage, setItemsPerPage] = useState(10)
 //   const [searchQuery, setSearchQuery] = useState('')
 
-//   // ✅ Column visibility state
-//   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
-//     ALL_COLUMNS.reduce((acc, col) => ({ ...acc, [col.key]: true }), {})
-//   )
-
-//   const toggleColumnVisibility = (key: string) => {
-//     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }))
-//   }
-
-//   const displayColumns = ALL_COLUMNS.filter((col) => visibleColumns[col.key])
-
-//   // ✅ Post IOU
+//   // ✅ Post IOU — draft → active
 //   const handlePostIou = async (iouId: number) => {
 //     try {
 //       await postIouRecord(iouId, token)
@@ -1034,7 +1015,7 @@ export default IouList
 //     }
 //   }
 
-//   // ✅ Delete IOU
+//   // ✅ Delete IOU — শুধু draft delete হবে
 //   const handleDeleteIou = async (iouId: number) => {
 //     try {
 //       await deleteIouRecord(iouId, token)
@@ -1126,57 +1107,11 @@ export default IouList
 //     0
 //   )
 
-//   // ✅ Render cell value based on column key
-//   const renderCell = (loan: IouRecordGetType, key: string) => {
-//     switch (key) {
-//       case 'dateIssued':
-//         return isNaN(new Date(loan.dateIssued).getTime())
-//           ? 'Invalid Date'
-//           : new Date(loan.dateIssued).toLocaleDateString()
-//       case 'iouId':
-//         return loan.iouId
-//       case 'employeeId':
-//         return getEmployeeName(loan.employeeId)
-//       case 'companyId':
-//         return getCompanyName(loan.companyId)
-//       case 'locationId':
-//         return getLocationName(loan.locationId)
-//       case 'amount':
-//         return loan.amount !== loan.adjustedAmount
-//           ? formatIndianNumber(loan.amount)
-//           : ''
-//       case 'adjustedAmount':
-//         return loan.amount !== loan.adjustedAmount
-//           ? formatIndianNumber(loan.adjustedAmount)
-//           : ''
-//       case 'dueDate':
-//         return isNaN(new Date(loan.dueDate).getTime())
-//           ? 'Invalid Date'
-//           : new Date(loan.dueDate).toLocaleDateString()
-//       case 'notes':
-//         return loan.notes
-//       case 'status':
-//         return (
-//           <span
-//             className={
-//               loan.status === 'draft'
-//                 ? 'px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700'
-//                 : 'px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700'
-//             }
-//           >
-//             {loan.status === 'draft' ? 'Draft' : 'Active'}
-//           </span>
-//         )
-//       default:
-//         return null
-//     }
-//   }
-
 //   return (
 //     <div className="p-1">
 //       {/* Header */}
 //       <div className="flex justify-between items-center mb-6">
-//         <div className="flex items-center gap-4 flex-wrap">
+//         <div className="flex items-center gap-4">
 //           <h1 className="text-2xl font-bold">IOU List</h1>
 //           <Select
 //             value={itemsPerPage.toString()}
@@ -1212,42 +1147,7 @@ export default IouList
 //             />
 //           </div>
 //         </div>
-
-//         <div className="flex items-center gap-2">
-//           {/* ✅ Column Visibility Popover */}
-//           <Popover>
-//             <PopoverTrigger asChild>
-//               <Button variant="outline" className="flex items-center gap-2">
-//                 <Settings className="h-4 w-4" />
-//                 Columns
-//               </Button>
-//             </PopoverTrigger>
-//             <PopoverContent className="w-56" align="end">
-//               <div className="space-y-3">
-//                 <h4 className="font-medium text-sm">Toggle Columns</h4>
-//                 <div className="space-y-2">
-//                   {ALL_COLUMNS.map((col) => (
-//                     <div key={col.key} className="flex items-center space-x-2">
-//                       <Checkbox
-//                         id={`col-${col.key}`}
-//                         checked={visibleColumns[col.key]}
-//                         onCheckedChange={() => toggleColumnVisibility(col.key)}
-//                       />
-//                       <Label
-//                         htmlFor={`col-${col.key}`}
-//                         className="text-sm font-normal cursor-pointer"
-//                       >
-//                         {col.label}
-//                       </Label>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-
-//           <Button onClick={onAddCategory}>Add IOU</Button>
-//         </div>
+//         <Button onClick={onAddCategory}>Add IOU</Button>
 //       </div>
 
 //       {/* Table */}
@@ -1258,18 +1158,52 @@ export default IouList
 //           <Table className="min-w-full">
 //             <TableHeader className="sticky top-0 bg-slate-200 z-20 text-center">
 //               <TableRow>
-//                 {displayColumns.map((col) => (
-//                   <TableHeadCell key={col.key}>
-//                     <Button
-//                       variant="ghost"
-//                       onClick={() =>
-//                         requestSort(col.key as keyof IouRecordGetType)
-//                       }
-//                     >
-//                       {col.label} <ArrowUpDown className="ml-2 h-4 w-4" />
-//                     </Button>
-//                   </TableHeadCell>
-//                 ))}
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('dateIssued')}>
+//                     Issued Date <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('iouId')}>
+//                     Iou Id <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('employeeId')}>
+//                     Employee Name <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('companyId')}>
+//                     Company Name <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('locationId')}>
+//                     Location Name <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('amount')}>
+//                     Amount <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('adjustedAmount')}>
+//                     Adjusted Amount <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('dueDate')}>
+//                     Due Date <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>
+//                   <Button variant="ghost" onClick={() => requestSort('notes')}>
+//                     Notes <ArrowUpDown className="ml-2 h-4 w-4" />
+//                   </Button>
+//                 </TableHeadCell>
+//                 <TableHeadCell>Status</TableHeadCell>
 //                 <TableHeadCell>Action</TableHeadCell>
 //               </TableRow>
 //             </TableHeader>
@@ -1278,21 +1212,54 @@ export default IouList
 //               {paginatedLoanData.length === 0 ? (
 //                 <TableRow>
 //                   <TableCell
-//                     colSpan={displayColumns.length + 1}
+//                     colSpan={11}
 //                     className="text-center py-8 text-muted-foreground"
 //                   >
-//                     No records found
-//                     {searchQuery ? ` matching "${searchQuery}"` : ''}
+//                     No records found matching &quot;{searchQuery}&quot;
 //                   </TableCell>
 //                 </TableRow>
 //               ) : (
 //                 paginatedLoanData.map((loan) => (
 //                   <TableRow className="text-center" key={loan.iouId}>
-//                     {displayColumns.map((col) => (
-//                       <TableCell key={col.key}>
-//                         {renderCell(loan, col.key)}
-//                       </TableCell>
-//                     ))}
+//                     <TableCell>
+//                       {isNaN(new Date(loan.dateIssued).getTime())
+//                         ? 'Invalid Date'
+//                         : new Date(loan.dateIssued).toLocaleDateString()}
+//                     </TableCell>
+//                     <TableCell>{loan.iouId}</TableCell>
+//                     <TableCell>{getEmployeeName(loan.employeeId)}</TableCell>
+//                     <TableCell>{getCompanyName(loan.companyId)}</TableCell>
+//                     <TableCell>{getLocationName(loan.locationId)}</TableCell>
+//                     {loan.amount !== loan.adjustedAmount ? (
+//                       <>
+//                         <TableCell>{formatIndianNumber(loan.amount)}</TableCell>
+//                         <TableCell>{formatIndianNumber(loan.adjustedAmount)}</TableCell>
+//                       </>
+//                     ) : (
+//                       <>
+//                         <TableCell></TableCell>
+//                         <TableCell></TableCell>
+//                       </>
+//                     )}
+//                     <TableCell>
+//                       {isNaN(new Date(loan.dueDate).getTime())
+//                         ? 'Invalid Date'
+//                         : new Date(loan.dueDate).toLocaleDateString()}
+//                     </TableCell>
+//                     <TableCell>{loan.notes}</TableCell>
+
+//                     {/* ✅ Status Badge */}
+//                     <TableCell>
+//                       <span
+//                         className={
+//                           loan.status === 'draft'
+//                             ? 'px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700'
+//                             : 'px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700'
+//                         }
+//                       >
+//                         {loan.status === 'draft' ? 'Draft' : 'Active'}
+//                       </span>
+//                     </TableCell>
 
 //                     {/* ✅ Action Column */}
 //                     <TableCell className="flex gap-2 justify-center">
@@ -1330,31 +1297,12 @@ export default IouList
 
 //               {/* Grand Total */}
 //               <TableRow className="bg-slate-100 font-bold sticky bottom-0 z-10">
-//                 {displayColumns.map((col, idx) => {
-//                   if (idx === 0) {
-//                     return (
-//                       <TableCell key={col.key} className="text-right">
-//                         Grand Total:
-//                       </TableCell>
-//                     )
-//                   }
-//                   if (col.key === 'amount') {
-//                     return (
-//                       <TableCell key={col.key}>
-//                         {formatIndianNumber(grandTotalAmount)}
-//                       </TableCell>
-//                     )
-//                   }
-//                   if (col.key === 'adjustedAmount') {
-//                     return (
-//                       <TableCell key={col.key}>
-//                         {formatIndianNumber(grandTotalAdjusted)}
-//                       </TableCell>
-//                     )
-//                   }
-//                   return <TableCell key={col.key} />
-//                 })}
-//                 <TableCell />
+//                 <TableCell colSpan={4} className="text-right">
+//                   Grand Total:
+//                 </TableCell>
+//                 <TableCell>{formatIndianNumber(grandTotalAmount)}</TableCell>
+//                 <TableCell>{formatIndianNumber(grandTotalAdjusted)}</TableCell>
+//                 <TableCell colSpan={5}></TableCell>
 //               </TableRow>
 //             </TableBody>
 //           </Table>
@@ -1413,5 +1361,4 @@ export default IouList
 // }
 
 // export default IouList
-
 
