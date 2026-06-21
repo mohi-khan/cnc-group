@@ -41,6 +41,7 @@ export const MENU_ITEMS: MenuItem[] = [
         name: "Suspense ",
         items: [
           { name: "Iou", source: "/cash/sespense/iou" },
+          { name: "Iou Adjustment", source: "/cash/sespense/iou-adjustment" },
           { name: "Iou report", source: "/cash/sespense/iou-report" }
         ],
       },
