@@ -8,14 +8,5 @@
   "editor.cursorSurroundingLines": 0,
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.requireConfig": true,
-  "editor.mouseWheelZoom": true,
-  "task.allowAutomaticTasks": true,
-  "debug.openDebug": "neverOpen",
-  "terminal.integrated.inheritEnv": false,
-  "tasks": {
-    "label": "lint on open",
-    "type": "shell",
-    "command": "npm run lint",
-    "runOn": "folderOpen"
-  }
+  "editor.mouseWheelZoom": true
 }
