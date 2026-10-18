@@ -14,7 +14,7 @@ const Loader = () => {
     //       <p className="mt-2 text-sm text-gray-600">Loading...</p>
     //     </div>
     //   </CardContent>
-    // </Card>
+  // </Card>
   )
 }
 
