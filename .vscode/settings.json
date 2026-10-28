@@ -8,5 +8,6 @@
   "editor.cursorSurroundingLines": 0,
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.requireConfig": true,
-  "editor.mouseWheelZoom": true
+  "editor.mouseWheelZoom": true,
+  "task.allowAutomaticTasks": "off"
 }
